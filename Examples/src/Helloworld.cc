@@ -4,7 +4,7 @@
 DECLARE_COMPONENT(HelloWorld)
 
 HelloWorld::HelloWorld(const std::string& name, ISvcLocator* ploc)
-    : Algorithm(name, ploc) {}
+    : GaudiAlgorithm(name, ploc) {}
 
 StatusCode HelloWorld::initialize() {
 
