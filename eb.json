@@ -1,0 +1,166 @@
+[
+    {
+        "Id": "sha256:79bb18d50cebf0ebff3457b3f21fbbc7fffb15fee179a2f079ab9e31637caf8f",
+        "RepoTags": [
+            "eic_builder:2.0.0",
+            "eic_builder:latest",
+            "eicweb.phy.anl.gov:4567/containers/eic_container/eic_builder:2.0.0",
+            "eicweb.phy.anl.gov:4567/containers/eic_container/eic_builder:latest"
+        ],
+        "RepoDigests": [
+            "eicweb.phy.anl.gov:4567/containers/eic_container/eic_builder@sha256:f366c3ead407ac5a6b38fe826cb4133cbe8b477ad18282971532ddb1c7735188"
+        ],
+        "Parent": "sha256:d0af57e10763e9c2fc79b7b01efaf63890c2f3047b7dc715853003671fc4256a",
+        "Comment": "",
+        "Created": "2020-07-24T22:00:07.085937175Z",
+        "Container": "863d9497038c849c42757f9e0ea58f012808f02def4ff5f431359861676616f9",
+        "ContainerConfig": {
+            "Hostname": "863d9497038c",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "DOCKERFILE_BASE=ubuntu",
+                "DOCKERFILE_DISTRO=ubuntu",
+                "DOCKERFILE_DISTRO_VERSION=20.04",
+                "DEBIAN_FRONTEND=noninteractive",
+                "CURRENTLY_BUILDING_DOCKER_IMAGE=1",
+                "container=docker",
+                "LANGUAGE=en_US.UTF-8",
+                "LANG=en_US.UTF-8",
+                "LC_ALL=en_US.UTF-8",
+                "SPACK_ROOT=/opt/spack"
+            ],
+            "Cmd": [
+                "/bin/bash",
+                "-c",
+                "#(nop) ",
+                "CMD [\"bash\"]"
+            ],
+            "Image": "sha256:d0af57e10763e9c2fc79b7b01efaf63890c2f3047b7dc715853003671fc4256a",
+            "Volumes": null,
+            "WorkingDir": "/root",
+            "Entrypoint": [
+                "/bin/bash",
+                "-c"
+            ],
+            "OnBuild": null,
+            "Labels": {
+                "base": "ubuntu",
+                "basedist": "ubuntu",
+                "group": "eic_builder",
+                "maintainer": "Sylvester Joosten <sjoosten@anl.gov>",
+                "march": "native",
+                "name": "eic_builder"
+            },
+            "Shell": [
+                "/bin/bash",
+                "-c"
+            ]
+        },
+        "DockerVersion": "19.03.11",
+        "Author": "",
+        "Config": {
+            "Hostname": "",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "DOCKERFILE_BASE=ubuntu",
+                "DOCKERFILE_DISTRO=ubuntu",
+                "DOCKERFILE_DISTRO_VERSION=20.04",
+                "DEBIAN_FRONTEND=noninteractive",
+                "CURRENTLY_BUILDING_DOCKER_IMAGE=1",
+                "container=docker",
+                "LANGUAGE=en_US.UTF-8",
+                "LANG=en_US.UTF-8",
+                "LC_ALL=en_US.UTF-8",
+                "SPACK_ROOT=/opt/spack"
+            ],
+            "Cmd": [
+                "bash"
+            ],
+            "Image": "sha256:d0af57e10763e9c2fc79b7b01efaf63890c2f3047b7dc715853003671fc4256a",
+            "Volumes": null,
+            "WorkingDir": "/root",
+            "Entrypoint": [
+                "/bin/bash",
+                "-c"
+            ],
+            "OnBuild": null,
+            "Labels": {
+                "base": "ubuntu",
+                "basedist": "ubuntu",
+                "group": "eic_builder",
+                "maintainer": "Sylvester Joosten <sjoosten@anl.gov>",
+                "march": "native",
+                "name": "eic_builder"
+            },
+            "Shell": [
+                "/bin/bash",
+                "-c"
+            ]
+        },
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 13154713043,
+        "VirtualSize": 13154713043,
+        "GraphDriver": {
+            "Data": {
+                "LowerDir": "/var/lib/docker/overlay2/34f5804bf0db3075d3a8c9013643f7e796017e01be6abee135d70ff6564ef0ad/diff:/var/lib/docker/overlay2/eb52f8d2faa61935552879638e718ec9d542760a609b41d9ea173943316d9fcb/diff:/var/lib/docker/overlay2/ae1f34afe8561919623b4a55be2daed79dd391b6a13398ab51c899d3078a411e/diff:/var/lib/docker/overlay2/ccb2f349b8cf020695b7e5bd8cbb3280064363aae82575e06f8f44f87f59d258/diff:/var/lib/docker/overlay2/02c2d6814843ef5b74db1e085f60841bc1c67187521db4532f64ac6d2150c7fb/diff:/var/lib/docker/overlay2/c99d485071a58f7c425e0d88d7b467907dab1cec4316537d178b3a21164be8da/diff:/var/lib/docker/overlay2/9c2d1833c214ac489975ffb226835f6d3275a3097b03a13b96620036bab2f0a2/diff:/var/lib/docker/overlay2/d8312438ef7b71d7bfba8afdbd48e7c75e25b28fe324465e5563b2ae8d94bb1a/diff:/var/lib/docker/overlay2/970390477a65c78784817954dbf45d3147d23c4f846414ec7712c70a2012163a/diff:/var/lib/docker/overlay2/bf01731e25d31a86a91ce13978e4ef11127038c2ddebcaf5eed020742de73443/diff:/var/lib/docker/overlay2/72dde84535713420e70b08957d9f640a1a9e72fc9948469699ce0bae710a2562/diff:/var/lib/docker/overlay2/3ca75f195a11584a41f253e2714f5d4761f498a8cb9c720a369700c9e3f40f09/diff:/var/lib/docker/overlay2/caadb38ac1b6caa4953846cc0f1483ee27db472974b4d3fc46c30d465050e0f2/diff:/var/lib/docker/overlay2/0ff5579c28edfcc9bd283c2c458592149aa8526c08593341a3b1e58c6fbb2ca8/diff:/var/lib/docker/overlay2/7587244422d6c3c80ac4da0e42ce5f2f2fec746cca44d8ac53d50f0718e3a32a/diff:/var/lib/docker/overlay2/142317df7e76bbd1eeee017c7e1d2a26e381deaca12a71c5b29b56c73c5ffb43/diff:/var/lib/docker/overlay2/7c9151b749fb5bde4ea89313402122b526c96b03518f4e0e639cd88f68d0ced6/diff:/var/lib/docker/overlay2/7e87195926958a41d596fe519f8ab7eb32ec6d06911be017d69feb7fa83629b1/diff:/var/lib/docker/overlay2/51021bde6018d131342dfc5d0715c5a40f9e5241a69ac6788f7c15366d05476a/diff:/var/lib/docker/overlay2/9ee2186ad94555c90fa93452d34647446c6db8a28681bf3e229171e9d1458b36/diff:/var/lib/docker/overlay2/9c560675f2ff6387bec18c7211787aa706a20d980d41f6777661268e3bb229c3/diff:/var/lib/docker/overlay2/84c3e0468c0b820998df6d70ce48fc9c4e9f5e09ae3c38e77250f170fd262991/diff:/var/lib/docker/overlay2/92dbe2d6e22a74bdd81ae61ed1397a7925df258565facc373d92fe5e7a9e0c02/diff:/var/lib/docker/overlay2/f2e65e512ce3bdcc28ce097a38e712216e3c16a7d1e105471c2ba74a4e9119c7/diff:/var/lib/docker/overlay2/eebf6316a0fe37d58f80bdf4ab4f0ddf958d8c7ef8752739b7d84ab75de6c3c4/diff:/var/lib/docker/overlay2/96c1f82a20925490f044adfe3caeeb012472692d4fd49d2f5894b5877ef2a9c0/diff:/var/lib/docker/overlay2/b82a25cc184b087d8028fede3efb50b851a610e6cc92daec706dd38bcd2fe545/diff",
+                "MergedDir": "/var/lib/docker/overlay2/1cc0feb6d89df781700e509285a49b0cd9d678b2b79392ef6262f45d5ce83640/merged",
+                "UpperDir": "/var/lib/docker/overlay2/1cc0feb6d89df781700e509285a49b0cd9d678b2b79392ef6262f45d5ce83640/diff",
+                "WorkDir": "/var/lib/docker/overlay2/1cc0feb6d89df781700e509285a49b0cd9d678b2b79392ef6262f45d5ce83640/work"
+            },
+            "Name": "overlay2"
+        },
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:7789f1a3d4e9258fbe5469a8d657deb6aba168d86967063e9b80ac3e1154333f",
+                "sha256:9e53fd4895597d04f8871a68caea4c686011e1fbd0be32e57e89ada2ea5c24c4",
+                "sha256:2a19bd70fcd4ce7fd73b37b1b2c710f8065817a9db821ff839fe0b4b4560e643",
+                "sha256:8891751e0a1733c5c214d17ad2b0040deccbdea0acebb963679735964d516ac2",
+                "sha256:5b8d2239d195d10903ac0b6a3dd34353fc5ebac3db6194c28012d7f63809165d",
+                "sha256:4d81ce2513b486f07c9d3e01c7c10a1b2b4d83c269fc2554ae3a9166f48f3092",
+                "sha256:562964ef9361938cc129280a578eb052e3d27cf5c679d591b5f3df7aa1378667",
+                "sha256:e3c80e9b776fdf412230beaa148f792a39bbfe549e317ceda77d47f69d4527f7",
+                "sha256:7772ee3fe1bb292f23e6973b011c31c3177fcf3120ce657d448888f165674195",
+                "sha256:0df08faf7c408d18b88a5fee45837d779a2b30bdea6dfc91259e9756d27d4191",
+                "sha256:0ea6ef2b8edd891d3795e6a89d2286a5816af71bc0189e1b3c7292dd97976c9e",
+                "sha256:e65e5f3479b021f980db6a327d8a9cf7f9a0bff3f835ef46444856d859fc3eee",
+                "sha256:7e40a04658b93dbf4a47788e6c614ea4ae62ecf919d84b10fdcdb4c778d646de",
+                "sha256:5436159d9ce57b6c5ece4fb45552d57bfd9d0b59c09cb3671effbbc611591366",
+                "sha256:9df64c3112ca59e1e658b4862b57c5f992229561638dcebc690b2ed2b8be85f1",
+                "sha256:c1379647c195849c54d225def000c985c6314a8996610d011414b4440458e6e0",
+                "sha256:71c29ac329e8aebd3056ad614ddcc8749b141a6b31e762c9d65b067965a5dada",
+                "sha256:215ba4a010d6ce0dc5b43c05f2c47a94a08f4e888d4c063aa3e2f5d11fe249d0",
+                "sha256:439ff31aec14e5c0cfc6f4a38d29fd9ec03e6907563167171e8e7920f4d4251b",
+                "sha256:030b9428c1deb43f5c8fc8274e932b161dd4281f923b71fd3eabaff157ee9b32",
+                "sha256:df3334df2030070935dc143021304f113c4ac7b4d9db9ffbc1c0f7db9267c1d3",
+                "sha256:16978adb019f2b768ecfe015ab1a52947ef522565484e36e08ad835192810391",
+                "sha256:ef802b4a46b536dab256ff85790eaa0d85ecacefd154a368c67f93eec278af92",
+                "sha256:845fb4ea1ce9855917679a0e34a25f3a7f04ddb099a6d38687c480a9b626bdbe",
+                "sha256:3921a0aba217d8d667789ae47597acb2f59bb6352e794fe0aa2605a99ecb6587",
+                "sha256:b0ada9ec1aaf2cc83d686b5bc2210492ccaccc7a82736babd2d8beabec4195cf",
+                "sha256:d2904d33640dc8f1508f8c17005c24e1029f80cc0309e2aa3eb0f84d88ffd6fa",
+                "sha256:7fdf33c425d1ba2825f86111c5adb8c0e00befa7fc017665a0726be197cf8655"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "2020-07-24T17:00:08.02595498-05:00"
+        }
+    }
+]

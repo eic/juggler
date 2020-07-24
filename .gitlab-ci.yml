@@ -1,0 +1,29 @@
+image: eicweb.phy.anl.gov:4567/containers/eic_container/eic:latest
+
+default:
+  artifacts:
+    paths:
+      - juggler/
+
+stages:
+  - build
+  - run
+
+compile:
+  stage: build
+  tags:
+    - sodium
+  before_script:
+    - pwd &&  ls -lrth
+  script:
+    - source /etc/profile
+    - git clone https://juggler-ci:_Pgt8fx-X2bnxgdu_8n_@eicweb.phy.anl.gov/EIC/juggler.git juggler
+    - cd juggler && mkdir build && cd build && cmake .. && make
+
+run_example:
+  stage: run
+  tags:
+    - sodium
+  script:
+    - source /etc/profile
+    - ./juggler/build/run gaudirun.py juggler/Examples/options/hello_world.py

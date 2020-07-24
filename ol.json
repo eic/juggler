@@ -1,0 +1,148 @@
+[
+    {
+        "Id": "sha256:0826e68e8fa8af1aa89c2b9587b78b2d2b59589de09d3330577b4e1ce9e43a5b",
+        "RepoTags": [
+            "eicweb.phy.anl.gov:4567/containers/eic_container/eic_container:latest"
+        ],
+        "RepoDigests": [
+            "eicweb.phy.anl.gov:4567/containers/eic_container/eic_container@sha256:c7e8e69dafb8e39e66615522bdff428bf0db0a7098135d8fb2e2ec94e4a29b0e"
+        ],
+        "Parent": "",
+        "Comment": "",
+        "Created": "2020-06-18T00:46:44.28024165Z",
+        "Container": "571650e46d8360fdfa28143dcdf379803c7a742bc2e1d0ad8023dd22a3a75587",
+        "ContainerConfig": {
+            "Hostname": "",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "PYTHONPATH=/usr/local/lib:"
+            ],
+            "Cmd": [
+                "/bin/bash",
+                "-c",
+                "cd /tmp                   && git clone  https://eicweb.phy.anl.gov/EIC/NPDet.git       && source /usr/local/bin/thisroot.sh       && source /usr/local/bin/geant4.sh       && source /usr/local/bin/thisdd4hep.sh       && mkdir -p NPDet/build && cd NPDet/build       && cmake ../. -DCMAKE_INSTALL_PREFIX=/usr/local  -DCMAKE_CXX_STANDARD=17       && make -j30  && make -j4 install       && cd /tmp && rm -rf /tmp/NPDet"
+            ],
+            "Image": "sha256:4e781c160cfc1f6b9bfb51c603018124dc308ebeff92b65099856d2d1febfacb",
+            "Volumes": null,
+            "WorkingDir": "",
+            "Entrypoint": null,
+            "OnBuild": null,
+            "Labels": {
+                "base": "dd4hep_base",
+                "basedist": "ubuntu",
+                "group": "containers/eic_container",
+                "maintainer": "Whitney Armstrong <warmstrong@anl.gov>",
+                "march": "native",
+                "name": "eic_container",
+                "version": "1.12.1"
+            },
+            "Shell": [
+                "/bin/bash",
+                "-c"
+            ]
+        },
+        "DockerVersion": "19.03.2",
+        "Author": "",
+        "Config": {
+            "Hostname": "",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "PYTHONPATH=/usr/local/lib:"
+            ],
+            "Cmd": [
+                "/bin/bash"
+            ],
+            "ArgsEscaped": true,
+            "Image": "sha256:4e781c160cfc1f6b9bfb51c603018124dc308ebeff92b65099856d2d1febfacb",
+            "Volumes": null,
+            "WorkingDir": "",
+            "Entrypoint": null,
+            "OnBuild": null,
+            "Labels": {
+                "base": "dd4hep_base",
+                "basedist": "ubuntu",
+                "group": "containers/eic_container",
+                "maintainer": "Whitney Armstrong <warmstrong@anl.gov>",
+                "march": "native",
+                "name": "eic_container",
+                "version": "1.12.1"
+            },
+            "Shell": [
+                "/bin/bash",
+                "-c"
+            ]
+        },
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 9579397437,
+        "VirtualSize": 9579397437,
+        "GraphDriver": {
+            "Data": {
+                "LowerDir": "/var/lib/docker/overlay2/2b63879bc880e4ede0b2267b8c2ff8bfc11dd67ce5b05a3df558329b6eb7f9a6/diff:/var/lib/docker/overlay2/96cd6955b3b46492d4f70d8d771ad0a3f96f9bece21a618d8e73bbedf687ce35/diff:/var/lib/docker/overlay2/238059432fd24dd0aa4bde8bd74c8e8389c1c980991975a8a300b03b9c047d33/diff:/var/lib/docker/overlay2/20a490b1b636800d8ed5fcd86ee6307b32301057535603fe9f64432831754ad6/diff:/var/lib/docker/overlay2/7b0fa82cfd452692de9761dd83b9d245891a4bf27fd36bae2cf34f093f38f764/diff:/var/lib/docker/overlay2/5471902c2004e10b7003f31f29f1cd1257a0d2549993e743c76c4bd5dbfe4b21/diff:/var/lib/docker/overlay2/8af9ef8d9067f4839c638f76995ca2577fdc0927426f84f50c17d45aa66ea9ad/diff:/var/lib/docker/overlay2/f12f4c4cae6ec3c64b9dda66dc6d6ec5d1f9b6e77b4bf609635633dd3ff9876e/diff:/var/lib/docker/overlay2/7ac021f20ae75e4d3245d5b17d7a2cd4618d3a637da2c1731bece8ffc1d9df29/diff:/var/lib/docker/overlay2/64c2be663abc965f1323361cfb4369d3898ab0e68dbc517d329228bdbd6010e7/diff:/var/lib/docker/overlay2/04841e01fc132d6cb8e002bf7f3edf398ab4176ae8654b66721e729668665901/diff:/var/lib/docker/overlay2/98dbfb1f7ebaff8edb9e7a0f2687f5d63b33bfa0f0088e95796862c55cd1fca4/diff:/var/lib/docker/overlay2/a371bf6871ecfb860e44cfaae89179388b0054de6ac181645f4db43c0d71fb2a/diff:/var/lib/docker/overlay2/5a3acfa18e65a49acfb41c97f1e394ba25f2654b35f5a96f4f3e5b7d30f8c878/diff:/var/lib/docker/overlay2/88c916c6e66ed3f3f9f57f633c050fad89461535f7581e7e1de3c0a41ddb9583/diff:/var/lib/docker/overlay2/9dc272b40dcb1fbaec6844d6bb8a80e2188ef8785742b2f42eb10b0d66321659/diff:/var/lib/docker/overlay2/e690668a0190723da673d5b01c0232ab0ae5ee9051bc89fa54398aef41e16561/diff:/var/lib/docker/overlay2/a8890f85a589bae7177da521e02026d6e0a3705cce823234402764c9adda3913/diff:/var/lib/docker/overlay2/a6358cdb2e2a3481516122a399de3c5a685a2f49e3b1785624909f09a1aacbde/diff:/var/lib/docker/overlay2/c5cd7b60115cd04b24dc6d4d6fdc12ec45945b3480863546e9f85bee2da1c8ff/diff:/var/lib/docker/overlay2/b50dcc212fc1abb464263b9a0603fe34afb827e2461c0821e560390b3a8855ad/diff:/var/lib/docker/overlay2/14655745ff5f0deb16cc1686971fe90317d9ec792bc29e419914dc29a5f41e95/diff:/var/lib/docker/overlay2/d3dbf3d1497a0d1f785d0db1a17d902072562a79677d6b61f693d4b50e97b80b/diff:/var/lib/docker/overlay2/87fa98f092e5321ee763e464e986bef8f3c8df110e79531fb94aa82a8085dab9/diff:/var/lib/docker/overlay2/9e4d71c86e321bc227673ea018fb03cf0d140863f44a9222aa63352ba0ee7f43/diff:/var/lib/docker/overlay2/18bdd538ee2eca4851159c8e7fa912fb89498863c81067dbd5459deaa9e85b2a/diff:/var/lib/docker/overlay2/44ee1180733d1897d5e4d2a8e9c364ec5a9e50fb48465ceeb1f84adf4b43d24b/diff:/var/lib/docker/overlay2/0304a2b41a1c0b44eb1efc74e0761519e9121d8cea179f85543f20d42bee9df0/diff:/var/lib/docker/overlay2/f879e48c7c8fbb79e4412336908b1ff4789b788bee9c213050c02668d3f0d1d5/diff:/var/lib/docker/overlay2/c52e4c74d30e51258a82ae2dbb6dcf642b7af30a82a7cb6cea39b5f9948e15b8/diff:/var/lib/docker/overlay2/f2e65e512ce3bdcc28ce097a38e712216e3c16a7d1e105471c2ba74a4e9119c7/diff:/var/lib/docker/overlay2/eebf6316a0fe37d58f80bdf4ab4f0ddf958d8c7ef8752739b7d84ab75de6c3c4/diff:/var/lib/docker/overlay2/96c1f82a20925490f044adfe3caeeb012472692d4fd49d2f5894b5877ef2a9c0/diff:/var/lib/docker/overlay2/b82a25cc184b087d8028fede3efb50b851a610e6cc92daec706dd38bcd2fe545/diff",
+                "MergedDir": "/var/lib/docker/overlay2/c63f184797f6d852c47520c1dc0e1ee95a26bb2f3a91ce6d0ed90cb085ca35b5/merged",
+                "UpperDir": "/var/lib/docker/overlay2/c63f184797f6d852c47520c1dc0e1ee95a26bb2f3a91ce6d0ed90cb085ca35b5/diff",
+                "WorkDir": "/var/lib/docker/overlay2/c63f184797f6d852c47520c1dc0e1ee95a26bb2f3a91ce6d0ed90cb085ca35b5/work"
+            },
+            "Name": "overlay2"
+        },
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:7789f1a3d4e9258fbe5469a8d657deb6aba168d86967063e9b80ac3e1154333f",
+                "sha256:9e53fd4895597d04f8871a68caea4c686011e1fbd0be32e57e89ada2ea5c24c4",
+                "sha256:2a19bd70fcd4ce7fd73b37b1b2c710f8065817a9db821ff839fe0b4b4560e643",
+                "sha256:8891751e0a1733c5c214d17ad2b0040deccbdea0acebb963679735964d516ac2",
+                "sha256:eb19d4b9ae3a989c2c385f9dc6344e17d06a2239f6af9aaf7ed0916497ad4cbf",
+                "sha256:62dd06a3c0de1997c5a705c27a83e506a6734296699bcb92b5c3aac41df79c8f",
+                "sha256:aafb6ec8f1bfe61ba2fc5f5e762109459c16e7f2c0d15f21f51ab794a93fa0e1",
+                "sha256:e4e1d0223b18ac8757dd55be558be96f14336629f5d29be6f55db9e26abb62ae",
+                "sha256:9033d8b1ff6b59c3045720c0abb66231da16f680f9cbdf19451b07ce3fe231c4",
+                "sha256:ce2fcff09978e341078dee28e984006e13bdb4d6135c8fb889d5b74cf6158098",
+                "sha256:6fcc1d8f046180380c6439356e5fa2a07003611e1dc45852d70593f1b0a618f4",
+                "sha256:52c6fb41588cab4447d45c407161da68a814daad53b4805d256b506cfa0469ab",
+                "sha256:a8215be74df1f81d436ed31022e8270129c163095607465879f928709935a654",
+                "sha256:0351cd0e00717bb9353b62ed5d89de1a3f7a34cb6b1e54fb91775a593fe01095",
+                "sha256:0ba8427d65b3053d83b12d6ab22c47c657a8f3d0b67c2a2ba94d89aef88ecbed",
+                "sha256:d2aac0765dc5a593009c2ab3c86d0d9994b6ec8cd96ab951ef348df337e06099",
+                "sha256:ca76f87d0fe4231501b09873dca0b7cf7deeb4fab004e162a68f3f84edfcc1b5",
+                "sha256:452a7ffce3efcb19f51609e07cf8dc7f3da6c94040139a6634abcbd5baab7b97",
+                "sha256:7088a37976fc3cad336687fcb165affdd381754ce109e039f6812e624f3a1420",
+                "sha256:48b646767675266886020e4cdd29cc7996cd208aabcb0a952dd2ed0e9042fadb",
+                "sha256:de939bd6f19f2c41592b6f436c06a56011c8e800b244912fe3dccdbffe4ca94b",
+                "sha256:01a6b53e6f60a417718c068b8ef9c307a3bb3f28fae10a501e8e126512b84702",
+                "sha256:3649af58d7a80dfea9ac7840451b0d04e15435b933a173999ed97d3340d0e8e2",
+                "sha256:cee6df58fb960497084d7b20e31598f2d562b6359319e9ad3a1d0ee0e3386260",
+                "sha256:77e8fd7bd75b212b7e0c82e5671f9e980193311b1affe86282d4a72460293e22",
+                "sha256:2c9cfc1837b911aec72e96153ab2078431da73751239d15d70f73097da72a493",
+                "sha256:c8f6d67b144b1d13b773f7fcfe50cef38c2f26940025b933c69eb13dac78944d",
+                "sha256:43cb9fe5a16cf6480779f0c8529bffc8d6f7bbe94fcafc566928400ebe2c6fcd",
+                "sha256:257d2b74856933618a256ad374d4f1514fe93343faf6340bfa5eda1ca112892d",
+                "sha256:918a27a2985f79f1e02c6e866fdd741674f94d3c96a9a9b2e6a34712f0646900",
+                "sha256:880b2fa32c3787a682dc4e1733512f32bf9068f8bd51c0dae907da9b1e33c236",
+                "sha256:5631e153ec47dcaf5d438416966f8063043627529592289bba612774d0104ed6",
+                "sha256:9f0dee6ab2e3140b6bd8db1a5344dccfc512cacb502ef638b45c25a4ad33a948",
+                "sha256:04bf0da6ce704a09525512eaf2b8cafea73fedfbb2d1fa5f4ab2642c58da0c56",
+                "sha256:56762546835beb7544945480de969bb90f990e29b8201be8d859916bde1eea33"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "0001-01-01T00:00:00Z"
+        }
+    }
+]

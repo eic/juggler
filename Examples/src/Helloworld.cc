@@ -17,7 +17,7 @@ StatusCode HelloWorld::initialize() {
 }
 
 StatusCode HelloWorld::execute() {
-  info() << "Hello World: ecuting..." << endmsg;
+  info() << "Hello World: executing..." << endmsg;
   return StatusCode::SUCCESS;
 }
 
