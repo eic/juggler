@@ -16,7 +16,6 @@ compile:
   before_script:
     - pwd &&  ls -lrth
   script:
-    - source /etc/profile
     - git clone https://juggler-ci:_Pgt8fx-X2bnxgdu_8n_@eicweb.phy.anl.gov/EIC/juggler.git juggler
     - cd juggler && mkdir build && cd build && cmake .. && make
 
@@ -25,5 +24,4 @@ run_example:
   tags:
     - sodium
   script:
-    - source /etc/profile
     - ./juggler/build/run gaudirun.py juggler/Examples/options/hello_world.py
