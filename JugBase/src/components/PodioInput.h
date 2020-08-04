@@ -8,10 +8,10 @@
 #include <vector>
 
 // forward declarations
-// from FWCore:
+// from JugBase:
 class PodioDataSvc;
 
-/** @class PodioInput FWCore/components/PodioInput.h PodioInput.h
+/** @class PodioInput JugBase/components/PodioInput.h PodioInput.h
  *
  *  Class that allows to read ROOT files written with PodioOutput
  *

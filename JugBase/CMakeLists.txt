@@ -21,10 +21,10 @@ target_link_libraries(JugBase
   podio::podioRootIO
   )
 
-#gaudi_add_module(FWCorePlugins
-#                 src/components/*.cpp
-#                 LINK_LIBRARIES GaudiAlgLib GaudiKernel FWCore ROOT)
-#
+gaudi_add_module(JugBasePlugins
+                 src/components/*.cpp
+                 LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT)
+
 #gaudi_add_test(ProduceForReadTest
 #               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 #               FRAMEWORK tests/options/simple_producer.py)

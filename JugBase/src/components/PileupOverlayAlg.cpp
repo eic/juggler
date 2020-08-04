@@ -1,6 +1,6 @@
 #include "PileupOverlayAlg.h"
 
-#include "FWCore/IEDMMergeTool.h"
+#include "JugBase/IEDMMergeTool.h"
 
 
 

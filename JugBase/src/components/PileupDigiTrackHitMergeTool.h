@@ -5,8 +5,8 @@
 #include "GaudiAlg/GaudiTool.h"
 
 // FCCSW
-#include "FWCore/DataHandle.h"
-#include "FWCore/IEDMMergeTool.h"
+#include "JugBase/DataHandle.h"
+#include "JugBase/IEDMMergeTool.h"
 
 namespace fcc {
 class PositionedTrackHit;

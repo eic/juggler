@@ -1,6 +1,6 @@
 #include "PodioOutput.h"
 #include "GaudiKernel/IJobOptionsSvc.h"
-#include "FWCore/PodioDataSvc.h"
+#include "JugBase/PodioDataSvc.h"
 #include "TFile.h"
 
 DECLARE_COMPONENT(PodioOutput)

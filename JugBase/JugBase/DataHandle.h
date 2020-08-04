@@ -1,8 +1,8 @@
 #ifndef FWCORE_DATAHANDLE_H
 #define FWCORE_DATAHANDLE_H
 
-#include "FWCore/DataWrapper.h"
-#include "FWCore/PodioDataSvc.h"
+#include "JugBase/DataWrapper.h"
+#include "JugBase/PodioDataSvc.h"
 
 #include "GaudiKernel/AlgTool.h"
 #include "GaudiKernel/Algorithm.h"
