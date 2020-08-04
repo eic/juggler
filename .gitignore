@@ -13,6 +13,7 @@
 *.a
 
 # build trees
+build/*
 DEBUG*/*
 BUILD*/*
 RELEASE*/*
