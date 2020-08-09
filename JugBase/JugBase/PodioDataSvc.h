@@ -37,7 +37,9 @@ public:
   using DataSvc::registerObject;
   /// Overriding standard behaviour of evt service
   /// Register object with the data store.
-  virtual StatusCode registerObject(std::string_view parentPath, std::string_view fullPath, DataObject* pObject) override final;
+  virtual StatusCode registerObject(std::string_view parentPath,
+                                    std::string_view fullPath,
+                                    DataObject* pObject) override final;
 
   StatusCode readCollection(const std::string& collectionName, int collectionID);
 
@@ -79,5 +81,6 @@ protected:
   /// ROOT file name the input is read from. Set by option filename
   std::vector<std::string> m_filenames;
   std::string m_filename;
+  std::string m_treename;
 };
 #endif  // CORE_PODIODATASVC_H

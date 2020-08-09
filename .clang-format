@@ -1,4 +1,6 @@
 ---
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
 BasedOnStyle:  LLVM
 BreakConstructorInitializersBeforeComma: true
 ConstructorInitializerAllOnOneLineOrOnePerLine: true

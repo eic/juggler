@@ -13,7 +13,6 @@ StatusCode PodioDataSvc::initialize() {
   StatusCode status = DataSvc::initialize();
   ISvcLocator* svc_loc = serviceLocator();
 
-
   // Attach data loader facility
   m_cnvSvc = svc_loc->service("EventPersistencySvc");
   status = setDataLoader(m_cnvSvc);
@@ -87,7 +86,7 @@ void PodioDataSvc::setCollectionIDs(podio::CollectionIDTable* collectionIds) {
 PodioDataSvc::PodioDataSvc(const std::string& name, ISvcLocator* svc)
     : DataSvc(name, svc), m_collectionIDs(new podio::CollectionIDTable()) {
 
-  m_eventDataTree = new TTree("events", "Events tree");
+      m_eventDataTree = new TTree("EVENT", "Events tree");
     }
 
 /// Standard Destructor
