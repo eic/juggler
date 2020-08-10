@@ -28,7 +28,7 @@ target_link_libraries(JugBase
 
 gaudi_add_module(JugBasePlugins
                  src/components/*.cpp src/components/ReadTestConsumer.cxx
-                 LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO NPDet::DDG4_PIDsdet)
+                 LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO)
 
 #gaudi_add_test(ProduceForReadTest
 #               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
