@@ -1,0 +1,164 @@
+<lccdd xmlns:compact="http://www.lcsim.org/schemas/compact/1.0" 
+       xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+       xs:noNamespaceSchemaLocation="http://www.lcsim.org/schemas/compact/1.0/compact.xsd">
+
+  <info name="beam_pipe" title="Beam pipe test"
+        author="Whitney Armstrong"
+        url="https://eicweb.phy.anl.gov/EIC/NPDet"
+        status="development"
+        version="">
+    <comment>EIC Beam Pipe</comment>        
+  </info>
+
+  <includes>
+    <gdmlFile  ref="elements.xml"/>
+    <gdmlFile  ref="materials.xml"/>
+  </includes>
+  
+  <define>
+    <constant name="world_side" value="10*m"/>
+    <constant name="world_x" value="world_side"/>
+    <constant name="world_y" value="world_side"/>
+    <constant name="world_z" value="10*world_side"/>
+    
+    <constant name="tracker_region_rmax" value="2.0*m" />
+    <constant name="tracker_region_zmax" value="4.0*m" />
+
+    <constant name="CrossingAngle" value="0.020*rad"/>
+
+    <constant name="CentralBeamPipe_length"     value="50.0*cm"/>
+    <constant name="CentralBeamPipe_thickness"  value="0.1*mm"/>
+    <constant name="CentralBeamPipe_radius"     value="3.5*cm"/>
+    <constant name="CentralBeamPipe_z"          value="0.0*cm"/>
+
+    <constant name="UpStreamBeamPipe_length"    value="150.0*cm"/>
+    <constant name="UpStreamBeamPipe_thickness" value="0.1*mm"/>
+    <constant name="UpStreamBeamPipe_radius"    value="5*cm"/>
+    <constant name="UpStreamBeamPipe_z"          value="-1.0*(CentralBeamPipe_length+UpStreamBeamPipe_length)/2.0"/>
+
+    <constant name="DownStreamBeamPipe_length"      value="250.0*cm"/>
+    <constant name="DownStreamBeamPipe_thickness"   value="0.1*mm"/>
+    <constant name="DownStreamBeamPipe_radius"      value="5*cm"/>
+    <constant name="DownStreamBeamPipe_z"          value="1.0*(CentralBeamPipe_length+DownStreamBeamPipe_length)/2.0"/>
+    
+    <constant name="Place_Center" value="0*cm"/>
+    <constant name="ForwardTrackerPlane_z0" value="400*cm"/>
+
+  </define>
+
+  <limits>
+    <limitset name="cal_limits">
+      <limit name="step_length_max" particles="*" value="5.0" unit="mm" />
+    </limitset>
+    <limitset name="GemTrackerDiscRegionLimitSet">
+      <limit name="step_length_max" particles="*" value="5.0" unit="mm" />
+      <limit name="track_length_max" particles="*" value="5.0" unit="mm" />
+      <limit name="time_max" particles="*" value="5.0" unit="ns" />
+      <limit name="ekin_min" particles="*" value="0.01" unit="MeV" />
+      <limit name="range_min" particles="*" value="5.0" unit="mm" />
+    </limitset>
+  </limits>
+  <regions>
+    <region name="GemTrackerDiscRegion" eunit="MeV" lunit="mm" cut="0.001" threshold="0.001">
+      <limitsetref name="GemTrackerDiscRegionLimitSet"/>
+    </region>
+  </regions>
+
+    <limits>
+      <limitset name="Tracker_limits">
+        <limit name="step_length_max" particles="*" value="5.0" unit="mm" />
+      </limitset>
+    </limits>
+
+  <comment>Common Generic visualization attributes</comment>
+  <display>
+    <vis name="InvisibleNoDaughters"      showDaughters="false" visible="false"/>
+    <vis name="InvisibleWithDaughters"    showDaughters="true" visible="false"/>
+    <vis name="GreenVis"       alpha="0.5"  r= "0.0" g="1.0" b="0.0" showDaughters="true" visible="true"/>
+    <vis name="RedVis"         alpha="0.5"  r= "1.0" g="0.0" b="0.0" showDaughters="true" visible="true"/>
+    <vis name="BlueVis"        alpha="0.5"  r= "0.0" g="0.0" b="1.0" showDaughters="true" visible="true"/>
+    <vis name="OrangeVis"      alpha="0.5"  r= "1.0" g="0.45" b="0.0" showDaughters="true" visible="true"/>
+    <vis name="RedGreenVis"    alpha="0.5"  r= "1.0" g="1.0" b="0.0" showDaughters="true" visible="true"/>
+    <vis name="BlueGreenVis"   alpha="0.5"  r= "0.0" g="1.0" b="1.0" showDaughters="true" visible="true"/>
+    <vis name="PurpleVis"      alpha="0.5"  r= "1.0" g="0.0" b="1.0" showDaughters="true" visible="true"/>
+    <vis name="DoubleRedG"     alpha="0.5"  r= "2.0" g=".10" b="0.0" showDaughters="true" visible="true"/>
+    <vis name="RBG015"         alpha="0.5"  r= "0.0" g=".2"  b="1.0" showDaughters="true" visible="true"/>
+    <vis name="RBG510"         alpha="0.5"  r= "1.0" g=".2"  b="0.0" showDaughters="true" visible="true"/>
+    <vis name="RBG"            alpha="0.5"  r= "1.0" g="1.0" b="1.0" showDaughters="true" visible="true"/>
+    <vis name="GrayVis"        alpha="1.0"  r= "0.75" g="0.75" b="0.75" showDaughters="true" visible="true"/>
+  </display>
+
+
+  <detectors>
+    <!--
+    <detector id="1" name="GEMTracker_PVDIS" vis="RedVis" type="GEMTrackerDiscSOLID" readout="GEMTrackerHits" > 
+      <layer id="1" z="157.5*cm" inner_r="48.0*cm"  outer_r="122.0*cm" phi0_offset=" 0.5*deg" />
+      <layer id="2" z="185.5*cm" inner_r="59.0*cm"  outer_r="143.0*cm" phi0_offset=" 0.0*deg" />
+      <layer id="3" z="190  *cm" inner_r="65.0*cm"  outer_r="143.0*cm" phi0_offset=" 0.0*deg" />
+      <layer id="4" z="306  *cm" inner_r="105.0*cm" outer_r="230.0*cm" phi0_offset="-0.5*deg" />
+      <layer id="5" z="315  *cm" inner_r="109.0*cm" outer_r="237.0*cm" phi0_offset="-0.5*deg" />
+    </detector>
+    -->
+    <detector id="2" name="GEMTracker_SIDIS" vis="RedVis" type="GEMTrackerDisc" readout="GEMTrackerHits" > 
+      <layer id="1" z="-175 *cm" inner_r="36*cm"  outer_r="87.0*cm"  phi0_offset="0.0*deg" />
+      <layer id="2" z="-150 *cm" inner_r="21*cm"  outer_r="98.0*cm"  phi0_offset="0.0*deg" />
+      <layer id="3" z="-119 *cm" inner_r="25*cm"  outer_r="112.0*cm" phi0_offset="0.0*deg" />
+      <layer id="4" z="-68  *cm" inner_r="32*cm"  outer_r="135.0*cm" phi0_offset="0.0*deg" />
+      <layer id="5" z="-5   *cm" inner_r="42*cm"  outer_r="100.0*cm" phi0_offset="0.0*deg" />
+      <layer id="6" z="5    *cm" inner_r="42*cm"  outer_r="100.0*cm" phi0_offset="0.0*deg" />
+      <layer id="7" z="30   *cm" inner_r="42*cm"  outer_r="123.0*cm" phi0_offset="0.0*deg" />
+      <layer id="8" z="60   *cm" inner_r="42*cm"  outer_r="123.0*cm" phi0_offset="0.0*deg" />
+      <layer id="9" z="92   *cm" inner_r="55*cm"  outer_r="123.0*cm" phi0_offset="0.0*deg" />
+    </detector>
+
+    <detector id="102" name="GEMTracker_assembly" type="DD4hep_SubdetectorAssembly" vis="BlueVis">
+      <composite name="GEMTracker_SIDIS"/>
+    </detector>
+
+  </detectors>
+
+  <readouts>
+    <readout name="TPCollection">
+      <segmentation type="CartesianGridXY" grid_size_x="10.0*cm" grid_size_y="10.0*cm" />
+      <id>system:5,layer:9,module:8,x:32:-16,y:-16</id>
+    </readout>
+    <!--
+         <readout name="SiVertexBarrelHits">
+      <id>system:8,barrel:3,layer:4,module:14,sensor:2,side:32:-2,strip:24</id>
+    </readout>
+-->
+    <readout name="GEMTrackerHits">
+      <segmentation type="PolarGridRPhi" grid_size_phi="1.0*degree" grid_size_r="1.0*cm"/>
+      <id>system:5,barrel:3,layer:4,module:5,r:32:-16,phi:-16</id>
+      </readout>
+    <!--
+    <readout name="SiTrackerEndcapHits">
+      <id>system:8,barrel:3,layer:4,module:14,sensor:2,side:32:-2,strip:24</id>
+    </readout>
+    <readout name="SiVertexEndcapHits">
+      <id>system:8,barrel:3,layer:4,wedge:6,module:6,sensor:1,side:32:-2,strip:26</id>
+    </readout>
+-->
+  </readouts>
+
+   <plugins>
+       <plugin name="DD4hep_GenericSurfaceInstallerPlugin">
+           <argument value="GEMTracker_SIDIS"/>
+           <argument value="dimension=2"/>
+           <argument value="u_x=-1."/>
+           <argument value="v_y=-1."/>
+           <argument value="n_z=1."/>
+       </plugin>	
+       <plugin name="InstallSurfaceManager"/>
+   </plugins>
+
+
+  <fields>
+    <field name="GlobalSolenoid" type="solenoid" 
+	   inner_field="3.0*tesla"
+	   outer_field="-0.5*tesla" 
+	   zmax="4.0*m"
+	   outer_radius="2.0*m">
+    </field>
+  </fields>
+</lccdd>
