@@ -7,7 +7,7 @@ podioevent   = EICDataSvc("EventDataSvc", inputs=["derp.root"], OutputLevel=DEBU
 from Configurables import PodioInput
 from Configurables import Jug__Digi__ExampleCaloDigi as ExampleCaloDigi
 podioinput = PodioInput("PodioReader", collections=["mcparticles","FAEC_ShHits"], OutputLevel=DEBUG)
-caldigi = ExampleCaloDigi(InputData="FAEC_ShHits",OutputData="RawFAECShowerHits")
+caldigi = ExampleCaloDigi(inputHitCollection="FAEC_ShHits",outputHitCollection="RawFAECShowerHits")
 
 out = PodioOutput("out", filename="test.root")
 out.outputCommands = ["keep *"]
