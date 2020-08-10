@@ -1,9 +1,9 @@
 image: eicweb.phy.anl.gov:4567/containers/eic_container/eic:latest
 
-default:
-  artifacts:
-    paths:
-      - juggler/
+#default:
+#  artifacts:
+#    paths:
+#      - juggler/
 
 stages:
   - build
@@ -17,7 +17,7 @@ compile:
     - pwd &&  ls -lrth
   script:
     - export homedir=$(pwd) &&  pwd && cd /tmp && git clone --depth=1 https://eicweb.phy.anl.gov/EIC/NPDet.git && mkdir build && cd build && cmake ../NPDet/. && make -j20 install
-    - cd $homedir && ls -lrth && mkdir build && cd build && cmake .. && make
+    - cd $homedir && ls -lrth && mkdir build && cd build && cmake .. && make -j 20
 
 run_example:
   stage: run
@@ -25,3 +25,10 @@ run_example:
     - sodium
   script:
     - ./build/run gaudirun.py Examples/options/hello_world.py
+
+run_example2:
+  stage: run
+  tags:
+    - sodium
+  script:
+    - ./build/run gaudirun.py JugBase/tests/options/simple_reader.py
