@@ -17,7 +17,7 @@ compile:
     - pwd &&  ls -lrth
   script:
     - cd /tmp && git clone --depth=1 https://eicweb.phy.anl.gov/EIC/NPDet.git && mkdir build && cd build && cmake ../NPDet/. && make -j20 install
-    - ls -lrth && mkdir build && cd build && cmake .. && make
+    - cd $CI_BUILDS_DIR && ls -lrth && mkdir build && cd build && cmake .. && make
     #- git clone https://juggler-ci:_Pgt8fx-X2bnxgdu_8n_@eicweb.phy.anl.gov/EIC/juggler.git juggler
 
 run_example:
