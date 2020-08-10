@@ -27,6 +27,7 @@ run_example:
     - ./build/run gaudirun.py Examples/options/hello_world.py
 
 run_example2:
+  image: eicweb.phy.anl.gov:4567/eic/npdet/npdet:latest
   stage: run
   tags:
     - sodium
