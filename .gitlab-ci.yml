@@ -1,9 +1,9 @@
 image: eicweb.phy.anl.gov:4567/containers/eic_container/eic:latest
 
-#default:
-#  artifacts:
-#    paths:
-#      - juggler/
+default:
+  artifacts:
+    paths:
+      - build/
 
 stages:
   - build
