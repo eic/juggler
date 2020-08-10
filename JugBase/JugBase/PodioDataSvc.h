@@ -1,5 +1,5 @@
-#ifndef FWCORE_PODIODATASVC_H
-#define FWCORE_PODIODATASVC_H
+#ifndef JUGBASE_PODIODATASVC_H
+#define JUGBASE_PODIODATASVC_H
 
 #include "GaudiKernel/DataSvc.h"
 #include "GaudiKernel/IConversionSvc.h"

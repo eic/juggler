@@ -1,5 +1,5 @@
-#ifndef FWCORE_FCCDATASVC_H
-#define FWCORE_FCCDATASVC_H
+#ifndef JUGBASE_FCCDATASVC_H
+#define JUGBASE_FCCDATASVC_H
 
 #include "JugBase/PodioDataSvc.h"
 
@@ -12,4 +12,4 @@ public:
   /// Standard Destructor
   virtual ~EICDataSvc();
 };
-#endif  // FWCORE_FCCDATASVC_H
+#endif  // JUGBASE_FCCDATASVC_H

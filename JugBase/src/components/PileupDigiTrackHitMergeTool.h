@@ -1,5 +1,5 @@
-#ifndef FWCORE_PILEUPDIGITRACKERHITSMERGETOOL_H
-#define FWCORE_PILEUPDIGITRACKERHITSMERGETOOL_H
+#ifndef JUGBASE_PILEUPDIGITRACKERHITSMERGETOOL_H
+#define JUGBASE_PILEUPDIGITRACKERHITSMERGETOOL_H
 
 // Gaudi
 #include "GaudiAlg/GaudiTool.h"
@@ -96,4 +96,4 @@ inline bool PileupDigiTrackHitMergeTool::isTrackerHit(unsigned long long cellId)
   return ((cellId & m_systemMask) < 5);
 }
 
-#endif  // FWCORE_PILEUPDIGITRACKERHITSMERGETOOL_H
+#endif  // JUGBASE_PILEUPDIGITRACKERHITSMERGETOOL_H

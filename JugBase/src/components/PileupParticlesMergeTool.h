@@ -1,5 +1,5 @@
-#ifndef FWCORE_PILEUPPARTICLESMERGETOOL_H
-#define FWCORE_PILEUPPARTICLESMERGETOOL_H
+#ifndef JUGBASE_PILEUPPARTICLESMERGETOOL_H
+#define JUGBASE_PILEUPPARTICLESMERGETOOL_H
 
 // Gaudi
 #include "GaudiAlg/GaudiTool.h"
@@ -48,4 +48,4 @@ private:
   DataHandle<fcc::MCParticleCollection> m_partIn{"overlay/signalGenParticles", Gaudi::DataHandle::Reader, this};
 };
 
-#endif  // FWCORE_PILEUPPARTICLESMERGETOOL_H
+#endif  // JUGBASE_PILEUPPARTICLESMERGETOOL_H

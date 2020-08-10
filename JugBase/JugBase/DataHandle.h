@@ -1,5 +1,5 @@
-#ifndef FWCORE_DATAHANDLE_H
-#define FWCORE_DATAHANDLE_H
+#ifndef JUGBASE_DATAHANDLE_H
+#define JUGBASE_DATAHANDLE_H
 
 #include "JugBase/DataWrapper.h"
 #include "JugBase/PodioDataSvc.h"

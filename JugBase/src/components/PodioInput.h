@@ -1,5 +1,5 @@
-#ifndef FWCORE_PODIOINPUT_H
-#define FWCORE_PODIOINPUT_H
+#ifndef JUGBASE_PODIOINPUT_H
+#define JUGBASE_PODIOINPUT_H
 // Gaaudi
 #include "GaudiAlg/GaudiAlgorithm.h"
 

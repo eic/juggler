@@ -1,5 +1,5 @@
-#ifndef FWCORE_IEDMMERGETOOL_H
-#define FWCORE_IEDMMERGETOOL_H
+#ifndef JUGBASE_IEDMMERGETOOL_H
+#define JUGBASE_IEDMMERGETOOL_H
 
 #include "GaudiKernel/IAlgTool.h"
 
@@ -25,4 +25,4 @@ public:
   virtual StatusCode readSignal() = 0;
 };
 
-#endif  // FWCORE_IEDMMERGETOOL_H
+#endif  // JUGBASE_IEDMMERGETOOL_H

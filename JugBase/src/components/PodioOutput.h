@@ -1,5 +1,5 @@
-#ifndef FWCORE_PODIOOUTPUT_H
-#define FWCORE_PODIOOUTPUT_H
+#ifndef JUGBASE_PODIOOUTPUT_H
+#define JUGBASE_PODIOOUTPUT_H
 
 #include "JugBase/KeepDropSwitch.h"
 #include "GaudiAlg/GaudiAlgorithm.h"

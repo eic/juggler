@@ -1,5 +1,5 @@
-#ifndef FWCORE_DATAWRAPPER_H
-#define FWCORE_DATAWRAPPER_H
+#ifndef JUGBASE_DATAWRAPPER_H
+#define JUGBASE_DATAWRAPPER_H
 
 #include <type_traits>
 

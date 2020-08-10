@@ -40,5 +40,5 @@ gaudi_add_test(ReadTest
 #gaudi_add_test(CheckReadCollectionSize
 #               ENVIRONMENT PYTHONPATH+=${PODIO_PYTHON_DIR}
 #               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-#               COMMAND python FWCore/tests/scripts/check_coll_after_read.py
+#               COMMAND python JugBase/tests/scripts/check_coll_after_read.py
 #               DEPENDS ReadTest)

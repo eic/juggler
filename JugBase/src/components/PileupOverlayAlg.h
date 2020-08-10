@@ -1,5 +1,5 @@
-#ifndef FWCORE_PILEUPOVERLAYALG_H
-#define FWCORE_PILEUPOVERLAYALG_H
+#ifndef JUGBASE_PILEUPOVERLAYALG_H
+#define JUGBASE_PILEUPOVERLAYALG_H
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IEDMMergeTool.h"
@@ -70,4 +70,4 @@ private:
   unsigned int m_pileupFileIndex;
 };
 
-#endif /* FWCORE_PILEUPOVERLAYALG_H */
+#endif /* JUGBASE_PILEUPOVERLAYALG_H */
