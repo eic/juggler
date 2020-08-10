@@ -9,7 +9,6 @@ find_package(EICD)
 #find_package(podio 0.11.01 REQUIRED)
 #include_directories(${podio_INCLUDE_DIR})
 
-#find_package(podio REQUIRED)
 find_package(ROOT COMPONENTS RIO Tree Core REQUIRED)
 find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 
@@ -19,7 +18,7 @@ gaudi_install_scripts()
 gaudi_install_python_modules()
 
 gaudi_add_library(JugBase
-		  src/*.cpp
+  src/*.cpp 
                   INCLUDE_DIRS EICD PODIO ROOT $ENV{HOME}/stow/podio/include
                   LINK_LIBRARIES GaudiAlgLib GaudiKernel ROOT DD4hep::DDG4IO
                   PUBLIC_HEADERS JugBase)
@@ -28,8 +27,8 @@ target_link_libraries(JugBase
   )
 
 gaudi_add_module(JugBasePlugins
-                 src/components/*.cpp
-                 LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT)
+                 src/components/*.cpp src/components/ReadTestConsumer.cxx
+                 LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO NPDet::DDG4_PIDsdet)
 
 #gaudi_add_test(ProduceForReadTest
 #               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
