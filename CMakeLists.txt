@@ -11,8 +11,7 @@ find_package(ROOT COMPONENTS MathCore GenVector Geom REQUIRED)
 find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 find_package(Geant4)
 
-set(CMAKE_MODULE_PATH CMAKE_MODULE_PATH $ENV{HOME}/stow/npdet/lib)
-find_package(NPDet COMPONENTS DD4podIO DDG4_PIDsdet HINTS $ENV{HOME}/stow/npdet/lib $ENV{HOME}/stow/npdet NO_DEFAULT_PATH)
+find_package(NPDet COMPONENTS DD4podIO DDG4_PIDsdet )
 
 find_package(GaudiProject)
 
