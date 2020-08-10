@@ -16,8 +16,8 @@ compile:
   before_script:
     - pwd &&  ls -lrth
   script:
-    - git clone https://juggler-ci:_Pgt8fx-X2bnxgdu_8n_@eicweb.phy.anl.gov/EIC/juggler.git juggler
-    - cd juggler && mkdir build && cd build && cmake .. && make
+    - ls -lrth && mkdir build && cd build && cmake .. && make
+    #- git clone https://juggler-ci:_Pgt8fx-X2bnxgdu_8n_@eicweb.phy.anl.gov/EIC/juggler.git juggler
 
 run_example:
   stage: run
