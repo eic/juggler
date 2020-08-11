@@ -6,14 +6,16 @@ podioevent   = EICDataSvc("EventDataSvc", inputs=["derp.root"], OutputLevel=DEBU
 
 from Configurables import PodioInput
 from Configurables import Jug__Digi__ExampleCaloDigi as ExampleCaloDigi
-podioinput = PodioInput("PodioReader", collections=["mcparticles","FAEC_ShHits"], OutputLevel=DEBUG)
+from Configurables import Jug__Digi__UFSDTrackerDigi as UFSDTrackerDigi
+podioinput = PodioInput("PodioReader", collections=["mcparticles","LAEC_PrShHits","LAEC_ShHits","FAEC_PrShHits","FAEC_ShHits","GEMTrackerHits"], OutputLevel=DEBUG)
 caldigi = ExampleCaloDigi(inputHitCollection="FAEC_ShHits",outputHitCollection="RawFAECShowerHits")
+ufsd_digi = UFSDTrackerDigi(inputHitCollection="GEMTrackerHits",outputHitCollection="GEMRawHits")
 
 out = PodioOutput("out", filename="test.root")
 out.outputCommands = ["keep *"]
 
 ApplicationMgr(
-    TopAlg = [podioinput, caldigi, out
+    TopAlg = [podioinput, caldigi,ufsd_digi, out
               ],
     EvtSel = 'NONE',
     EvtMax   = 5,

@@ -41,12 +41,13 @@ namespace Jug {
         //std::cout << ahit << "\n";
         if(cell_hit_map.count(ahit.cellID()) == 0) {
           cell_hit_map[ahit.cellID()] = rawhits->size();
-          eic::RawTrackerHit rawhit((long long)ahit.cellID(), (int)ahit.energyDeposit() * 100, ahit.position().t);
+          eic::RawTrackerHit rawhit((long long)ahit.cellID(), ahit.truth().time*100000, (int)ahit.energyDeposit() * 10000);
           rawhits->push_back(rawhit);
         } else {
            auto hit = (*rawhits)[cell_hit_map[ahit.cellID()]];
            auto ch = hit.charge();
-           hit.charge( ch  + (int)ahit.energyDeposit() * 100);
+           hit.charge( ch  + (int)ahit.energyDeposit() * 10000);
+           hit.time(ahit.truth().time*100000);
         }
       }
       return StatusCode::SUCCESS;
