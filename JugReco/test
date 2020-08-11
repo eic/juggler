@@ -1,0 +1,10 @@
+  TruthSeedSelector::Config particleSelectorCfg;
+  particleSelectorCfg.inputParticles = particleReader.outputParticles;
+  particleSelectorCfg.inputHitParticlesMap =
+      clusterReaderCfg.outputHitParticlesMap;
+  particleSelectorCfg.outputParticles = "particles_selected";
+  particleSelectorCfg.ptMin = 1_GeV;
+  particleSelectorCfg.nHitsMin = 9;
+  sequencer.addAlgorithm(
+      std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
+
