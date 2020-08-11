@@ -52,7 +52,11 @@ public:
   /// Inform that a new incident has occurred
   virtual void handle(const Incident& inc) final;
 
+  virtual std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry() const;
+
 private:
+  // Tracking  Geometry
+  std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeo;
   /// Pointer to the incident service
   ServiceHandle<IIncidentSvc> m_incidentSvc;
   /// Pointer to the interface to the DD4hep geometry
@@ -66,5 +70,7 @@ private:
   // Flag set to true if any incident is fired from geometry constructors
   bool m_failureFlag;
 };
+
+inline std::shared_ptr<const Acts::TrackingGeometry> GeoSvc::trackingGeometry() const { return m_trackingGeo; }
 
 #endif  // GEOSVC_H
