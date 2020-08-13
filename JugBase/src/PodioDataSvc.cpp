@@ -7,7 +7,6 @@
 
 #include "TTree.h"
 
-/// Service initialisation
 StatusCode PodioDataSvc::initialize() {
   // Nothing to do: just call base class initialisation
   StatusCode status = DataSvc::initialize();
@@ -33,12 +32,12 @@ StatusCode PodioDataSvc::initialize() {
   }
   return status;
 }
-/// Service reinitialisation
+
 StatusCode PodioDataSvc::reinitialize() {
   // Do nothing for this service
   return StatusCode::SUCCESS;
 }
-/// Service finalization
+
 StatusCode PodioDataSvc::finalize() {
   m_cnvSvc = 0; // release
   DataSvc::finalize().ignore();

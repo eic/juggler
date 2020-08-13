@@ -23,12 +23,12 @@ DECLARE_COMPONENT(GeoSvc)
 
 GeoSvc::GeoSvc(const std::string& name, ISvcLocator* svc)
     : base_class(name, svc)
-    , m_incidentSvc("IncidentSvc", "GeoSvc")
+    //, m_incidentSvc("IncidentSvc", "GeoSvc")
     ,m_trackingGeo(nullptr)
     , m_dd4hepgeo(0)
     //, m_geant4geo(0)
     , m_log(msgSvc(), name)
-    , m_failureFlag(false) {}
+    {}
 
 GeoSvc::~GeoSvc() {
   if (m_dd4hepgeo){
@@ -48,7 +48,7 @@ StatusCode GeoSvc::initialize() {
   }
   uint printoutLevel = msgLevel();
   dd4hep::setPrintLevel(dd4hep::PrintLevel(printoutLevel));
-  m_incidentSvc->addListener(this, "GeometryFailure");
+  //m_incidentSvc->addListener(this, "GeometryFailure");
   if (buildDD4HepGeo().isFailure())
     m_log << MSG::ERROR << "Could not build DD4Hep geometry" << endmsg;
   else
@@ -58,9 +58,9 @@ StatusCode GeoSvc::initialize() {
   //  m_log << MSG::ERROR << "Could not build Geant4 geometry" << endmsg;
   //else
   //  m_log << MSG::INFO << "Geant4 geometry SUCCESSFULLY built" << endmsg;
-  if (m_failureFlag) {
-    return StatusCode::FAILURE;
-  }
+  //if (m_failureFlag) {
+  //  return StatusCode::FAILURE;
+  //}
   Acts::Logging::Level geoMsgLevel;                                                                                                                                                                            
   switch (msgLevel()) {                                                                                                                                                                                        
   case (MSG::DEBUG):                                                                                                                                                                                           
@@ -84,8 +84,8 @@ StatusCode GeoSvc::initialize() {
   default:                                                                                                                                                                                                     
     geoMsgLevel = Acts::Logging::VERBOSE;                                                                                                                                                                      
   }                                                                                                                                                                                                            
-  m_trackingGeo = std::move(Acts::convertDD4hepDetector(m_dd4hepgeo->world(), geoMsgLevel, Acts::equidistant,                                                                                              
-                                                        Acts::equidistant, Acts::equidistant));      
+  //m_trackingGeo = std::move(Acts::convertDD4hepDetector(m_dd4hepgeo->world(), geoMsgLevel, Acts::equidistant,                                                                                              
+  //                                                      Acts::equidistant, Acts::equidistant));      
   return StatusCode::SUCCESS;
 }
 
@@ -107,9 +107,9 @@ StatusCode GeoSvc::buildDD4HepGeo() {
   return StatusCode::SUCCESS;
 }
 
-dd4hep::Detector* GeoSvc::lcdd() { return (m_dd4hepgeo); }
+dd4hep::Detector* GeoSvc::detector() { return (m_dd4hepgeo); }
 
-dd4hep::DetElement GeoSvc::getDD4HepGeo() { return (lcdd()->world()); }
+dd4hep::DetElement GeoSvc::getDD4HepGeo() { return (detector()->world()); }
 
 //StatusCode GeoSvc::buildGeant4Geo() {
 //  std::shared_ptr<G4VUserDetectorConstruction> detector(new det::GeoConstruction(*lcdd()));
@@ -122,9 +122,9 @@ dd4hep::DetElement GeoSvc::getDD4HepGeo() { return (lcdd()->world()); }
 
 //G4VUserDetectorConstruction* GeoSvc::getGeant4Geo() { return (m_geant4geo.get()); }
 
-void GeoSvc::handle(const Incident& inc) {
-  error() << "Handling incident '" << inc.type() << "'" << endmsg;
-  if (!inc.type().compare("GeometryFailure")) {
-    m_failureFlag = true;
-  }
-}
+//void GeoSvc::handle(const Incident& inc) {
+//  error() << "Handling incident '" << inc.type() << "'" << endmsg;
+//  if (!inc.type().compare("GeometryFailure")) {
+//    m_failureFlag = true;
+//  }
+//}

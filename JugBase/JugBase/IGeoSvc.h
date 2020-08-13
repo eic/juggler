@@ -29,7 +29,6 @@ public:
   DeclareInterfaceID(IGeoSvc, 1, 0);
   // receive DD4hep Geometry
   virtual dd4hep::DetElement getDD4HepGeo() = 0;
-  virtual dd4hep::Detector* lcdd() = 0;
   virtual dd4hep::Detector* detector() = 0;
   virtual std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry() const = 0;
   // receive Geant4 Geometry

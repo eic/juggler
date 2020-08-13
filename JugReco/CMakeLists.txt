@@ -9,6 +9,7 @@ find_package(EICD REQUIRED)
 #find_package(podio 0.11.01 REQUIRED)
 #include_directories(${podio_INCLUDE_DIR})
 
+find_package(Acts REQUIRED COMPONENTS Core IdentificationPlugin TGeoPlugin DD4hepPlugin )
 find_package(ROOT COMPONENTS RIO Tree Core REQUIRED)
 find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 
@@ -26,17 +27,17 @@ gaudi_install_python_modules()
 #  podio::podioRootIO
 #  )
 
-#gaudi_add_module(JugRecoPlugins
-#                 src/components/*.cpp 
-#                 LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO EICD::eicd)
+gaudi_add_module(JugRecoPlugins
+                 src/components/*.cpp 
+                 LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO EICD::eicd)
 
 #gaudi_add_test(ProduceForReadTest
 #               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 #               FRAMEWORK tests/options/simple_producer.py)
-#gaudi_add_test(ExCaloReco
-#               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-#               FRAMEWORK tests/options/example_caloReco.py
-#               )
+gaudi_add_test(loggerTest
+               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+               FRAMEWORK tests/options/testLogger.py
+               )
 #gaudi_add_test(CheckReadCollectionSize
 #               ENVIRONMENT PYTHONPATH+=${PODIO_PYTHON_DIR}
 #               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}

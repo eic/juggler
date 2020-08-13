@@ -22,6 +22,10 @@ class PodioDataSvc : public DataSvc {
 public:
   typedef std::vector<std::pair<std::string, podio::CollectionBase*>> CollRegistry;
 
+  /** Initialize the service.
+   *  - attaches data loader
+   *  - registers input filenames  
+   */
   virtual StatusCode initialize();
   virtual StatusCode reinitialize();
   virtual StatusCode finalize();

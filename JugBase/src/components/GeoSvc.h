@@ -13,9 +13,6 @@
 #include "JugBase/IGeoSvc.h"
 
 // Gaudi
-#include "GaudiKernel/IIncidentListener.h"
-#include "GaudiKernel/IIncidentSvc.h"
-#include "GaudiKernel/Incident.h"
 #include "GaudiKernel/MsgStream.h"
 #include "GaudiKernel/Service.h"
 #include "GaudiKernel/ServiceHandle.h"
@@ -23,52 +20,50 @@
 // DD4Hep
 #include "DD4hep/Detector.h"
 
-//// Geant4
-//#include "G4RunManager.hh"
-//#include "G4VUserDetectorConstruction.hh"
-
-class GeoSvc : public extends2<Service, IGeoSvc, IIncidentListener> {
+class GeoSvc : public extends<Service, IGeoSvc> {
 
 public:
-  /// Default constructor
   GeoSvc(const std::string& name, ISvcLocator* svc);
 
-  /// Destructor
   virtual ~GeoSvc();
-  /// Initialize function
+  
   virtual StatusCode initialize() final;
-  /// Finalize function
+  
   virtual StatusCode finalize() final;
-  /// This function generates the DD4hep geometry
+ 
+  /** Build the dd4hep geometry.
+   * This function generates the DD4hep geometry.
+   */
   StatusCode buildDD4HepGeo();
-  /// This function generates the Geant4 geometry
-  //StatusCode buildGeant4Geo();
-  // receive DD4hep Geometry
-  virtual dd4hep::DetElement getDD4HepGeo() override;
-  virtual dd4hep::Detector* lcdd() override;
-  virtual dd4hep::Detector* detector() override { return lcdd();}
-  // receive Geant4 Geometry
-  //virtual G4VUserDetectorConstruction* getGeant4Geo() override;
-  /// Inform that a new incident has occurred
-  virtual void handle(const Incident& inc) final;
 
+  /** Get the top level DetElement.
+   *   DD4hep Geometry
+   */
+  virtual dd4hep::DetElement getDD4HepGeo() override;
+  
+
+  /** Get the main dd4hep Detector.
+   * Returns the pointer to the main dd4hep detector class.
+   */
+  virtual dd4hep::Detector* detector() override ;
+
+  /** Gets the ACTS tracking geometry.
+   */
   virtual std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry() const;
 
 private:
-  // Tracking  Geometry
+
+  /// ACTS Tracking  Geometry
   std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeo;
-  /// Pointer to the incident service
-  ServiceHandle<IIncidentSvc> m_incidentSvc;
+
   /// Pointer to the interface to the DD4hep geometry
   dd4hep::Detector* m_dd4hepgeo;
-  /// Pointer to the detector construction of DDG4
-  //std::shared_ptr<G4VUserDetectorConstruction> m_geant4geo;
+
   /// XML-files with the detector description
   Gaudi::Property<std::vector<std::string>> m_xmlFileNames{this, "detectors", {}, "Detector descriptions XML-files"};
-  // output
+
+  /// output
   MsgStream m_log;
-  // Flag set to true if any incident is fired from geometry constructors
-  bool m_failureFlag;
 };
 
 inline std::shared_ptr<const Acts::TrackingGeometry> GeoSvc::trackingGeometry() const { return m_trackingGeo; }

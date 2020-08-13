@@ -38,8 +38,10 @@ gaudi_add_module(JugBasePlugins
 #               FRAMEWORK tests/options/simple_producer.py)
 gaudi_add_test(ReadTest
                WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-               FRAMEWORK tests/options/simple_reader.py
-               DEPENDS ProduceForReadTest)
+               FRAMEWORK tests/options/simple_reader.py)
+gaudi_add_test(ReadGeoTest
+               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+               FRAMEWORK tests/options/reader_with_geosvc.py)
 #gaudi_add_test(CheckReadCollectionSize
 #               ENVIRONMENT PYTHONPATH+=${PODIO_PYTHON_DIR}
 #               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
