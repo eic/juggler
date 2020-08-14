@@ -3,8 +3,6 @@
 #include "JugBase/DataHandle.h"
 
 #include "dd4pod/Geant4ParticleCollection.h"
-//#include "datamodel/MCParticleCollection.h"
-//#include "datamodel/TrackHitCollection.h"
 
 class ReadTestConsumer : public GaudiAlgorithm {
 
