@@ -104,13 +104,11 @@ namespace Jug {
       return StatusCode::SUCCESS;
     }
     StatusCode execute() override {
-
       // input collection
       const dd4pod::CalorimeterHitCollection* simhits = m_inputHitCollection.get();
       // Create output collections
       auto rawhits = m_outputHitCollection.createAndPut();
       eic::RawCalorimeterHitCollection* rawHitCollection = new eic::RawCalorimeterHitCollection();
-
       for(const auto& ahit : *simhits) {
         //std::cout << ahit << "\n";
         eic::RawCalorimeterHit rawhit((long long)ahit.cellID(), (long long)ahit.cellID(),

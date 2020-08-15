@@ -3,7 +3,7 @@ from Gaudi.Configuration import *
 from Configurables import ApplicationMgr, EICDataSvc, PodioOutput, GeoSvc
 
 podioevent   = EICDataSvc("EventDataSvc", inputs=["derp.root"], OutputLevel=DEBUG)
-geo_service  = GeoSvc(detectors=["topside/vertex_tracker.xml"])
+geo_service  = GeoSvc(detectors=["topside/vertex_barrel.xml")
 
 # reads HepMC text file and write the HepMC::GenEvent to the data service
 from Configurables import PodioInput, ReadTestConsumer

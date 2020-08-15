@@ -1,19 +1,21 @@
 from Gaudi.Configuration import *
 
 from GaudiKernel.DataObjectHandleBase import DataObjectHandleBase
-from Configurables import ApplicationMgr, EICDataSvc, PodioOutput
+from Configurables import ApplicationMgr, EICDataSvc, PodioOutput, GeoSvc
 
-
+geo_service  = GeoSvc("GeoSvc")#detectors=["topside/vertex_tracker.xml"])
 podioevent   = EICDataSvc("EventDataSvc", inputs=["derp.root"], OutputLevel=DEBUG)
 
 from Configurables import PodioInput
 from Configurables import Jug__Digi__ExampleCaloDigi as ExampleCaloDigi
-from Configurables import Jug__Digi__ExampleCaloDigiFunc as ExampleCaloDigiFunc
+#from Configurables import Jug__Digi__ExampleCaloDigiFunc as ExampleCaloDigiFunc
 from Configurables import Jug__Digi__UFSDTrackerDigi as UFSDTrackerDigi
+from Configurables import Jug__Reco__TrackerHitReconstruction as TrackerHitReconstruction
 podioinput = PodioInput("PodioReader", collections=["mcparticles","LAEC_PrShHits","LAEC_ShHits","FAEC_PrShHits","FAEC_ShHits","GEMTrackerHits"], OutputLevel=DEBUG)
-#caldigi = ExampleCaloDigi(inputHitCollection="FAEC_ShHits",outputHitCollection="RawFAECShowerHits")
+caldigi = ExampleCaloDigi(inputHitCollection="FAEC_ShHits",outputHitCollection="RawFAECShowerHits")
 ufsd_digi = UFSDTrackerDigi(inputHitCollection="GEMTrackerHits",outputHitCollection="GEMRawHits")
-caldigifunc = ExampleCaloDigiFunc(InputData="FAEC_ShHits",OutputData="DERP")
+#caldigifunc = ExampleCaloDigiFunc(InputData="FAEC_ShHits",OutputData="DERP")
+trackerhit = TrackerHitReconstruction(inputHitCollection="GEMRawHits",outputHitCollection="GEMTrackHits")
 
 types = []
 
@@ -22,7 +24,7 @@ print("---------------------------------------\n")
 print("---\n# List of input and output types by class")
 for configurable in sorted([
         PodioInput, EICDataSvc, PodioOutput,
-        ExampleCaloDigiFunc,ExampleCaloDigi, UFSDTrackerDigi ],
+        ExampleCaloDigi,ExampleCaloDigi, UFSDTrackerDigi ],
                            key=lambda c: c.getType()):
     print("\"{}\":".format(configurable.getType()))
     props = configurable.getDefaultProperties()
@@ -39,7 +41,7 @@ out.outputCommands = ["keep *"]
 
 
 ApplicationMgr(
-    TopAlg = [podioinput, ufsd_digi,caldigifunc, out
+    TopAlg = [podioinput, caldigi,ufsd_digi,trackerhit, out
               ],
     EvtSel = 'NONE',
     EvtMax   = 5,
