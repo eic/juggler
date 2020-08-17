@@ -19,6 +19,7 @@
 //#include "GaudiExamples/MyTrack.h"
 #include "eicd/RawTrackerHitCollection.h"
 #include "eicd/TrackerHitCollection.h"
+#include "JugReco/SourceLinks.h"
 
 namespace Jug {
   namespace Reco {
@@ -65,8 +66,6 @@ namespace Jug {
       // input collection
       const eic::RawTrackerHitCollection* rawhits = m_inputHitCollection.get();
       // Create output collections
-      //dd4hep::rec::CellIDPositionConverter cellid_converter(*(m_geoSvc->detector()));
-      
       auto rec_hits = m_outputHitCollection.createAndPut();
       for(const auto& ahit : *rawhits) {
         debug() << "cell ID : " << ahit.cellID() << endmsg;

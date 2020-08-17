@@ -85,9 +85,8 @@ StatusCode GeoSvc::initialize() {
   default:
     geoMsgLevel = Acts::Logging::VERBOSE;
   }
-  //m_trackingGeo = std::move(Acts::convertDD4hepDetector(
-  //    m_dd4hepgeo->world(), geoMsgLevel, Acts::equidistant, Acts::equidistant,
-  //    Acts::equidistant));
+  m_trackingGeo = std::move(Acts::convertDD4hepDetector(m_dd4hepgeo->world(), geoMsgLevel, Acts::equidistant,
+                                                        Acts::equidistant, Acts::equidistant));
   return StatusCode::SUCCESS;
 }
 
