@@ -29,6 +29,7 @@ gaudi_install_python_modules()
 gaudi_add_module(JugDigiPlugins
                  src/components/*.cpp 
                  LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO EICD::eicd)
+target_compile_options(JugDigiPlugins PRIVATE -Wno-suggest-override)
 
 #gaudi_add_test(ProduceForReadTest
 #               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}

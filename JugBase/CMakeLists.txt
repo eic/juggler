@@ -28,10 +28,12 @@ target_link_libraries(JugBase
   podio::podioRootIO
   ActsCore ActsDD4hepPlugin
   )
+target_compile_options(JugBase PRIVATE -Wno-suggest-override)
 
 gaudi_add_module(JugBasePlugins
                  src/components/*.cpp src/components/ReadTestConsumer.cxx
                  LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO  ActsCore ActsDD4hepPlugin)
+target_compile_options(JugBasePlugins PRIVATE -Wno-suggest-override)
 
 #gaudi_add_test(ProduceForReadTest
 #               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}

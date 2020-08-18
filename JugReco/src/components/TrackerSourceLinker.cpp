@@ -25,6 +25,7 @@
 #include "DDRec/SurfaceManager.h"
 #include "DDRec/Surface.h"
 
+#include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
@@ -97,13 +98,14 @@ namespace Jug::Reco {
       for(const auto& ahit : *hits) {
 
         Acts::BoundMatrix cov           = Acts::BoundMatrix::Zero();
-        cov(Acts::eLOC_0, Acts::eLOC_0) = ahit.covMatrix(0)*ahit.covMatrix(0);
-        cov(Acts::eLOC_1, Acts::eLOC_1) = ahit.covMatrix(1)*ahit.covMatrix(1);
+        cov(Acts::eLOC_0, Acts::eLOC_0) = ahit.covMatrix(0)*Acts::UnitConstants::mm;//*ahit.covMatrix(0);
+        cov(Acts::eLOC_1, Acts::eLOC_1) = ahit.covMatrix(1)*Acts::UnitConstants::mm;//*ahit.covMatrix(1);
 
         debug() << "cell ID : " << ahit.cellID0() << endmsg;
         auto vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID0());
         auto vol_id = vol_ctx->identifier;
         debug() << " vol_id : " <<  vol_id << endmsg;
+        debug() << " hit : " <<  ahit << endmsg;
 
         const auto is = m_surfaces.find(vol_id);
         if (is == m_surfaces.end()) {
