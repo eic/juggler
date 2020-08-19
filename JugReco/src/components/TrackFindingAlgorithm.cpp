@@ -52,7 +52,6 @@
 #include <random>
 #include <stdexcept>
 
-
 namespace Jug::Reco {
   using namespace Acts::UnitLiterals;
 
@@ -69,8 +68,7 @@ namespace Jug::Reco {
 
   public:
     DataHandle<SourceLinkContainer>      m_inputSourceLinks{"inputSourceLinks", Gaudi::DataHandle::Reader, this};
-    DataHandle<TrackParametersContainer> m_inputInitialTrackParameters{"inputInitialTrackParameters",
-                                                                       Gaudi::DataHandle::Reader, this};
+    DataHandle<TrackParametersContainer> m_inputInitialTrackParameters{"inputInitialTrackParameters", Gaudi::DataHandle::Reader, this};
     DataHandle<TrajectoryContainer>      m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
     TrackFinderFunction                  m_trackFinderFunc;
     SmartIF<IGeoSvc> m_geoSvc;
@@ -95,22 +93,8 @@ namespace Jug::Reco {
     static TrackFinderFunction makeTrackFinderFunction(std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
                                                        BFieldVariant                                 magneticField);
 
-    // struct Config {
-    //  /// Input source links collection.
-    //  std::string inputSourceLinks;
-    //
-    //  /// Input initial track parameter estimates for for each proto track.
-    //  std::string inputInitialTrackParameters;
-    //
-    //  /// Output find trajectories collection.
-    //  std::string outputTrajectories;
-    //
-    //  /// Type erased track finder function.
+    /// Type erased track finder function.
     TrackFinderFunction findTracks;
-    //
-    //  /// CKF source link selector config
-    //  Acts::CKFSourceLinkSelector::Config sourcelinkSelectorCfg;
-    //};
 
     StatusCode initialize() override {
       if (GaudiAlgorithm::initialize().isFailure())
@@ -149,7 +133,7 @@ namespace Jug::Reco {
       //// Construct a perigee surface as the target surface
       auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3D{0., 0., 0.});
 
-      ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("TrackFindingAlgorithm Logger", Acts::Logging::VERBOSE));
+      ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("TrackFindingAlgorithm Logger", Acts::Logging::INFO));
 
       // Perform the track finding for each starting parameter
       // @TODO: use seeds from track seeding algorithm as starting parameter
@@ -172,8 +156,9 @@ namespace Jug::Reco {
           // Get the track finding output object
           const auto& trackFindingOutput = result.value();
           // Create a SimMultiTrajectory
-          trajectories->emplace_back(std::move(trackFindingOutput.fittedStates), std::move(trackFindingOutput.trackTips),
-                                    std::move(trackFindingOutput.fittedParameters));
+          trajectories->emplace_back(std::move(trackFindingOutput.fittedStates),
+                                     std::move(trackFindingOutput.trackTips),
+                                     std::move(trackFindingOutput.fittedParameters));
         } else {
           ACTS_WARNING("Track finding failed for truth seed " << iseed << " with error" << result.error());
           // Track finding failed, but still create an empty SimMultiTrajectory

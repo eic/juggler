@@ -72,7 +72,8 @@ class SourceLink {
 
   friend constexpr bool operator==(const SourceLink& lhs,
                                    const SourceLink& rhs) {
-    return lhs.geometryId() == rhs.geometryId();//lhs.m_truthHit == rhs.m_truthHit;
+    return lhs.geometryId() == rhs.geometryId();
+    //lhs.m_truthHit == rhs.m_truthHit;
   }
 };
 

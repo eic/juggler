@@ -8,7 +8,7 @@
 #include "GaudiKernel/Algorithm.h"
 #include <GaudiKernel/DataObjectHandle.h>
 #include <GaudiKernel/GaudiException.h>
-#include <GaudiKernel/Property.h>
+#include <Gaudi/Property.h>
 #include <GaudiKernel/ServiceLocatorHelper.h>
 
 #include "TTree.h"
