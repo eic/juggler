@@ -18,7 +18,7 @@ compile:
   script:
     - export homedir=$(pwd) &&  pwd && cd /tmp && git clone --depth=1 https://eicweb.phy.anl.gov/EIC/NPDet.git && mkdir build && cd build && cmake ../NPDet/. && make -j20 install
     - cd /tmp && git clone --depth=1 https://eicweb.phy.anl.gov/EIC/eicd.git && mkdir eicd_build && cd eicd_build && cmake ../eicd/. && make -j20 install
-    - cd $homedir && ls -lrth && mkdir build && cd build && cmake .. && make -j2
+    - cd $homedir && ls -lrth && mkdir build && cd build && cmake .. && make -j1
 
 run_example:
   stage: run
