@@ -15,50 +15,72 @@
 namespace Jug {
   namespace Digi {
 
-   class HadronicCalDigi : public GaudiAlgorithm {
-   public:
-     Gaudi::Property<double>                      m_energyResolution{this, "energyResolution", 50/*percent/sqrt(E)*/};
-     Rndm::Numbers                                m_gaussDist;
-     DataHandle<dd4pod::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-     DataHandle<eic::RawCalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
-   public:
+    /** Hadronic Calorimeter Digitization.
+     *
+     * \f$ \sigma/E = a/\sqrt{E} \oplus b \f$
+     *
+     * \param a stochastic term (0.5 is 50%)
+     * \param b constant term (0.05 is 5%)
+     *
+     * Resolution terms are added in quadrature. 
+     * When digitizing they are assumed to be independent random variables and are sampled as such.
+     *
+     *
+     */
+    class HadronicCalDigi : public GaudiAlgorithm {
+    public:
+      Gaudi::Property<double>                      m_energyResolution_a{this, "energyResolution_a", 0.5 /*50 percent*/};
+      Gaudi::Property<double>                      m_energyResolution_b{this, "energyResolution_b", 0.05 /* 5 percent*/};
+      Rndm::Numbers                                m_gaussDist_a;
+      Rndm::Numbers                                m_gaussDist_b;
+      DataHandle<dd4pod::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+                                                                        this};
+      DataHandle<eic::RawCalorimeterHitCollection> m_outputHitCollection{"outputHitCollection",
+                                                                         Gaudi::DataHandle::Writer, this};
 
-    HadronicCalDigi(const std::string& name, ISvcLocator* svcLoc)
-        : GaudiAlgorithm(name, svcLoc) {
-          declareProperty("inputHitCollection", m_inputHitCollection,"");
-          declareProperty("outputHitCollection", m_outputHitCollection, "");
+    public:
+      HadronicCalDigi(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+        declareProperty("inputHitCollection", m_inputHitCollection, "");
+        declareProperty("outputHitCollection", m_outputHitCollection, "");
+      }
+
+      StatusCode initialize() override {
+        IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
+        StatusCode   sc      = m_gaussDist_a.initialize(randSvc, Rndm::Gauss(0.0, m_energyResolution_a.value() ));
+        if (!sc.isSuccess()) {
+          return StatusCode::FAILURE;
         }
-
-    StatusCode initialize() override {
-      IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
-      StatusCode   sc      = m_gaussDist.initialize( randSvc, Rndm::Gauss(1.0, m_energyResolution.value()/100.0));
-      if (!sc.isSuccess()) {
-        return StatusCode::FAILURE;
+        sc      = m_gaussDist_b.initialize(randSvc, Rndm::Gauss(0.0, m_energyResolution_b.value()));
+        if (!sc.isSuccess()) {
+          return StatusCode::FAILURE;
+        }
+        if (GaudiAlgorithm::initialize().isFailure())
+          return StatusCode::FAILURE;
+        // f_counter = m_starting_value.value();
+        return StatusCode::SUCCESS;
       }
-      if (GaudiAlgorithm::initialize().isFailure()) return StatusCode::FAILURE;
-      //f_counter = m_starting_value.value();
-      return StatusCode::SUCCESS;
-    }
 
-    StatusCode execute() override {
-      // input collection
-      const dd4pod::CalorimeterHitCollection* simhits = m_inputHitCollection.get();
-      // Create output collections
-      auto rawhits = m_outputHitCollection.createAndPut();
-      eic::RawCalorimeterHitCollection* rawHitCollection = new eic::RawCalorimeterHitCollection();
-      for(const auto& ahit : *simhits) {
-        //std::cout << ahit << "\n";
-        // here 1000 is arbitrary
-        eic::RawCalorimeterHit rawhit((long long)ahit.cellID(), (long long)ahit.cellID(),
-                        (long long)ahit.energyDeposit()*1000, 0);
-        rawhits->push_back(rawhit);
+      StatusCode execute() override {
+        // input collection
+        const dd4pod::CalorimeterHitCollection* simhits = m_inputHitCollection.get();
+        // Create output collections
+        auto                              rawhits          = m_outputHitCollection.createAndPut();
+        eic::RawCalorimeterHitCollection* rawHitCollection = new eic::RawCalorimeterHitCollection();
+        for (const auto& ahit : *simhits) {
+          // std::cout << ahit << "\n";
+          double  sqrtE = std::sqrt(ahit.energyDeposit()) ;
+          double aterm = m_gaussDist_a()*sqrtE;
+          double bterm = ahit.energyDeposit()*m_gaussDist_b();
+          // here 1000 is arbitrary scale factor
+          eic::RawCalorimeterHit rawhit((long long)ahit.cellID(), (ljong long)ahit.cellID(),
+                                        (long long)(ahit.energyDeposit() +aterm + bterm) * 1000, 0);
+          rawhits->push_back(rawhit);
+        }
+        return StatusCode::SUCCESS;
       }
-      return StatusCode::SUCCESS;
-    }
+    };
+    DECLARE_COMPONENT(HadronicCalDigi)
 
-  };
-  DECLARE_COMPONENT(HadronicCalDigi)
-
-  } // namespace Examples
-} // namespace Gaudi
+  } // namespace Digi
+} // namespace Jug
 
