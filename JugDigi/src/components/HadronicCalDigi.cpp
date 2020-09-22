@@ -3,6 +3,8 @@
 #include "GaudiAlg/Transformer.h"
 #include "GaudiAlg/Producer.h"
 #include "GaudiAlg/GaudiTool.h"
+#include "GaudiKernel/RndmGenerators.h"
+#include "Gaudi/Property.h"
 
 // FCCSW
 #include "JugBase/DataHandle.h"
