@@ -27,14 +27,12 @@ namespace Jug {
     Gaudi::Property<double>      m_energyResolution{this, "energyResolution", 0.02};  // 2% sqrt(E)
     Rndm::Numbers m_gaussDist;
     DataHandle<dd4pod::CalorimeterHitCollection> m_inputHitCollection{ "inputHitCollection",  Gaudi::DataHandle::Reader, this};
-    DataHandle<dd4pod::Geant4ParticleCollection> m_inputMCParticles{   "inputMCParticles",   Gaudi::DataHandle::Reader, this};
     DataHandle<eic::RawCalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
 
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     CrystalEndcapsDigi(const std::string& name, ISvcLocator* svcLoc)
         : GaudiAlgorithm(name, svcLoc) {
           declareProperty("inputHitCollection", m_inputHitCollection,"");
-	  declareProperty("inputMCParticles", m_inputMCParticles,"");
           declareProperty("outputHitCollection", m_outputHitCollection, "");
         }
     StatusCode initialize() override {
@@ -50,19 +48,13 @@ namespace Jug {
     StatusCode execute() override {
       // input collections
       const dd4pod::CalorimeterHitCollection* simhits = m_inputHitCollection.get();
-      const dd4ppod::Geant4ParticleData*      mcparts = m_inputParticleData.get();
       // Create output collections
       auto rawhits = m_outputHitCollection.createAndPut();
       eic::RawCalorimeterHitCollection* rawHitCollection = new eic::RawCalorimeterHitCollection();
-      
       for(const auto& ahit : *simhits){
-      	for(const auto& part : *mcparts){
-		if(ahit.cellID() > 0.0){
-	   		eic::RawCalorimeterHit rawhit((long long)ahit.cellID(), (long long)ahit.cellID(), 
-				(long long)ahit.energyDeposit * 100.0 + m_gaussDist*sqrt(ahit.energyDeposit), (long long)part.time());
-          		rawhits->push_back(rawhit);
-		}
-     	 }
+	   	eic::RawCalorimeterHit rawhit((long long)ahit.cellID(), (long long)ahit.cellID(), 
+			(long long)ahit.energyDeposit * 100.0 + m_gaussDist*sqrt(ahit.energyDeposit), (double)ahit.truth.time);
+          	rawhits->push_back(rawhit);
       }
       return StatusCode::SUCCESS;
     }
