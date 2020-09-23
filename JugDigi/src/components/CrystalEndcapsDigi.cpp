@@ -9,10 +9,9 @@
 #include "JugBase/DataHandle.h"
 
 // Event Model related classes
-#include "eicd/CalorimeterHitCollection.h"
-#include "eicd/CalorimeterHitData.h"
+#include "eicd/RawCalorimeterHitCollection.h"
+#include "eicd/RawCalorimeterHitData.h"
 #include "dd4pod/CalorimeterHitCollection.h"
-#include "dd4pod/Geant4ParticleCollection.h"
 
 namespace Jug {
   namespace Digi {
@@ -53,7 +52,7 @@ namespace Jug {
       eic::RawCalorimeterHitCollection* rawHitCollection = new eic::RawCalorimeterHitCollection();
       for(const auto& ahit : *simhits){
 	   	eic::RawCalorimeterHit rawhit((long long)ahit.cellID(), (long long)ahit.cellID(), 
-			(long long)(ahit.energyDeposit() + m_gaussDist*sqrt(ahit.energyDeposit) * 100.0, (double)ahit.truth().time);
+			(long long)(ahit.energyDeposit() + m_gaussDist*sqrt(ahit.energyDeposit())) * 100.0, (double)ahit.truth().time);
           	rawhits->push_back(rawhit);
       }
       return StatusCode::SUCCESS;
