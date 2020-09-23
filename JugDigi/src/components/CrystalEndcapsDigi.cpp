@@ -9,10 +9,9 @@
 #include "JugBase/DataHandle.h"
 
 // Event Model related classes
-#include "eicd/CalorimeterHitCollection.h"
-#include "eicd/CalorimeterHitData.h"
+#include "eicd/RawCalorimeterHitCollection.h"
+#include "eicd/RawCalorimeterHitData.h"
 #include "dd4pod/CalorimeterHitCollection.h"
-#include "dd4pod/Geant4ParticleCollection.h"
 
 namespace Jug {
   namespace Digi {
@@ -24,7 +23,7 @@ namespace Jug {
    class CrystalEndcapsDigi : public GaudiAlgorithm {
    public:
   
-    Gaudi::Property<double>      m_energyResolution{this, "energyResolution", 0.02};  // 2% sqrt(E)
+    Gaudi::Property<double>      m_energyResolution{this, "energyResolution", 0.02};  // 2%sqrt(E)
     Rndm::Numbers m_gaussDist;
     DataHandle<dd4pod::CalorimeterHitCollection> m_inputHitCollection{ "inputHitCollection",  Gaudi::DataHandle::Reader, this};
     DataHandle<eic::RawCalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
@@ -53,7 +52,7 @@ namespace Jug {
       eic::RawCalorimeterHitCollection* rawHitCollection = new eic::RawCalorimeterHitCollection();
       for(const auto& ahit : *simhits){
 	   	eic::RawCalorimeterHit rawhit((long long)ahit.cellID(), (long long)ahit.cellID(), 
-			(long long)ahit.energyDeposit * 100.0 + m_gaussDist*sqrt(ahit.energyDeposit), (double)ahit.truth.time);
+			(long long)(ahit.energyDeposit() + m_gaussDist*sqrt(ahit.energyDeposit())) * 100.0, (double)ahit.truth().time);
           	rawhits->push_back(rawhit);
       }
       return StatusCode::SUCCESS;
