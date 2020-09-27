@@ -31,7 +31,7 @@ namespace Jug::Reco {
 class ClusterRecoCoG : public GaudiAlgorithm
 {
 public:
-    Gaudi::Property<double> m_logWeightThres{this, "logWeightThres", 4.2};
+    Gaudi::Property<double> m_logWeightBase{this, "logWeightBase", 3.6};
     DataHandle<eic::ClusterCollection>
         m_clusterCollection{"clusterCollection", Gaudi::DataHandle::Reader, this};
 
@@ -75,7 +75,8 @@ private:
         // center of gravity with logarithmic weighting
         float totalW = 0., x = 0., y = 0., z = 0.;
         for (auto &hit : cl.hits()) {
-            float weight = m_logWeightThres + std::log(hit.energy()/totalE);
+            // suppress low energy contributions
+            float weight = std::max(0., m_logWeightBase + std::log(hit.energy()/totalE));
             totalW += weight;
             x += hit.position().x * weight;
             y += hit.position().y * weight;
