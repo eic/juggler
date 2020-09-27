@@ -28,6 +28,7 @@ gaudi_install_python_modules()
 #  )
 
 gaudi_add_module(JugRecoPlugins
+  src/components/CalorimeterIslandCluster.cpp 
   src/components/TrackerHitReconstruction.cpp 
   src/components/TrackerSourceLinker.cpp 
   src/components/TrackFindingAlgorithm.cpp 
