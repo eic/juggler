@@ -2,7 +2,6 @@
  *  Island Clustering Algorithm for Calorimeter Blocks
  *  1. group all the adjacent modules
  *  2. split the groups between their local maxima with the energy deposit above <minClusterCenterEdep>
- *  3. reconstruct the clustrers
  *
  *  Author: Chao Peng (ANL), 09/27/2020
  *  References:
@@ -39,7 +38,6 @@ class CalorimeterIslandCluster : public GaudiAlgorithm
 public:
     Gaudi::Property<double> m_groupRange{this, "groupRange", 1.8};
     Gaudi::Property<double> m_minClusterCenterEdep{this, "minClusterCenterEdep", 50.0*MeV};
-    Gaudi::Property<double> m_logWeightThres{this, "logWeightThres", 4.2};
     DataHandle<eic::CalorimeterHitCollection>
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::ClusterCollection>
@@ -95,13 +93,6 @@ public:
             auto split_collection = split_group(group, maxima, clusters);
             info() << "hits in a group: " << group.hits_size() <<  ", "
                    << "local maxima: " << maxima.hits_size() << endmsg;
-        }
-
-        // reconstruct hit position for the cluster
-        for (auto &cl : clusters) {
-            reconstruct(cl);
-            info() << cl.energy()/GeV << " GeV, (" << cl.position()[0]/mm << ", "
-                   << cl.position()[1]/mm << ", " << cl.position()[2]/mm << ")" << endmsg;
         }
 
         return StatusCode::SUCCESS;
@@ -237,25 +228,6 @@ private:
             clusters.push_back(cl);
         }
         return scoll;
-    }
-
-    void reconstruct(eic::Cluster cl) {
-        float totalE = 0.;
-        for (auto &hit : cl.hits()) {
-            totalE += hit.energy();
-        }
-        cl.energy(totalE);
-
-        // center of gravity with logarithmic weighting
-        float totalW = 0., x = 0., y = 0., z = 0.;
-        for (auto &hit : cl.hits()) {
-            float weight = m_logWeightThres + std::log(hit.energy()/totalE);
-            totalW += weight;
-            x += hit.position().x * weight;
-            y += hit.position().y * weight;
-            z += hit.position().z * weight;
-        }
-        cl.position() = std::array<float, 3>{x/totalW, y/totalW, z/totalW};
     }
 };
 
