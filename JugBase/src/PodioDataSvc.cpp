@@ -85,7 +85,7 @@ void PodioDataSvc::setCollectionIDs(podio::CollectionIDTable* collectionIds) {
 PodioDataSvc::PodioDataSvc(const std::string& name, ISvcLocator* svc)
     : DataSvc(name, svc), m_collectionIDs(new podio::CollectionIDTable()) {
 
-      m_eventDataTree = new TTree("EVENT", "Events tree");
+      m_eventDataTree = new TTree("events", "Events tree");
     }
 
 /// Standard Destructor
