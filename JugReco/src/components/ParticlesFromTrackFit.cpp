@@ -60,13 +60,18 @@ namespace Jug {
         debug() << "# fitted parameters : " << tsize << endmsg;
         if(tsize == 0 ) continue;
         traj.trajectory().second.visitBackwards(tsize-1, [&](auto&& trackstate) {
-          debug() << trackstate.hasPredicted() << endmsg;
-          debug() << trackstate.predicted() << endmsg;
+          //debug() << trackstate.hasPredicted() << endmsg;
+          //debug() << trackstate.predicted() << endmsg;
           auto params = trackstate.predicted() ;//<< endmsg;
           debug() << 1.0/params[Acts::eQOP] << " GeV" << endmsg;
+          if ( std::abs(1.0 / params[Acts::eQOP]) > 10) {
+            debug() << "skipping" << endmsg;
+            return;
+          }
 
-          eic::Particle p( {params[Acts::ePHI],params[Acts::eTHETA],1.0/params[Acts::eQOP],0.105}, {0.0,0.0,0.0,params[Acts::eT]},
-                          (long long)13*params[Acts::eQOP]/std::abs(params[Acts::eQOP]), 0);
+          eic::Particle p({params[Acts::ePHI], params[Acts::eTHETA], 1.0 / params[Acts::eQOP], 0.105},
+                          {0.0, 0.0, 0.0, params[Acts::eT]},
+                          (long long)13 * params[Acts::eQOP] / std::abs(params[Acts::eQOP]), 0);
           debug() << p << endmsg;
           rec_parts->push_back(p);
         });

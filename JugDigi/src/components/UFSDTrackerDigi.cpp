@@ -10,8 +10,11 @@
 
 // Event Model related classes
 //#include "GaudiExamples/MyTrack.h"
-#include "eicd/RawTrackerHitCollection.h"
+//
+// dd4pod's tracker hit is the input collectiopn
 #include "dd4pod/TrackerHitCollection.h"
+// eicd's RawTrackerHit is the output
+#include "eicd/RawTrackerHitCollection.h"
 
 namespace Jug {
   namespace Digi {
@@ -21,6 +24,12 @@ namespace Jug {
      *
      */
    class UFSDTrackerDigi : public GaudiAlgorithm {
+   public:
+     Gaudi::Property<double>                  m_timeResolution{this, "timeResolution", 10};
+     Rndm::Numbers                            m_gaussDist;
+     DataHandle<dd4pod::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+     DataHandle<eic::RawTrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
+
    public:
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     UFSDTrackerDigi(const std::string& name, ISvcLocator* svcLoc)
@@ -43,7 +52,7 @@ namespace Jug {
       const dd4pod::TrackerHitCollection* simhits = m_inputHitCollection.get();
       // Create output collections
       auto rawhits = m_outputHitCollection.createAndPut();
-      eic::RawTrackerHitCollection* rawHitCollection = new eic::RawTrackerHitCollection();
+      //eic::RawTrackerHitCollection* rawHitCollection = new eic::RawTrackerHitCollection();
       std::map<long long,int> cell_hit_map;
       for(const auto& ahit : *simhits) {
         //std::cout << ahit << "\n";
@@ -61,10 +70,6 @@ namespace Jug {
       return StatusCode::SUCCESS;
     }
 
-    Gaudi::Property<double>      m_timeResolution{this, "timeResolution", 10};
-    Rndm::Numbers m_gaussDist;
-    DataHandle<dd4pod::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-    DataHandle<eic::RawTrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
   };
   DECLARE_COMPONENT(UFSDTrackerDigi)
 

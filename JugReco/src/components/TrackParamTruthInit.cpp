@@ -61,13 +61,13 @@ namespace Jug::Reco {
         cov(Acts::eLOC_1, Acts::eLOC_1) = 0.1 * mm*0.1 * mm;
         cov(Acts::ePHI, Acts::ePHI)     = M_PI / 180.0;
         cov(Acts::eTHETA, Acts::eTHETA) = M_PI / 180.0;
-        cov(Acts::eQOP, Acts::eQOP)     = 1.0 / (0.2 * GeV* 0.2 * GeV);
+        cov(Acts::eQOP, Acts::eQOP)     = 1.0 / (0.3 * GeV* 0.3 * GeV);
         cov(Acts::eT, Acts::eT)         = Acts::UnitConstants::ns;
 
         init_trk_params->emplace_back(std::make_optional(std::move(cov)),
                                       Acts::Vector3D(part.vsx() * mm, part.vsy() * mm, part.vsz() * mm),
                                       Acts::Vector3D(part.psx() * GeV, part.psy() * GeV, part.psz() * GeV),
-                                      ((part.pdgID() > 0) ? 1 : -1), part.time() * Acts::UnitConstants::ns);
+                                      ((part.pdgID() > 0) ? -1 : 1), part.time() * Acts::UnitConstants::ns);
         //part .charge()
 
         debug() << "Invoke track finding seeded by truth particle " << part << endmsg;

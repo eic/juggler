@@ -10,6 +10,7 @@
 
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
 // Forward declarations
 namespace Acts {
   template <typename G>
