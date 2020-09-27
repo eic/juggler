@@ -21,6 +21,7 @@ emcalcluster = IslandCluster(inputHitCollection="RecoEcalHits", outputClusterCol
                              minClusterCenterEdep=30*units.MeV, groupRange=2.0)
 clusterreco = RecoCoG(clusterCollection="EcalClusters", logWeightThres=4.2)
 
+
 out = PodioOutput("out", filename="reco_emcal_electrons_npsim.root")
 out.outputCommands = ["keep EcalClusters"]
 
