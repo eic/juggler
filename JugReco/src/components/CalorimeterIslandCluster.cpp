@@ -1,6 +1,6 @@
 /*
  *  Island Clustering Algorithm for Calorimeter Blocks
- *  1. group all the adjacent modules with the energy deposit above <minModuleEdep>
+ *  1. group all the adjacent modules
  *  2. split the groups between their local maxima with the energy deposit above <minClusterCenterEdep>
  *  3. reconstruct the clustrers
  *
@@ -29,7 +29,6 @@
 
 // Event Model related classes
 #include "eicd/CalorimeterHitCollection.h"
-#include "eicd/RawCalorimeterHitCollection.h"
 #include "eicd/ClusterCollection.h"
 
 using namespace Gaudi::Units;
@@ -38,10 +37,10 @@ namespace Jug::Reco {
 class CalorimeterIslandCluster : public GaudiAlgorithm
 {
 public:
-    Gaudi::Property<double> m_minModuleEdep{this, "minModuleEdep", 0.5*MeV};
+    Gaudi::Property<double> m_groupRange{this, "groupRange", 1.8};
     Gaudi::Property<double> m_minClusterCenterEdep{this, "minClusterCenterEdep", 50.0*MeV};
     Gaudi::Property<double> m_logWeightThres{this, "logWeightThres", 4.2};
-    DataHandle<eic::RawCalorimeterHitCollection>
+    DataHandle<eic::CalorimeterHitCollection>
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::ClusterCollection>
         m_outputClusterCollection{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
@@ -73,25 +72,9 @@ public:
     StatusCode execute() override
     {
         // input collections
-	    const auto &rawhits = *m_inputHitCollection.get();
+	    const auto &hits = *m_inputHitCollection.get();
         // Create output collections
         auto &clusters = *m_outputClusterCollection.createAndPut();
-
-        info() << "we have " << rawhits.size() << " raw hits" << endmsg;
-
-        // energy time reconstruction
-        eic::CalorimeterHitCollection hits;
-        for (auto &rh : rawhits) {
-            float energy = rh.amplitude()/100.*MeV;
-            if (energy >= m_minModuleEdep) {
-                float time = rh.timeStamp();
-                auto pos = m_geoSvc->cellIDPositionConverter()->position(rh.cellID0());
-                hits.push_back(eic::CalorimeterHit{
-                    rh.cellID0(), rh.cellID1(), energy, time, {pos.X(), pos.Y(), pos.Z()}, 0
-                });
-            }
-        }
-        info() << "we have " << hits.size() << " hits" << endmsg;
 
         // group neighboring hits
         std::vector<bool> visits(hits.size(), false);
@@ -136,12 +119,12 @@ private:
         // info() << std::abs(pos1.x - pos2.x) << ", " << (dim1[0] + dim2[0])/2. << ", "
         //        << std::abs(pos1.y - pos2.y) << ", " << (dim1[1] + dim2[1])/2. << endmsg;
 
-        return (std::abs(pos1.x - pos2.x) <= (dim1[0] + dim2[0])/1.3) &&
-               (std::abs(pos1.y - pos2.y) <= (dim1[1] + dim2[1])/1.3);
+        return (std::abs(pos1.x - pos2.x) <= (dim1[0] + dim2[0])/2.*m_groupRange) &&
+               (std::abs(pos1.y - pos2.y) <= (dim1[1] + dim2[1])/2.*m_groupRange);
     }
 
     // grouping function with Depth-First Search
-    void dfs_group(eic::Cluster group, int idx, eic::CalorimeterHitCollection &hits, std::vector<bool> &visits)
+    void dfs_group(eic::Cluster group, int idx, const eic::CalorimeterHitCollection &hits, std::vector<bool> &visits)
     {
         auto hit = hits[idx];
         group.addhits(hit);
@@ -203,12 +186,7 @@ private:
         if (maxima.hits_size() == 0) {
             return scoll;
         } else if (maxima.hits_size() == 1) {
-            auto cl = clusters.create();
-            for (auto hit : group.hits()) {
-                auto shit = hit.clone();
-                cl.addhits(shit);
-                scoll.push_back(shit);
-            }
+            clusters.push_back(group.clone());
             return scoll;
         }
 
