@@ -101,8 +101,8 @@ namespace Jug::Reco {
         cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = ahit.covMatrix(0)*Acts::UnitConstants::mm;//*ahit.covMatrix(0);
         cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = ahit.covMatrix(1)*Acts::UnitConstants::mm;//*ahit.covMatrix(1);
 
-        debug() << "cell ID : " << ahit.cellID0() << endmsg;
-        auto vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID0());
+        debug() << "cell ID : " << ahit.cellID() << endmsg;
+        auto vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID());
         auto vol_id = vol_ctx->identifier;
         debug() << " vol_id : " <<  vol_id << endmsg;
         debug() << " hit : " <<  ahit << endmsg;
