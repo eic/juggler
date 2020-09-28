@@ -111,7 +111,7 @@ namespace Jug {
       eic::RawCalorimeterHitCollection* rawHitCollection = new eic::RawCalorimeterHitCollection();
       for(const auto& ahit : *simhits) {
         //std::cout << ahit << "\n";
-        eic::RawCalorimeterHit rawhit((long long)ahit.cellID(), (long long)ahit.cellID(),
+        eic::RawCalorimeterHit rawhit((long long)ahit.cellID(),
                         (long long)ahit.energyDeposit() * 100, 0);
         rawhits->push_back(rawhit);
       }

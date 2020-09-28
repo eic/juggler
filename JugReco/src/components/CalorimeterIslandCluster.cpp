@@ -42,8 +42,6 @@ public:
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::ClusterCollection>
         m_outputClusterCollection{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
-    // Pointer to the geometry service
-    SmartIF<IGeoSvc> m_geoSvc;
 
     // ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     CalorimeterIslandCluster(const std::string& name, ISvcLocator* svcLoc)
@@ -56,12 +54,6 @@ public:
     StatusCode initialize() override
     {
         if (GaudiAlgorithm::initialize().isFailure()) {
-            return StatusCode::FAILURE;
-        }
-        m_geoSvc = service("GeoSvc");
-        if (!m_geoSvc) {
-            error() << "Unable to locate Geometry Service. "
-                    << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
             return StatusCode::FAILURE;
         }
         return StatusCode::SUCCESS;
@@ -102,17 +94,8 @@ private:
     // helper function to group hits
     inline bool is_neighbor(const eic::ConstCalorimeterHit &h1, const eic::ConstCalorimeterHit &h2)
     {
-        // check neighbor hits with local positions
-        auto pos1 = h1.localPosition();
-        auto pos2 = h2.localPosition();
-        auto dim1 = m_geoSvc->cellIDPositionConverter()->cellDimensions(h1.cellID0());
-        auto dim2 = m_geoSvc->cellIDPositionConverter()->cellDimensions(h2.cellID0());
-
-        // info() << std::abs(pos1.x - pos2.x) << ", " << (dim1[0] + dim2[0])/2. << ", "
-        //        << std::abs(pos1.y - pos2.y) << ", " << (dim1[1] + dim2[1])/2. << endmsg;
-
-        return (std::abs(pos1.x - pos2.x) <= (dim1[0] + dim2[0])/2.*m_groupRange) &&
-               (std::abs(pos1.y - pos2.y) <= (dim1[1] + dim2[1])/2.*m_groupRange);
+        return (std::abs(h1.local_x() - h2.local_x()) <= (h1.dim_x() + h2.dim_y())/2.*m_groupRange) &&
+               (std::abs(h1.local_y() - h2.local_y()) <= (h1.dim_y() + h2.dim_y())/2.*m_groupRange);
     }
 
     // grouping function with Depth-First Search
@@ -182,23 +165,19 @@ private:
             return scoll;
         }
 
-        // distance reference
-        auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(maxima.hits_begin()->cellID0());
-        double dist_ref = dim[0];
-
         // split between maxima
         std::vector<double> weights(maxima.hits_size());
         std::vector<eic::Cluster> splits(maxima.hits_size());
         size_t i = 0;
         for (auto it = group.hits_begin(); it != group.hits_end(); ++it, ++i) {
-            auto hpos = it->localPosition();
             auto hedep = it->energy();
             size_t j = 0;
             // calculate weights for local maxima
             for (auto cit = maxima.hits_begin(); cit != maxima.hits_end(); ++cit, ++j) {
+                double dist_ref = cit->dim_x();
                 double energy = cit->energy();
-                auto pos = cit->localPosition();
-                double dist = std::sqrt(std::pow(pos.x - hpos.x, 2) + std::pow(pos.y - hpos.y, 2));
+                double dist = std::sqrt(std::pow(it->local_x() - cit->local_x(), 2)
+                                        + std::pow(it->local_y() - cit->local_y(), 2));
                 weights[j] = std::exp(-dist/dist_ref)*energy;
             }
 
@@ -218,8 +197,8 @@ private:
                     continue;
                 }
 
-                eic::CalorimeterHit hit(it->cellID0(), it->cellID1(), hedep*weight,
-                                        it->time(), it->localPosition(), it->type());
+                eic::CalorimeterHit hit(it->cellID(), hedep*weight, it->time(),
+                                        it->position(), it->local(), it->dimension(), it->type());
                 scoll.push_back(hit);
                 splits[k].addhits(hit);
             }

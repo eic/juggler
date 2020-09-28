@@ -82,13 +82,13 @@ private:
 
         // calculate total energy, find the cell with the maximum energy deposit
         float totalE = 0., maxE = 0.;
-        auto centerID = cl.hits_begin()->cellID0();
+        auto centerID = cl.hits_begin()->cellID();
         for (auto &hit : cl.hits()) {
             auto energy = hit.energy();
             totalE += energy;
             if (energy > maxE) {
                 maxE = energy;
-                centerID = hit.cellID0();
+                centerID = hit.cellID();
             }
         }
         cl.energy(totalE);
@@ -99,9 +99,9 @@ private:
             // suppress low energy contributions
             float w = std::max(0., m_logWeightBase + std::log(hit.energy()/totalE));
             tw += w;
-            x += hit.localPosition().x * w;
-            y += hit.localPosition().y * w;
-            z += hit.localPosition().z * w;
+            x += hit.local_x() * w;
+            y += hit.local_y() * w;
+            z += hit.local_z() * w;
         }
 
         // convert local position to global position, use the cell with max edep as a reference
