@@ -23,7 +23,7 @@ namespace Jug {
 
 
   /// (Reconstructed) track parameters e.g. close to the vertex.
-  using TrackParameters = Acts::CurvilinearParameters;
+  using TrackParameters = Acts::CurvilinearTrackParameters;
 
   /// Container of reconstructed track states for multiple tracks.
   using TrackParametersContainer = std::vector<TrackParameters>;

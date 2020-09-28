@@ -37,11 +37,11 @@
 #include <vector>
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/TrackFinder/CKFSourceLinkSelector.hpp"
-#include "Acts/TrackFinder/CombinatorialKalmanFilter.hpp"
+#include "Acts/TrackFinding/CKFSourceLinkSelector.hpp"
+#include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 
-#include "Acts/Fitter/GainMatrixSmoother.hpp"
-#include "Acts/Fitter/GainMatrixUpdater.hpp"
+#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
+#include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SharedBField.hpp"
@@ -75,7 +75,7 @@ namespace Jug::Reco {
     m_BField                = std::make_shared<Acts::ConstantBField>(Acts::Vector3D{0.0, 0.0, 1.0_T});
     m_fieldctx              = BFieldVariant(m_BField);
     m_sourcelinkSelectorCfg = {
-        {Acts::GeometryID(), {15, 10}},
+        {Acts::GeometryIdentifier(), {15, 10}},
     };
 
     findTracks = TrackFindingAlgorithm::makeTrackFinderFunction(m_geoSvc->trackingGeometry(), m_BField);
@@ -109,9 +109,12 @@ namespace Jug::Reco {
     for (std::size_t iseed = 0; iseed < init_trk_params->size(); ++iseed) {
       const auto& initialParams = (*init_trk_params)[iseed];
 
+      Acts::PropagatorPlainOptions pOptions;
+      pOptions.maxSteps = 10000;
       // Set the CombinatorialKalmanFilter options
-      TrackFindingAlgorithm::CKFOptions ckfOptions(m_geoctx, m_fieldctx, m_calibctx, m_sourcelinkSelectorCfg,
-                                                   Acts::LoggerWrapper{logger()}, &(*pSurface));
+      CKFOptions ckfOptions(m_geoctx, m_fieldctx, m_calibctx, m_sourcelinkSelectorCfg,
+                                      Acts::LoggerWrapper{logger()}, pOptions,
+                                      &(*pSurface));
       // TrackFindingAlgorithm::CKFOptions ckfOptions(ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
       //                                                 m_cfg.sourcelinkSelectorCfg, Acts::LoggerWrapper{logger()},
       //                                                 &(*pSurface));

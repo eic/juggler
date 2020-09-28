@@ -32,8 +32,8 @@
 
 //#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/TrackFinder/CKFSourceLinkSelector.hpp"
-#include "Acts/TrackFinder/CombinatorialKalmanFilter.hpp"
+#include "Acts/TrackFinding/CKFSourceLinkSelector.hpp"
+#include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 
 //#include "Acts/Fitter/GainMatrixSmoother.hpp"
 //#include "Acts/Fitter/GainMatrixUpdater.hpp"
@@ -57,6 +57,7 @@ namespace Jug::Reco {
     /// Track finding function that takes input measurements, initial trackstate
     /// and track finder options and returns some track-finding-specific result.
     using CKFOptions = Acts::CombinatorialKalmanFilterOptions<Acts::CKFSourceLinkSelector>;
+ 
 
     using TrackFinderFunction =
         std::function<TrackFinderResult(const SourceLinkContainer&, const TrackParameters&, const CKFOptions&)>;
