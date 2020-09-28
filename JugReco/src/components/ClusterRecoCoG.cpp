@@ -34,6 +34,8 @@ public:
     Gaudi::Property<double> m_logWeightBase{this, "logWeightBase", 3.6};
     DataHandle<eic::ClusterCollection>
         m_clusterCollection{"clusterCollection", Gaudi::DataHandle::Reader, this};
+    // Pointer to the geometry service
+    SmartIF<IGeoSvc> m_geoSvc;
 
     // ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     ClusterRecoCoG(const std::string& name, ISvcLocator* svcLoc)
@@ -47,42 +49,72 @@ public:
         if (GaudiAlgorithm::initialize().isFailure()) {
             return StatusCode::FAILURE;
         }
+        m_geoSvc = service("GeoSvc");
+        if (!m_geoSvc) {
+            error() << "Unable to locate Geometry Service. "
+                    << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
+            return StatusCode::FAILURE;
+        }
         return StatusCode::SUCCESS;
     }
 
     StatusCode execute() override
     {
         // input collections
-	    const auto &clusters = *m_clusterCollection.get();
+        auto &clusters = *m_clusterCollection.get();
         // reconstruct hit position for the cluster
         for (auto &cl : clusters) {
             reconstruct(cl);
-            info() << cl.energy()/GeV << " GeV, (" << cl.position()[0]/mm << ", "
-                   << cl.position()[1]/mm << ", " << cl.position()[2]/mm << ")" << endmsg;
+            // info() << cl.energy()/GeV << " GeV, (" << cl.position().x/mm << ", "
+            //        << cl.position().y/mm << ", " << cl.position().z/mm << ")" << endmsg;
         }
 
         return StatusCode::SUCCESS;
     }
 
 private:
-    void reconstruct(eic::Cluster cl) {
-        float totalE = 0.;
+    void reconstruct(eic::Cluster cl)
+    {
+        // no hits
+        if (cl.hits_size() == 0) {
+            return;
+        }
+
+        // calculate total energy, find the cell with the maximum energy deposit
+        float totalE = 0., maxE = 0.;
+        auto centerID = cl.hits_begin()->cellID();
         for (auto &hit : cl.hits()) {
-            totalE += hit.energy();
+            auto energy = hit.energy();
+            totalE += energy;
+            if (energy > maxE) {
+                maxE = energy;
+                centerID = hit.cellID();
+            }
         }
         cl.energy(totalE);
 
         // center of gravity with logarithmic weighting
-        float totalW = 0., x = 0., y = 0., z = 0.;
+        float tw = 0., x = 0., y = 0., z = 0.;
         for (auto &hit : cl.hits()) {
             // suppress low energy contributions
-            float weight = std::max(0., m_logWeightBase + std::log(hit.energy()/totalE));
-            totalW += weight;
-            x += hit.position().x * weight;
-            y += hit.position().y * weight;
-            z += hit.position().z * weight;
+            float w = std::max(0., m_logWeightBase + std::log(hit.energy()/totalE));
+            tw += w;
+            x += hit.local_x() * w;
+            y += hit.local_y() * w;
+            z += hit.local_z() * w;
         }
-        cl.position() = std::array<float, 3>{x/totalW, y/totalW, z/totalW};
+
+        // convert local position to global position, use the cell with max edep as a reference
+        auto volman = m_geoSvc->detector()->volumeManager();
+        auto alignment = volman.lookupDetector(centerID).nominal();
+        // depth
+        // @TODO, assume on the surface
+        auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(centerID);
+        double depth = -dim[2]/2.;
+        // info() << depth << " (" << dim[0] << ", " << dim[1] << ", " << dim[2] << ")" << endmsg;
+        auto gpos = alignment.localToWorld(dd4hep::Position(x/tw, y/tw, z/tw + depth));
+
+        cl.position({gpos.x(), gpos.y(), gpos.z()});
     }
 };
 

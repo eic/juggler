@@ -67,10 +67,20 @@ public:
         for (auto &rh : rawhits) {
             float energy = rh.amplitude()/100.*MeV;
             if (energy >= m_minModuleEdep) {
-                float time = rh.timeStamp();
-                auto pos = m_geoSvc->cellIDPositionConverter()->position(rh.cellID0());
+                float time = rh.timeStamp()*ns;
+                auto id = rh.cellID();
+                // global positions
+                auto gpos = m_geoSvc->cellIDPositionConverter()->position(id);
+                // local positions
+                auto pos = m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().position();
+                // cell dimension
+                auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
                 hits.push_back(eic::CalorimeterHit{
-                    rh.cellID0(), rh.cellID1(), energy, time, {pos.X(), pos.Y(), pos.Z()}, 0
+                    id, energy, time,
+                    {gpos.x(), gpos.y(), gpos.z()},
+                    {pos.x(), pos.y(), pos.z()},
+                    {dim[0], dim[1], dim[2]},
+                    0
                 });
             }
         }
