@@ -64,10 +64,12 @@ namespace Jug::Reco {
         cov(Acts::eBoundQOverP, Acts::eBoundQOverP)     = 1.0 / (0.3 * GeV* 0.3 * GeV);
         cov(Acts::eBoundTime, Acts::eBoundTime)         = Acts::UnitConstants::ns;
 
-        init_trk_params->emplace_back(std::make_optional(std::move(cov)),
-                                      Acts::Vector3D(part.vsx() * mm, part.vsy() * mm, part.vsz() * mm),
+        init_trk_params->emplace_back(Acts::Vector4D(part.vsx() * mm, part.vsy() * mm, part.vsz() * mm, part.time() * Acts::UnitConstants::ns),
                                       Acts::Vector3D(part.psx() * GeV, part.psy() * GeV, part.psz() * GeV),
-                                      ((part.pdgID() > 0) ? -1 : 1), part.time() * Acts::UnitConstants::ns);
+                                      std::sqrt(part.psx() *part.psx() + part.psy() * part.psy() + part.psz() * part.psz())*GeV,
+                                      ((part.pdgID() > 0) ? -1 : 1),
+                                      std::make_optional(std::move(cov))
+                                      );
         //part .charge()
 
         debug() << "Invoke track finding seeded by truth particle " << part << endmsg;

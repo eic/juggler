@@ -109,9 +109,12 @@ namespace Jug::Reco {
     for (std::size_t iseed = 0; iseed < init_trk_params->size(); ++iseed) {
       const auto& initialParams = (*init_trk_params)[iseed];
 
+      Acts::PropagatorPlainOptions pOptions;
+      pOptions.maxSteps = 10000;
       // Set the CombinatorialKalmanFilter options
-      Acts::CombinatorialKalmanFilterOptions ckfOptions(m_geoctx, m_fieldctx, m_calibctx, m_sourcelinkSelectorCfg,
-                                                   Acts::LoggerWrapper{logger()}, &(*pSurface));
+      CKFOptions ckfOptions(m_geoctx, m_fieldctx, m_calibctx, m_sourcelinkSelectorCfg,
+                                      Acts::LoggerWrapper{logger()}, pOptions,
+                                      &(*pSurface));
       // TrackFindingAlgorithm::CKFOptions ckfOptions(ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
       //                                                 m_cfg.sourcelinkSelectorCfg, Acts::LoggerWrapper{logger()},
       //                                                 &(*pSurface));
