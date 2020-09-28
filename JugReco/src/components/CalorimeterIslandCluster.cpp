@@ -42,7 +42,7 @@ public:
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::ClusterCollection>
         m_outputClusterCollection{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
-    /// Pointer to the geometry service
+    // Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
 
     // ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
@@ -86,13 +86,13 @@ public:
             // create a new group, and group all the neighboring hits
             dfs_group(groups.create(), i, hits, visits);
         }
-        info() << "we have " << groups.size() << " groups of hits" << endmsg;
+        // info() << "we have " << groups.size() << " groups of hits" << endmsg;
 
         for (auto &group : groups) {
             auto maxima = find_local_maxima(group);
             auto split_collection = split_group(group, maxima, clusters);
-            info() << "hits in a group: " << group.hits_size() <<  ", "
-                   << "local maxima: " << maxima.hits_size() << endmsg;
+            // info() << "hits in a group: " << group.hits_size() <<  ", "
+            //        << "local maxima: " << maxima.hits_size() << endmsg;
         }
 
         return StatusCode::SUCCESS;
@@ -102,8 +102,9 @@ private:
     // helper function to group hits
     inline bool is_neighbor(const eic::ConstCalorimeterHit &h1, const eic::ConstCalorimeterHit &h2)
     {
-        auto pos1 = h1.position();
-        auto pos2 = h2.position();
+        // check neighbor hits with local positions
+        auto pos1 = h1.localPosition();
+        auto pos2 = h2.localPosition();
         auto dim1 = m_geoSvc->cellIDPositionConverter()->cellDimensions(h1.cellID0());
         auto dim2 = m_geoSvc->cellIDPositionConverter()->cellDimensions(h2.cellID0());
 
@@ -190,13 +191,13 @@ private:
         std::vector<eic::Cluster> splits(maxima.hits_size());
         size_t i = 0;
         for (auto it = group.hits_begin(); it != group.hits_end(); ++it, ++i) {
-            auto hpos = it->position();
+            auto hpos = it->localPosition();
             auto hedep = it->energy();
             size_t j = 0;
             // calculate weights for local maxima
             for (auto cit = maxima.hits_begin(); cit != maxima.hits_end(); ++cit, ++j) {
                 double energy = cit->energy();
-                auto pos = cit->position();
+                auto pos = cit->localPosition();
                 double dist = std::sqrt(std::pow(pos.x - hpos.x, 2) + std::pow(pos.y - hpos.y, 2));
                 weights[j] = std::exp(-dist/dist_ref)*energy;
             }
@@ -218,7 +219,7 @@ private:
                 }
 
                 eic::CalorimeterHit hit(it->cellID0(), it->cellID1(), hedep*weight,
-                                        it->time(), it->position(), it->type());
+                                        it->time(), it->localPosition(), it->type());
                 scoll.push_back(hit);
                 splits[k].addhits(hit);
             }

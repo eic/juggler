@@ -16,14 +16,14 @@
 
 namespace Jug {
   namespace Digi {
-  
+
     /** Crystal Endcaps Calorimeter detector digitization.
      *
      *
      */
    class CrystalEndcapsDigi : public GaudiAlgorithm {
    public:
-  
+
     Gaudi::Property<double>      m_energyResolution{this, "energyResolution", 0.02};  // 2%sqrt(E)
     Rndm::Numbers m_gaussDist;
     DataHandle<dd4pod::CalorimeterHitCollection> m_inputHitCollection{ "inputHitCollection",  Gaudi::DataHandle::Reader, this};
@@ -51,11 +51,13 @@ namespace Jug {
       // Create output collections
       auto rawhits = m_outputHitCollection.createAndPut();
       eic::RawCalorimeterHitCollection* rawHitCollection = new eic::RawCalorimeterHitCollection();
-      for(const auto& ahit : *simhits){
-	   	eic::RawCalorimeterHit rawhit((long long)ahit.cellID(), (long long)ahit.cellID(), 
-			(long long)(ahit.energyDeposit() + m_gaussDist*sqrt(ahit.energyDeposit()))/Gaudi::Units::MeV * 100.0,
-            (double)ahit.truth().time);
-          	rawhits->push_back(rawhit);
+      for (const auto& ahit : *simhits) {
+	    eic::RawCalorimeterHit rawhit(
+          (long long) ahit.cellID(),
+          (long long) ahit.cellID(),
+		  (long long) (ahit.energyDeposit() + m_gaussDist*sqrt(ahit.energyDeposit()))/Gaudi::Units::MeV * 100.0,
+          (double) ahit.truth().time/Gaudi::Units::ns);
+          rawhits->push_back(rawhit);
       }
       return StatusCode::SUCCESS;
     }
