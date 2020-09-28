@@ -68,7 +68,7 @@ public:
 	    const auto &hits = *m_inputHitCollection.get();
         // Create output collections
         auto &clusters = *m_outputClusterCollection.createAndPut();
-        auto &shits = *m_splitHitCollection.createAndPut();
+        auto &split_hits = *m_splitHitCollection.createAndPut();
 
         // group neighboring hits
         std::vector<bool> visits(hits.size(), false);
@@ -87,7 +87,7 @@ public:
 
         for (auto &group : groups) {
             auto maxima = find_local_maxima(group);
-            split_group(group, maxima, clusters, shits);
+            split_group(group, maxima, clusters, split_hits);
             // info() << "hits in a group: " << group.hits_size() <<  ", "
             //        << "local maxima: " << maxima.hits_size() << endmsg;
         }

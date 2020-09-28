@@ -52,9 +52,9 @@ namespace Jug {
       auto rawhits = m_outputHitCollection.createAndPut();
       eic::RawCalorimeterHitCollection* rawHitCollection = new eic::RawCalorimeterHitCollection();
       for (const auto& ahit : *simhits) {
-	    eic::RawCalorimeterHit rawhit(
+        eic::RawCalorimeterHit rawhit(
           (long long) ahit.cellID(),
-		  (long long) (ahit.energyDeposit() + m_gaussDist*sqrt(ahit.energyDeposit()))/Gaudi::Units::MeV * 100.0,
+          (long long) (ahit.energyDeposit() + m_gaussDist*sqrt(ahit.energyDeposit()))/Gaudi::Units::MeV * 100.0,
           (double) ahit.truth().time/Gaudi::Units::ns);
           rawhits->push_back(rawhit);
       }
