@@ -65,8 +65,8 @@ public:
         // reconstruct hit position for the cluster
         for (auto &cl : clusters) {
             reconstruct(cl);
-            info() << cl.energy()/GeV << " GeV, (" << cl.position().x/mm << ", "
-                   << cl.position().y/mm << ", " << cl.position().z/mm << ")" << endmsg;
+            // info() << cl.energy()/GeV << " GeV, (" << cl.position().x/mm << ", "
+            //        << cl.position().y/mm << ", " << cl.position().z/mm << ")" << endmsg;
         }
 
         return StatusCode::SUCCESS;
@@ -107,7 +107,12 @@ private:
         // convert local position to global position, use the cell with max edep as a reference
         auto volman = m_geoSvc->detector()->volumeManager();
         auto alignment = volman.lookupDetector(centerID).nominal();
-        auto gpos = alignment.localToWorld(dd4hep::Position(x/tw, y/tw, z/tw));
+        // depth
+        // @TODO, assume on the surface
+        auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(centerID);
+        double depth = -dim[2]/2.;
+        // info() << depth << " (" << dim[0] << ", " << dim[1] << ", " << dim[2] << ")" << endmsg;
+        auto gpos = alignment.localToWorld(dd4hep::Position(x/tw, y/tw, z/tw + depth));
 
         cl.position({gpos.x(), gpos.y(), gpos.z()});
     }
