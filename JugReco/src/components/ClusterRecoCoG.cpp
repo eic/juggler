@@ -61,7 +61,7 @@ public:
     StatusCode execute() override
     {
         // input collections
-	    const auto &clusters = *m_clusterCollection.get();
+	    auto &clusters = *m_clusterCollection.get();
         // reconstruct hit position for the cluster
         for (auto &cl : clusters) {
             reconstruct(cl);

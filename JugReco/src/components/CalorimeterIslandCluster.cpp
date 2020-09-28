@@ -42,13 +42,16 @@ public:
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::ClusterCollection>
         m_outputClusterCollection{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
+    DataHandle<eic::CalorimeterHitCollection>
+        m_splitHitCollection{"splitHitCollection", Gaudi::DataHandle::Writer, this};
 
     // ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     CalorimeterIslandCluster(const std::string& name, ISvcLocator* svcLoc)
         : GaudiAlgorithm(name, svcLoc)
     {
-        declareProperty("inputHitCollection",      m_inputHitCollection,      "");
-        declareProperty("outputClusterCollection", m_outputClusterCollection, "");
+        declareProperty("inputHitCollection",       m_inputHitCollection,       "");
+        declareProperty("outputClusterCollection",  m_outputClusterCollection,  "");
+        declareProperty("splitHitCollection",       m_splitHitCollection,       "");
     }
 
     StatusCode initialize() override
@@ -65,24 +68,26 @@ public:
 	    const auto &hits = *m_inputHitCollection.get();
         // Create output collections
         auto &clusters = *m_outputClusterCollection.createAndPut();
+        auto &shits = *m_splitHitCollection.createAndPut();
 
         // group neighboring hits
         std::vector<bool> visits(hits.size(), false);
-        eic::ClusterCollection groups;
+        std::vector<std::vector<eic::CalorimeterHit>> groups;
         for (size_t i = 0; i < hits.size(); ++i)
         {
             // already in a group
             if (visits[i]) {
                 continue;
             }
+            groups.emplace_back();
             // create a new group, and group all the neighboring hits
-            dfs_group(groups.create(), i, hits, visits);
+            dfs_group(groups.back(), i, hits, visits);
         }
         // info() << "we have " << groups.size() << " groups of hits" << endmsg;
 
         for (auto &group : groups) {
             auto maxima = find_local_maxima(group);
-            auto split_collection = split_group(group, maxima, clusters);
+            split_group(group, maxima, clusters, shits);
             // info() << "hits in a group: " << group.hits_size() <<  ", "
             //        << "local maxima: " << maxima.hits_size() << endmsg;
         }
@@ -99,10 +104,11 @@ private:
     }
 
     // grouping function with Depth-First Search
-    void dfs_group(eic::Cluster group, int idx, const eic::CalorimeterHitCollection &hits, std::vector<bool> &visits)
+    void dfs_group(std::vector<eic::CalorimeterHit> &group, int idx,
+                   const eic::CalorimeterHitCollection &hits, std::vector<bool> &visits)
     {
         auto hit = hits[idx];
-        group.addhits(hit);
+        group.push_back(hit);
         visits[idx] = true;
         for(size_t i = 0; i < hits.size(); ++i)
         {
@@ -114,10 +120,10 @@ private:
     }
 
     // find local maxima that above a certain threshold
-    eic::Cluster find_local_maxima(const eic::Cluster &group)
+    eic::Cluster find_local_maxima(const std::vector<eic::CalorimeterHit> &group)
     {
         eic::Cluster maxima;
-        for(auto &hit : group.hits())
+        for(auto &hit : group)
         {
             // not a qualified center
             if(hit.energy() < m_minClusterCenterEdep) {
@@ -125,7 +131,7 @@ private:
             }
 
             bool maximum = true;
-            for(auto &hit2 : group.hits())
+            for(auto &hit2 : group)
             {
                 if(hit == hit2)
                     continue;
@@ -152,24 +158,26 @@ private:
     }
 
     // split a group of hits according to the local maxima
-    eic::CalorimeterHitCollection split_group(eic::Cluster group, const eic::Cluster &maxima,
-                                              eic::ClusterCollection &clusters)
+    // split_hits is used to persistify the data
+    void split_group(const std::vector<eic::CalorimeterHit> &group, const eic::Cluster &maxima,
+                     eic::ClusterCollection &clusters, eic::CalorimeterHitCollection &split_hits)
     {
-        // to persistify the split hits
-        eic::CalorimeterHitCollection scoll;
         // special cases
         if (maxima.hits_size() == 0) {
-            return scoll;
+            return;
         } else if (maxima.hits_size() == 1) {
-            clusters.push_back(group.clone());
-            return scoll;
+            auto cl = clusters.create();
+            for (auto &hit : group) {
+                cl.addhits(hit);
+            }
+            return;
         }
 
         // split between maxima
         std::vector<double> weights(maxima.hits_size());
         std::vector<eic::Cluster> splits(maxima.hits_size());
         size_t i = 0;
-        for (auto it = group.hits_begin(); it != group.hits_end(); ++it, ++i) {
+        for (auto it = group.begin(); it != group.end(); ++it, ++i) {
             auto hedep = it->energy();
             size_t j = 0;
             // calculate weights for local maxima
@@ -196,10 +204,10 @@ private:
                 if (weight <= 1e-6) {
                     continue;
                 }
-
-                eic::CalorimeterHit hit(it->cellID(), hedep*weight, it->time(),
-                                        it->position(), it->local(), it->dimension(), it->type());
-                scoll.push_back(hit);
+                auto hit = it->clone();
+                hit.energy(hedep*weight);
+                hit.type(1);
+                split_hits.push_back(hit);
                 splits[k].addhits(hit);
             }
         }
@@ -207,7 +215,7 @@ private:
         for (auto &cl : splits) {
             clusters.push_back(cl);
         }
-        return scoll;
+        return;
     }
 };
 
