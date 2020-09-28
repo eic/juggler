@@ -57,12 +57,12 @@ namespace Jug::Reco {
 
         // build some track cov matrix
         Acts::BoundSymMatrix cov        = Acts::BoundSymMatrix::Zero();
-        cov(Acts::eLOC_0, Acts::eLOC_0) = 0.1 * mm*0.1 * mm;
-        cov(Acts::eLOC_1, Acts::eLOC_1) = 0.1 * mm*0.1 * mm;
-        cov(Acts::ePHI, Acts::ePHI)     = M_PI / 180.0;
-        cov(Acts::eTHETA, Acts::eTHETA) = M_PI / 180.0;
-        cov(Acts::eQOP, Acts::eQOP)     = 1.0 / (0.3 * GeV* 0.3 * GeV);
-        cov(Acts::eT, Acts::eT)         = Acts::UnitConstants::ns;
+        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = 0.1 * mm*0.1 * mm;
+        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = 0.1 * mm*0.1 * mm;
+        cov(Acts::eBoundPhi, Acts::eBoundPhi)     = M_PI / 180.0;
+        cov(Acts::eBoundTheta, Acts::eBoundTheta) = M_PI / 180.0;
+        cov(Acts::eBoundQOverP, Acts::eBoundQOverP)     = 1.0 / (0.3 * GeV* 0.3 * GeV);
+        cov(Acts::eBoundTime, Acts::eBoundTime)         = Acts::UnitConstants::ns;
 
         init_trk_params->emplace_back(std::make_optional(std::move(cov)),
                                       Acts::Vector3D(part.vsx() * mm, part.vsy() * mm, part.vsz() * mm),

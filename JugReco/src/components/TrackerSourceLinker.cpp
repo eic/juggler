@@ -98,8 +98,8 @@ namespace Jug::Reco {
       for(const auto& ahit : *hits) {
 
         Acts::BoundMatrix cov           = Acts::BoundMatrix::Zero();
-        cov(Acts::eLOC_0, Acts::eLOC_0) = ahit.covMatrix(0)*Acts::UnitConstants::mm;//*ahit.covMatrix(0);
-        cov(Acts::eLOC_1, Acts::eLOC_1) = ahit.covMatrix(1)*Acts::UnitConstants::mm;//*ahit.covMatrix(1);
+        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = ahit.covMatrix(0)*Acts::UnitConstants::mm;//*ahit.covMatrix(0);
+        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = ahit.covMatrix(1)*Acts::UnitConstants::mm;//*ahit.covMatrix(1);
 
         debug() << "cell ID : " << ahit.cellID0() << endmsg;
         auto vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID0());
@@ -117,7 +117,7 @@ namespace Jug::Reco {
         Acts::Vector2D pos(0, 0);
         // geometry context contains nothing here
         surface->globalToLocal(Acts::GeometryContext(), {ahit.position(0), ahit.position(1), ahit.position(2)},
-                               {0, 0, 0}, pos);
+                               {0, 0, 0});//, pos);
 
         //// smear truth to create local measurement
         Acts::BoundVector loc = Acts::BoundVector::Zero();
