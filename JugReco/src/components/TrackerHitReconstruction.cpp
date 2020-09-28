@@ -78,7 +78,7 @@ namespace Jug {
         //std::array<double,3> posarr; pos.GetCoordinates(posarr);
         //std::array<double,3> dimarr; dim.GetCoordinates(posarr);
         //eic::TrackerHit hit;
-        eic::TrackerHit hit((long long)ahit.cellID(), (long long)ahit.cellID(), (long long)ahit.time(),
+        eic::TrackerHit hit((long long)ahit.cellID(),  (long long)ahit.time(),
                             (float)ahit.charge() / 10000.0, (float)0.0, {{pos.x(), pos.y(),pos.z()}},{{dim[0],dim[1],0.0}});
         rec_hits->push_back(hit);
       }
