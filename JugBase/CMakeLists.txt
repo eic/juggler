@@ -9,7 +9,7 @@ find_package(EICD)
 #find_package(podio 0.11.01 REQUIRED)
 #include_directories(${podio_INCLUDE_DIR})
 
-find_package(Acts REQUIRED COMPONENTS Core IdentificationPlugin TGeoPlugin DD4hepPlugin )
+find_package(Acts REQUIRED COMPONENTS Core PluginIdentification PluginTGeo PluginDD4hep )
 
 find_package(ROOT COMPONENTS RIO Tree Core REQUIRED)
 find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
@@ -26,13 +26,13 @@ gaudi_add_library(JugBase
                   PUBLIC_HEADERS JugBase)
 target_link_libraries(JugBase 
   podio::podioRootIO
-  ActsCore ActsDD4hepPlugin
+  ActsCore ActsPluginDD4hep
   )
 target_compile_options(JugBase PRIVATE -Wno-suggest-override)
 
 gaudi_add_module(JugBasePlugins
                  src/components/*.cpp src/components/ReadTestConsumer.cxx
-                 LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO  ActsCore ActsDD4hepPlugin)
+                 LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO  ActsCore ActsPluginDD4hep)
 target_compile_options(JugBasePlugins PRIVATE -Wno-suggest-override)
 
 #gaudi_add_test(ProduceForReadTest
