@@ -32,6 +32,7 @@ class ClusterRecoCoG : public GaudiAlgorithm
 {
 public:
     Gaudi::Property<double> m_logWeightBase{this, "logWeightBase", 3.6};
+    Gaudi::Property<std::string> m_moduleDimZName{this, "moduleDimZName", "CrystalBox_z_length"};
     DataHandle<eic::ClusterCollection>
         m_clusterCollection{"clusterCollection", Gaudi::DataHandle::Reader, this};
     // Pointer to the geometry service
@@ -110,8 +111,10 @@ private:
         // depth
         // @TODO, assume on the surface
         auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(centerID);
-        double depth = -dim[2]/2.;
-        // info() << depth << " (" << dim[0] << ", " << dim[1] << ", " << dim[2] << ")" << endmsg;
+	// z length of the crystal block
+	double depth = m_geoSvc->detector()->constantAsDouble(m_moduleDimZName);
+	//info() << "z_length " << depth << endmsg;
+	// info() << depth << " (" << dim[0] << ", " << dim[1] << ", " << dim[2] << ")" << endmsg;
         auto gpos = alignment.localToWorld(dd4hep::Position(x/tw, y/tw, z/tw + depth));
 
         cl.position({gpos.x(), gpos.y(), gpos.z()});

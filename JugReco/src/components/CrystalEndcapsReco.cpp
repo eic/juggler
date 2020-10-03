@@ -79,7 +79,7 @@ public:
                     id, energy, time,
                     {gpos.x(), gpos.y(), gpos.z()},
                     {pos.x(), pos.y(), pos.z()},
-                    {dim[0], dim[1], dim[2]},
+                    {dim[0], dim[1], 0.0},
                     0
                 });
             }

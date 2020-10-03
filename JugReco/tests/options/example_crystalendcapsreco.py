@@ -19,7 +19,7 @@ emcalreco = CrystalEndcapsReco(inputHitCollection="RawDigiEcalHits", outputHitCo
                                minModuleEdep=1.0*units.MeV)
 emcalcluster = IslandCluster(inputHitCollection="RecoEcalHits", outputClusterCollection="EcalClusters",
                              minClusterCenterEdep=30*units.MeV, groupRange=2.0)
-clusterreco = RecoCoG(clusterCollection="EcalClusters", logWeightBase=4.2)
+clusterreco = RecoCoG(clusterCollection="EcalClusters", logWeightBase=4.2, moduleDimZName="CrystalBox_z_length")
 
 
 out = PodioOutput("out", filename="reco_emcal_electrons_npsim.root")
