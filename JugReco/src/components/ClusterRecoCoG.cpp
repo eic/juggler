@@ -32,12 +32,12 @@ class ClusterRecoCoG : public GaudiAlgorithm
 {
 public:
     Gaudi::Property<double> m_logWeightBase{this, "logWeightBase", 3.6};
-    Gaudi::Property<std::string> m_moduleDimZName{this, "moduleDimZName", "CrystalBox_z_length"};
+    Gaudi::Property<double> m_depthCorrection{this, "depthCorrection", 0.0};
+    Gaudi::Property<std::string> m_moduleDimZName{this, "moduleDimZName", ""};
     DataHandle<eic::ClusterCollection>
         m_clusterCollection{"clusterCollection", Gaudi::DataHandle::Reader, this};
     // Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
-    double m_depthCorr;
 
     // ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     ClusterRecoCoG(const std::string& name, ISvcLocator* svcLoc)
@@ -57,8 +57,10 @@ public:
                     << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
             return StatusCode::FAILURE;
         }
-	// depth: z length of the crystal block
-        m_depthCorr = m_geoSvc->detector()->constantAsDouble(m_moduleDimZName);
+        // update depth correction if a name is provided
+        if (!m_moduleDimZName.value().empty()) {
+            m_depthCorrection = m_geoSvc->detector()->constantAsDouble(m_moduleDimZName);
+        }
         //info() << "z_length " << depth << endmsg;
         return StatusCode::SUCCESS;
     }
@@ -112,7 +114,7 @@ private:
         // convert local position to global position, use the cell with max edep as a reference
         auto volman = m_geoSvc->detector()->volumeManager();
         auto alignment = volman.lookupDetector(centerID).nominal();
-        auto gpos = alignment.localToWorld(dd4hep::Position(x/tw, y/tw, z/tw + m_depthCorr));
+        auto gpos = alignment.localToWorld(dd4hep::Position(x/tw, y/tw, z/tw + m_depthCorrection));
 
         cl.position({gpos.x(), gpos.y(), gpos.z()});
     }

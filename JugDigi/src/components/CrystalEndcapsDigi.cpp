@@ -32,9 +32,10 @@ namespace Jug {
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     CrystalEndcapsDigi(const std::string& name, ISvcLocator* svcLoc)
         : GaudiAlgorithm(name, svcLoc) {
-          declareProperty("inputHitCollection", m_inputHitCollection,"");
-          declareProperty("outputHitCollection", m_outputHitCollection, "");
-        }
+      declareProperty("inputHitCollection", m_inputHitCollection,"");
+      declareProperty("outputHitCollection", m_outputHitCollection, "");
+    }
+
     StatusCode initialize() override {
       if (GaudiAlgorithm::initialize().isFailure())
         return StatusCode::FAILURE;
@@ -45,6 +46,7 @@ namespace Jug {
       }
       return StatusCode::SUCCESS;
     }
+
     StatusCode execute() override {
       // input collections
       const dd4pod::CalorimeterHitCollection* simhits = m_inputHitCollection.get();
@@ -52,9 +54,10 @@ namespace Jug {
       auto rawhits = m_outputHitCollection.createAndPut();
       eic::RawCalorimeterHitCollection* rawHitCollection = new eic::RawCalorimeterHitCollection();
       for (const auto& ahit : *simhits) {
+        double res = m_gaussDist()/sqrt(ahit.energyDeposit()/Gaudi::Units::GeV);
         eic::RawCalorimeterHit rawhit(
           (long long) ahit.cellID(),
-          (long long) (ahit.energyDeposit() + m_gaussDist*sqrt(ahit.energyDeposit()))/Gaudi::Units::MeV * 100.0,
+          (long long) ahit.energyDeposit() * (1. + res)/Gaudi::Units::MeV * 100.0,
           (double) ahit.truth().time/Gaudi::Units::ns);
           rawhits->push_back(rawhit);
       }
