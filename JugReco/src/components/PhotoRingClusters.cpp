@@ -1,10 +1,8 @@
-/*  General PhotoMultiplier Reconstruction
- *
- *  Estimate the number of photo-electrons and convert timeStamp to time
- *  Collect cell information
+/*  Clustering Algorithm for Ring Imaging Cherenkov (RICH) events
  *
  *  Author: Chao Peng (ANL)
- *  Date: 10/03/2020
+ *  Date: 10/04/2020
+ *
  */
 
 #include <algorithm>
@@ -27,31 +25,31 @@
 
 // Event Model related classes
 #include "eicd/PMTHitCollection.h"
-#include "eicd/RawPMTHitCollection.h"
+#include "eicd/RIChClusterCollection.h"
+#include "FuzzyKClusters.h"
 
 using namespace Gaudi::Units;
+using namespace Eigen;
+
 
 namespace Jug::Reco {
-class PhotoMultiplierReco : public GaudiAlgorithm
+class PhotoRingClusters : public GaudiAlgorithm
 {
 public:
-    DataHandle<eic::RawPMTHitCollection>
-        m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::PMTHitCollection>
-        m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
-    Gaudi::Property<double> m_timeStep{this, "timeStep", 0.0625*ns};
+        m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+    DataHandle<eic::RIChClusterCollection>
+        m_outputClusterCollection{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
     Gaudi::Property<double> m_minNpe{this, "minNpe", 0.0};
-    Gaudi::Property<double> m_speMean{this, "speMean", 80.0};
-    Gaudi::Property<double> m_pedMean{this, "pedMean", 200.0};
     /// Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
 
     // ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
-    PhotoMultiplierReco(const std::string& name, ISvcLocator* svcLoc)
+    PhotoRingClusters(const std::string& name, ISvcLocator* svcLoc)
         : GaudiAlgorithm(name, svcLoc)
     {
         declareProperty("inputHitCollection",   m_inputHitCollection,   "");
-        declareProperty("outputHitCollection",  m_outputHitCollection,  "");
+        declareProperty("outputClusterCollection",  m_outputClusterCollection,  "");
     }
 
     StatusCode initialize() override
@@ -73,31 +71,21 @@ public:
         // input collections
 	    const auto &rawhits = *m_inputHitCollection.get();
         // Create output collections
-        auto &hits = *m_outputHitCollection.createAndPut();
+        auto &clusters = *m_outputClusterCollection.createAndPut();
 
-        // reconstrut number of photo-electrons and time
-        for (auto &rh : rawhits) {
-            float npe = (rh.amplitude() - m_pedMean)/m_speMean;
-            if (npe >= m_minNpe) {
-                float time = rh.timeStamp()*m_timeStep;
-                auto id = rh.cellID();
-                // global positions
-                auto gpos = m_geoSvc->cellIDPositionConverter()->position(id);
-                // local positions
-                auto pos = m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().position();
-                hits.push_back(eic::PMTHit{
-                    id, npe, time,
-                    {gpos.x(), gpos.y(), gpos.z()},
-                    {pos.x(), pos.y(), pos.z()}
-                });
-            }
+        // algorithm
+        auto alg = fkc::KRings();
+
+        MatrixXd data(rawhits.size(), 2);
+        for (int i = 0; i < data.rows(); ++i) {
+            data.row(i) << rawhits[i].local_x(), rawhits[i].local_y();
         }
 
         return StatusCode::SUCCESS;
     }
 };
 
-DECLARE_COMPONENT(PhotoMultiplierReco)
+DECLARE_COMPONENT(PhotoRingClusters)
 
 } // namespace Jug::Reco
 
