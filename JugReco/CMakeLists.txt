@@ -37,6 +37,7 @@ gaudi_add_module(JugRecoPlugins
   src/components/CalorimeterIslandCluster.cpp 
   src/components/CrystalEndcapsReco.cpp 
   src/components/ClusterRecoCoG.cpp 
+  src/components/PhotoMultiplierReco.cpp 
   LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO EICD::eicd DDRec Acts)
 
 target_compile_options(JugRecoPlugins PRIVATE -Wno-suggest-override)
