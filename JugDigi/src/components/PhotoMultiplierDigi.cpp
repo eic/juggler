@@ -152,7 +152,7 @@ private:
     // helper function for linear interpolation
     // Comp return is defined as: equal, 0;  greater, > 0; less, < 0
     template<class RndmIter, typename T, class Compare>
-    RndmIter interval_search(RndmIter beg, RndmIter end, const T &val, Compare comp)
+    RndmIter interval_search(RndmIter beg, RndmIter end, const T &val, Compare comp) const
     {
         // special cases
         auto dist = std::distance(beg, end);
@@ -178,7 +178,7 @@ private:
         return mid;
     }
 
-    bool qe_pass(double ev, double rand)
+    bool qe_pass(double ev, double rand) const
     {
         auto &qeff = u_quantumEfficiency.value();
         auto it = interval_search(qeff.begin(), qeff.end(), ev,

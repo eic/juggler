@@ -97,7 +97,7 @@ public:
 
 private:
     // helper function to group hits
-    inline bool is_neighbor(const eic::ConstCalorimeterHit &h1, const eic::ConstCalorimeterHit &h2)
+    inline bool is_neighbor(const eic::ConstCalorimeterHit &h1, const eic::ConstCalorimeterHit &h2) const
     {
         return (std::abs(h1.local_x() - h2.local_x()) <= (h1.dim_x() + h2.dim_y())/2.*m_groupRange) &&
                (std::abs(h1.local_y() - h2.local_y()) <= (h1.dim_y() + h2.dim_y())/2.*m_groupRange);
@@ -105,7 +105,7 @@ private:
 
     // grouping function with Depth-First Search
     void dfs_group(std::vector<eic::CalorimeterHit> &group, int idx,
-                   const eic::CalorimeterHitCollection &hits, std::vector<bool> &visits)
+                   const eic::CalorimeterHitCollection &hits, std::vector<bool> &visits) const
     {
         auto hit = hits[idx];
         group.push_back(hit);
@@ -120,7 +120,7 @@ private:
     }
 
     // find local maxima that above a certain threshold
-    eic::Cluster find_local_maxima(const std::vector<eic::CalorimeterHit> &group)
+    eic::Cluster find_local_maxima(const std::vector<eic::CalorimeterHit> &group) const
     {
         eic::Cluster maxima;
         for(auto &hit : group)
@@ -151,7 +151,7 @@ private:
     }
 
     // helper function
-    inline void vec_normalize(std::vector<double> &vals) {
+    inline void vec_normalize(std::vector<double> &vals) const {
         double total = 0.;
         for (auto &val : vals) { total += val; }
         for (auto &val : vals) { val /= total; }
@@ -160,7 +160,7 @@ private:
     // split a group of hits according to the local maxima
     // split_hits is used to persistify the data
     void split_group(const std::vector<eic::CalorimeterHit> &group, const eic::Cluster &maxima,
-                     eic::ClusterCollection &clusters, eic::CalorimeterHitCollection &split_hits)
+                     eic::ClusterCollection &clusters, eic::CalorimeterHitCollection &split_hits) const
     {
         // special cases
         if (maxima.hits_size() == 0) {

@@ -71,8 +71,10 @@ public:
         // input collections
         auto &clusters = *m_clusterCollection.get();
         // reconstruct hit position for the cluster
-        for (auto &cl : clusters) {
-            reconstruct(cl);
+        for (auto cl : clusters) {
+            auto hit = reconstruct(cl);
+            cl.energy(hit.energy());
+            cl.position(hit.position());
             // info() << cl.energy()/GeV << " GeV, (" << cl.position().x/mm << ", "
             //        << cl.position().y/mm << ", " << cl.position().z/mm << ")" << endmsg;
         }
@@ -81,11 +83,12 @@ public:
     }
 
 private:
-    void reconstruct(eic::Cluster cl)
+    eic::CalorimeterHit reconstruct(eic::Cluster cl) const
     {
+        eic::CalorimeterHit res;
         // no hits
         if (cl.hits_size() == 0) {
-            return;
+            return res;;
         }
 
         // calculate total energy, find the cell with the maximum energy deposit
@@ -99,7 +102,8 @@ private:
                 centerID = hit.cellID();
             }
         }
-        cl.energy(totalE);
+        res.cellID(centerID);
+        res.energy(totalE);
 
         // center of gravity with logarithmic weighting
         float tw = 0., x = 0., y = 0., z = 0.;
@@ -111,13 +115,15 @@ private:
             y += hit.local_y() * w;
             z += hit.local_z() * w;
         }
+        res.local({x/tw, y/tw, z/tw + m_depthCorrection});
 
         // convert local position to global position, use the cell with max edep as a reference
         auto volman = m_geoSvc->detector()->volumeManager();
         auto alignment = volman.lookupDetector(centerID).nominal();
-        auto gpos = alignment.localToWorld(dd4hep::Position(x/tw, y/tw, z/tw + m_depthCorrection));
+        auto gpos = alignment.localToWorld(dd4hep::Position(res.local_x(), res.local_y(), res.local_z()));
 
-        cl.position({gpos.x(), gpos.y(), gpos.z()});
+        res.position({gpos.x(), gpos.y(), gpos.z()});
+        return res;
     }
 };
 
