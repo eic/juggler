@@ -8,12 +8,11 @@ Overview
 
 ### Running Juggler
 
+Here is an example for topside
 ```
-./scripts/run_topside.py -i eic_upsilon.hepmc -o test_hytop.root -n 10
+./scripts/run_topside.py -i inputevents.hepmc -o output_events.root -n 10
 ../where_ever/../juggler/build/run gaudirun.py options/example_reconstruction.py
 ```
-
-
 
 ### `JugBase`
 
