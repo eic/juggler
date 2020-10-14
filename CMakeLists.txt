@@ -18,3 +18,6 @@ find_package(GaudiProject)
 
 gaudi_project(Juggler v1r0
               USE Gaudi v33r1)
+
+            install(FILES ${CMAKE_BINARY_DIR}/run 
+              DESTINATION bin/)
