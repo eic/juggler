@@ -40,7 +40,7 @@ docker_image:
   image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
   stage: container
   tags:
-    - sodium
+    - silicon
   only:
     - master
     - ci_dev
@@ -51,7 +51,7 @@ docker_tag:
   image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
   stage: container
   tags:
-    - sodium
+    - silicon
   only:
     - tags
   script:
