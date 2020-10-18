@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2.0)
+cmake_minimum_required(VERSION 0.3.1)
 
 set(CMAKE_PREFIX_PATH $ENV{HOME}/lib CMAKE_PREFIX_PATH)
 find_package(NPDet  REQUIRED)

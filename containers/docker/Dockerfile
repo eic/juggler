@@ -1,0 +1,31 @@
+FROM  eicweb.phy.anl.gov:4567/containers/eic_container/eic:latest
+
+LABEL maintainer="Whitney Armstrong <warmstrong@anl.gov>" \
+      name="juggler" \
+      group="EIC/juggler" \
+      march="native" \
+      basedist="debian" \
+      base="eic_container/eic" \
+      version="2.2.2"
+
+RUN cd /tmp             \
+      && git clone  https://eicweb.phy.anl.gov/EIC/NPDet.git \
+      && mkdir -p NPDet/build && cd NPDet/build \
+      && cmake ../. -DCMAKE_CXX_STANDARD=17 \
+      && make -j30  && make -j4 install \
+      && cd /tmp && rm -rf /tmp/NPDet 
+
+RUN cd /tmp             \
+      && git clone  https://eicweb.phy.anl.gov/EIC/eicd.git \
+      && mkdir -p eicd/build && cd eicd/build \
+      && cmake ../. -DCMAKE_CXX_STANDARD=17 \
+      && make -j30  && make -j4 install \
+      && cd /tmp && rm -rf /tmp/eicd 
+
+RUN cd /tmp             \
+      && git clone  https://eicweb.phy.anl.gov/EIC/juggler.git \
+      && mkdir -p juggler/build && cd juggler/build \
+      && cmake ../. -DCMAKE_CXX_STANDARD=17 \
+      && make -j30  && make -j4 install \
+      && cd /tmp && rm -rf /tmp/juggler 
+
