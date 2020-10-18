@@ -7,7 +7,7 @@ default:
 
 stages:
   #  - build
-  - container
+  - docker_build
   - run
 
     #compile:
@@ -38,18 +38,20 @@ stages:
 
 docker_image:
   image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
-  stage: container
+  stage: docker_build
   tags:
     - silicon
-  only:
-    - master
-    - ci_dev
+      #  only:
+      #    - master
+      #    - ci_dev
   script:
-    - cd containers/docker && make release-latest
+    - cd containers/docker 
+    - ls -lrth && pwd
+    - make release-latest
 
 docker_tag:
   image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
-  stage: container
+  stage: docker_build
   tags:
     - silicon
   only:
