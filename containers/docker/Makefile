@@ -77,7 +77,7 @@ login: ## Auto login to AWS-ECR unsing aws-cli
 
 release-latest: build login publish-latest ## Make a release by building and publishing the `{version}` ans `latest` tagged containers to ECR
 
-release: build-nc publish cleanup## Make a release by building and publishing the `{version}` ans `latest` tagged containers to ECR
+release: build-nc publish-latest cleanup## Make a release by building and publishing the `{version}` ans `latest` tagged containers to ECR
 
 release-cached: build publish ## Make a release by building and publishing the `{version}` ans `latest` tagged containers to ECR
 
