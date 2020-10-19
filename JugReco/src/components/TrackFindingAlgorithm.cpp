@@ -72,7 +72,7 @@ namespace Jug::Reco {
               << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
       return StatusCode::FAILURE;
     }
-    m_BField                = std::make_shared<Acts::ConstantBField>(Acts::Vector3D{0.0, 0.0, 1.0_T});
+    m_BField                = std::make_shared<Acts::ConstantBField>(Acts::Vector3D{0.0, 0.0, m_geoSvc->centralMagneticField()});
     m_fieldctx              = BFieldVariant(m_BField);
     m_sourcelinkSelectorCfg = {
         {Acts::GeometryIdentifier(), {15, 10}},

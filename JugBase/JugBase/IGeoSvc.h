@@ -35,6 +35,8 @@ public:
   virtual dd4hep::Detector* detector() = 0;
   virtual std::shared_ptr<const dd4hep::rec::CellIDPositionConverter> cellIDPositionConverter() const = 0;
   virtual std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry() const = 0;
+
+  virtual double centralMagneticField() const = 0;
   // receive Geant4 Geometry
   //virtual G4VUserDetectorConstruction* getGeant4Geo() = 0;
 

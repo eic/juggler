@@ -57,6 +57,13 @@ public:
    */
   virtual std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry() const;
 
+  virtual double centralMagneticField() const  {
+    return m_dd4hepgeo->field().magneticField({0,0,0}).z();                                                                                  
+  }
+ 
+;
+
+
 private:
 
   /// ACTS Tracking  Geometry
