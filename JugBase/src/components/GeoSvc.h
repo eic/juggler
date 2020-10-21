@@ -11,6 +11,10 @@
 
 // Interface
 #include "JugBase/IGeoSvc.h"
+#include "Acts/Utilities/Units.hpp"
+#include "DD4hep/DD4hepUnits.h"
+
+//using namespace Acts::UnitLiterals;
 
 // Gaudi
 #include "GaudiKernel/MsgStream.h"
@@ -58,7 +62,7 @@ public:
   virtual std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry() const;
 
   virtual double centralMagneticField() const  {
-    return m_dd4hepgeo->field().magneticField({0,0,0}).z();                                                                                  
+    return m_dd4hepgeo->field().magneticField({0,0,0}).z()*(Acts::UnitConstants::T/dd4hep::tesla);
   }
  
 ;
