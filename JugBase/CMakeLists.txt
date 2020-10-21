@@ -31,7 +31,8 @@ target_link_libraries(JugBase
 target_compile_options(JugBase PRIVATE -Wno-suggest-override)
 
 gaudi_add_module(JugBasePlugins
-                 src/components/*.cpp src/components/ReadTestConsumer.cxx
+                 src/components/*.cpp 
+                 src/components/ReadTestConsumer.cxx
                  LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO  ActsCore ActsPluginDD4hep)
 target_compile_options(JugBasePlugins PRIVATE -Wno-suggest-override)
 

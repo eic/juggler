@@ -3,15 +3,17 @@ from Configurables import ApplicationMgr, EICDataSvc, PodioOutput
 
 podioevent   = EICDataSvc("EventDataSvc", inputs=["derp.root"], OutputLevel=DEBUG)
 
+from Configurables import Jug__Base__MCCopier as MCCopier
 from Configurables import PodioInput, ReadTestConsumer
 podioinput = PodioInput("PodioReader", collections=["mcparticles"], OutputLevel=DEBUG)
 checker = ReadTestConsumer()
+copier = MCCopier("copier", inputCollection="mcparticles", outputCollection="mcparticles",OutputLevel=DEBUG)
 
 out = PodioOutput("out", filename="test.root")
 out.outputCommands = ["keep *"]
 
 ApplicationMgr(
-    TopAlg = [podioinput, checker,
+    TopAlg = [podioinput, checker,copier,
               out
               ],
     EvtSel = 'NONE',

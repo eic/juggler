@@ -1,6 +1,5 @@
 //
 #include "TrackFindingAlgorithm.h"
-#include "JugReco/GeometryContainers.hpp"
 
 // Gaudi
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -10,36 +9,15 @@
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/Property.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
-
 #include "DDRec/CellIDPositionConverter.h"
 #include "DDRec/SurfaceManager.h"
 #include "DDRec/Surface.h"
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Logger.hpp"
-
-#include "JugReco/SourceLinks.h"
-#include "JugReco/Track.hpp"
-#include "JugReco/BField.h"
-
-#include "eicd/TrackerHitCollection.h"
-
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "JugReco/SourceLinks.h"
-
-#include <functional>
-#include <stdexcept>
-#include <vector>
-
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFinding/CKFSourceLinkSelector.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
-
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -48,10 +26,28 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
 
+#include "JugBase/DataHandle.h"
+#include "JugBase/IGeoSvc.h"
+#include "JugReco/GeometryContainers.hpp"
+#include "JugReco/SourceLinks.h"
+#include "JugReco/Track.hpp"
+#include "JugReco/BField.h"
+#include "JugReco/SourceLinks.h"
+
+#include "eicd/TrackerHitCollection.h"
+
+#include <functional>
+#include <stdexcept>
+#include <vector>
 #include <random>
 #include <stdexcept>
+
+
 
 namespace Jug::Reco {
 
@@ -74,16 +70,11 @@ namespace Jug::Reco {
     }
     m_BField                = std::make_shared<Acts::ConstantBField>(Acts::Vector3D{0.0, 0.0, m_geoSvc->centralMagneticField()});
     m_fieldctx              = BFieldVariant(m_BField);
-    m_sourcelinkSelectorCfg = {
-        {Acts::GeometryIdentifier(), {15, 10}},
+    m_sourcelinkSelectorCfg = { {Acts::GeometryIdentifier(), {100, 100}},
     };
 
     findTracks = TrackFindingAlgorithm::makeTrackFinderFunction(m_geoSvc->trackingGeometry(), m_BField);
-    // IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
-    // StatusCode   sc = m_gaussDist.initialize(randSvc, Rndm::Gauss(0.0, m_timeResolution.value()));
-    // if (!sc.isSuccess()) {
-    //  return StatusCode::FAILURE;
-    //}
+
     return StatusCode::SUCCESS;
   }
 
@@ -196,3 +187,4 @@ namespace Jug::Reco {
         std::move(magneticField));
   }
 } // namespace Jug::Reco
+

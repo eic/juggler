@@ -2,18 +2,20 @@
 #define JUG_RECO_SourceLinks_HH
 
 #include "Acts/EventData/Measurement.hpp"
-//#include "ActsFatras/EventData/Hit.hpp"
 #include "JugReco/GeometryContainers.hpp"
 
 #include <stdexcept>
 #include <string>
 #include "dd4pod/Geant4Particle.h"
 
+#include "eicd/TrackerHitCollection.h"
+
 
 namespace Jug {
 
-/* Source link class for simulation in the acts-framework.
+/** Source Link for simulation in the acts-framework.
  *
+ * https://github.com/acts-project/acts/blob/master/Core/include/Acts/EventData/SourceLinkConcept.hpp
  * The source link stores the measuremts, surface, and the associated simulated
  * truth hit.
  *
@@ -21,6 +23,7 @@ namespace Jug {
  *
  */
 class SourceLink {
+
  private:
   Acts::BoundVector m_values;
   Acts::BoundMatrix m_cov;
@@ -30,6 +33,7 @@ class SourceLink {
   // need to store pointers to make the object copyable
   const Acts::Surface* m_surface;
   //const ActsFatras::Hit* m_truthHit;
+  const eic::TrackerHit* m_Hit ;
 
  public:
   SourceLink(const Acts::Surface& surface, //const ActsFatras::Hit& truthHit,
