@@ -11,40 +11,11 @@ stages:
   - docker_push
   - run
 
-    #compile:
-    #  stage: build
-    #  tags:
-    #    - silicon
-    #  before_script:
-    #    - pwd &&  ls -lrth
-    #  script:
-    #    - export homedir=$(pwd) &&  pwd && cd /tmp && git clone --depth=1 https://eicweb.phy.anl.gov/EIC/NPDet.git && mkdir build && cd build && cmake ../NPDet/. && make -j20 install
-    #    - cd /tmp && git clone --depth=1 https://eicweb.phy.anl.gov/EIC/eicd.git && mkdir eicd_build && cd eicd_build && cmake ../eicd/. && make -j20 install
-    #    - cd $homedir && ls -lrth && mkdir build && cd build && cmake .. && make -j10
-
-      #run_example:
-      #  stage: run
-      #  tags:
-      #    - silicon
-      #  script:
-      #    - ./build/run gaudirun.py Examples/options/hello_world.py
-      #
-      #run_example2:
-      #  image: eicweb.phy.anl.gov:4567/eic/npdet/npdet:latest
-      #  stage: run
-      #  tags:
-      #    - silicon
-      #  script:
-      #    - ./build/run gaudirun.py JugBase/tests/options/simple_reader.py
-
 docker_image:
   image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
   stage: docker_build
   tags:
     - silicon
-      #  only:
-      #    - master
-      #    - ci_dev
   script:
     - cd containers/docker 
     - make build-nc
@@ -54,9 +25,6 @@ docker_image_push:
   stage: docker_push
   tags:
     - silicon
-      #  only:
-      #    - master
-      #    - ci_dev
   script:
     - cd containers/docker 
     - make push
