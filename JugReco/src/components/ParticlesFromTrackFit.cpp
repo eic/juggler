@@ -63,31 +63,21 @@ namespace Jug {
           //debug() << trackstate.hasPredicted() << endmsg;
           //debug() << trackstate.predicted() << endmsg;
           auto params = trackstate.predicted() ;//<< endmsg;
-          debug() << 1.0/params[Acts::eBoundQOverP] << " GeV" << endmsg;
-          if ( std::abs(1.0 / params[Acts::eBoundQOverP]) > 10) {
+
+          double p0 = (1.0 / params[Acts::eBoundQOverP]) / Acts::UnitConstants::GeV;
+          debug() << "track predicted p = " << p0 << " GeV" << endmsg;
+          if ( std::abs(p0) > 500) {
             debug() << "skipping" << endmsg;
             return;
           }
 
-          eic::Particle p({params[Acts::eBoundPhi], params[Acts::eBoundTheta], 1.0 / params[Acts::eBoundQOverP], 0.105},
+          eic::Particle p({params[Acts::eBoundPhi], params[Acts::eBoundTheta], 1.0 / params[Acts::eBoundQOverP], 0.000511},
                           {0.0, 0.0, 0.0, params[Acts::eBoundTime]},
-                          (long long)13 * params[Acts::eBoundQOverP] / std::abs(params[Acts::eBoundQOverP]), 0);
-          debug() << p << endmsg;
+                          (long long)11 * params[Acts::eBoundQOverP] / std::abs(params[Acts::eBoundQOverP]), 0);
+          //debug() << p << endmsg;
           rec_parts->push_back(p);
         });
 
-        //auto pos = m_geoSvc->cellIDPositionConverter()->position(ahit.cellID());
-        //auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(ahit.cellID());
-        //debug() << " dim size : " <<  std::size(dim) << endmsg;
-        //for(const auto& s : dim ) {
-        //  debug() << "a size : " <<  s << endmsg;
-        //}
-        ////std::array<double,3> posarr; pos.GetCoordinates(posarr);
-        ////std::array<double,3> dimarr; dim.GetCoordinates(posarr);
-        ////eic::TrackerHit hit;
-        //eic::TrackerHit hit((long long)ahit.cellID(), (long long)ahit.cellID(), (long long)ahit.time(),
-        //                    (float)ahit.charge() / 10000.0, (float)0.0, {{pos.x(), pos.y(),pos.z()}},{{dim[0],dim[1],0.0}});
-        //rec_hits->push_back(hit);
       }
       return StatusCode::SUCCESS;
     }

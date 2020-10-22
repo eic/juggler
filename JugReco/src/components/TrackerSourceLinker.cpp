@@ -24,6 +24,9 @@
 #include "DDRec/CellIDPositionConverter.h"
 #include "DDRec/SurfaceManager.h"
 #include "DDRec/Surface.h"
+#include "DD4hep/Volumes.h"
+#include "DD4hep/DD4hepUnits.h"
+
 
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -38,8 +41,6 @@ namespace Jug::Reco {
 
   class TrackerSourceLinker : public GaudiAlgorithm {
   public:
-    Gaudi::Property<double>               m_timeResolution{this, "timeResolution", 10};
-    Rndm::Numbers                         m_gaussDist;
     DataHandle<eic::TrackerHitCollection>    m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<SourceLinkContainer> m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};
     /// Pointer to the geometry service
@@ -63,11 +64,6 @@ namespace Jug::Reco {
         error() << "Unable to locate Geometry Service. "
                 << "Make sure you have GeoSvc and SimSvc in the right order in the configuration."
                 << endmsg;
-        return StatusCode::FAILURE;
-      }
-      IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
-      StatusCode   sc = m_gaussDist.initialize(randSvc, Rndm::Gauss(0.0, m_timeResolution.value()));
-      if (!sc.isSuccess()) {
         return StatusCode::FAILURE;
       }
       debug() << "visiting all the surfaces  " << endmsg;
@@ -95,34 +91,40 @@ namespace Jug::Reco {
       // setup local covariance
       // TODO add support for per volume/layer/module settings
 
+      debug() << (*hits).size() << " hits " << endmsg;
       for(const auto& ahit : *hits) {
 
         Acts::BoundMatrix cov           = Acts::BoundMatrix::Zero();
-        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = ahit.covMatrix(0)*Acts::UnitConstants::mm;//*ahit.covMatrix(0);
-        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = ahit.covMatrix(1)*Acts::UnitConstants::mm;//*ahit.covMatrix(1);
+        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = ahit.covMatrix(0)*Acts::UnitConstants::mm*ahit.covMatrix(0)*Acts::UnitConstants::mm;
+        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = ahit.covMatrix(1)*Acts::UnitConstants::mm*ahit.covMatrix(1)*Acts::UnitConstants::mm;
 
-        debug() << "cell ID : " << ahit.cellID() << endmsg;
         auto vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID());
         auto vol_id = vol_ctx->identifier;
-        debug() << " vol_id : " <<  vol_id << endmsg;
-        debug() << " hit : " <<  ahit << endmsg;
+        debug() << " hit          : \n" <<  ahit << endmsg;
+        //debug() << "cell ID : " << ahit.cellID() << endmsg;
+        //debug() << " position : (" <<  ahit.position(0) << ", " <<  ahit.position(1) << ", "<<  ahit.position(2) << ") " << endmsg;
+        debug() << " vol_id       : " <<  vol_id << endmsg;
+        debug() << " placment pos : " << vol_ctx->volumePlacement().position() << endmsg;
 
         const auto is = m_surfaces.find(vol_id);
         if (is == m_surfaces.end()) {
+          debug() << " vol_id (" <<  vol_id << ")  not found in m_surfaces." <<endmsg;
           continue;
         }
         const Acts::Surface* surface = is->second;
 
+        debug() << " surface center : " << surface->center(Acts::GeometryContext()) << endmsg;
         // transform global position into local coordinates
         Acts::Vector2D pos(0, 0);
         // geometry context contains nothing here
-        surface->globalToLocal(Acts::GeometryContext(), {ahit.position(0), ahit.position(1), ahit.position(2)},
-                               {0, 0, 0});//, pos);
+        pos = surface->globalToLocal(Acts::GeometryContext(), {ahit.position(0), ahit.position(1), ahit.position(2)}, {0, 0, 0}).value();//, pos);
 
         //// smear truth to create local measurement
         Acts::BoundVector loc = Acts::BoundVector::Zero();
-        //loc[Acts::eLOC_0]     = pos[0] + m_cfg.sigmaLoc0 * stdNormal(rng);
-        //loc[Acts::eLOC_1]     = pos[1] + m_cfg.sigmaLoc1 * stdNormal(rng);
+        loc[Acts::eBoundLoc0]     = pos[0] ;//+ m_cfg.sigmaLoc0 * stdNormal(rng);
+        loc[Acts::eBoundLoc0]     = pos[1] ;//+ m_cfg.sigmaLoc1 * stdNormal(rng);
+
+        debug() << "loc : (" << loc[0] << ", " << loc[1] << ")" << endmsg;
 
         // create source link at the end of the container
         //auto it = source_links->emplace_hint(source_links->end(), *surface, hit, 2, loc, cov);

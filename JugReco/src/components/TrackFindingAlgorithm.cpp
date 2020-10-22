@@ -70,7 +70,7 @@ namespace Jug::Reco {
     }
     m_BField                = std::make_shared<Acts::ConstantBField>(Acts::Vector3D{0.0, 0.0, m_geoSvc->centralMagneticField()});
     m_fieldctx              = BFieldVariant(m_BField);
-    m_sourcelinkSelectorCfg = { {Acts::GeometryIdentifier(), {100, 100}},
+    m_sourcelinkSelectorCfg = { {Acts::GeometryIdentifier(), {15, 10}},
     };
 
     findTracks = TrackFindingAlgorithm::makeTrackFinderFunction(m_geoSvc->trackingGeometry(), m_BField);
@@ -120,6 +120,7 @@ namespace Jug::Reco {
         trajectories->emplace_back(std::move(trackFindingOutput.fittedStates), std::move(trackFindingOutput.trackTips),
                                    std::move(trackFindingOutput.fittedParameters));
       } else {
+        debug() << "Track finding failed for truth seed " << iseed << endmsg;
         ACTS_WARNING("Track finding failed for truth seed " << iseed << " with error" << result.error());
         // Track finding failed, but still create an empty SimMultiTrajectory
         trajectories->push_back(SimMultiTrajectory());

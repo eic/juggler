@@ -21,6 +21,8 @@
 #include "eicd/TrackerHitCollection.h"
 #include "JugReco/SourceLinks.h"
 
+#include "DD4hep/DD4hepUnits.h"
+
 namespace Jug {
   namespace Reco {
   
@@ -68,18 +70,22 @@ namespace Jug {
       // Create output collections
       auto rec_hits = m_outputHitCollection.createAndPut();
       for(const auto& ahit : *rawhits) {
-        debug() << "cell ID : " << ahit.cellID() << endmsg;
+        //debug() << "cell ID : " << ahit.cellID() << endmsg;
         auto pos = m_geoSvc->cellIDPositionConverter()->position(ahit.cellID());
         auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(ahit.cellID());
-        debug() << " dim size : " <<  std::size(dim) << endmsg;
-        for(const auto& s : dim ) {
-          debug() << "a size : " <<  s << endmsg;
-        }
+        //debug() << " dim size : " <<  std::size(dim) << endmsg;
+        //for(const auto& s : dim ) {
+        //  debug() << "a size : " <<  s << endmsg;
+        //}
         //std::array<double,3> posarr; pos.GetCoordinates(posarr);
         //std::array<double,3> dimarr; dim.GetCoordinates(posarr);
         //eic::TrackerHit hit;
-        eic::TrackerHit hit((long long)ahit.cellID(),  (long long)ahit.time(),
-                            (float)ahit.charge() / 10000.0, (float)0.0, {{pos.x(), pos.y(),pos.z()}},{{dim[0],dim[1],0.0}});
+        eic::TrackerHit hit((long long)ahit.cellID(),  
+                            (long long)ahit.time()/1000, // ps
+                            (float)ahit.charge() / 1000.0, // MeV
+                            (float)0.0, 
+                            {{pos.x()/dd4hep::mm, pos.y()/dd4hep::mm,pos.z()/dd4hep::mm}},
+                            {{dim[0]/dd4hep::mm,dim[1]/dd4hep::mm,0.0}});
         rec_hits->push_back(hit);
       }
       return StatusCode::SUCCESS;
