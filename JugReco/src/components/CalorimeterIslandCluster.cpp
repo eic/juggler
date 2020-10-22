@@ -33,9 +33,9 @@
 using namespace Gaudi::Units;
 
 namespace Jug::Reco {
-class CalorimeterIslandCluster : public GaudiAlgorithm
-{
-public:
+
+  class CalorimeterIslandCluster : public GaudiAlgorithm {
+  public:
     Gaudi::Property<double> m_groupRange{this, "groupRange", 1.8};
     Gaudi::Property<double> m_minClusterCenterEdep{this, "minClusterCenterEdep", 50.0*MeV};
     DataHandle<eic::CalorimeterHitCollection>
@@ -83,13 +83,13 @@ public:
             // create a new group, and group all the neighboring hits
             dfs_group(groups.back(), i, hits, visits);
         }
-        // info() << "we have " << groups.size() << " groups of hits" << endmsg;
+        debug() << "we have " << groups.size() << " groups of hits" << endmsg;
 
         for (auto &group : groups) {
             auto maxima = find_local_maxima(group);
             split_group(group, maxima, clusters, split_hits);
-            // info() << "hits in a group: " << group.hits_size() <<  ", "
-            //        << "local maxima: " << maxima.hits_size() << endmsg;
+            debug() << "hits in a group: " << group.size() <<  ", "
+                    << "local maxima: " << maxima.hits_size() << endmsg;
         }
 
         return StatusCode::SUCCESS;
@@ -217,7 +217,7 @@ private:
         }
         return;
     }
-};
+  };
 
 DECLARE_COMPONENT(CalorimeterIslandCluster)
 
