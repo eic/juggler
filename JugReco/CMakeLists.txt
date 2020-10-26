@@ -33,6 +33,7 @@ gaudi_add_module(JugRecoPlugins
   src/components/TrackFindingAlgorithm.cpp 
   src/components/TestACTSLogger.cpp 
   src/components/TrackParamTruthInit.cpp 
+  src/components/SimpleClustering.cpp 
   src/components/ParticlesFromTrackFit.cpp 
   src/components/CalorimeterIslandCluster.cpp 
   src/components/CrystalEndcapsReco.cpp 

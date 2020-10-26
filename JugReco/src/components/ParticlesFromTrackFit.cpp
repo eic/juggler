@@ -71,7 +71,7 @@ namespace Jug {
             return;
           }
 
-          eic::Particle p({params[Acts::eBoundPhi], params[Acts::eBoundTheta], 1.0 / params[Acts::eBoundQOverP], 0.000511},
+          eic::Particle p({params[Acts::eBoundPhi], params[Acts::eBoundTheta], 1.0 / std::abs(params[Acts::eBoundQOverP]), 0.000511},
                           {0.0, 0.0, 0.0, params[Acts::eBoundTime]},
                           (long long)11 * params[Acts::eBoundQOverP] / std::abs(params[Acts::eBoundQOverP]), 0);
           //debug() << p << endmsg;
