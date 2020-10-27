@@ -83,10 +83,10 @@ namespace Jug {
         //eic::TrackerHit hit;
         eic::TrackerHit hit((long long)ahit.cellID(),  
                             (float)ahit.time()/1000, // ps
-                            (float)ahit.charge()/ 1.0e6, // MeV
+                            (float)ahit.charge()/ 1.0e6, // GeV
                             (float)0.0, 
                             {pos.x()/dd4hep::mm, pos.y()/dd4hep::mm,pos.z()/dd4hep::mm},
-                            {dim[0],dim[1],0.0});
+                            {dim[0]/dd4hep::mm,dim[1]/dd4hep::mm,0.0});
         rec_hits->push_back(hit);
       }
       return StatusCode::SUCCESS;

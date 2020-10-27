@@ -86,11 +86,9 @@ namespace Jug::Reco {
       while (continue_clustering) {
 
         std::vector<eic::CalorimeterHit> cluster_hits;
-        debug() << " ref_hit" << ref_hit << endmsg;
-
+        //debug() << " ref_hit" << ref_hit << endmsg;
         // auto ref_hit = *(std::max_element(std::begin(hits), std::end(hits),
         //                                [](const auto& h1, const auto& h2) { return h1.energy() < h2.energy(); }));
-
         // std::partition_copy(std::begin(hits), std::end(hits), std::begin(first_cluster_hits),
         // std::begin(remaining_hits),
         //                    [=](const auto& h) {
@@ -122,7 +120,7 @@ namespace Jug::Reco {
           cluster0.y(cluster0.y() + h.energy() * h.y() / total_energy);
           cluster0.z(cluster0.z() + h.energy() * h.z() / total_energy);
         }
-        debug() << " cluster = " << cluster0 << endmsg;
+        //debug() << " cluster = " << cluster0 << endmsg;
         clusters.push_back(cluster0);
 
 
