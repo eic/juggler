@@ -1,9 +1,9 @@
 image: eicweb.phy.anl.gov:4567/containers/eic_container/eic:latest
 
-default:
-  artifacts:
-    paths:
-      - build/
+#default:
+#  artifacts:
+#    paths:
+#      - build/
 
 stages:
   - build
@@ -14,7 +14,7 @@ stages:
 compile:
   stage: build
   rules:
-    - if: '$CI_COMMIT_BRANCH != "master"'
+    - if: '$CI_COMMIT_BRANCH != "master" && $CI_PIPELINE_SOURCE == "merge_request_event"'
   tags:
     - silicon
   script:
@@ -28,7 +28,9 @@ docker_image:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
-      #  - if: '$CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_COMMIT_BRANCH != "master"'
+      when: never
+    - when: on_success
   tags:
     - silicon
   script:
@@ -38,6 +40,7 @@ docker_image:
 docker_image_push:
   image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
   stage: docker_push
+  needs: ["docker_image"]
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
