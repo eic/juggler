@@ -65,54 +65,85 @@ namespace Jug::Reco {
       // Create output collections
       auto& clusters = *m_outputClusters.createAndPut();
 
-      std::vector<eic::CalorimeterHit> first_cluster_hits  ;
-      std::vector<eic::CalorimeterHit> remaining_hits  ;
-      double max_dist = m_maxDistance.value();
-
-      debug() << " max_dist = " << max_dist << endmsg;
+      std::vector<eic::CalorimeterHit> hits_A;
+      std::vector<eic::CalorimeterHit> hits_B;
+      std::vector<eic::CalorimeterHit>& the_hits  = hits_A;
+      std::vector<eic::CalorimeterHit>& remaining_hits = hits_B;
+      double                           max_dist = m_maxDistance.value();
 
       eic::CalorimeterHit ref_hit;
       ref_hit.energy(0.0);
       for (const auto& h : hits) {
-        if(h.energy() > ref_hit.energy()){
+        if (h.energy() > ref_hit.energy()) {
           ref_hit = h;
         }
+        the_hits.push_back(h.clone());
       }
-      debug() << " ref_hit" << ref_hit << endmsg;
 
-      //auto ref_hit = *(std::max_element(std::begin(hits), std::end(hits),
-      //                                [](const auto& h1, const auto& h2) { return h1.energy() < h2.energy(); }));
+      debug() << " max_dist = " << max_dist << endmsg;
+      bool continue_clustering = true;
 
-      //std::partition_copy(std::begin(hits), std::end(hits), std::begin(first_cluster_hits), std::begin(remaining_hits),
-      //                    [=](const auto& h) {
-      //                      return (std::hypot(h.x() - ref_hit.x(), h.y() - ref_hit.y(), h.z() - ref_hit.z()) <
-      //                              max_dist);
-      //                    });
+      while (continue_clustering) {
 
-      for (const auto& h : hits) {
-        if(std::hypot(h.x() - ref_hit.x(), h.y() - ref_hit.y(), h.z() - ref_hit.z()) < max_dist){
-          first_cluster_hits.push_back(h.clone());
+        std::vector<eic::CalorimeterHit> cluster_hits;
+        debug() << " ref_hit" << ref_hit << endmsg;
+
+        // auto ref_hit = *(std::max_element(std::begin(hits), std::end(hits),
+        //                                [](const auto& h1, const auto& h2) { return h1.energy() < h2.energy(); }));
+
+        // std::partition_copy(std::begin(hits), std::end(hits), std::begin(first_cluster_hits),
+        // std::begin(remaining_hits),
+        //                    [=](const auto& h) {
+        //                      return (std::hypot(h.x() - ref_hit.x(), h.y() - ref_hit.y(), h.z() - ref_hit.z()) <
+        //                              max_dist);
+        //                    });
+
+        for (const auto& h : the_hits) {
+          if (std::hypot(h.x() - ref_hit.x(), h.y() - ref_hit.y(), h.z() - ref_hit.z()) < max_dist) {
+            cluster_hits.push_back(h.clone());
+          } else {
+            remaining_hits.push_back(h.clone());
+          }
+        }
+
+        debug() << " cluster size " << cluster_hits.size() << endmsg;
+        double total_energy =
+            std::accumulate(std::begin(cluster_hits), std::end(cluster_hits), 0.0,
+                            [](double t, const eic::CalorimeterHit& h1) { return (t + h1.energy()); });
+        debug() << " total_energy = " << total_energy << endmsg;
+
+        eic::Cluster cluster0;
+        // debug() << " cluster0 = " << cluster0 << endmsg;
+        // eic::Cluster cluster1  = std::accumulate(std::begin(first_cluster_hits), std::end(first_cluster_hits),
+        // cluster0,
+        for (const auto& h : cluster_hits) {
+          cluster0.energy(cluster0.energy() + h.energy());
+          cluster0.x(cluster0.x() + h.energy() * h.x() / total_energy);
+          cluster0.y(cluster0.y() + h.energy() * h.y() / total_energy);
+          cluster0.z(cluster0.z() + h.energy() * h.z() / total_energy);
+        }
+        debug() << " cluster = " << cluster0 << endmsg;
+        clusters.push_back(cluster0);
+
+
+        if((remaining_hits.size() > 5) && (clusters.size() < 10) ){
+          ref_hit.energy(0.0);
+          for (const auto& h : remaining_hits) {
+            if (h.energy() > ref_hit.energy()) {
+              ref_hit = h;
+            }
+          }
+
+          std::swap( remaining_hits, the_hits);
+          remaining_hits.clear();
+
         } else {
-          remaining_hits.push_back(h.clone());
+          continue_clustering = false;
+          break;
+
         }
       }
-
-      debug() << " first cluster size " << first_cluster_hits.size() << endmsg;
-      double total_energy = std::accumulate(std::begin(first_cluster_hits), std::end(first_cluster_hits), 0.0,
-                                            [](double t,const eic::CalorimeterHit& h1 ) { return (t + h1.energy()); });
-      debug() << " total_energy = " << total_energy << endmsg;
-
-      eic::Cluster cluster0;
-      //debug() << " cluster0 = " << cluster0 << endmsg;
-      //eic::Cluster cluster1  = std::accumulate(std::begin(first_cluster_hits), std::end(first_cluster_hits), cluster0,
-      for (const auto& h : first_cluster_hits) {
-        cluster0.energy(cluster0.energy() + h.energy());
-        cluster0.x(cluster0.x() + h.energy() * h.x()/total_energy);
-        cluster0.y(cluster0.y() + h.energy() * h.y()/total_energy);
-        cluster0.z(cluster0.z() + h.energy() * h.z()/total_energy);
-      }
-      debug() << " cluster0 = " << cluster0 << endmsg;
-      clusters.push_back(cluster0);
+        debug() << " clusters found: " << clusters.size() << endmsg;
 
       return StatusCode::SUCCESS;
       }
