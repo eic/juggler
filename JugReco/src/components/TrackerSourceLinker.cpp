@@ -95,8 +95,8 @@ namespace Jug::Reco {
       for(const auto& ahit : *hits) {
 
         Acts::BoundMatrix cov           = Acts::BoundMatrix::Zero();
-        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = ahit.covMatrix(0)*Acts::UnitConstants::mm*ahit.covMatrix(0)*Acts::UnitConstants::mm;
-        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = ahit.covMatrix(1)*Acts::UnitConstants::mm*ahit.covMatrix(1)*Acts::UnitConstants::mm;
+        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = ahit.covsym_xx()*Acts::UnitConstants::mm*ahit.covsym_xx()*Acts::UnitConstants::mm;
+        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = ahit.covsym_yy()*Acts::UnitConstants::mm*ahit.covsym_yy()*Acts::UnitConstants::mm;
 
         auto vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID());
         auto vol_id = vol_ctx->identifier;
@@ -117,7 +117,7 @@ namespace Jug::Reco {
         // transform global position into local coordinates
         Acts::Vector2D pos(0, 0);
         // geometry context contains nothing here
-        pos = surface->globalToLocal(Acts::GeometryContext(), {ahit.position(0), ahit.position(1), ahit.position(2)}, {0, 0, 0}).value();//, pos);
+        pos = surface->globalToLocal(Acts::GeometryContext(), {ahit.x(), ahit.y(), ahit.z()}, {0, 0, 0}).value();//, pos);
 
         //// smear truth to create local measurement
         Acts::BoundVector loc = Acts::BoundVector::Zero();

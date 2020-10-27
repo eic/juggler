@@ -11,21 +11,21 @@ LABEL maintainer="Whitney Armstrong <warmstrong@anl.gov>" \
 RUN cd /tmp             \
       && git clone  https://eicweb.phy.anl.gov/EIC/NPDet.git \
       && mkdir -p NPDet/build && cd NPDet/build \
-      && cmake ../. -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/usr/local \
+      && cmake ../. -DCMAKE_CXX_STANDARD=20 -DCMAKE_INSTALL_PREFIX=/usr/local \
       && make -j30  && make -j4 install \
       && cd /tmp && rm -rf /tmp/NPDet 
 
 RUN cd /tmp             \
       && git clone  https://eicweb.phy.anl.gov/EIC/eicd.git \
       && mkdir -p eicd/build && cd eicd/build \
-      && cmake ../. -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/usr/local \
+      && cmake ../. -DCMAKE_CXX_STANDARD=20 -DCMAKE_INSTALL_PREFIX=/usr/local \
       && make -j30  && make -j4 install \
       && cd /tmp && rm -rf /tmp/eicd 
 
 RUN cd /tmp             \
       && git clone  https://eicweb.phy.anl.gov/EIC/juggler.git \
       && mkdir -p juggler/build && cd juggler/build \
-      && cmake ../. -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/usr/local \
+      && cmake ../. -DCMAKE_CXX_STANDARD=20 -DCMAKE_INSTALL_PREFIX=/usr/local \
       && make -j30  && make -j4 install \
       && cd /tmp && rm -rf /tmp/juggler 
 

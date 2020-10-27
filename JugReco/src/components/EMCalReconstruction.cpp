@@ -11,6 +11,7 @@
 #include "DDRec/CellIDPositionConverter.h"
 #include "DDRec/SurfaceManager.h"
 #include "DDRec/Surface.h"
+#include "DD4hep/DD4hepUnits.h"
 
 // FCCSW
 #include "JugBase/DataHandle.h"
@@ -76,7 +77,7 @@ namespace Jug::Reco {
           // cell dimension
           auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
           hits.push_back(eic::CalorimeterHit{
-              id, energy, time, {gpos.x(), gpos.y(), gpos.z()}, {pos.x(), pos.y(), pos.z()}, {dim[0], dim[1], 0.0}, 0});
+              id, energy, time, {gpos.x()/dd4hep::mm, gpos.y()/dd4hep::mm, gpos.z()/dd4hep::mm}, {pos.x()/dd4hep::mm, pos.y()/dd4hep::mm, pos.z()/dd4hep::mm}, {dim[0]/dd4hep::mm, dim[1]/dd4hep::mm, 0.0}, 0});
         }
       }
 

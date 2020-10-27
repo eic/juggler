@@ -11,6 +11,7 @@
 #include "DDRec/CellIDPositionConverter.h"
 #include "DDRec/SurfaceManager.h"
 #include "DDRec/Surface.h"
+#include "DD4hep/DD4hepUnits.h"
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
@@ -81,11 +82,11 @@ namespace Jug {
         //std::array<double,3> dimarr; dim.GetCoordinates(posarr);
         //eic::TrackerHit hit;
         eic::TrackerHit hit((long long)ahit.cellID(),  
-                            (long long)ahit.time()/1000, // ps
-                            (float)ahit.charge() / 1000.0, // MeV
+                            (float)ahit.time()/1000, // ps
+                            (float)ahit.charge()/ 1.0e6, // MeV
                             (float)0.0, 
-                            {{pos.x()/dd4hep::mm, pos.y()/dd4hep::mm,pos.z()/dd4hep::mm}},
-                            {{dim[0]/dd4hep::mm,dim[1]/dd4hep::mm,0.0}});
+                            {pos.x()/dd4hep::mm, pos.y()/dd4hep::mm,pos.z()/dd4hep::mm},
+                            {dim[0],dim[1],0.0});
         rec_hits->push_back(hit);
       }
       return StatusCode::SUCCESS;
