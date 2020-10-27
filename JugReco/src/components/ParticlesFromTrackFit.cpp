@@ -15,12 +15,18 @@
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+ 
 // Event Model related classes
-//#include "GaudiExamples/MyTrack.h"
 #include "eicd/ParticleCollection.h"
 #include "eicd/TrackerHitCollection.h"
+#include "eicd/TrackParametersCollection.h"
 #include "JugReco/SourceLinks.h"
 #include "JugReco/Track.hpp"
+
+#include "Acts/Utilities/Helpers.hpp"
+
 
 namespace Jug {
   namespace Reco {
@@ -31,8 +37,9 @@ namespace Jug {
    class ParticlesFromTrackFit : public GaudiAlgorithm {
    public:
     //DataHandle<eic::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-    DataHandle<TrajectoryContainer>      m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
+    DataHandle<TrajectoryContainer>     m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::ParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer, this};
+    DataHandle<eic::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters", Gaudi::DataHandle::Writer, this};
 
    public:
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
@@ -40,6 +47,7 @@ namespace Jug {
         : GaudiAlgorithm(name, svcLoc) {
           declareProperty("inputTrajectories", m_inputTrajectories,"");
           declareProperty("outputParticles", m_outputParticles, "");
+          declareProperty("outputTrackParameters", m_outputTrackParameters, "ACTS Track Parameters");
         }
 
     StatusCode initialize() override {
@@ -53,12 +61,68 @@ namespace Jug {
       const TrajectoryContainer* trajectories = m_inputTrajectories.get();
       // create output collections
       auto rec_parts = m_outputParticles.createAndPut();
+      auto track_pars = m_outputTrackParameters.createAndPut();
 
       for(const auto& traj : *trajectories) {
         //traj.trajectory().first
+        const auto& [trackTips, mj] = traj.trajectory();
+        if (trackTips.empty()) {
+          debug() << "Empty multiTrajectory." << endmsg;
+          continue;
+        }
+
+            // Get the entry index for the single trajectory
+    auto& trackTip = trackTips.front();
+
+    // Collect the trajectory summary info
+    auto trajState       = Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
+    int m_nMeasurements = trajState.nMeasurements;
+    int m_nStates = trajState.nStates;
+
+            // Get the fitted track parameter
+    bool  m_hasFittedParams = false;
+    if (traj.hasTrackParameters(trackTip)) {
+      m_hasFittedParams = true;
+      const auto& boundParam = traj.trackParameters(trackTip);
+      const auto& parameter = boundParam.parameters();
+      const auto& covariance = *boundParam.covariance();
+      debug() << "loc 0 = " << parameter[Acts::eBoundLoc0]   << endmsg;
+      debug() << "loc 1 = " << parameter[Acts::eBoundLoc1]   << endmsg;
+      debug() << "phi   = " << parameter[Acts::eBoundPhi]    << endmsg;
+      debug() << "theta = " << parameter[Acts::eBoundTheta]  << endmsg;
+      debug() << "q/p   = " << parameter[Acts::eBoundQOverP] << endmsg;
+      debug() << "p     = " << 1.0/parameter[Acts::eBoundQOverP] << endmsg;
+
+      debug() << "err phi = " << sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi))      << endmsg;
+      debug() << "err th  = " << sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta))  << endmsg;
+      debug() << "err q/p = " << sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP))<< endmsg;
+
+      debug() << " chi2 = " << trajState.chi2Sum << endmsg;
+
+      eic::TrackParameters pars({
+          parameter[Acts::eBoundLoc0], parameter[Acts::eBoundLoc1], parameter[Acts::eBoundPhi],
+          parameter[Acts::eBoundTheta], parameter[Acts::eBoundQOverP],parameter[Acts::eBoundTime],
+          sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)), sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)),
+          sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)), sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)),
+          sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)),sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime))});
+      track_pars->push_back(pars);
+
+      //m_ePHI_fit = parameter[Acts::eBoundPhi];
+      //m_eTHETA_fit = parameter[Acts::eBoundTheta];
+      //m_eQOP_fit = parameter[Acts::eBoundQOverP];
+      //m_eT_fit = parameter[Acts::eBoundTime];
+      //m_err_eLOC0_fit = sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0));
+      //m_err_eLOC1_fit = sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1));
+      //m_err_ePHI_fit = sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi));
+      //m_err_eTHETA_fit = sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta));
+      //m_err_eQOP_fit = sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP));
+      //m_err_eT_fit = sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime));
+    }
+
         auto tsize = traj.trajectory().first.size();
         debug() << "# fitted parameters : " << tsize << endmsg;
         if(tsize == 0 ) continue;
+
         traj.trajectory().second.visitBackwards(tsize-1, [&](auto&& trackstate) {
           //debug() << trackstate.hasPredicted() << endmsg;
           //debug() << trackstate.predicted() << endmsg;

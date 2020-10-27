@@ -100,7 +100,7 @@ namespace Jug::Reco {
 
         auto vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID());
         auto vol_id = vol_ctx->identifier;
-        debug() << " hit          : \n" <<  ahit << endmsg;
+        //debug() << " hit          : \n" <<  ahit << endmsg;
         //debug() << "cell ID : " << ahit.cellID() << endmsg;
         //debug() << " position : (" <<  ahit.position(0) << ", " <<  ahit.position(1) << ", "<<  ahit.position(2) << ") " << endmsg;
         debug() << " vol_id       : " <<  vol_id << endmsg;

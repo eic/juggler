@@ -13,7 +13,7 @@
 #include "Acts/Utilities/Units.hpp"
 
 #include "eicd/TrackerHitCollection.h"
-#include "dd4pod/Geant4ParticleCollection.h"
+#include "eicd/ClusterCollection.h"
 
 
   ///// (Reconstructed) track parameters e.g. close to the vertex.
@@ -30,21 +30,28 @@
 
 namespace Jug::Reco {
 
-  /** Initial Track parameters from MC truth.
+  /** Initial Track parameters from clusters and vertex hits.
    *
-   *  TrackParmetersContainer
+   *
+   * The momentum of the initial track is estimated from the cluster  energy and 
+   * the direction is set using the vertex hits.
+   *
    */
-  class TrackParamTruthInit : public GaudiAlgorithm {
+  class TrackParamVertexClusterInit : public GaudiAlgorithm {
   public:
-    DataHandle<dd4pod::Geant4ParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader,
-                                                                    this};
-    DataHandle<TrackParametersContainer>         m_outputInitialTrackParameters{"outputInitialTrackParameters",
+    using Clusters =  eic::ClusterCollection;
+    using VertexHits =  eic::TrackerHitCollection;
+
+    DataHandle<VertexHits>               m_inputVertexHits{"inputVertexHits", Gaudi::DataHandle::Reader, this};
+    DataHandle<Clusters>                 m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
+    DataHandle<TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
                                                                         Gaudi::DataHandle::Writer, this};
 
   public:
-    TrackParamTruthInit(const std::string& name, ISvcLocator* svcLoc)
+    TrackParamVertexClusterInit(const std::string& name, ISvcLocator* svcLoc)
         : GaudiAlgorithm(name, svcLoc) {
-      declareProperty("inputMCParticles", m_inputMCParticles, "");
+      declareProperty("inputVertexHits", m_inputVertexHits, "Vertex tracker hits");
+      declareProperty("inputClusters", m_inputClusters, "Input clusters");
       declareProperty("outputInitialTrackParameters", m_outputInitialTrackParameters, "");
     }
 
@@ -59,21 +66,25 @@ namespace Jug::Reco {
 
     StatusCode execute() override {
       // input collection
-      const dd4pod::Geant4ParticleCollection* mcparts = m_inputMCParticles.get();
+      const Clusters*   clusters = m_inputClusters.get();
+      const VertexHits* vtx_hits = m_inputVertexHits.get();
       // Create output collections
       auto init_trk_params = m_outputInitialTrackParameters.createAndPut();
 
-      for(const auto& part : *mcparts) {
+      for(const auto& c : *clusters) {
 
-        // genStatus = 1 means thrown G4Primary 
-        if(part.genStatus() != 1 ) {
+        using Acts::UnitConstants::GeV;
+        using Acts::UnitConstants::MeV;
+        using Acts::UnitConstants::mm;
+        using Acts::UnitConstants::ns;
+
+        double p = c.energy()*GeV;
+        if( p < 1.0) {
+          debug() << " skipping cluster with energy " << p/GeV << " GeV" << endmsg;
           continue;
         }
-        using Acts::UnitConstants::MeV;
-        using Acts::UnitConstants::GeV;
-        using Acts::UnitConstants::mm;
 
-        double p = std::hypot( part.psx() * GeV, part.psy() * GeV, part.psz() * GeV);
+        double len =  std::hypot( c.x() , c.y() , c.z() );
 
         // build some track cov matrix
         Acts::BoundSymMatrix cov        = Acts::BoundSymMatrix::Zero();
@@ -81,26 +92,25 @@ namespace Jug::Reco {
         cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = 1.0 * mm*1.0 * mm;
         cov(Acts::eBoundPhi, Acts::eBoundPhi)     = M_PI / 180.0;
         cov(Acts::eBoundTheta, Acts::eBoundTheta) = M_PI / 180.0;
-        cov(Acts::eBoundQOverP, Acts::eBoundQOverP)     = 0.98 / (p*p);
+        cov(Acts::eBoundQOverP, Acts::eBoundQOverP)     = 1.0 / (p*p);
         cov(Acts::eBoundTime, Acts::eBoundTime)         = Acts::UnitConstants::ns;
 
-        init_trk_params->emplace_back(Acts::Vector4D(part.vsx() * mm, part.vsy() * mm, part.vsz() * mm, part.time() * Acts::UnitConstants::ns),
-                                      Acts::Vector3D(part.psx() * GeV, part.psy() * GeV, part.psz() * GeV),
-                                      p+200*MeV,
-                                      ((part.pdgID() > 0) ? -1 : 1),
-                                      std::make_optional(std::move(cov))
-                                      );
-        //part .charge()
-
+        // add all charges to the track candidate...
+        init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
+                                      Acts::Vector3D(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, -1,
+                                      std::make_optional(cov));
+        init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
+                                      Acts::Vector3D(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, 1,
+                                      std::make_optional(cov));
+        //init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
+        //                              Acts::Vector3D(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, 0,
+        //                              std::make_optional(cov));
         debug() << "Invoke track finding seeded by truth particle with p = " << p/GeV  << " GeV" << endmsg;
-        //Acts::BoundMatrix cov           = Acts::BoundMatrix::Zero();
-        //cov(Acts::eLOC_0, Acts::eLOC_0) = ahit.covMatrix(0)*ahit.covMatrix(0);
-        //cov(Acts::eLOC_1, Acts::eLOC_1) = ahit.covMatrix(1)*ahit.covMatrix(1);
       }
       return StatusCode::SUCCESS;
     }
   };
-  DECLARE_COMPONENT(TrackParamTruthInit)
+  DECLARE_COMPONENT(TrackParamVertexClusterInit)
 
 } // namespace Jug::reco
 

@@ -34,6 +34,7 @@ gaudi_add_module(JugRecoPlugins
   src/components/TestACTSLogger.cpp 
   src/components/TrackParamTruthInit.cpp 
   src/components/TrackParamClusterInit.cpp 
+  src/components/TrackParamVertexClusterInit.cpp 
   src/components/SimpleClustering.cpp 
   src/components/ParticlesFromTrackFit.cpp 
   src/components/CalorimeterIslandCluster.cpp 

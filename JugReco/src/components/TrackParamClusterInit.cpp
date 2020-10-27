@@ -80,7 +80,7 @@ namespace Jug::Reco {
         cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = 1.0 * mm*1.0 * mm;
         cov(Acts::eBoundPhi, Acts::eBoundPhi)     = M_PI / 180.0;
         cov(Acts::eBoundTheta, Acts::eBoundTheta) = M_PI / 180.0;
-        cov(Acts::eBoundQOverP, Acts::eBoundQOverP)     = 1.0 / (0.05*0.05*p*p);
+        cov(Acts::eBoundQOverP, Acts::eBoundQOverP)     = 1.0 / (p*p);
         cov(Acts::eBoundTime, Acts::eBoundTime)         = Acts::UnitConstants::ns;
 
         // add all charges to the track candidate...
@@ -90,9 +90,9 @@ namespace Jug::Reco {
         init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
                                       Acts::Vector3D(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, 1,
                                       std::make_optional(cov));
-        init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
-                                      Acts::Vector3D(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, 0,
-                                      std::make_optional(cov));
+        //init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
+        //                              Acts::Vector3D(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, 0,
+        //                              std::make_optional(cov));
         debug() << "Invoke track finding seeded by truth particle with p = " << p/GeV  << " GeV" << endmsg;
       }
       return StatusCode::SUCCESS;

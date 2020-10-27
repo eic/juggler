@@ -72,7 +72,7 @@ namespace Jug::Reco {
     m_fieldctx              = BFieldVariant(m_BField);
 
     // chi2 and #sourclinks per surface cutoffs
-    m_sourcelinkSelectorCfg = { {Acts::GeometryIdentifier(), {3, 3}},
+    m_sourcelinkSelectorCfg = { {Acts::GeometryIdentifier(), {15, 10}},
     };
 
     findTracks = TrackFindingAlgorithm::makeTrackFinderFunction(m_geoSvc->trackingGeometry(), m_BField);
@@ -113,8 +113,8 @@ namespace Jug::Reco {
       //                                                 &(*pSurface));
 
       debug() << "Invoke track finding seeded by truth particle " << iseed << endmsg;
-
       auto result = findTracks(*src_links, initialParams, ckfOptions);
+      debug() << "finding done." << endmsg;
       if (result.ok()) {
         // Get the track finding output object
         const auto& trackFindingOutput = result.value();
@@ -174,6 +174,7 @@ namespace Jug::Reco {
           using SourceLinkSelector = Acts::CKFSourceLinkSelector;
           using CKF                = Acts::CombinatorialKalmanFilter<Propagator, Updater, Smoother, SourceLinkSelector>;
 
+          std::cout << " finding ...\n";
           // construct all components for the track finder
           MagneticField field(std::move(inputField));
           Stepper       stepper(std::move(field));
@@ -181,6 +182,7 @@ namespace Jug::Reco {
           navigator.resolvePassive   = false;
           navigator.resolveMaterial  = true;
           navigator.resolveSensitive = true;
+          std::cout << " propagator\n" ;
           Propagator propagator(std::move(stepper), std::move(navigator));
           CKF        trackFinder(std::move(propagator));
 
