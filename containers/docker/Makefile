@@ -5,8 +5,6 @@ include $(cnf)
 # exports variables in config.env as environment variables
 export $(shell sed 's/=.*//' $(cnf))
 
-
-
 SHELL = bash
 # grep the version from the mix file
 VERSION=$(shell bash version.sh)
@@ -28,14 +26,6 @@ build: ## build the image
 
 build-nc: ## Build the container without caching (from scratch)
 	docker build --no-cache -t $(APP_NAME) .
-
-build-alt: ## build the container for various machine architectures (broadwell, haswell, knl)
-	@echo 'building for architecture: $(ALT_NAME)'
-	docker build -t $(APP_NAME)_$(ALT_NAME) -f Dockerfile.$(ALT_NAME) .
-
-build-alt-nc: ## build the container for various machine architectures (broadwell, haswell, knl)
-	@echo 'build-alt-nc: building for architecture: $(ALT_NAME)'
-	docker build --no-cache -t $(APP_NAME)_$(ALT_NAME) -f Dockerfile.$(ALT_NAME) .
 
 # ==========================================================================
 #
@@ -59,15 +49,6 @@ tag-version: ## Generate container `latest` tag
 	@echo 'creating tag $(APP_NAME):$(VERSION)'
 	docker tag $(APP_NAME):latest $(APP_NAME):$(VERSION)
 
-tag-alt: tag-alt-latest # tag-alt-version ## Generate container tags for the `{version}` ans `latest` tags
-
-tag-alt-latest: ## Generate container `{version}` tag
-	@echo 'create tag latest'
-	#docker tag $(APP_NAME)_$(ALT_NAME) $(REPO)/$(APP_NAME)_$(ALT_NAME):latest
-
-tag-alt-version: ## Generate container `{version}` tag
-	@echo 'create tag latest'
-	docker tag $(APP_NAME)_$(ALT_NAME) $(REG_NAME)/$(REPO)/$(APP_NAME)_$(ALT_NAME):$(VERSION)
 
 # ==========================================================================
 #
@@ -75,19 +56,14 @@ login: ## Auto login to AWS-ECR unsing aws-cli
 	@docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
 	echo "Login COMPLETE"
 
-release-latest: build login publish-latest ## Make a release by building and publishing the `{version}` ans `latest` tagged containers to ECR
+release-latest: build-nc login publish-latest ## Make a release by building and publishing the `{version}` ans `latest` tagged containers to ECR
 
-release: build-nc publish-latest cleanup## Make a release by building and publishing the `{version}` ans `latest` tagged containers to ECR
+release: build-nc publish clean-all## Make a release by building and publishing the `{version}` ans `latest` tagged containers to ECR
 
 release-cached: build publish ## Make a release by building and publishing the `{version}` ans `latest` tagged containers to ECR
 
-cleanup:
-	@echo "cleaning up"
-	docker rmi  $(APP_NAME):latest 
-
 publish: login publish-latest publish-version #publish-version ## Publish the `{version}` ans `latest` tagged containers to ECR
 	@echo "Publishing done"
-
 
 publish-latest: ## Publish the `latest` taged container to ECR
 	@echo 'publish latest to $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME)'
@@ -104,26 +80,7 @@ publish-version: ## Publish the `{version}` taged container to ECR
 push: login ## push after login @echo 'push latest to $(REG_NAME)/$(REPO)/$(APP_NAME):latest'
 	docker tag  $(APP_NAME):latest $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME):latest
 	docker push $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME):latest
-
-# ==========================================================================
-#
-release-alt: build-alt publish-alt ## Make a release by building and publishing the `{version}` ans `latest` tagged containers to ECR
-
-publish-alt: login publish-alt-latest #publish-alt-version ## Publish the `{version}` ans `latest` tagged containers to ECR
-
-push-alt: login tag-alt-latest ## push after login 
-	#docker push $(REG_NAME)/$(REPO)/$(APP_NAME)_$(ALT_NAME):latest
-	docker push $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME)_$(ALT_NAME):latest
-
-publish-alt-latest: #tag-alt-latest ## Publish the `latest` taged container to ECR
-	#docker push $(REG_NAME)/$(REPO)/$(APP_NAME)_$(ALT_NAME):latest
-	docker tag $(APP_NAME)_$(ALT_NAME):latest $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME)_$(ALT_NAME):latest
-	docker push $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME)_$(ALT_NAME):latest
-	docker rmi $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME)_$(ALT_NAME):latest
-
-publish-alt-version: tag-alt-version ## Publish the `latest` taged container to ECR
-	#docker push $(REG_NAME)/$(REPO)/$(APP_NAME)_$(ALT_NAME):$(VERSION)
-	docker push $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME)_$(ALT_NAME):$(VERSION)
+	docker rmi  $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME):latest
 
 # ==========================================================================
 #
@@ -150,11 +107,6 @@ clean-tags:
 	docker rmi  $(GL_REG_GROUP)/$(APP_NAME):latest || true
 	docker rmi  $(REG_NAME)/$(REPO)/$(APP_NAME):latest   || true
 	docker rmi  $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME):latest || true
-	docker rmi  $(REPO)/$(APP_NAME)_$(ALT_NAME):latest || true
-	docker rmi  $(GL_GROUP)/$(APP_NAME)_$(ALT_NAME):latest || true
-	docker rmi  $(GL_REG_GROUP)/$(APP_NAME)_$(ALT_NAME):latest || true
-	docker rmi  $(REG_NAME)/$(REPO)/$(APP_NAME)_$(ALT_NAME):latest   || true
-	docker rmi  $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME)_$(ALT_NAME):latest || true
 
 clean:
 	docker rmi $(REPO_NAME)/$(APP_NAME) || true
@@ -172,16 +124,12 @@ clean:
 	docker rmi $(GL_REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME):latest || true  
 	docker rmi $(GL_REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME):$(VERSION) || true  
 	docker rmi $(GL_REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME) || true  
-	docker rmi $(GL_REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME)_$(ALT_NAME):latest || true  
-	docker rmi $(GL_REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME)_$(ALT_NAME):$(VERSION) || true  
-	docker rmi $(GL_REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME)_$(ALT_NAME) || true  
 	docker rmi $(GL_REG_GROUP)/$(APP_NAME) || true  
 	docker rmi $(GL_REG_GROUP)/$(APP_NAME):$(VERSION) || true  
-	docker rmi $(GL_REG_GROUP)/$(APP_NAME)_$(ALT_NAME) || true  
-	docker rmi $(GL_REG_GROUP)/$(APP_NAME)_$(ALT_NAME):$(VERSION) || true  
-	docker rmi $(GL_REG_NAME)/$(REG_USER)/$(APP_NAME) || true  
-	docker rmi $(GL_REG_NAME)/$(REG_USER)/$(APP_NAME):$(VERSION) || true  
 	#docker rmi $(APP_NAME) || true
+
+clean-all: clean
+	docker rmi $(REPO_NAME)/$(APP_NAME) || true
 
 version: ## Output the current version
 	@echo $(VERSION)
@@ -190,16 +138,14 @@ version: ## Output the current version
 #
 info: ## Output the current version
 	@echo 'VERSION      = $(VERSION)     '
-	@echo 'REG_USER     = $(REG_USER)    '
 	@echo 'REG_NAME     = $(REG_NAME)    '
-	@echo 'ALT_NAME     = $(ALT_NAME)    '
 	@echo 'APP_NAME     = $(APP_NAME)    '
 	@echo 'REPO_NAME    = $(REPO_NAME)   '
 	@echo 'DH_ORG       = $(DH_ORG)      '
 	@echo 'GL_GROUP     = $(GL_GROUP)    '
 	@echo 'GL_REG_GROUP = $(GL_REG_GROUP)'
 	@echo 'GL_REG_NAME  = $(GL_REG_NAME) '
-	@echo 'REPO         = $(REPO)        '
+	@echo 'REPO_NAME    = $(REPO)        '
 	@echo 'TAG_VERSION  = $(TAG_VERSION) '
 
 ls: ## list all docker images 
