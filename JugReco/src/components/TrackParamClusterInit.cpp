@@ -72,6 +72,9 @@ namespace Jug::Reco {
         using Acts::UnitConstants::ns;
 
         double p = c.energy()*GeV;
+        if( p < 0.1*GeV) {
+          continue;
+        }
         double len =  std::hypot( c.x() , c.y() , c.z() );
 
         // build some track cov matrix
@@ -83,17 +86,19 @@ namespace Jug::Reco {
         cov(Acts::eBoundQOverP, Acts::eBoundQOverP)     = 1.0 / (p*p);
         cov(Acts::eBoundTime, Acts::eBoundTime)         = Acts::UnitConstants::ns;
 
+        debug() << "Invoke track finding seeded by truth particle with p = " << p/GeV  << " GeV" << endmsg;
         // add all charges to the track candidate...
         init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
                                       Acts::Vector3D(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, -1,
                                       std::make_optional(cov));
+        debug() << init_trk_params->back() << endmsg;
         init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
                                       Acts::Vector3D(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, 1,
                                       std::make_optional(cov));
+        debug() << init_trk_params->back() << endmsg;
         //init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
         //                              Acts::Vector3D(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, 0,
         //                              std::make_optional(cov));
-        debug() << "Invoke track finding seeded by truth particle with p = " << p/GeV  << " GeV" << endmsg;
       }
       return StatusCode::SUCCESS;
     }
