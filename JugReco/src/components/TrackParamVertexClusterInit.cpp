@@ -78,34 +78,38 @@ namespace Jug::Reco {
         using Acts::UnitConstants::mm;
         using Acts::UnitConstants::ns;
 
-        double p = c.energy()*GeV;
-        if( p < 1.0) {
-          debug() << " skipping cluster with energy " << p/GeV << " GeV" << endmsg;
+        double p_cluster = c.energy()*GeV;
+        if( p_cluster < 1.0) {
+          debug() << " skipping cluster with energy " << p_cluster/GeV << " GeV" << endmsg;
           continue;
         }
 
-        double len =  std::hypot( c.x() , c.y() , c.z() );
 
-        // build some track cov matrix
-        Acts::BoundSymMatrix cov        = Acts::BoundSymMatrix::Zero();
-        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = 1.0 * mm*1.0 * mm;
-        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = 1.0 * mm*1.0 * mm;
-        cov(Acts::eBoundPhi, Acts::eBoundPhi)     = M_PI / 180.0;
-        cov(Acts::eBoundTheta, Acts::eBoundTheta) = M_PI / 180.0;
-        cov(Acts::eBoundQOverP, Acts::eBoundQOverP)     = 1.0 / (p*p);
-        cov(Acts::eBoundTime, Acts::eBoundTime)         = Acts::UnitConstants::ns;
+        for(const auto& t : *vtx_hits) {
 
-        // add all charges to the track candidate...
-        init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
-                                      Acts::Vector3D(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, -1,
-                                      std::make_optional(cov));
-        init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
-                                      Acts::Vector3D(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, 1,
-                                      std::make_optional(cov));
+        double len =  std::hypot( t.x() , t.y() , t.z() );
+
+          // build some track cov matrix
+          Acts::BoundSymMatrix cov                    = Acts::BoundSymMatrix::Zero();
+          cov(Acts::eBoundLoc0, Acts::eBoundLoc0)     = 1.0 * mm*1.0 * mm;
+          cov(Acts::eBoundLoc1, Acts::eBoundLoc1)     = 1.0 * mm*1.0 * mm;
+          cov(Acts::eBoundPhi, Acts::eBoundPhi)       = M_PI / 180.0;
+          cov(Acts::eBoundTheta, Acts::eBoundTheta)   = M_PI / 180.0;
+          cov(Acts::eBoundQOverP, Acts::eBoundQOverP) = 1.0 / (0.01*0.01*p_cluster*p_cluster);
+          cov(Acts::eBoundTime, Acts::eBoundTime)     = Acts::UnitConstants::ns;
+
+          // add all charges to the track candidate...
+          init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
+                                        Acts::Vector3D(t.x() * p_cluster / len, t.y() * p_cluster / len, t.z() * p_cluster / len), p_cluster, -1,
+                                        std::make_optional(cov));
+        }
+        //init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
+        //                              Acts::Vector3D(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, 1,
+        //                              std::make_optional(cov));
         //init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
         //                              Acts::Vector3D(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, 0,
         //                              std::make_optional(cov));
-        debug() << "Invoke track finding seeded by truth particle with p = " << p/GeV  << " GeV" << endmsg;
+        debug() << "Invoke track finding seeded by truth particle with p = " << p_cluster/GeV  << " GeV" << endmsg;
       }
       return StatusCode::SUCCESS;
     }
