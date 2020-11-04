@@ -20,5 +20,22 @@ Here is an example for topside
 
 ### `JugReco`
 
-
-
+```
+CalorimeterIslandCluster.cpp
+ClusterRecoCoG.cpp
+CrystalEndcapsReco.cpp
+EMCalReconstruction.cpp
+FuzzyKClusters.cpp
+ParticlesFromTrackFit.cpp
+PhotoMultiplierReco.cpp
+PhotoRingClusters.cpp
+SimpleClustering.cpp
+TestACTSLogger.cpp
+TrackerHitReconstruction.cpp
+TrackerSourceLinker.cpp
+TrackFindingAlgorithm.cpp
+TrackingHitsSourceLinker.cpp
+TrackParamClusterInit.cpp
+TrackParamTruthInit.cpp
+TrackParamVertexClusterInit.cpp
+```
