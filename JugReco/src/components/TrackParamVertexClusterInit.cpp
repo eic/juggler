@@ -1,4 +1,5 @@
 #include <cmath>
+
 // Gaudi
 #include "GaudiAlg/GaudiAlgorithm.h"
 #include "GaudiKernel/ToolHandle.h"
@@ -6,6 +7,7 @@
 #include "GaudiAlg/GaudiTool.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/Property.h"
+#include "GaudiKernel/PhysicalConstants.h"
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
@@ -15,18 +17,7 @@
 #include "eicd/TrackerHitCollection.h"
 #include "eicd/ClusterCollection.h"
 
-
-  ///// (Reconstructed) track parameters e.g. close to the vertex.
-  //using TrackParameters = Acts::CurvilinearTrackParameters;
-
-  ///// Container of reconstructed track states for multiple tracks.
-  //using TrackParametersContainer = std::vector<TrackParameters>;
-
-  ///// MultiTrajectory definition
-  //using Trajectory = Acts::MultiTrajectory<SourceLink>;
-
-  ///// Container for the truth fitting/finding track(s)
-  //using TrajectoryContainer = std::vector<SimMultiTrajectory>;
+using namespace Gaudi::Units;
 
 namespace Jug::Reco {
 
@@ -46,6 +37,7 @@ namespace Jug::Reco {
     DataHandle<Clusters>                 m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
     DataHandle<TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
                                                                         Gaudi::DataHandle::Writer, this};
+    Gaudi::Property<double> m_maxHitRadius{this, "maxHitRadius", 40.0*mm};
 
   public:
     TrackParamVertexClusterInit(const std::string& name, ISvcLocator* svcLoc)
@@ -71,6 +63,8 @@ namespace Jug::Reco {
       // Create output collections
       auto init_trk_params = m_outputInitialTrackParameters.createAndPut();
 
+      double max_radius = m_maxHitRadius.value();
+
       for(const auto& c : *clusters) {
 
         using Acts::UnitConstants::GeV;
@@ -87,6 +81,9 @@ namespace Jug::Reco {
         for (const auto& t : *vtx_hits) {
 
           double len = std::hypot(t.x(), t.y(), t.z());
+          if( len > max_radius ) {
+            continue;
+          }
 
           // build some track cov matrix
           Acts::BoundSymMatrix cov                    = Acts::BoundSymMatrix::Zero();

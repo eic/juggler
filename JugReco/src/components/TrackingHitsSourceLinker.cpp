@@ -111,10 +111,6 @@ namespace Jug::Reco {
 
           auto vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID());
           auto vol_id  = vol_ctx->identifier;
-          // debug() << " hit          : \n" <<  ahit << endmsg;
-          // debug() << "cell ID : " << ahit.cellID() << endmsg;
-          // debug() << " position : (" <<  ahit.position(0) << ", " <<  ahit.position(1) << ", "<<  ahit.position(2) <<
-          // ") " << endmsg;
           debug() << " vol_id       : " << vol_id << endmsg;
           debug() << " placment pos : " << vol_ctx->volumePlacement().position() << endmsg;
 
@@ -132,15 +128,12 @@ namespace Jug::Reco {
           pos = surface->globalToLocal(Acts::GeometryContext(), {ahit.x(), ahit.y(), ahit.z()}, {0, 0, 0})
                     .value(); //, pos);
 
-          //// smear truth to create local measurement
           Acts::BoundVector loc = Acts::BoundVector::Zero();
-          loc[Acts::eBoundLoc0] = pos[0]; //+ m_cfg.sigmaLoc0 * stdNormal(rng);
-          loc[Acts::eBoundLoc0] = pos[1]; //+ m_cfg.sigmaLoc1 * stdNormal(rng);
-
+          loc[Acts::eBoundLoc0] = pos[0];
+          loc[Acts::eBoundLoc0] = pos[1];
           debug() << "loc : (" << loc[0] << ", " << loc[1] << ")" << endmsg;
 
           // create source link at the end of the container
-          // auto it = source_links->emplace_hint(source_links->end(), *surface, hit, 2, loc, cov);
           auto it = source_links->emplace_hint(source_links->end(), *surface, 2, loc, cov);
           // ensure hits and links share the same order to prevent ugly surprises
           if (std::next(it) != source_links->end()) {
