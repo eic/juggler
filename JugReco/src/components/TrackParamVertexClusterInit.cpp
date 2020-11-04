@@ -79,15 +79,14 @@ namespace Jug::Reco {
         using Acts::UnitConstants::ns;
 
         double p_cluster = c.energy()*GeV;
-        if( p_cluster < 1.0) {
+        if( p_cluster/GeV < 0.1) {
           debug() << " skipping cluster with energy " << p_cluster/GeV << " GeV" << endmsg;
           continue;
         }
 
+        for (const auto& t : *vtx_hits) {
 
-        for(const auto& t : *vtx_hits) {
-
-        double len =  std::hypot( t.x() , t.y() , t.z() );
+          double len = std::hypot(t.x(), t.y(), t.z());
 
           // build some track cov matrix
           Acts::BoundSymMatrix cov                    = Acts::BoundSymMatrix::Zero();
@@ -95,12 +94,15 @@ namespace Jug::Reco {
           cov(Acts::eBoundLoc1, Acts::eBoundLoc1)     = 1.0 * mm*1.0 * mm;
           cov(Acts::eBoundPhi, Acts::eBoundPhi)       = M_PI / 180.0;
           cov(Acts::eBoundTheta, Acts::eBoundTheta)   = M_PI / 180.0;
-          cov(Acts::eBoundQOverP, Acts::eBoundQOverP) = 1.0 / (0.01*0.01*p_cluster*p_cluster);
+          cov(Acts::eBoundQOverP, Acts::eBoundQOverP) = 1.0 / (0.9*0.9*p_cluster*p_cluster);
           cov(Acts::eBoundTime, Acts::eBoundTime)     = Acts::UnitConstants::ns;
 
           // add all charges to the track candidate...
           init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
                                         Acts::Vector3D(t.x() * p_cluster / len, t.y() * p_cluster / len, t.z() * p_cluster / len), p_cluster, -1,
+                                        std::make_optional(cov));
+          init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
+                                        Acts::Vector3D(t.x() * p_cluster / len, t.y() * p_cluster / len, t.z() * p_cluster / len), p_cluster, 1,
                                         std::make_optional(cov));
         }
         //init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
