@@ -20,6 +20,14 @@ Here is an example for topside
 
 ### `JugReco`
 
+#### Hit reconstruction algorithms
+
+#### Source Linkers
+
+#### Initial Track Parameters 
+
+#### Track Fitting
+
 ```
 CalorimeterIslandCluster.cpp
 ClusterRecoCoG.cpp
