@@ -1,0 +1,18 @@
+Bootstrap: docker
+From: eicweb.phy.anl.gov:4567/juggler/juggler:latest
+%help
+  singularity container for Juggler development
+
+%help
+  EIC software container (for Juggler/Recon development)
+  Tools:
+     - eic_shell: start shell in the eic container
+
+%labels
+  Maintainer "Whitney Armstrong, Sylvester Joosten"
+  Version v1-dev
+
+%post -c /bin/bash
+  echo "  -------------------------------------------------"
+  echo "  ===> Image setup complete"
+  echo "  -------------------------------------------------"

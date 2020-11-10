@@ -22,7 +22,7 @@ compile:
     - cd /tmp && git clone --depth=1 https://eicweb.phy.anl.gov/EIC/eicd.git && mkdir eicd_build && cd eicd_build && cmake ../eicd/. && make -j20 install
     - cd $homedir && ls -lrth && mkdir build && cd build && cmake .. && make -j10
 
-docker_image:
+docker:build:
   image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
   stage: docker_build
   rules:
@@ -37,10 +37,10 @@ docker_image:
     - cd containers/docker 
     - make build-nc
 
-docker_image_push:
+docker:push:
   image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
   stage: docker_push
-  needs: ["docker_image"]
+  needs: ["docker:build"]
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
@@ -53,7 +53,7 @@ docker_image_push:
     - cd containers/docker 
     - make push
 
-docker_tag:
+docker:release:
   image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
   stage: docker_build
   rules:
@@ -63,3 +63,32 @@ docker_tag:
   script:
     - cd containers/docker && make release
 
+docker:singularity:
+  image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
+  stage: docker_push
+  needs: ["docker:build"]
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH != "master"'
+      when: never
+    - when: on_success
+  tags: 
+    - silicon
+  script:
+    - cp containers/singularity/juggler.def .
+    - /bin/bash .gitlabci/setup.sh
+    - /bin/bash .gitlabci/build.sh juggler.def
+    - mkdir -p build 
+    - cp juggler.sif build/.
+    - cp juggler.def build/.
+  artifacts:
+      expire_in: 90 days 
+      paths:
+        - build/juggler.sif
+        - build/juggler.def
+
+
+
+
+  
