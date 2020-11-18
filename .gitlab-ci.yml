@@ -34,7 +34,7 @@ docker:build:
   tags:
     - silicon
   script:
-    - cd containers/docker 
+    - cd .containers/docker 
     - make build-nc
 
 docker:push:
@@ -50,7 +50,7 @@ docker:push:
   tags:
     - silicon
   script:
-    - cd containers/docker 
+    - cd .containers/docker 
     - make push
 
 docker:release:
@@ -61,7 +61,7 @@ docker:release:
   tags:
     - silicon
   script:
-    - cd containers/docker && make release
+    - cd .containers/docker && make release
 
 docker:singularity:
   image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
@@ -76,8 +76,7 @@ docker:singularity:
   tags: 
     - silicon
   script:
-    - cp containers/singularity/juggler.def .
-    - /bin/bash .gitlabci/setup.sh
+    - cp .containers/singularity/juggler.def .
     - /bin/bash .gitlabci/build.sh juggler.def
     - mkdir -p build 
     - cp juggler.sif build/.
@@ -111,3 +110,4 @@ benchmarks:physics:
     - if: '$CI_COMMIT_BRANCH != "master"'
       when: never
     - when: on_success
+
