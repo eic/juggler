@@ -9,8 +9,8 @@ stages:
   - build
   - docker_build
   - docker_push
-  - run
-
+  - deploy
+ 
 compile:
   stage: build
   rules:
@@ -88,7 +88,26 @@ docker:singularity:
         - build/juggler.sif
         - build/juggler.def
 
-
-
-
+benchmarks:reconstruction:
+  stage: deploy
+  trigger:
+    project: EIC/benchmarks/reconstruction_benchmarks
+  needs: ["docker:push"]
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH != "master"'
+      when: never
+    - when: on_success
   
+benchmarks:physics:
+  stage: deploy
+  trigger:
+    project: EIC/benchmarks/physics_benchmarks
+  needs: ["docker:push"]
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH != "master"'
+      when: never
+    - when: on_success

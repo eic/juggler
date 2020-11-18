@@ -6,6 +6,15 @@ Concurrent event processor for NP experiments, based on the Gaudi framework.
 Overview
 --------
 
+
+### Internal Units
+
+The juggler internal units are (`GeV`, `mm`, `ns`, and `radians`).
+
+#### Units Table
+
+todo...
+
 ### Running Juggler
 
 Here is an example for topside
