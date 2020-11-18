@@ -119,28 +119,28 @@ namespace Jug {
       //m_err_eT_fit = sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime));
     }
 
-        auto tsize = traj.trajectory().first.size();
-        debug() << "# fitted parameters : " << tsize << endmsg;
-        if(tsize == 0 ) continue;
+    auto tsize = traj.trajectory().first.size();
+    debug() << "# fitted parameters : " << tsize << endmsg;
+    if(tsize == 0 ) continue;
 
-        traj.trajectory().second.visitBackwards(tsize-1, [&](auto&& trackstate) {
-          //debug() << trackstate.hasPredicted() << endmsg;
-          //debug() << trackstate.predicted() << endmsg;
-          auto params = trackstate.predicted() ;//<< endmsg;
+    traj.trajectory().second.visitBackwards(tsize-1, [&](auto&& trackstate) {
+      //debug() << trackstate.hasPredicted() << endmsg;
+      //debug() << trackstate.predicted() << endmsg;
+      auto params = trackstate.predicted() ;//<< endmsg;
 
-          double p0 = (1.0 / params[Acts::eBoundQOverP]) / Acts::UnitConstants::GeV;
-          debug() << "track predicted p = " << p0 << " GeV" << endmsg;
-          if ( std::abs(p0) > 500) {
-            debug() << "skipping" << endmsg;
-            return;
-          }
+      double p0 = (1.0 / params[Acts::eBoundQOverP]) / Acts::UnitConstants::GeV;
+      debug() << "track predicted p = " << p0 << " GeV" << endmsg;
+      if ( std::abs(p0) > 500) {
+        debug() << "skipping" << endmsg;
+        return;
+      }
 
-          eic::Particle p({params[Acts::eBoundPhi], params[Acts::eBoundTheta], 1.0 / std::abs(params[Acts::eBoundQOverP]), 0.000511},
-                          {0.0, 0.0, 0.0, params[Acts::eBoundTime]},
-                          (long long)11 * params[Acts::eBoundQOverP] / std::abs(params[Acts::eBoundQOverP]), 0);
-          //debug() << p << endmsg;
-          rec_parts->push_back(p);
-        });
+      eic::Particle p({params[Acts::eBoundPhi], params[Acts::eBoundTheta], 1.0 / std::abs(params[Acts::eBoundQOverP]), 0.000511},
+                      {0.0, 0.0, 0.0, params[Acts::eBoundTime]},
+                      (long long)11 * params[Acts::eBoundQOverP] / std::abs(params[Acts::eBoundQOverP]), 0);
+      //debug() << p << endmsg;
+      rec_parts->push_back(p);
+    });
 
       }
       return StatusCode::SUCCESS;

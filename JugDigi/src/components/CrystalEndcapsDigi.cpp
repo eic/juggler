@@ -48,17 +48,18 @@ namespace Jug {
     }
 
     StatusCode execute() override {
+      // Note the energy is in units of GeV from dd4hep
       // input collections
       const dd4pod::CalorimeterHitCollection* simhits = m_inputHitCollection.get();
       // Create output collections
       auto rawhits = m_outputHitCollection.createAndPut();
       eic::RawCalorimeterHitCollection* rawHitCollection = new eic::RawCalorimeterHitCollection();
       for (const auto& ahit : *simhits) {
-        double res = m_gaussDist()/sqrt(ahit.energyDeposit()/Gaudi::Units::GeV);
+        double res = m_gaussDist()/sqrt(ahit.energyDeposit());
         eic::RawCalorimeterHit rawhit(
           (long long) ahit.cellID(),
-          (long long) ahit.energyDeposit() * (1. + res)/Gaudi::Units::MeV * 100.0,
-          (double) ahit.truth().time/Gaudi::Units::ns);
+          (long long) ahit.energyDeposit() * (1. + res)*1.0e6, // convert to keV integer
+          (double) ahit.truth().time);
           rawhits->push_back(rawhit);
       }
       return StatusCode::SUCCESS;

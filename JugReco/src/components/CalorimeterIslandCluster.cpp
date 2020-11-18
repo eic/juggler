@@ -126,7 +126,7 @@ private:
         for(auto &hit : group)
         {
             // not a qualified center
-            if(hit.energy() < m_minClusterCenterEdep) {
+            if(hit.energy() < m_minClusterCenterEdep/GeV) {
                 continue;
             }
 

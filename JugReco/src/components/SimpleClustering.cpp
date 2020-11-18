@@ -69,7 +69,8 @@ namespace Jug::Reco {
       std::vector<eic::CalorimeterHit> hits_B;
       std::vector<eic::CalorimeterHit>& the_hits  = hits_A;
       std::vector<eic::CalorimeterHit>& remaining_hits = hits_B;
-      double                           max_dist = m_maxDistance.value();
+
+      double max_dist = m_maxDistance.value() / mm;
 
       eic::CalorimeterHit ref_hit;
       ref_hit.energy(0.0);

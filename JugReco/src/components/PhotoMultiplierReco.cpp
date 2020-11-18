@@ -79,7 +79,7 @@ public:
         for (auto &rh : rawhits) {
             float npe = (rh.amplitude() - m_pedMean)/m_speMean;
             if (npe >= m_minNpe) {
-                float time = rh.timeStamp()*m_timeStep;
+                float time = rh.timeStamp()*(m_timeStep/ns);
                 auto id = rh.cellID();
                 // global positions
                 auto gpos = m_geoSvc->cellIDPositionConverter()->position(id);
