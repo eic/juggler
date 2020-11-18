@@ -97,7 +97,7 @@ public:
             if (it != hit_groups.end()) {
                 size_t i = 0;
                 for (auto git = it->second.begin(); git != it->second.end(); ++git, ++i) {
-                    if (std::abs(time - git->time) <= m_hitTimeWindow) {
+                    if (std::abs(time - git->time) <= (m_hitTimeWindow/ns)) {
                         git->npe += 1;
                         git->signal += amp;
                         break;
@@ -115,7 +115,7 @@ public:
         // build hit
         for (auto &it : hit_groups) {
             for (auto &data : it.second) {
-                eic::RawPMTHit hit(it.first, (unsigned) data.signal, (unsigned) data.time/m_timeStep);
+                eic::RawPMTHit hit(it.first, (unsigned) data.signal, (unsigned) data.time/(m_timeStep/ns));
                 raw.push_back(hit);
             }
         }
