@@ -1,4 +1,10 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.15)
+project(Juggler 
+  LANGUAGES CXX
+  VERSION 0.5.0
+  DESCRIPTION "Juggler of reconstruction"
+  HOMEPAGE_URL "https://eicweb.phy.anl.gov/EIC/juggler"
+  )
 
 set(CMAKE_PREFIX_PATH $ENV{HOME}/lib CMAKE_PREFIX_PATH)
 find_package(NPDet  REQUIRED)
@@ -14,10 +20,13 @@ find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 find_package(Geant4)
 
 
-find_package(GaudiProject)
+find_package(Gaudi)
 
-gaudi_project(Juggler v1r0
-              USE Gaudi v33r1)
+add_subdirectory(JugBase)
+add_subdirectory(JugDigi)
+add_subdirectory(JugReco)
+
+
 
 install(FILES ${CMAKE_BINARY_DIR}/run 
   PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ  GROUP_EXECUTE WORLD_READ  WORLD_EXECUTE 

@@ -1,7 +1,7 @@
 ################################################################################
 # Package: JugReco
 ################################################################################
-gaudi_subdir(JugReco v1r0)
+#gaudi_subdir(JugReco v1r0)
 
 find_package(EICD REQUIRED)
 #set(PODIO $ENV{PODIO})
@@ -14,7 +14,7 @@ find_package(ROOT COMPONENTS RIO Tree Core REQUIRED)
 find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 
 # this declaration will not be needed in the future
-gaudi_depends_on_subdirs(GaudiAlg GaudiKernel)
+#gaudi_depends_on_subdirs(GaudiAlg GaudiKernel)
 #gaudi_install_scripts()
 #gaudi_install_python_modules()
 
@@ -28,7 +28,7 @@ gaudi_depends_on_subdirs(GaudiAlg GaudiKernel)
 #  )
 
 gaudi_add_module(JugRecoPlugins
-  src/components/TrackerHitReconstruction.cpp 
+  SOURCES src/components/TrackerHitReconstruction.cpp 
   src/components/TrackerSourceLinker.cpp 
   src/components/TrackingHitsSourceLinker.cpp 
   src/components/TrackFindingAlgorithm.cpp 
@@ -45,17 +45,22 @@ gaudi_add_module(JugRecoPlugins
   src/components/PhotoRingClusters.cpp 
   src/components/FuzzyKClusters.cpp 
   src/components/EMCalReconstruction.cpp 
-  LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO EICD::eicd DDRec Acts)
+  )
+target_link_libraries(JugRecoPlugins 
+  PUBLIC GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO EICD::eicd DDRec Acts)
+target_include_directories(JugRecoPlugins
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  PUBLIC $<INSTALL_INTERFACE:include> )
 
 target_compile_options(JugRecoPlugins PRIVATE -Wno-suggest-override)
 
 #gaudi_add_test(ProduceForReadTest
 #               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 #               FRAMEWORK tests/options/simple_producer.py)
-gaudi_add_test(loggerTest
-               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-               FRAMEWORK tests/options/testLogger.py
-               )
+#gaudi_add_test(loggerTest
+#               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+#               FRAMEWORK tests/options/testLogger.py
+#               )
 #gaudi_add_test(CheckReadCollectionSize
 #               ENVIRONMENT PYTHONPATH+=${PODIO_PYTHON_DIR}
 #               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}

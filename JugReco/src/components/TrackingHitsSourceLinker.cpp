@@ -7,7 +7,6 @@
 #include "GaudiAlg/Transformer.h"
 #include "GaudiAlg/GaudiTool.h"
 #include "GaudiKernel/RndmGenerators.h"
-#include "GaudiKernel/Property.h"
 #include "Gaudi/Property.h"
 
 #include "JugBase/DataHandle.h"
