@@ -51,6 +51,7 @@ class SourceLink {
   SourceLink& operator=(SourceLink&&) = default;
   SourceLink& operator=(const SourceLink&) = default;
 
+
   constexpr Acts::GeometryIdentifier geometryId() const { return m_geometryId; }
   constexpr const Acts::Surface& referenceSurface() const { return *m_surface; }
   //constexpr const ActsFatras::Hit& truthHit() const { return *m_truthHit; }
@@ -79,6 +80,7 @@ class SourceLink {
     return lhs.geometryId() == rhs.geometryId();
     //lhs.m_truthHit == rhs.m_truthHit;
   }
+  friend bool operator!=(const SourceLink& lhs, const SourceLink& rhs) { return not(lhs == rhs); }
 };
 
 /// Store source links ordered by geometry identifier.

@@ -187,9 +187,9 @@ T* DataHandle<T>::createAndPut() {
 // temporary to allow property declaration
 namespace Gaudi {
 template <class T>
-class Property<::DataHandle<T>&> : public ::DataObjectHandleProperty {
+class Property<::DataHandle<T>&> : public ::DataHandleProperty {
 public:
-  Property(const std::string& name, ::DataHandle<T>& value) : ::DataObjectHandleProperty(name, value) {}
+  Property(const std::string& name, ::DataHandle<T>& value) : ::DataHandleProperty(name, value) {}
 
   /// virtual Destructor
   virtual ~Property() {}

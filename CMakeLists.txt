@@ -22,6 +22,8 @@ find_package(Geant4)
 
 find_package(Gaudi)
 
+add_compile_options( -Wfatal-errors )
+
 add_subdirectory(JugBase)
 add_subdirectory(JugDigi)
 add_subdirectory(JugReco)
