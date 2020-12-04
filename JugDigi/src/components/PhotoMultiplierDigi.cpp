@@ -10,6 +10,7 @@
 #include <iterator>
 #include <algorithm>
 #include <unordered_map>
+#include <cmath>
 
 #include "GaudiAlg/Transformer.h"
 #include "GaudiAlg/GaudiTool.h"

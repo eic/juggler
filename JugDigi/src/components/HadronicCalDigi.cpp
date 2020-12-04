@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 
 #include "GaudiAlg/Transformer.h"
 #include "GaudiAlg/Producer.h"
@@ -75,7 +76,7 @@ namespace Jug {
           double bterm = ahit.energyDeposit()*m_gaussDist_b();
           // here 1000 is arbitrary scale factor
           eic::RawCalorimeterHit rawhit((long long)ahit.cellID(),
-                                        (long long)(ahit.energyDeposit() +aterm + bterm) * 1000, 0);
+                                        std::llround(ahit.energyDeposit() +aterm + bterm * 1000), 0);
           rawhits->push_back(rawhit);
         }
         return StatusCode::SUCCESS;

@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 
 #include "GaudiAlg/Transformer.h"
 #include "GaudiAlg/Producer.h"
@@ -35,7 +36,7 @@ namespace Jug {
       StatusCode initialize() override
       {
         IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
-        StatusCode   sc      = m_gaussDist.initialize(randSvc, Rndm::Gauss(0.0, m_energyResolution.value() ));
+        StatusCode   sc      = m_gaussDist.initialize(randSvc, Rndm::Gauss(0.0, m_energyResolution.value()));
         if (!sc.isSuccess()) {
           return StatusCode::FAILURE;
         }
@@ -55,7 +56,7 @@ namespace Jug {
           double sqrtE = std::sqrt(ahit.energyDeposit()) ;
           double aterm = m_gaussDist()*sqrtE;
           eic::RawCalorimeterHit rawhit((long long)ahit.cellID(),
-                                        (long long)((ahit.energyDeposit() + aterm) * 1e6),
+                                        std::llround((ahit.energyDeposit() + aterm) * 1e6),
                                         ahit.truth().time * 1e6);
           rawhits->push_back(rawhit);
         }

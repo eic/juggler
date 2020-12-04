@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 
 #include "GaudiAlg/Transformer.h"
 #include "GaudiAlg/Producer.h"
@@ -111,8 +112,7 @@ namespace Jug {
       eic::RawCalorimeterHitCollection* rawHitCollection = new eic::RawCalorimeterHitCollection();
       for(const auto& ahit : *simhits) {
         //std::cout << ahit << "\n";
-        eic::RawCalorimeterHit rawhit((long long)ahit.cellID(), 
-                        (long long)ahit.energyDeposit() * 100, 0);
+        eic::RawCalorimeterHit rawhit((long long)ahit.cellID(), std::llround(ahit.energyDeposit() * 100), 0);
         rawhits->push_back(rawhit);
       }
       return StatusCode::SUCCESS;
