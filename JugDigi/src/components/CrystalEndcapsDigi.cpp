@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 
 #include "GaudiAlg/Transformer.h"
 #include "GaudiAlg/GaudiTool.h"
@@ -58,7 +59,7 @@ namespace Jug {
         double res = m_gaussDist()/sqrt(ahit.energyDeposit());
         eic::RawCalorimeterHit rawhit(
           (long long) ahit.cellID(),
-          (long long) ahit.energyDeposit() * (1. + res)*1.0e6, // convert to keV integer
+          std::llround(ahit.energyDeposit() * (1. + res)*1.0e6), // convert to keV integer
           (double) ahit.truth().time);
           rawhits->push_back(rawhit);
       }
