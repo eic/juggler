@@ -47,6 +47,11 @@ docker:push:
     - if: '$CI_COMMIT_BRANCH != "master"'
       when: never
     - when: on_success
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
   tags:
     - silicon
   script:
@@ -82,10 +87,15 @@ docker:singularity:
     - cp juggler.sif build/.
     - cp juggler.def build/.
   artifacts:
-      expire_in: 90 days 
-      paths:
-        - build/juggler.sif
-        - build/juggler.def
+    expire_in: 90 days 
+    paths:
+      - build/juggler.sif
+      - build/juggler.def
+
+        #singularity:push:
+        #  stage: deploy
+        #  when: manual
+
 
 benchmarks:reconstruction:
   stage: deploy
