@@ -71,6 +71,7 @@ namespace Jug::Reco {
       std::vector<eic::CalorimeterHit>& remaining_hits = hits_B;
 
       double max_dist = m_maxDistance.value() / mm;
+      double min_energy = m_minModuleEdep.value() / GeV;
 
       eic::CalorimeterHit ref_hit;
       ref_hit.energy(0.0);
@@ -82,7 +83,7 @@ namespace Jug::Reco {
       }
 
       debug() << " max_dist = " << max_dist << endmsg;
-      bool continue_clustering = true;
+      bool continue_clustering = (ref_hit.energy() > min_energy);
 
       while (continue_clustering) {
 
@@ -135,6 +136,8 @@ namespace Jug::Reco {
 
           std::swap( remaining_hits, the_hits);
           remaining_hits.clear();
+
+          continue_clustering = (ref_hit.energy() > min_energy);
 
         } else {
           continue_clustering = false;
