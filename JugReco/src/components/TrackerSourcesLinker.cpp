@@ -43,7 +43,7 @@ namespace Jug::Reco {
   public:
     TrackerSourcesLinker(const std::string& name, ISvcLocator* svcLoc)
         : GaudiAlgorithm(name, svcLoc) {
-      //declareProperty("inputHitCollection", m_inputHitCollection, "");
+      declareProperty("trackerHitCollections", m_trackerHitCollections, "");
       declareProperty("outputSourceLinks", m_outputSourceLinks, "");
     }
 
@@ -79,6 +79,8 @@ namespace Jug::Reco {
       auto source_links = m_outputSourceLinks.createAndPut();
       // setup local covariance
       // TODO add support for per volume/layer/module settings
+
+      debug() << "   m_trackerHitCollections  size :  " << m_trackerHitCollections.size() << endmsg;
 
       for(const auto& col : m_trackerHitCollections) {
         // input collection
