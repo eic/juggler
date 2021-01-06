@@ -39,7 +39,8 @@ namespace Jug::Reco {
     DataHandle<HitCol> m_OTrackerBarrelHits{"OTrackerBarrelHits", Gaudi::DataHandle::Reader, this};
     DataHandle<HitCol> m_OTrackerEndcapHits{"OTrackerEndcapHits", Gaudi::DataHandle::Reader, this};
 
-    Gaudi::Property<std::vector<std::string>> m_trackerHitCollections{this, "trackerHitCollections"};
+    std::vector<DataHandle<HitCol>*> m_trackerHitCollections;
+    //Gaudi::Property<std::vector<std::string>> m_trackerHitCollections{this, "trackerHitCollections"};
     DataHandle<SourceLinkContainer>           m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};
     /// Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
@@ -55,11 +56,18 @@ namespace Jug::Reco {
       declareProperty("OTrackerBarrelHits", m_OTrackerBarrelHits, "");
       declareProperty("OTrackerEndcapHits", m_OTrackerEndcapHits, "");
       declareProperty("outputSourceLinks", m_outputSourceLinks, "");
+
     }
 
     StatusCode initialize() override {
       if (GaudiAlgorithm::initialize().isFailure())
         return StatusCode::FAILURE;
+
+      m_trackerHitCollections.push_back(&m_ITrackerBarrelHits);
+      m_trackerHitCollections.push_back(&m_ITrackerEndcapHits);
+      m_trackerHitCollections.push_back(&m_OTrackerBarrelHits);
+      m_trackerHitCollections.push_back(&m_OTrackerEndcapHits);
+
       m_geoSvc = service("GeoSvc");
       if (!m_geoSvc) {
         error() << "Unable to locate Geometry Service. "
@@ -92,10 +100,10 @@ namespace Jug::Reco {
 
       debug() << "   m_trackerHitCollections  size :  " << m_trackerHitCollections.size() << endmsg;
 
-      for(const auto& col : m_trackerHitCollections) {
+      for(const auto col : m_trackerHitCollections) {
         // input collection
-        //const eic::TrackerHitCollection* hits = m_inputHitCollection.get();
-        const eic::TrackerHitCollection* hits = get<eic::TrackerHitCollection>("/Event/"+ col);
+        const eic::TrackerHitCollection* hits = col->get();
+        //const eic::TrackerHitCollection* hits = get<eic::TrackerHitCollection>("/Event/"+ col);
 
         debug() << (*hits).size() << " hits " << endmsg;
         for(const auto& ahit : *hits) {
