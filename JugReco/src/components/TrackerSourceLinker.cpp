@@ -112,7 +112,7 @@ namespace Jug::Reco {
         //// smear truth to create local measurement
         Acts::BoundVector loc = Acts::BoundVector::Zero();
         loc[Acts::eBoundLoc0]     = pos[0] ;//+ m_cfg.sigmaLoc0 * stdNormal(rng);
-        loc[Acts::eBoundLoc0]     = pos[1] ;//+ m_cfg.sigmaLoc1 * stdNormal(rng);
+        loc[Acts::eBoundLoc1]     = pos[1] ;//+ m_cfg.sigmaLoc1 * stdNormal(rng);
 
         debug() << "loc : (" << loc[0] << ", " << loc[1] << ")" << endmsg;
 

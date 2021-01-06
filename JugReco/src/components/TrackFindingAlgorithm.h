@@ -57,7 +57,6 @@ namespace Jug::Reco {
     /// Track finding function that takes input measurements, initial trackstate
     /// and track finder options and returns some track-finding-specific result.
     using CKFOptions = Acts::CombinatorialKalmanFilterOptions<Acts::CKFSourceLinkSelector>;
- 
 
     using TrackFinderFunction =
         std::function<TrackFinderResult(const SourceLinkContainer&, const TrackParameters&, const CKFOptions&)>;

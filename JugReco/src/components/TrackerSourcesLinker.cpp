@@ -31,9 +31,16 @@ namespace Jug::Reco {
 
   class TrackerSourcesLinker : public GaudiAlgorithm {
   public:
+
+    using HitCol = eic::TrackerHitCollection;
+
+    DataHandle<HitCol> m_ITrackerBarrelHits{"ITrackerBarrelHits", Gaudi::DataHandle::Reader, this};
+    DataHandle<HitCol> m_ITrackerEndcapHits{"ITrackerEndcapHits", Gaudi::DataHandle::Reader, this};
+    DataHandle<HitCol> m_OTrackerBarrelHits{"OTrackerBarrelHits", Gaudi::DataHandle::Reader, this};
+    DataHandle<HitCol> m_OTrackerEndcapHits{"OTrackerEndcapHits", Gaudi::DataHandle::Reader, this};
+
     Gaudi::Property<std::vector<std::string>> m_trackerHitCollections{this, "trackerHitCollections"};
     DataHandle<SourceLinkContainer>           m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};
-    //DataHandle<>                    m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     /// Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
 
@@ -43,7 +50,10 @@ namespace Jug::Reco {
   public:
     TrackerSourcesLinker(const std::string& name, ISvcLocator* svcLoc)
         : GaudiAlgorithm(name, svcLoc) {
-      declareProperty("trackerHitCollections", m_trackerHitCollections, "");
+      declareProperty("ITrackerBarrelHits", m_ITrackerBarrelHits, "Inner tracker barrel hits");
+      declareProperty("ITrackerEndcapHits", m_ITrackerEndcapHits, "");
+      declareProperty("OTrackerBarrelHits", m_OTrackerBarrelHits, "");
+      declareProperty("OTrackerEndcapHits", m_OTrackerEndcapHits, "");
       declareProperty("outputSourceLinks", m_outputSourceLinks, "");
     }
 

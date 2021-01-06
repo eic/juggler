@@ -108,9 +108,6 @@ namespace Jug::Reco {
       CKFOptions ckfOptions(m_geoctx, m_fieldctx, m_calibctx, m_sourcelinkSelectorCfg,
                                       Acts::LoggerWrapper{logger()}, pOptions,
                                       &(*pSurface));
-      // TrackFindingAlgorithm::CKFOptions ckfOptions(ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-      //                                                 m_cfg.sourcelinkSelectorCfg, Acts::LoggerWrapper{logger()},
-      //                                                 &(*pSurface));
 
       debug() << "Invoke track finding seeded by truth particle " << iseed << endmsg;
       auto result = findTracks(*src_links, initialParams, ckfOptions);
