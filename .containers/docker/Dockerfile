@@ -18,12 +18,12 @@ LABEL maintainer="Whitney Armstrong <warmstrong@anl.gov>" \
 
 RUN cd /tmp \
       && apt-get update && apt-get install rsync -y \
-      && wget http://home.thep.lu.se/~torbjorn/pythia8/pythia8303.tgz \
-      && tar -zxf pythia8303.tgz && cd pythia8303 \
+      && wget http://home.thep.lu.se/~torbjorn/pythia8/pythia8244.tgz \
+      && tar -zxf pythia8244.tgz && cd pythia8244 \
       && ./configure --prefix=/usr/local --enable-shared --enable-64bit --with-root --with-hepmc3 \
       && make -j30 \
       && make install  \
-      && cd /tmp && rm -rf /tmp/pythia8303
+      && cd /tmp && rm -rf /tmp/pythia8244
 
 
 RUN cd /tmp             \
