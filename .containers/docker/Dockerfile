@@ -1,4 +1,4 @@
-FROM  eicweb.phy.anl.gov:4567/containers/eic_container/eic:latest
+FROM  eicweb.phy.anl.gov:4567/containers/eic_container/eic:2.3.0
 
 LABEL maintainer="Whitney Armstrong <warmstrong@anl.gov>" \
       name="juggler" \
@@ -11,7 +11,7 @@ LABEL maintainer="Whitney Armstrong <warmstrong@anl.gov>" \
 RUN cd /tmp \
       && git clone https://gitlab.cern.ch/hepmc/HepMC3.git  \
       && mkdir HepMC3/build && cd HepMC3/build \
-      && cmake ../. -DHEPMC3_ENABLE_ROOTIO=ON -DCMAKE_INSTALL_PREFIX=/usr/local -DHEPMC3_BUILD_EXAMPLES=ON \
+      && cmake ../. -DHEPMC3_ENABLE_ROOTIO=ON -DCMAKE_INSTALL_PREFIX=/usr/local -DHEPMC3_BUILD_EXAMPLES=OFF \
       && make -j20 \
       && make install  \
       && cd /tmp && rm -rf /tmp/HepMC3
