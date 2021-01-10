@@ -17,6 +17,7 @@ LABEL maintainer="Whitney Armstrong <warmstrong@anl.gov>" \
 #      && cd /tmp && rm -rf /tmp/HepMC3
 
 RUN cd /tmp \
+      && apt-get update && apt-get install rsync -y \
       && wget http://home.thep.lu.se/~torbjorn/pythia8/pythia8303.tgz \
       && tar -zxf pythia8303.tgz && cd pythia8303 \
       && ./configure --prefix=/usr/local --enable-shared --enable-64bit --with-root --with-hepmc3 \
