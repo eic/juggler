@@ -34,6 +34,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFinding/CKFSourceLinkSelector.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 //#include "Acts/Fitter/GainMatrixSmoother.hpp"
 //#include "Acts/Fitter/GainMatrixUpdater.hpp"

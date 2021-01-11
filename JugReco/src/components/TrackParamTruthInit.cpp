@@ -11,6 +11,7 @@
 #include "JugBase/IGeoSvc.h"
 #include "JugReco/Track.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 #include "eicd/TrackerHitCollection.h"
 #include "dd4pod/Geant4ParticleCollection.h"
