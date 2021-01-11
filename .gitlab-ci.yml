@@ -1,4 +1,4 @@
-image: eicweb.phy.anl.gov:4567/containers/eic_container/eic:2.3.1
+image: eicweb.phy.anl.gov:4567/containers/eic_container/eic:latest
 
 #default:
 #  artifacts:

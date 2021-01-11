@@ -1,4 +1,4 @@
-FROM  eicweb.phy.anl.gov:4567/containers/eic_container/eic:2.3.1
+FROM  eicweb.phy.anl.gov:4567/containers/eic_container/eic:latest
 
 LABEL maintainer="Whitney Armstrong <warmstrong@anl.gov>" \
       name="juggler" \
@@ -6,25 +6,7 @@ LABEL maintainer="Whitney Armstrong <warmstrong@anl.gov>" \
       march="native" \
       basedist="debian" \
       base="eic_container/eic" \
-      version="2.2.2"
-
-#RUN cd /tmp \
-#      && git clone https://gitlab.cern.ch/hepmc/HepMC3.git  \
-#      && mkdir HepMC3/build && cd HepMC3/build \
-#      && cmake ../.  -DCMAKE_INSTALL_PREFIX=/usr/local -DHEPMC3_BUILD_EXAMPLES=OFF \ 
-#      && make -j20 \
-#      && make install  \
-#      && cd /tmp && rm -rf /tmp/HepMC3
-
-RUN cd /tmp \
-      && apt-get update && apt-get install rsync -y \
-      && wget http://home.thep.lu.se/~torbjorn/pythia8/pythia8244.tgz \
-      && tar -zxf pythia8244.tgz && cd pythia8244 \
-      && ./configure --prefix=/usr/local --enable-shared --enable-64bit --with-root --with-hepmc3 \
-      && make -j30 \
-      && make install  \
-      && cd /tmp && rm -rf /tmp/pythia8244
-
+      version="2.5.0"
 
 RUN cd /tmp             \
       && git clone  https://eicweb.phy.anl.gov/EIC/NPDet.git \
