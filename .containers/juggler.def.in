@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: eicweb.phy.anl.gov:4567/eic/juggler/juggler:latest
+From: eicweb.phy.anl.gov:4567/eic/juggler/juggler:@JUGGLER_TAG@
 %help
   singularity container for Juggler development
 

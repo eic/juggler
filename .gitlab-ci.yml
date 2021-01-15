@@ -1,124 +1,140 @@
-image: eicweb.phy.anl.gov:4567/containers/eic_container/eic:2.5-stable
+variables:
+  EIC_TAG: "2.5-stable"
 
-#default:
-#  artifacts:
-#    paths:
-#      - build/
+default:
+  image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
+  tags: 
+    - silicon
 
 stages:
+  - config
   - build
-  - docker_build
-  - docker_push
+  - push
   - deploy
+  - cleanup
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_COMMIT_TAG'
+
+env:
+  stage: config 
+  script:
+    - export JUGGLER_TAG="latest"
+    - |
+      if [ "x${CI_PIPELINE_SOURCE}" == "xmerge_request_event" ]; then
+        export JUGGLER_TAG="testing-mr-${CI_MERGE_REQUEST_IID}"
+      fi
+    - echo "CI JUGGLER_TAG for this pipeline set to ${JUGGLER_TAG}"
+    - echo "JUGGLER_TAG=$JUGGLER_TAG" >> juggler.env
+  artifacts:
+    reports:
+      dotenv: juggler.env
  
-compile:
+docker:
   stage: build
-  rules:
-    - if: '$CI_COMMIT_BRANCH != "master" && $CI_PIPELINE_SOURCE == "merge_request_event"'
-  tags:
-    - silicon
+  needs:
+    - env
   script:
-    - apt-get update && apt-get install -y rsync 
-    - export homedir=$(pwd) &&  pwd && cd /tmp && git clone --depth=1 https://eicweb.phy.anl.gov/EIC/NPDet.git && mkdir build && cd build && cmake ../NPDet/. && make -j20 install
-    - cd /tmp && git clone --depth=1 https://eicweb.phy.anl.gov/EIC/eicd.git && mkdir eicd_build && cd eicd_build && cmake ../eicd/. && make -j20 install
-    - cd $homedir && ls -lrth && mkdir build && cd build && cmake .. && make -j10
+    - echo $JUGGLER_TAG
+    - ./.gitlabci/configure.sh .containers/Dockerfile.in
+    - cd .containers
+    - make build
+      #- make build-nc
 
-docker:build:
-  image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
-  stage: docker_build
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: never
-    - if: '$CI_COMMIT_BRANCH != "master"'
-      when: never
-    - when: on_success
-  tags:
-    - silicon
+publish:
+  stage: push
+  needs:
+    - env
+    - docker
   script:
-    - cd .containers/docker 
-    - make build-nc
-
-docker:push:
-  image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
-  stage: docker_push
-  needs: ["docker:build"]
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: never
-    - if: '$CI_COMMIT_BRANCH != "master"'
-      when: never
-    - when: on_success
+    - cd .containers
+    - |
+      if [ "x$CI_COMMIT_TAG" != "x" ]; then
+        make publish publish-version
+      else
+        make publish
+      fi
   retry:
     max: 2
     when:
       - runner_system_failure
       - stuck_or_timeout_failure
-  tags:
-    - silicon
-  script:
-    - cd .containers/docker 
-    - make push
 
-docker:release:
-  image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
-  stage: docker_build
+.singularity:
+  stage: deploy
+  needs: 
+    - env
+    - publish
+  script:
+    - ./.gitlabci/configure.sh .containers/juggler.def.in
+    - mkdir -p build
+    - mv .containers/juggler.def build
+    - singularity build build/juggler.sif build/juggler.def
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+
+singularity:latest:
+  extends: .singularity
   rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      when: on_success
     - if: '$CI_COMMIT_TAG'
-  tags:
-    - silicon
-  script:
-    - cd .containers/docker && make release
-
-docker:singularity:
-  image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
-  stage: docker_push
-  needs: ["docker:build"]
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: never
-    - if: '$CI_COMMIT_BRANCH != "master"'
-      when: never
-    - when: on_success
-  tags: 
-    - silicon
-  script:
-    - cp .containers/singularity/juggler.def .
-    - /bin/bash .gitlabci/build.sh juggler.def
-    - mkdir -p build 
-    - cp juggler.sif build/.
-    - cp juggler.def build/.
+      when: on_success
   artifacts:
-    expire_in: 90 days 
+    expire_in: 90 days
     paths:
       - build/juggler.sif
       - build/juggler.def
 
-        #singularity:push:
-        #  stage: deploy
-        #  when: manual
-
+singularity:testing:
+  extends: .singularity
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: manual
+  artifacts:
+    expire_in: 1 days
+    paths:
+      - build/juggler.sif
+      - build/juggler.def
 
 benchmarks:reconstruction:
   stage: deploy
+  needs: 
+    - env
+    - publish
+  variables:
+    JUGGLER_TAG: "$JUGGLER_TAG"
   trigger:
     project: EIC/benchmarks/reconstruction_benchmarks
-  needs: ["docker:push"]
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: never
-    - if: '$CI_COMMIT_BRANCH != "master"'
-      when: never
-    - when: on_success
+    strategy: depend
+
   
 benchmarks:physics:
   stage: deploy
+  needs: 
+    - env
+    - publish
+  variables:
+    JUGGLER_TAG: "$JUGGLER_TAG"
   trigger:
     project: EIC/benchmarks/physics_benchmarks
-  needs: ["docker:push"]
+    strategy: depend
+
+purge_image:
+  stage: cleanup
+  dependencies:
+    - env
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: never
-    - if: '$CI_COMMIT_BRANCH != "master"'
-      when: never
-    - when: on_success
+  script:
+    - cd .containers
+    - make cleanup unpublish
+      #- make unpublish
 
+      

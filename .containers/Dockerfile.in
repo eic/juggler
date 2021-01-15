@@ -1,12 +1,11 @@
-FROM  eicweb.phy.anl.gov:4567/containers/eic_container/eic:latest
+FROM  eicweb.phy.anl.gov:4567/containers/eic_container/eic:@EIC_TAG@
 
 LABEL maintainer="Whitney Armstrong <warmstrong@anl.gov>" \
       name="juggler" \
       group="EIC/juggler" \
       march="native" \
       basedist="debian" \
-      base="eic_container/eic" \
-      version="2.5.0"
+      base="eic_container/eic"
 
 RUN cd /tmp             \
       && git clone  https://eicweb.phy.anl.gov/EIC/NPDet.git \
