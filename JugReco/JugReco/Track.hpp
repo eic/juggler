@@ -15,21 +15,19 @@
 //#include "ACTFW/EventData/SimSourceLink.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "JugReco/SourceLinks.h"
+#include "JugReco/IndexSourceLink.hpp"
 
 #include <vector>
 
 namespace Jug {
 
-
   /// (Reconstructed) track parameters e.g. close to the vertex.
-  using TrackParameters = Acts::CurvilinearTrackParameters;
-
+  using TrackParameters = ::Acts::BoundTrackParameters;
   /// Container of reconstructed track states for multiple tracks.
   using TrackParametersContainer = std::vector<TrackParameters>;
 
   /// MultiTrajectory definition
-  using Trajectory = Acts::MultiTrajectory<SourceLink>;
+  using Trajectory = Acts::MultiTrajectory<IndexSourceLink>;
 
   /// Container for the truth fitting/finding track(s)
   using TrajectoryContainer = std::vector<SimMultiTrajectory>;

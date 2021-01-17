@@ -17,6 +17,44 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+
+
+void draw_surfaces(std::shared_ptr<const Acts::TrackingGeometry> trk_geo, const std::string& fname)
+{
+  using namespace Acts;
+  Acts::GeometryContext tgContext = Acts::GeometryContext();
+  std::vector<const Surface*> surfaces;
+
+  trk_geo->visitSurfaces([&](const Acts::Surface* surface) {
+    // for now we just require a valid surface
+    if (not surface) {
+      return;
+    }
+    surfaces.push_back(surface);
+  });
+  std::ofstream os;
+  os.open(fname);
+  os << std::fixed << std::setprecision(4);
+  size_t nVtx = 0;
+  for (const auto& srfx : surfaces) {
+    const PlaneSurface*                 srf    = dynamic_cast<const PlaneSurface*>(srfx);
+    const PlanarBounds*                 bounds = dynamic_cast<const PlanarBounds*>(&srf->bounds());
+    for (const auto& vtxloc : bounds->vertices()) {
+      Vector3 vtx = srf->transform(tgContext) * Vector3(vtxloc.x(), vtxloc.y(), 0);
+      os << "v " << vtx.x() << " " << vtx.y() << " " << vtx.z() << "\n";
+    }
+    // connect them
+    os << "f";
+    for (size_t i = 1; i <= bounds->vertices().size(); ++i) {
+      os << " " << nVtx + i;
+    }
+    os << "\n";
+    nVtx += bounds->vertices().size();
+  }
+  os.close();
+}
+
 using namespace Gaudi;
 
 DECLARE_COMPONENT(GeoSvc)
@@ -85,8 +123,9 @@ StatusCode GeoSvc::initialize() {
   default:
     geoMsgLevel = Acts::Logging::VERBOSE;
   }
-  m_trackingGeo = std::move(Acts::convertDD4hepDetector(m_dd4hepgeo->world(), geoMsgLevel, Acts::equidistant,
+  m_trackingGeo = std::move(Acts::convertDD4hepDetector(m_dd4hepgeo->world(), Acts::Logging::VERBOSE, Acts::equidistant,
                                                         Acts::equidistant, Acts::equidistant));
+  draw_surfaces(m_trackingGeo, "Derp.obj");
   return StatusCode::SUCCESS;
 }
 

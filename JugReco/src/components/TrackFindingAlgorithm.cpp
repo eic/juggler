@@ -26,18 +26,20 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Units.hpp"
+#include "Acts/Definitions/Units.hpp"
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 #include "JugReco/GeometryContainers.hpp"
-#include "JugReco/SourceLinks.h"
+//#include "JugReco/SourceLinks.h"
+#include "JugReco/Measurement.hpp"
+#include "JugReco/Index.hpp"
+#include "JugReco/IndexSourceLink.hpp"
 #include "JugReco/Track.hpp"
 #include "JugReco/BField.h"
-#include "JugReco/SourceLinks.h"
 
 #include "eicd/TrackerHitCollection.h"
 
@@ -47,19 +49,21 @@
 #include <random>
 #include <stdexcept>
 
-
-
 namespace Jug::Reco {
 
   using namespace Acts::UnitLiterals;
 
-  TrackFindingAlgorithm::TrackFindingAlgorithm(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+  TrackFindingAlgorithm::TrackFindingAlgorithm(const std::string& name, ISvcLocator* svcLoc)
+      : GaudiAlgorithm(name, svcLoc)
+  {
     declareProperty("inputSourceLinks", m_inputSourceLinks, "");
+    declareProperty("inputMeasurements", m_inputMeasurements, "");
     declareProperty("inputInitialTrackParameters", m_inputInitialTrackParameters, "");
     declareProperty("outputTrajectories", m_outputTrajectories, "");
   }
 
-  StatusCode TrackFindingAlgorithm::initialize() {
+  StatusCode TrackFindingAlgorithm::initialize()
+  {
     if (GaudiAlgorithm::initialize().isFailure())
       return StatusCode::FAILURE;
     m_geoSvc = service("GeoSvc");
@@ -68,24 +72,22 @@ namespace Jug::Reco {
               << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
       return StatusCode::FAILURE;
     }
-    m_BField                = std::make_shared<Acts::ConstantBField>(Acts::Vector3D{0.0, 0.0, m_geoSvc->centralMagneticField()});
-    m_fieldctx              = BFieldVariant(m_BField);
-
+    m_BField   = std::make_shared<Acts::ConstantBField>(Acts::Vector3{0.0, 0.0, m_geoSvc->centralMagneticField()});
+    m_fieldctx = BFieldVariant(m_BField);
     // chi2 and #sourclinks per surface cutoffs
-    m_sourcelinkSelectorCfg = { {Acts::GeometryIdentifier(), {15, 10}},
+    m_sourcelinkSelectorCfg = {
+        {Acts::GeometryIdentifier(), {15, 10}},
     };
-
-    findTracks = TrackFindingAlgorithm::makeTrackFinderFunction(m_geoSvc->trackingGeometry(), m_BField);
-
+    m_trackFinderFunc = TrackFindingAlgorithm::makeTrackFinderFunction(m_geoSvc->trackingGeometry(), m_BField);
     return StatusCode::SUCCESS;
   }
 
-  StatusCode TrackFindingAlgorithm::execute() {
+  StatusCode TrackFindingAlgorithm::execute()
+  {
     // Read input data
-    const SourceLinkContainer*      src_links       = m_inputSourceLinks.get();
+    const IndexSourceLinkContainer* src_links       = m_inputSourceLinks.get();
     const TrackParametersContainer* init_trk_params = m_inputInitialTrackParameters.get();
-    // const auto sourceLinks       = ctx.eventStore.get<SourceLinkContainer>(m_cfg.inputSourceLinks);
-    // const auto initialParameters = ctx.eventStore.get<TrackParametersContainer>(m_cfg.inputInitialTrackParameters);
+    const MeasurementContainer*     measurements    = m_inputMeasurements.get();
 
     //// Prepare the output data with MultiTrajectory
     // TrajectoryContainer trajectories;
@@ -93,7 +95,7 @@ namespace Jug::Reco {
     trajectories->reserve(init_trk_params->size());
 
     //// Construct a perigee surface as the target surface
-    auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3D{0., 0., 0.});
+    auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3{0., 0., 0.});
 
     ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("TrackFindingAlgorithm Logger", Acts::Logging::INFO));
 
@@ -104,13 +106,14 @@ namespace Jug::Reco {
 
       Acts::PropagatorPlainOptions pOptions;
       pOptions.maxSteps = 10000;
+
       // Set the CombinatorialKalmanFilter options
-      CKFOptions ckfOptions(m_geoctx, m_fieldctx, m_calibctx, m_sourcelinkSelectorCfg,
-                                      Acts::LoggerWrapper{logger()}, pOptions,
-                                      &(*pSurface));
+      TrackFindingAlgorithm::TrackFinderOptions options(
+          m_geoctx, m_fieldctx, m_calibctx, MeasurementCalibrator(*measurements),
+          Acts::CKFSourceLinkSelector(m_sourcelinkSelectorCfg), Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
 
       debug() << "Invoke track finding seeded by truth particle " << iseed << endmsg;
-      auto result = findTracks(*src_links, initialParams, ckfOptions);
+      auto result = m_trackFinderFunc(*src_links, initialParams, options);
       debug() << "finding done." << endmsg;
       if (result.ok()) {
         // Get the track finding output object
@@ -122,7 +125,7 @@ namespace Jug::Reco {
         debug() << "Track finding failed for truth seed " << iseed << endmsg;
         ACTS_WARNING("Track finding failed for truth seed " << iseed << " with error" << result.error());
         // Track finding failed, but still create an empty SimMultiTrajectory
-        //trajectories->push_back(SimMultiTrajectory());
+        // trajectories->push_back(SimMultiTrajectory());
       }
     }
 
@@ -141,8 +144,9 @@ namespace {
     TrackFinderFunctionImpl(TrackFinder&& f) : trackFinder(std::move(f)) {}
 
     Jug::Reco::TrackFindingAlgorithm::TrackFinderResult
-    operator()(const Jug::SourceLinkContainer& sourceLinks, const Jug::TrackParameters& initialParameters,
-               const Acts::CombinatorialKalmanFilterOptions<Acts::CKFSourceLinkSelector>& options) const {
+    operator()(const Jug::IndexSourceLinkContainer& sourceLinks, const Jug::TrackParameters& initialParameters,
+               const Jug::Reco::TrackFindingAlgorithm::TrackFinderOptions& options) const
+    {
       return trackFinder.findTracks(sourceLinks, initialParameters, options);
     };
   };
@@ -169,7 +173,7 @@ namespace Jug::Reco {
           using Navigator          = Acts::Navigator;
           using Propagator         = Acts::Propagator<Stepper, Navigator>;
           using SourceLinkSelector = Acts::CKFSourceLinkSelector;
-          using CKF                = Acts::CombinatorialKalmanFilter<Propagator, Updater, Smoother, SourceLinkSelector>;
+          using CKF                = Acts::CombinatorialKalmanFilter<Propagator, Updater, Smoother>;
 
           std::cout << " finding ...\n";
           // construct all components for the track finder
@@ -179,9 +183,10 @@ namespace Jug::Reco {
           navigator.resolvePassive   = false;
           navigator.resolveMaterial  = true;
           navigator.resolveSensitive = true;
-          std::cout << " propagator\n" ;
+          std::cout << " propagator\n";
           Propagator propagator(std::move(stepper), std::move(navigator));
           CKF        trackFinder(std::move(propagator));
+
 
           // build the track finder functions. owns the track finder object.
           return TrackFinderFunctionImpl<CKF>(std::move(trackFinder));
@@ -189,4 +194,3 @@ namespace Jug::Reco {
         std::move(magneticField));
   }
 } // namespace Jug::Reco
-

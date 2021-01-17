@@ -21,6 +21,10 @@ gaudi_depends_on_subdirs(GaudiAlg GaudiKernel)
 
 gaudi_add_library(JugBase
   src/*.cpp 
+  src/Utilities/*.cpp
+  src/Plugins/BFieldOptions.cpp  
+  #src/Plugins/BFieldScalor.cpp  
+  src/Plugins/BFieldUtils.cpp
                   INCLUDE_DIRS EICD PODIO ROOT $ENV{HOME}/stow/podio/include
                   LINK_LIBRARIES GaudiAlgLib GaudiKernel ROOT DD4hep::DDG4IO
                   PUBLIC_HEADERS JugBase)
