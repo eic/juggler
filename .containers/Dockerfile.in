@@ -22,7 +22,7 @@ RUN cd /tmp             \
       && cd /tmp && rm -rf /tmp/eicd 
 
 RUN cd /tmp             \
-      && git clone  https://eicweb.phy.anl.gov/EIC/juggler.git \
+      && git clone  -b @JUGGLER_BRANCH@ https://eicweb.phy.anl.gov/EIC/juggler.git \
       && mkdir -p juggler/build && cd juggler/build \
       && cmake ../. -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/usr/local \
       && make -j30  && make -j4 install \
