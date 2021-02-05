@@ -41,7 +41,7 @@ docker:
     - echo $JUGGLER_TAG
     - ./.gitlabci/configure.sh .containers/Dockerfile.in
     - cd .containers
-    - make build
+    - make build-nc
       #- make build-nc
 
 publish:
