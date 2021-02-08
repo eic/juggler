@@ -30,6 +30,7 @@ gaudi_depends_on_subdirs(GaudiAlg GaudiKernel)
 gaudi_add_module(JugRecoPlugins
   src/components/TrackerHitReconstruction.cpp 
   src/components/TrackerSourceLinker.cpp 
+  src/components/Tracker2SourceLinker.cpp 
   src/components/TrackerSourcesLinker.cpp 
   #src/components/TrackingHitsSourceLinker.cpp 
   src/components/TrackFindingAlgorithm.cpp 
