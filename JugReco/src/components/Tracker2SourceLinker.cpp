@@ -119,7 +119,7 @@ namespace Jug::Reco {
         debug() << (*hits).size() << " hits " << endmsg;
         for (const auto& ahit : *hits) {
 
-          allHits->push_back(ahit);
+          allHits->push_back(ahit.clone());
 
           Acts::SymMatrix2 cov = Acts::SymMatrix2::Zero();
           cov(0, 0) = ahit.covsym_xx() * Acts::UnitConstants::mm * ahit.covsym_xx() * Acts::UnitConstants::mm;
