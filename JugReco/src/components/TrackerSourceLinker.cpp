@@ -6,7 +6,7 @@
 #include "GaudiAlg/Transformer.h"
 #include "GaudiAlg/GaudiTool.h"
 #include "GaudiKernel/RndmGenerators.h"
-#include "GaudiKernel/Property.h"
+#include "Gaudi/Property.h"
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
@@ -18,12 +18,15 @@
 #include "DD4hep/DD4hepUnits.h"
 
 
-#include "Acts/Utilities/Units.hpp"
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 
-#include "JugReco/SourceLinks.h"
+#include "JugReco/Index.hpp"
+#include "JugReco/IndexSourceLink.hpp"
+#include "JugReco/Measurement.hpp"
 
 #include "eicd/TrackerHitCollection.h"
 
@@ -32,7 +35,8 @@ namespace Jug::Reco {
   class TrackerSourceLinker : public GaudiAlgorithm {
   public:
     DataHandle<eic::TrackerHitCollection>    m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-    DataHandle<SourceLinkContainer> m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};
+    DataHandle<IndexSourceLinkContainer>     m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};
+    DataHandle<MeasurementContainer>          m_outputMeasurements{"outputMeasurements", Gaudi::DataHandle::Writer, this};
     /// Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
 
@@ -44,6 +48,7 @@ namespace Jug::Reco {
         : GaudiAlgorithm(name, svcLoc) {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputSourceLinks", m_outputSourceLinks, "");
+      declareProperty("outputMeasurements", m_outputMeasurements, "");
     }
 
     StatusCode initialize() override {
@@ -77,60 +82,60 @@ namespace Jug::Reco {
       // input collection
       const eic::TrackerHitCollection* hits = m_inputHitCollection.get();
       // Create output collections
-      auto source_links = m_outputSourceLinks.createAndPut();
-      // setup local covariance
-      // TODO add support for per volume/layer/module settings
+      auto sourceLinks = m_outputSourceLinks.createAndPut();
+      auto measurements = m_outputMeasurements.createAndPut();
+      // IndexMultimap<ActsFatras::Barcode> hitParticlesMap;
+      // IndexMultimap<Index> hitSimHitsMap;
+      sourceLinks->reserve(hits->size());
+      measurements->reserve(hits->size());
 
       debug() << (*hits).size() << " hits " << endmsg;
+      int ihit = 0;
       for(const auto& ahit : *hits) {
 
-        Acts::BoundMatrix cov           = Acts::BoundMatrix::Zero();
-        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = ahit.covsym_xx()*Acts::UnitConstants::mm*ahit.covsym_xx()*Acts::UnitConstants::mm;
-        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = ahit.covsym_yy()*Acts::UnitConstants::mm*ahit.covsym_yy()*Acts::UnitConstants::mm;
+        Acts::SymMatrix2 cov = Acts::SymMatrix2::Zero();
+        cov(0,0) = ahit.covsym_xx()*Acts::UnitConstants::mm*ahit.covsym_xx()*Acts::UnitConstants::mm;
+        cov(1,1) = ahit.covsym_yy()*Acts::UnitConstants::mm*ahit.covsym_yy()*Acts::UnitConstants::mm;
 
-        auto vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID());
-        auto vol_id = vol_ctx->identifier;
-        //debug() << " hit          : \n" <<  ahit << endmsg;
-        //debug() << "cell ID : " << ahit.cellID() << endmsg;
-        //debug() << " position : (" <<  ahit.position(0) << ", " <<  ahit.position(1) << ", "<<  ahit.position(2) << ") " << endmsg;
-        debug() << " vol_id       : " <<  vol_id << endmsg;
-        debug() << " placment pos : " << vol_ctx->volumePlacement().position() << endmsg;
-
-        const auto is = m_surfaces.find(vol_id);
+        auto       vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID());
+        auto       vol_id  = vol_ctx->identifier;
+        const auto is      = m_surfaces.find(vol_id);
         if (is == m_surfaces.end()) {
           debug() << " vol_id (" <<  vol_id << ")  not found in m_surfaces." <<endmsg;
           continue;
         }
         const Acts::Surface* surface = is->second;
-
         debug() << " surface center : " << surface->center(Acts::GeometryContext()) << endmsg;
         // transform global position into local coordinates
-        Acts::Vector2D pos(0, 0);
+        Acts::Vector2 pos(0, 0);
         // geometry context contains nothing here
         pos = surface->globalToLocal(Acts::GeometryContext(), {ahit.x(), ahit.y(), ahit.z()}, {0, 0, 0}).value();//, pos);
 
-        //// smear truth to create local measurement
-        Acts::BoundVector loc = Acts::BoundVector::Zero();
+        Acts::Vector2 loc = Acts::Vector2::Zero();
         loc[Acts::eBoundLoc0]     = pos[0] ;//+ m_cfg.sigmaLoc0 * stdNormal(rng);
         loc[Acts::eBoundLoc1]     = pos[1] ;//+ m_cfg.sigmaLoc1 * stdNormal(rng);
+        //debug() << "loc : (" << loc[0] << ", " << loc[1] << ")" << endmsg;
 
-        debug() << "loc : (" << loc[0] << ", " << loc[1] << ")" << endmsg;
+        //local position
+        //auto loc = {ahit.x(), ahit.y(), ahit.z()} - vol_ctx->volumePlacement().position()
+        //debug() << " hit          : \n" <<  ahit << endmsg;
+        //debug() << " cell ID : " << ahit.cellID() << endmsg;
+        //debug() << " position : (" <<  ahit.position(0) << ", " <<  ahit.position(1) << ", "<<  ahit.position(2) << ") " << endmsg;
+        //debug() << " vol_id       : " <<  vol_id << endmsg;
+        //debug() << " placment pos : " << vol_ctx->volumePlacement().position() << endmsg;
 
-        // create source link at the end of the container
-        //auto it = source_links->emplace_hint(source_links->end(), *surface, hit, 2, loc, cov);
-        auto it = source_links->emplace_hint(source_links->end(), *surface,  2, loc, cov);
-        // ensure hits and links share the same order to prevent ugly surprises
-        if (std::next(it) != source_links->end()) {
-          error() << "The hit ordering broke. Run for your life." << endmsg;
-          return StatusCode::FAILURE;
-        }
+        // the measurement container is unordered and the index under which the
+        // measurement will be stored is known before adding it.
+        Index hitIdx = measurements->size();
+        IndexSourceLink sourceLink(vol_id, ihit);
+        auto meas = Acts::makeMeasurement(sourceLink, loc, cov, Acts::eBoundLoc0, Acts::eBoundLoc1);
 
-        //std::array<double,3> posarr; pos.GetCoordinates(posarr);
-        //std::array<double,3> dimarr; dim.GetCoordinates(posarr);
-        //eic::TrackerHit hit;
-        //eic::TrackerHit hit((long long)ahit.cellID0(), (long long)ahit.cellID(), (long long)ahit.time(),
-        //                    (float)ahit.charge() / 10000.0, (float)0.0, {{pos.x(), pos.y(),pos.z()}},{{dim[0],dim[1],0.0}});
-        //rec_hits->push_back(hit);
+        // add to output containers. since the input is already geometry-order,
+        // new elements in geometry containers can just be appended at the end.
+        sourceLinks->emplace_hint(sourceLinks->end(), std::move(sourceLink));
+        measurements->emplace_back(std::move(meas));
+
+        ihit++;
       }
       return StatusCode::SUCCESS;
     }
@@ -140,82 +145,3 @@ namespace Jug::Reco {
 
 } // namespace Jug::reco
 
-//HitSmearing::HitSmearing(const Config& cfg, Acts::Logging::Level lvl)
-//    : BareAlgorithm("HitSmearing", lvl), m_cfg(cfg) {
-//  if (m_cfg.inputSimulatedHits.empty()) {
-//    throw std::invalid_argument("Missing input simulated hits collection");
-//  }
-//  if (m_cfg.outputSourceLinks.empty()) {
-//    throw std::invalid_argument("Missing output source links collection");
-//  }
-//  if ((m_cfg.sigmaLoc0 < 0) or (m_cfg.sigmaLoc1 < 0)) {
-//    throw std::invalid_argument("Invalid resolution setting");
-//  }
-//  if (not m_cfg.trackingGeometry) {
-//    throw std::invalid_argument("Missing tracking geometry");
-//  }
-//  if (!m_cfg.randomNumbers) {
-//    throw std::invalid_argument("Missing random numbers tool");
-//  }
-//  // fill the surface map to allow lookup by geometry id only
-//  m_cfg.trackingGeometry->visitSurfaces([this](const Acts::Surface* surface) {
-//    // for now we just require a valid surface
-//    if (not surface) {
-//      return;
-//    }
-//    this->m_surfaces.insert_or_assign(surface->associatedDetectorElement()->identifier(), surface);
-//  });
-//     }
-//}
-
-//ProcessCode HitSmearing::execute(const AlgorithmContext& ctx) const {
-//  // setup input and output containers
-//  const auto& hits =
-//      ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimulatedHits);
-//  SimSourceLinkContainer sourceLinks;
-//  sourceLinks.reserve(hits.size());
-//
-//  // setup random number generator
-//  auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
-//  std::normal_distribution<double> stdNormal(0.0, 1.0);
-//
-//  // setup local covariance
-//  // TODO add support for per volume/layer/module settings
-//  Acts::BoundMatrix cov = Acts::BoundMatrix::Zero();
-//  cov(Acts::eLOC_0, Acts::eLOC_0) = m_cfg.sigmaLoc0 * m_cfg.sigmaLoc0;
-//  cov(Acts::eLOC_1, Acts::eLOC_1) = m_cfg.sigmaLoc1 * m_cfg.sigmaLoc1;
-//
-//  for (auto&& [moduleGeoId, moduleHits] : groupByModule(hits)) {
-//    // check if we should create hits for this surface
-//    const auto is = m_surfaces.find(moduleGeoId);
-//    if (is == m_surfaces.end()) {
-//      continue;
-//    }
-//
-//    // smear all truth hits for this module
-//    const Acts::Surface* surface = is->second;
-//    for (const auto& hit : moduleHits) {
-//      // transform global position into local coordinates
-//      Acts::Vector2D pos(0, 0);
-//      surface->globalToLocal(ctx.geoContext, hit.position(),
-//                             hit.unitDirection(), pos);
-//
-//      // smear truth to create local measurement
-//      Acts::BoundVector loc = Acts::BoundVector::Zero();
-//      loc[Acts::eLOC_0] = pos[0] + m_cfg.sigmaLoc0 * stdNormal(rng);
-//      loc[Acts::eLOC_1] = pos[1] + m_cfg.sigmaLoc1 * stdNormal(rng);
-//
-//      // create source link at the end of the container
-//      auto it = sourceLinks.emplace_hint(sourceLinks.end(), *surface, hit, 2,
-//                                         loc, cov);
-//      // ensure hits and links share the same order to prevent ugly surprises
-//      if (std::next(it) != sourceLinks.end()) {
-//        ACTS_FATAL("The hit ordering broke. Run for your life.");
-//        return ProcessCode::ABORT;
-//      }
-//    }
-//  }
-//
-//  ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
-//  return ProcessCode::SUCCESS;
-//}

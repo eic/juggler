@@ -2,11 +2,11 @@
 
 // Gaudi
 #include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiKernel/ToolHandle.h"
+//#include "GaudiKernel/ToolHandle.h"
 #include "GaudiAlg/Transformer.h"
 #include "GaudiAlg/GaudiTool.h"
 #include "GaudiKernel/RndmGenerators.h"
-#include "GaudiKernel/Property.h"
+#include "Gaudi/Property.h"
 
 #include "DDRec/CellIDPositionConverter.h"
 #include "DDRec/SurfaceManager.h"
@@ -20,7 +20,6 @@
 //#include "GaudiExamples/MyTrack.h"
 #include "eicd/RawTrackerHitCollection.h"
 #include "eicd/TrackerHitCollection.h"
-#include "JugReco/SourceLinks.h"
 
 #include "DD4hep/DD4hepUnits.h"
 

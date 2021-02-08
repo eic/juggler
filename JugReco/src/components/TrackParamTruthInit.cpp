@@ -10,11 +10,13 @@
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 #include "JugReco/Track.hpp"
-#include "Acts/Utilities/Units.hpp"
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Definitions/Common.hpp"
 
 #include "eicd/TrackerHitCollection.h"
 #include "dd4pod/Geant4ParticleCollection.h"
+#include "Math/Vector3D.h"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 
 
   ///// (Reconstructed) track parameters e.g. close to the vertex.
@@ -70,28 +72,46 @@ namespace Jug::Reco {
         if(part.genStatus() != 1 ) {
           continue;
         }
-        using Acts::UnitConstants::MeV;
         using Acts::UnitConstants::GeV;
+        using Acts::UnitConstants::MeV;
         using Acts::UnitConstants::mm;
+        using Acts::UnitConstants::um;
+        using Acts::UnitConstants::ns;
 
         double p = std::hypot( part.psx() * GeV, part.psy() * GeV, part.psz() * GeV);
+        ROOT::Math::XYZVector  momentum(part.psx() * GeV, part.psy() * GeV, part.psz() * GeV);
 
         // build some track cov matrix
         Acts::BoundSymMatrix cov        = Acts::BoundSymMatrix::Zero();
-        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = 1.0 * mm*1.0 * mm;
-        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = 1.0 * mm*1.0 * mm;
-        cov(Acts::eBoundPhi, Acts::eBoundPhi)     = M_PI / 180.0;
-        cov(Acts::eBoundTheta, Acts::eBoundTheta) = M_PI / 180.0;
-        cov(Acts::eBoundQOverP, Acts::eBoundQOverP)     = 0.98 / (p*p);
-        cov(Acts::eBoundTime, Acts::eBoundTime)         = Acts::UnitConstants::ns;
+        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = 25*um*25*um;
+        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = 100*um*100*um;
+        cov(Acts::eBoundPhi, Acts::eBoundPhi)     = 0.005*0.005;
+        cov(Acts::eBoundTheta, Acts::eBoundTheta) = 0.001*0.001;
+        cov(Acts::eBoundQOverP, Acts::eBoundQOverP)     = (0.1*0.1) / (GeV*GeV);
+        cov(Acts::eBoundTime, Acts::eBoundTime)         = 1.0e9*ns*1.0e9*ns;
 
-        init_trk_params->emplace_back(Acts::Vector4D(part.vsx() * mm, part.vsy() * mm, part.vsz() * mm, part.time() * Acts::UnitConstants::ns),
-                                      Acts::Vector3D(part.psx() * GeV, part.psy() * GeV, part.psz() * GeV),
-                                      p+200*MeV,
-                                      ((part.pdgID() > 0) ? -1 : 1),
-                                      std::make_optional(std::move(cov))
-                                      );
-        //part .charge()
+        Acts::BoundVector  params;
+        params(Acts::eBoundLoc0)   = 0.0 * mm ;  // cylinder radius
+        params(Acts::eBoundLoc1)   = 0.0 * mm ; // cylinder length
+        params(Acts::eBoundPhi)    = momentum.Phi();
+        params(Acts::eBoundTheta)  = momentum.Theta();
+        params(Acts::eBoundQOverP) = 1/p;
+        params(Acts::eBoundTime)   = part.time() * ns;
+        /// \todo create or find better particle data interface.
+        // get the particle charge
+        int charge = ((part.pdgID() > 0) ? 1 : -1);
+        // electron is negative but positive pdg code
+        if( std::abs(part.pdgID()) == 11 ) {
+          charge *= -1;
+        }
+
+        //// Construct a perigee surface as the target surface
+        auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
+            Acts::Vector3{part.vsx() * mm, part.vsy() * mm, part.vsz() * mm});
+
+        //params(Acts::eBoundQOverP) = charge/p;
+        init_trk_params->push_back({pSurface, params, charge});
+        // std::make_optional(std::move(cov))
 
         debug() << "Invoke track finding seeded by truth particle with p = " << p/GeV  << " GeV" << endmsg;
         //Acts::BoundMatrix cov           = Acts::BoundMatrix::Zero();

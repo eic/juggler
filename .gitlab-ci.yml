@@ -1,5 +1,5 @@
 variables:
-  EIC_TAG: "2.5-stable"
+  EIC_TAG: "2.7-stable"
 
 default:
   image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
@@ -29,6 +29,10 @@ env:
       fi
     - echo "CI JUGGLER_TAG for this pipeline set to ${JUGGLER_TAG}"
     - echo "JUGGLER_TAG=$JUGGLER_TAG" >> juggler.env
+    - |
+      if [ "${DETECTOR_TAG}" ]; then
+        echo "DETECTOR_TAG=$DETECTOR_TAG" >> juggler.env
+      fi
   artifacts:
     reports:
       dotenv: juggler.env

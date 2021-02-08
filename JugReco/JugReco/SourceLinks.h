@@ -27,8 +27,9 @@ class SourceLink {
  private:
   Acts::BoundVector m_values;
   Acts::BoundMatrix m_cov;
-  size_t m_dim = 0u;
+  size_t m_dim = 2;
   // store geo id copy to avoid indirection via truth hit
+  int32_t m_index;
   Acts::GeometryIdentifier m_geometryId;
   // need to store pointers to make the object copyable
   const Acts::Surface* m_surface;
@@ -37,10 +38,11 @@ class SourceLink {
 
  public:
   SourceLink(const Acts::Surface& surface, //const ActsFatras::Hit& truthHit,
-                size_t dim, Acts::BoundVector values, Acts::BoundMatrix cov)
+                size_t dim, int32_t index, Acts::BoundVector values, Acts::BoundMatrix cov)
       : m_values(values),
         m_cov(cov),
         m_dim(dim),
+        m_index(index),
         m_geometryId(0),//truthHit.geometryId()),
         m_surface(&surface){}
         //m_truthHit(&truthHit) {}
@@ -76,8 +78,13 @@ class SourceLink {
 
   friend constexpr bool operator==(const SourceLink& lhs,
                                    const SourceLink& rhs) {
-    return lhs.geometryId() == rhs.geometryId();
+
+    return (lhs.geometryId() == rhs.geometryId()) && (lhs.m_index == rhs.m_index);
     //lhs.m_truthHit == rhs.m_truthHit;
+  }
+  friend constexpr bool operator!=(const SourceLink& lhs,
+                                   const SourceLink& rhs) {
+    return not(lhs == rhs);
   }
 };
 

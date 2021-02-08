@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "JugReco/SourceLinks.h"
 //#include "ACTFW/Validation/ProtoTrackClassification.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 
+#include "JugReco/IndexSourceLink.hpp"
 #include <unordered_map>
 #include <utility>
 
@@ -48,7 +48,7 @@ struct SimMultiTrajectory {
   /// @param tTips The entry indices for trajectories in multiTrajectory
   /// @param parameters The fitted track parameters indexed by trajectory entry
   /// index
-  SimMultiTrajectory(const Acts::MultiTrajectory<SourceLink>& multiTraj,
+  SimMultiTrajectory(const Acts::MultiTrajectory<IndexSourceLink>& multiTraj,
                      const std::vector<size_t>& tTips,
                      const IndexedParams& parameters)
       : m_multiTrajectory(multiTraj),
@@ -118,7 +118,7 @@ struct SimMultiTrajectory {
   /// @return The multiTrajectory with trajectory entry indices
   ///
   /// @note It could return an empty multiTrajectory
-  std::pair<std::vector<size_t>, Acts::MultiTrajectory<SourceLink>>
+  std::pair<std::vector<size_t>, Acts::MultiTrajectory<IndexSourceLink>>
   trajectory() const {
     return std::make_pair(m_trackTips, m_multiTrajectory);
   }
@@ -149,7 +149,7 @@ struct SimMultiTrajectory {
 
  private:
   // The multiTrajectory
-  Acts::MultiTrajectory<SourceLink> m_multiTrajectory;
+  Acts::MultiTrajectory<IndexSourceLink> m_multiTrajectory;
 
   // The entry indices of trajectories stored in multiTrajectory
   std::vector<size_t> m_trackTips = {};

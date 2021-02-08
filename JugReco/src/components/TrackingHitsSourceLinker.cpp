@@ -20,8 +20,8 @@
 #include "DD4hep/DD4hepUnits.h"
 
 
-#include "Acts/Utilities/Units.hpp"
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 

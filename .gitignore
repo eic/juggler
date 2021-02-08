@@ -39,3 +39,6 @@ __pycache__/
 
 # ROOT file
 *.root
+*.sif
+**old
+install/*

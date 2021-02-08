@@ -22,7 +22,7 @@
 #include "eicd/ParticleCollection.h"
 #include "eicd/TrackerHitCollection.h"
 #include "eicd/TrackParametersCollection.h"
-#include "JugReco/SourceLinks.h"
+#include "JugReco/IndexSourceLink.hpp"
 #include "JugReco/Track.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"

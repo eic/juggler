@@ -31,8 +31,11 @@ gaudi_add_module(JugRecoPlugins
   src/components/TrackerHitReconstruction.cpp 
   src/components/TrackerSourceLinker.cpp 
   src/components/TrackerSourcesLinker.cpp 
-  src/components/TrackingHitsSourceLinker.cpp 
+  #src/components/TrackingHitsSourceLinker.cpp 
   src/components/TrackFindingAlgorithm.cpp 
+  src/components/TrackFindingAlgorithmFunction.cpp 
+  #src/components/TrackFittingAlgorithm.cpp 
+  #src/components/TrackFittingFunction.cpp 
   src/components/TestACTSLogger.cpp 
   src/components/TrackParamTruthInit.cpp 
   src/components/TrackParamClusterInit.cpp 

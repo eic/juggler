@@ -12,11 +12,13 @@
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 #include "JugReco/Track.hpp"
-#include "Acts/Utilities/Units.hpp"
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Definitions/Common.hpp"
 
 #include "eicd/TrackerHitCollection.h"
 #include "eicd/ClusterCollection.h"
+#include "Math/Vector3D.h"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 
 using namespace Gaudi::Units;
 
@@ -79,6 +81,7 @@ namespace Jug::Reco {
           continue;
         }
 
+        auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3{0,0,0});
         for (const auto& t : *vtx_hits) {
 
           double len = std::hypot(t.x(), t.y(), t.z());
@@ -86,30 +89,54 @@ namespace Jug::Reco {
             continue;
           }
 
-          // build some track cov matrix
-          Acts::BoundSymMatrix cov                    = Acts::BoundSymMatrix::Zero();
-          cov(Acts::eBoundLoc0, Acts::eBoundLoc0)     = 1.0 * mm*1.0 * mm;
-          cov(Acts::eBoundLoc1, Acts::eBoundLoc1)     = 1.0 * mm*1.0 * mm;
-          cov(Acts::eBoundPhi, Acts::eBoundPhi)       = M_PI / 180.0;
-          cov(Acts::eBoundTheta, Acts::eBoundTheta)   = M_PI / 180.0;
-          cov(Acts::eBoundQOverP, Acts::eBoundQOverP) = 1.0 / (0.9*0.9*p_cluster*p_cluster);
-          cov(Acts::eBoundTime, Acts::eBoundTime)     = Acts::UnitConstants::ns;
+          //// build some track cov matrix
+          //Acts::BoundSymMatrix cov                    = Acts::BoundSymMatrix::Zero();
+          //cov(Acts::eBoundLoc0, Acts::eBoundLoc0)     = 1.0 * mm*1.0 * mm;
+          //cov(Acts::eBoundLoc1, Acts::eBoundLoc1)     = 1.0 * mm*1.0 * mm;
+          //cov(Acts::eBoundPhi, Acts::eBoundPhi)       = M_PI / 180.0;
+          //cov(Acts::eBoundTheta, Acts::eBoundTheta)   = M_PI / 180.0;
+          //cov(Acts::eBoundQOverP, Acts::eBoundQOverP) = 1.0 / (0.9*0.9*p_cluster*p_cluster);
+          //cov(Acts::eBoundTime, Acts::eBoundTime)     = Acts::UnitConstants::ns;
 
-          // add all charges to the track candidate...
-          init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
-                                        Acts::Vector3D(t.x() * p_cluster / len, t.y() * p_cluster / len, t.z() * p_cluster / len), p_cluster, -1,
-                                        std::make_optional(cov));
-          init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
-                                        Acts::Vector3D(t.x() * p_cluster / len, t.y() * p_cluster / len, t.z() * p_cluster / len), p_cluster, 1,
-                                        std::make_optional(cov));
+          //// add all charges to the track candidate...
+          //init_trk_params->emplace_back(Acts::Vector4(0 * mm, 0 * mm, 0 * mm, 0),
+          //                              Acts::Vector3(t.x() * p_cluster / len, t.y() * p_cluster / len, t.z() * p_cluster / len), p_cluster, -1,
+          //                              std::make_optional(cov));
+          //init_trk_params->emplace_back(Acts::Vector4(0 * mm, 0 * mm, 0 * mm, 0),
+          //                              Acts::Vector3(t.x() * p_cluster / len, t.y() * p_cluster / len, t.z() * p_cluster / len), p_cluster, 1,
+          //                              std::make_optional(cov));
+
+          ROOT::Math::XYZVector momentum(t.x() * p_cluster / len, t.y() * p_cluster / len, t.z() * p_cluster / len);
+
+          Acts::BoundVector params;
+          params(Acts::eBoundLoc0)   = 0.0 * mm;
+          params(Acts::eBoundLoc1)   = 0.0 * mm;
+          params(Acts::eBoundPhi)    = momentum.Phi();
+          params(Acts::eBoundTheta)  = momentum.Theta();
+          params(Acts::eBoundQOverP) = 1 / p_cluster;
+          params(Acts::eBoundTime)   = 0 * ns;
+
+          //debug() << "Invoke track finding seeded by truth particle with p = " << p / GeV << " GeV" << endmsg;
+
+          // add both charges to the track candidate...
+          init_trk_params->push_back({pSurface, params, 1});
+
+          Acts::BoundVector params2;
+          params2(Acts::eBoundLoc0)   = 0.0 * mm;
+          params2(Acts::eBoundLoc1)   = 0.0 * mm;
+          params2(Acts::eBoundPhi)    = momentum.Phi();
+          params2(Acts::eBoundTheta)  = momentum.Theta();
+          params2(Acts::eBoundQOverP) = -1 / p_cluster;
+          params2(Acts::eBoundTime)   = 0 * ns;
+          init_trk_params->push_back({pSurface, params2, -1});
         }
-        //init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
-        //                              Acts::Vector3D(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, 1,
+        // init_trk_params->emplace_back(Acts::Vector4(0 * mm, 0 * mm, 0 * mm, 0),
+        //                              Acts::Vector3(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, 1,
         //                              std::make_optional(cov));
-        //init_trk_params->emplace_back(Acts::Vector4D(0 * mm, 0 * mm, 0 * mm, 0),
-        //                              Acts::Vector3D(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, 0,
+        // init_trk_params->emplace_back(Acts::Vector4(0 * mm, 0 * mm, 0 * mm, 0),
+        //                              Acts::Vector3(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, 0,
         //                              std::make_optional(cov));
-        debug() << "Invoke track finding seeded by truth particle with p = " << p_cluster/GeV  << " GeV" << endmsg;
+        // debug() << "Invoke track finding seeded by truth particle with p = " << p_cluster/GeV  << " GeV" << endmsg;
       }
       return StatusCode::SUCCESS;
     }
