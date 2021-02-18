@@ -45,6 +45,7 @@ gaudi_add_module(JugRecoPlugins
   src/components/ParticlesFromTrackFit.cpp 
   src/components/CalorimeterIslandCluster.cpp 
   src/components/CrystalEndcapsReco.cpp 
+  src/components/EcalTungstenSamplingReco.cpp
   src/components/ClusterRecoCoG.cpp 
   src/components/PhotoMultiplierReco.cpp 
   src/components/PhotoRingClusters.cpp 
