@@ -18,7 +18,9 @@ namespace Jug {
 
     class MC2DummyParticle : public GaudiAlgorithm {
     public:
-      //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
+      DataHandle<dd4pod::Geant4ParticleCollection>     m_inputHitCollection{"mcparticles", Gaudi::DataHandle::Reader, this};
+      DataHandle<eic::ReconstructedParticleCollection> m_outputHitCollection{"DummyReconstructedParticles", Gaudi::DataHandle::Writer, this};
+
       MC2DummyParticle(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
       {
         declareProperty("inputCollection", m_inputHitCollection, "mcparticles");
@@ -37,16 +39,13 @@ namespace Jug {
         // output collection
         auto out_parts = m_outputHitCollection.createAndPut();
         for (const auto& p : *parts) {
-
           double momentum = std::hypot(p.psx(), p.psy(), p.psz());
           double energy   = std::hypot(momentum, p.mass());
-          out_parts->push_back({p.pdgID(), energy, {p.psx(),p.psy(),p.psz()}, p.charge(), p.mass()});
+          eic::ReconstructedParticle rec_part(p.pdgID(), energy, {p.psx(),p.psy(),p.psz()}, (double)p.charge(), p.mass());
+          out_parts->push_back(rec_part);
         }
         return StatusCode::SUCCESS;
       }
-
-      DataHandle<dd4pod::Geant4ParticleCollection>     m_inputHitCollection{"mcparticles", Gaudi::DataHandle::Reader, this};
-      DataHandle<eic::ReconstructedParticleCollection> m_outputHitCollection{"DummyReconstructedParticles", Gaudi::DataHandle::Writer, this};
     };
 
     DECLARE_COMPONENT(MC2DummyParticle)

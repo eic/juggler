@@ -27,7 +27,7 @@ gaudi_add_library(JugBase
   src/Plugins/BFieldUtils.cpp
                   INCLUDE_DIRS EICD PODIO ROOT $ENV{HOME}/stow/podio/include
                   LINK_LIBRARIES GaudiAlgLib GaudiKernel ROOT DD4hep::DDG4IO
-                  PUBLIC_HEADERS JugBase)
+                  PUBLIC_HEADERS JugBase )
 target_link_libraries(JugBase 
   podio::podioRootIO
   ActsCore ActsPluginDD4hep
@@ -37,7 +37,7 @@ target_compile_options(JugBase PRIVATE -Wno-suggest-override)
 gaudi_add_module(JugBasePlugins
                  src/components/*.cpp 
                  src/components/ReadTestConsumer.cxx
-                 LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO  ActsCore ActsPluginDD4hep)
+                 LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO  ActsCore ActsPluginDD4hep EICD::eicd)
 target_compile_options(JugBasePlugins PRIVATE -Wno-suggest-override)
 
 #gaudi_add_test(ProduceForReadTest
