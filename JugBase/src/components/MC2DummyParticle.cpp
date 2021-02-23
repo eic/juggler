@@ -39,6 +39,9 @@ namespace Jug {
         // output collection
         auto out_parts = m_outputHitCollection.createAndPut();
         for (const auto& p : *parts) {
+          if (p.genStatus() != 1) {
+            continue;
+          }
           double momentum = std::hypot(p.psx(), p.psy(), p.psz());
           double energy   = std::hypot(momentum, p.mass());
           eic::ReconstructedParticle rec_part(p.pdgID(), energy, {p.psx(),p.psy(),p.psz()}, (double)p.charge(), p.mass());
