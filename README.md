@@ -13,7 +13,9 @@ The juggler internal units are (`GeV`, `mm`, `ns`, and `radians`).
 
 #### Units Table
 
-todo...
+| G4 | DD4hep | Gaudi | Juggler |
+|----|--------|-------|---------|
+
 
 ### Running Juggler
 
@@ -22,6 +24,8 @@ Here is an example for topside
 ./scripts/run_topside.py -i inputevents.hepmc -o output_events.root -n 10
 ../where_ever/../juggler/build/run gaudirun.py options/example_reconstruction.py
 ```
+
+## Components
 
 ### `JugBase`
 

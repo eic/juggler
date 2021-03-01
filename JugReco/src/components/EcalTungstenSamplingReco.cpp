@@ -25,6 +25,7 @@ using namespace Gaudi::Units;
 namespace Jug::Reco {
   class EcalTungstenSamplingReco : public GaudiAlgorithm {
   public:
+    Gaudi::Property<double>                      m_samplingFraction{this, "samplingFraction", 0.25};
     Gaudi::Property<double>                      m_minModuleEdep{this, "minModuleEdep", 0.5 * MeV};
     DataHandle<eic::RawCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                       this};
@@ -74,7 +75,7 @@ namespace Jug::Reco {
           // cell dimension
           auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
           hits.push_back(eic::CalorimeterHit{id,
-                                             energy,
+                                             energy/m_samplingFraction,
                                              time,
                                              {gpos.x() / dd4hep::mm, gpos.y() / dd4hep::mm, gpos.z() / dd4hep::mm},
                                              {pos.x() / dd4hep::mm, pos.y() / dd4hep::mm, pos.z() / dd4hep::mm},

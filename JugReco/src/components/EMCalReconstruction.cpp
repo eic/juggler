@@ -33,6 +33,7 @@ namespace Jug::Reco {
     DataHandle<RawHits>     m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<RecHits>     m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
     Gaudi::Property<double> m_minModuleEdep{this, "minModuleEdep", 5.0*MeV};
+    Gaudi::Property<double>                      m_samplingFraction{this, "samplingFraction", 1.0};
 
     /// Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
@@ -76,8 +77,13 @@ namespace Jug::Reco {
           auto pos = m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().position();
           // cell dimension
           auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
-          hits.push_back(eic::CalorimeterHit{
-              id, energy, time, {gpos.x()/dd4hep::mm, gpos.y()/dd4hep::mm, gpos.z()/dd4hep::mm}, {pos.x()/dd4hep::mm, pos.y()/dd4hep::mm, pos.z()/dd4hep::mm}, {dim[0]/dd4hep::mm, dim[1]/dd4hep::mm, 0.0}, 0});
+          hits.push_back(eic::CalorimeterHit{id,
+                                             energy / m_samplingFraction,
+                                             time,
+                                             {gpos.x() / dd4hep::mm, gpos.y() / dd4hep::mm, gpos.z() / dd4hep::mm},
+                                             {pos.x() / dd4hep::mm, pos.y() / dd4hep::mm, pos.z() / dd4hep::mm},
+                                             {dim[0] / dd4hep::mm, dim[1] / dd4hep::mm, 0.0},
+                                             0});
         }
       }
 
