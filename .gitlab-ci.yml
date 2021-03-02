@@ -96,17 +96,17 @@ singularity:latest:
       - build/juggler.sif
       - build/juggler.def
 
-singularity:testing:
-  extends: .singularity
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: manual
-  artifacts:
-    expire_in: 1 days
-    paths:
-      - build/juggler.sif
-      - build/juggler.def
-
+        #singularity:testing:
+        #  extends: .singularity
+        #  rules:
+        #    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+        #      when: manual
+        #  artifacts:
+        #    expire_in: 1 days
+        #    paths:
+        #      - build/juggler.sif
+        #      - build/juggler.def
+        #
 benchmarks:reconstruction:
   stage: deploy
   needs: 
@@ -139,7 +139,7 @@ purge_image:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
   script:
     - cd .containers
-    - make cleanup unpublish
-      #- make unpublish
+    - make cleanup || true
+    - make unpublish || true
 
       
