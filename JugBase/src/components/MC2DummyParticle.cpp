@@ -35,7 +35,7 @@ namespace Jug {
           return StatusCode::FAILURE;
 
         IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
-        StatusCode   sc      = m_gaussDist.initialize(randSvc, Rndm::Gauss(0.0, m_smearing.value()));
+        StatusCode   sc      = m_gaussDist.initialize(randSvc, Rndm::Gauss(1.0, m_smearing.value()));
         if (!sc.isSuccess()) {
           return StatusCode::FAILURE;
         }
