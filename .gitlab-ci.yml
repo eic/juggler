@@ -132,8 +132,9 @@ benchmarks:physics:
 
 purge_image:
   stage: cleanup
-  dependencies:
-    - env
+  needs:
+    - benchmarks:reconstruction
+    - benchmarks:physics
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
   script:
