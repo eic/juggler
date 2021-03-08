@@ -1,10 +1,10 @@
+#include "Gaudi/Algorithm.h"
+#include "GaudiAlg/GaudiTool.h"
+#include "GaudiAlg/Producer.h"
+#include "GaudiAlg/Transformer.h"
+#include "GaudiKernel/RndmGenerators.h"
 #include <algorithm>
 #include <cmath>
-#include "GaudiAlg/Transformer.h"
-#include "GaudiAlg/Producer.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "Gaudi/Algorithm.h"
-#include "GaudiKernel/RndmGenerators.h"
 
 // FCCSW
 #include "JugBase/DataHandle.h"
@@ -13,16 +13,16 @@
 #include "dd4pod/Geant4ParticleCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
 
-
 namespace Jug {
   namespace Base {
 
     class MC2DummyParticle : public GaudiAlgorithm {
     public:
-      DataHandle<dd4pod::Geant4ParticleCollection>     m_inputHitCollection{"mcparticles", Gaudi::DataHandle::Reader, this};
-      DataHandle<eic::ReconstructedParticleCollection> m_outputHitCollection{"DummyReconstructedParticles", Gaudi::DataHandle::Writer, this};
-      Rndm::Numbers           m_gaussDist;
-      Gaudi::Property<double> m_smearing{this, "smearing", 0.01 /* 1 percent*/};
+      DataHandle<dd4pod::Geant4ParticleCollection> m_inputHitCollection{"mcparticles", Gaudi::DataHandle::Reader, this};
+      DataHandle<eic::ReconstructedParticleCollection> m_outputHitCollection{"DummyReconstructedParticles",
+                                                                             Gaudi::DataHandle::Writer, this};
+      Rndm::Numbers                                    m_gaussDist;
+      Gaudi::Property<double>                          m_smearing{this, "smearing", 0.01 /* 1 percent*/};
 
       MC2DummyParticle(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
       {
@@ -51,10 +51,18 @@ namespace Jug {
           if (p.genStatus() != 1) {
             continue;
           }
-          
-          double momentum = std::hypot(p.psx(), p.psy(), p.psz());
-          double energy   = std::hypot(momentum, p.mass());
-          eic::ReconstructedParticle rec_part(p.pdgID(), energy*m_gaussDist(), {p.psx()*m_gaussDist(),p.psy()*m_gaussDist(),p.psz()*m_gaussDist()}, (double)p.charge(), p.mass());
+
+          // for now just use total momentum smearing as this is the largest effect,
+          // ideally we should also smear the angles but this should be good enough
+          // for now.
+          const double pgen     = std::hypot(p.psx(), p.psy(), p.psz());
+          const double momentum = pgen * m_gaussDist();
+          const double energy   = std::hypot(momentum, p.mass());
+          const double px       = p.psx() * momentum / pgen;
+          const double py       = p.psy() * momentum / pgen;
+          const double pz       = p.psz() * momentum / pgen;
+
+          eic::ReconstructedParticle rec_part{p.pdgID(), energy, {px, py, pz}, (double)p.charge(), p.mass()};
           out_parts->push_back(rec_part);
         }
         return StatusCode::SUCCESS;
@@ -64,5 +72,5 @@ namespace Jug {
     DECLARE_COMPONENT(MC2DummyParticle)
 
   } // namespace Base
-} // namespace Gaudi
+} // namespace Jug
 
