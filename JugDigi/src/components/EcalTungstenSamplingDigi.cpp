@@ -1,3 +1,4 @@
+// Digitize the simulation outputs from Ecal Tungsten Sampling Calorimeter
 #include <algorithm>
 #include <cmath>
 
@@ -15,6 +16,8 @@
 #include "eicd/RawCalorimeterHitCollection.h"
 #include "eicd/RawCalorimeterHitData.h"
 
+using namespace Gaudi::Units;
+
 namespace Jug {
   namespace Digi {
 
@@ -24,8 +27,15 @@ namespace Jug {
      */
     class EcalTungstenSamplingDigi : public GaudiAlgorithm {
     public:
-      Gaudi::Property<double>                      m_energyResolution{this, "energyResolution", 0.11}; // 11%sqrt(E)
-      Rndm::Numbers                                m_gaussDist;
+      Gaudi::Property<double>                      m_eRes{this, "energyResolution", 0.11}; // 11%sqrt(E)
+      Gaudi::Property<double>                      m_tRes{this, "timineResolution", 0.1*ns};
+      Gaudi::Property<double>                      m_eUnit{this, "inputEnergyUnit", GeV};
+      Gaudi::Property<double>                      m_tUnit{this, "inputTimeUnit", ns};
+      Gaudi::Property<int>                         m_capADC{this, "capacityADC", 8096};
+      Gaudi::Property<double>                      m_dyRangeADC{this, "DynamicRangeADC", 100*MeV};
+      Gaudi::Property<int>                         m_pedMeanADC{this, "pedestalMean", 400};
+      Gaudi::Property<double>                      m_pedSigmaADC{this, "pedestalSigma", 3.2};
+      Rndm::Numbers                                m_normDist;
       DataHandle<dd4pod::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                         this};
       DataHandle<eic::RawCalorimeterHitCollection> m_outputHitCollection{"outputHitCollection",
@@ -43,7 +53,7 @@ namespace Jug {
         if (GaudiAlgorithm::initialize().isFailure())
           return StatusCode::FAILURE;
         IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
-        StatusCode   sc      = m_gaussDist.initialize(randSvc, Rndm::Gauss(0.0, m_energyResolution.value()));
+        StatusCode   sc      = m_normDist.initialize(randSvc, Rndm::Gauss(0.0, 1.0));
         if (!sc.isSuccess()) {
           return StatusCode::FAILURE;
         }
@@ -59,11 +69,12 @@ namespace Jug {
         auto                              rawhits          = m_outputHitCollection.createAndPut();
         eic::RawCalorimeterHitCollection* rawHitCollection = new eic::RawCalorimeterHitCollection();
         for (const auto& ahit : *simhits) {
-          double                 res = m_gaussDist() / sqrt(ahit.energyDeposit());
+          double res = m_normDist()*m_eRes / sqrt(ahit.energyDeposit()*m_eUnit/GeV);
+          double ped = m_pedMeanADC + m_normDist()*m_pedSigmaADC;
           eic::RawCalorimeterHit rawhit(
               (long long)ahit.cellID(),
-              std::llround(ahit.energyDeposit() * (1. + res) * 1.0e6), // convert to keV integer
-              (double)ahit.truth().time * 1.0e6);
+              std::llround(ped + ahit.energyDeposit()*(1. + res) * m_eUnit/m_dyRangeADC*m_capADC), // convert to ADC Value
+              (double)ahit.truth().time*m_tUnit/ns + m_normDist()*m_tRes/ns);
           rawhits->push_back(rawhit);
         }
         return StatusCode::SUCCESS;

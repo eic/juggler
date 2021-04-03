@@ -1,4 +1,8 @@
+// Reconstruct digitized outputs fof Ecal Tungsten Sampling Calorimeter
+// It is exactly the reverse step of JugDigi/src/components/EcalTungstenSamplingDigi.cpp
+
 #include <algorithm>
+#include <bitset>
 
 #include "Gaudi/Property.h"
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -25,8 +29,11 @@ using namespace Gaudi::Units;
 namespace Jug::Reco {
   class EcalTungstenSamplingReco : public GaudiAlgorithm {
   public:
-    Gaudi::Property<double>                      m_samplingFraction{this, "samplingFraction", 0.25};
-    Gaudi::Property<double>                      m_minModuleEdep{this, "minModuleEdep", 0.5 * MeV};
+    Gaudi::Property<int>                         m_capADC{this, "capacityADC", 8096};
+    Gaudi::Property<double>                      m_dyRangeADC{this, "DynamicRangeADC", 100*MeV};
+    Gaudi::Property<int>                         m_pedMeanADC{this, "pedestalMean", 400};
+    Gaudi::Property<double>                      m_pedSigmaADC{this, "pedestalSigma", 3.2};
+    Gaudi::Property<double>                      m_thresholdADC{this, "thresholdFactor", 3.0};
     DataHandle<eic::RawCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                       this};
     DataHandle<eic::CalorimeterHitCollection>    m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
@@ -64,24 +71,31 @@ namespace Jug::Reco {
 
       // energy time reconstruction
       for (auto& rh : rawhits) {
-        float energy = rh.amplitude() / 1.0e6; // convert keV -> GeV
-        if (energy >= (m_minModuleEdep / GeV)) {
-          float time = rh.timeStamp() / 1.0e6; // ns
-          auto  id   = rh.cellID();
-          // global positions
-          auto gpos = m_geoSvc->cellIDPositionConverter()->position(id);
-          // local positions
-          auto pos = m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().position();
-          // cell dimension
-          auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
-          hits.push_back(eic::CalorimeterHit{id,
-                                             energy/m_samplingFraction,
-                                             time,
-                                             {gpos.x() / dd4hep::mm, gpos.y() / dd4hep::mm, gpos.z() / dd4hep::mm},
-                                             {pos.x() / dd4hep::mm, pos.y() / dd4hep::mm, pos.z() / dd4hep::mm},
-                                             {dim[0] / dd4hep::mm, dim[1] / dd4hep::mm, 0.0},
-                                             0});
+        // did not pass the threshold
+        if ((rh.amplitude() - m_pedMeanADC) < m_thresholdADC*m_pedSigmaADC) {
+          continue;
         }
+        float energy = (rh.amplitude() - m_pedMeanADC) / (float) m_capADC * m_dyRangeADC; // convert ADC -> energy
+        float time = rh.timeStamp(); // ns
+        auto id = rh.cellID();
+        // global positions
+        auto gpos = m_geoSvc->cellIDPositionConverter()->position(id);
+        // local positions
+        auto volman = m_geoSvc->detector()->volumeManager();
+        auto alignment = volman.lookupDetector(id).nominal();
+        auto pos = alignment.worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
+        // auto pos = m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().position();
+        // cell dimension
+        auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
+        // info() << std::bitset<64>(id) << "\n"
+        //        << m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().volIDs().str() << endmsg;
+        hits.push_back(eic::CalorimeterHit{id,
+                                           energy,
+                                           time,
+                                           {gpos.x() / dd4hep::mm, gpos.y() / dd4hep::mm, gpos.z() / dd4hep::mm},
+                                           {pos.x() / dd4hep::mm, pos.y() / dd4hep::mm, pos.z() / dd4hep::mm},
+                                           {dim[0] / dd4hep::mm, dim[1] / dd4hep::mm, 0.0},
+                                           0});
       }
 
       return StatusCode::SUCCESS;

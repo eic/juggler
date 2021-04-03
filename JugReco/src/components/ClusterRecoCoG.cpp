@@ -75,8 +75,8 @@ public:
             auto hit = reconstruct(cl);
             cl.energy(hit.energy());
             cl.position(hit.position());
-            // info() << cl.energy()/GeV << " GeV, (" << cl.position().x/mm << ", "
-            //        << cl.position().y/mm << ", " << cl.position().z/mm << ")" << endmsg;
+            debug() << cl.hits_size() << " hits: " << cl.energy()/GeV << " GeV, (" << cl.position().x/mm << ", "
+                    << cl.position().y/mm << ", " << cl.position().z/mm << ")" << endmsg;
         }
 
         return StatusCode::SUCCESS;
@@ -95,6 +95,7 @@ private:
         float totalE = 0., maxE = 0.;
         auto centerID = cl.hits_begin()->cellID();
         for (auto &hit : cl.hits()) {
+            // info() << "hit energy = " << hit.energy() << endmsg;
             auto energy = hit.energy();
             totalE += energy;
             if (energy > maxE) {
@@ -109,11 +110,18 @@ private:
         float tw = 0., x = 0., y = 0., z = 0.;
         for (auto &hit : cl.hits()) {
             // suppress low energy contributions
+            // info() << std::log(hit.energy()/totalE) << endmsg;
             float w = std::max(0., m_logWeightBase + std::log(hit.energy()/totalE));
             tw += w;
             x += hit.local_x() * w;
             y += hit.local_y() * w;
             z += hit.local_z() * w;
+            /*
+            debug() << hit.cellID()
+                    << "(" << hit.local_x() << ", " << hit.local_y() << ", " << hit.local_z() << "), "
+                    << "(" << hit.x() << ", " << hit.y() << ", " << hit.z() << "), "
+                    << endmsg;
+            */
         }
         res.local({x/tw, y/tw, z/tw + m_depthCorrection});
 

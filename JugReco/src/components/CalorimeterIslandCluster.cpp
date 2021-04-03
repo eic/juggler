@@ -36,6 +36,7 @@ namespace Jug::Reco {
 
   class CalorimeterIslandCluster : public GaudiAlgorithm {
   public:
+    Gaudi::Property<bool> m_splitCluster{this, "splitCluster", true};
     Gaudi::Property<double> m_groupRange{this, "groupRange", 1.8};
     Gaudi::Property<double> m_minClusterCenterEdep{this, "minClusterCenterEdep", 50.0*MeV};
     DataHandle<eic::CalorimeterHitCollection>
@@ -86,7 +87,7 @@ namespace Jug::Reco {
         debug() << "we have " << groups.size() << " groups of hits" << endmsg;
 
         for (auto &group : groups) {
-            auto maxima = find_local_maxima(group);
+            auto maxima = find_maxima(group, !m_splitCluster);
             split_group(group, maxima, clusters, split_hits);
             debug() << "hits in a group: " << group.size() <<  ", "
                     << "local maxima: " << maxima.hits_size() << endmsg;
@@ -120,9 +121,24 @@ private:
     }
 
     // find local maxima that above a certain threshold
-    eic::Cluster find_local_maxima(const std::vector<eic::CalorimeterHit> &group) const
+    eic::Cluster find_maxima(const std::vector<eic::CalorimeterHit> &group, bool global = false) const
     {
         eic::Cluster maxima;
+        if (group.empty()) {
+            return maxima;
+        }
+
+        if (global) {
+            int mpos = 0;
+            for (size_t i = 0; i < group.size(); ++i) {
+                if (group[mpos].energy() < group[i].energy()) {
+                    mpos = i;
+                }
+            }
+            maxima.addhits(group[mpos]);
+            return maxima;
+        }
+
         for(auto &hit : group)
         {
             // not a qualified center
