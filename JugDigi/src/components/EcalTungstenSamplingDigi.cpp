@@ -71,9 +71,10 @@ namespace Jug {
         for (const auto& ahit : *simhits) {
           double res = m_normDist()*m_eRes / sqrt(ahit.energyDeposit()*m_eUnit/GeV);
           double ped = m_pedMeanADC + m_normDist()*m_pedSigmaADC;
+          long long adc = std::llround(ped + ahit.energyDeposit()*(1. + res) * m_eUnit/m_dyRangeADC*m_capADC);
           eic::RawCalorimeterHit rawhit(
               (long long)ahit.cellID(),
-              std::llround(ped + ahit.energyDeposit()*(1. + res) * m_eUnit/m_dyRangeADC*m_capADC), // convert to ADC Value
+              (adc > m_capADC ? m_capADC.value() : adc),
               (double)ahit.truth().time*m_tUnit/ns + m_normDist()*m_tRes/ns);
           rawhits->push_back(rawhit);
         }

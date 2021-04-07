@@ -29,6 +29,7 @@ using namespace Gaudi::Units;
 namespace Jug::Reco {
   class EcalTungstenSamplingReco : public GaudiAlgorithm {
   public:
+    Gaudi::Property<double>                      m_lUnit{this, "lengthUnit", dd4hep::mm};
     Gaudi::Property<int>                         m_capADC{this, "capacityADC", 8096};
     Gaudi::Property<double>                      m_dyRangeADC{this, "DynamicRangeADC", 100*MeV};
     Gaudi::Property<int>                         m_pedMeanADC{this, "pedestalMean", 400};
@@ -86,15 +87,19 @@ namespace Jug::Reco {
         auto pos = alignment.worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
         // auto pos = m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().position();
         // cell dimension
-        auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
+        auto cdim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
+        double dim[3] = {0., 0., 0.};
+        for (size_t i = 0; i < cdim.size() && i < 3; ++i) {
+            dim[i] = cdim[i] / m_lUnit;
+        }
         // info() << std::bitset<64>(id) << "\n"
         //        << m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().volIDs().str() << endmsg;
         hits.push_back(eic::CalorimeterHit{id,
                                            energy,
                                            time,
-                                           {gpos.x() / dd4hep::mm, gpos.y() / dd4hep::mm, gpos.z() / dd4hep::mm},
-                                           {pos.x() / dd4hep::mm, pos.y() / dd4hep::mm, pos.z() / dd4hep::mm},
-                                           {dim[0] / dd4hep::mm, dim[1] / dd4hep::mm, 0.0},
+                                           {gpos.x() / m_lUnit, gpos.y() / m_lUnit, gpos.z() / m_lUnit},
+                                           {pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit},
+                                           {dim[0], dim[1], dim[2]},
                                            0});
       }
 
