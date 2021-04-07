@@ -27,7 +27,8 @@ namespace Jug {
      */
     class EcalTungstenSamplingDigi : public GaudiAlgorithm {
     public:
-      Gaudi::Property<double>                      m_eRes{this, "energyResolution", 0.11}; // 11%sqrt(E)
+      Gaudi::Property<double>                      m_eRes{this, "energyResolution", 0.11}; // a%/sqrt(E/GeV)
+      Gaudi::Property<std::vector<double>>         u_eRes{this, "energyResolutions", {}}; // a%/sqrt(E/GeV) + b% + c%/E
       Gaudi::Property<double>                      m_tRes{this, "timineResolution", 0.1*ns};
       Gaudi::Property<double>                      m_eUnit{this, "inputEnergyUnit", GeV};
       Gaudi::Property<double>                      m_tUnit{this, "inputTimeUnit", ns};
@@ -40,6 +41,7 @@ namespace Jug {
                                                                         this};
       DataHandle<eic::RawCalorimeterHitCollection> m_outputHitCollection{"outputHitCollection",
                                                                          Gaudi::DataHandle::Writer, this};
+      double res[3] = {0., 0., 0.};
 
       //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
       EcalTungstenSamplingDigi(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
@@ -57,6 +59,11 @@ namespace Jug {
         if (!sc.isSuccess()) {
           return StatusCode::FAILURE;
         }
+        // set energy resolution
+        res[0] = m_eRes.value();
+        for (size_t i = 0; i < u_eRes.size() && i < 3; ++i) {
+            res[i] = u_eRes[i];
+        }
         return StatusCode::SUCCESS;
       }
 
@@ -69,9 +76,11 @@ namespace Jug {
         auto                              rawhits          = m_outputHitCollection.createAndPut();
         eic::RawCalorimeterHitCollection* rawHitCollection = new eic::RawCalorimeterHitCollection();
         for (const auto& ahit : *simhits) {
-          double res = m_normDist()*m_eRes / sqrt(ahit.energyDeposit()*m_eUnit/GeV);
+          double resval = m_normDist()*res[0] / sqrt(ahit.energyDeposit()*m_eUnit/GeV)
+                        + m_normDist()*res[1]
+                        + m_normDist()*res[2] / (ahit.energyDeposit()*m_eUnit/GeV);
           double ped = m_pedMeanADC + m_normDist()*m_pedSigmaADC;
-          long long adc = std::llround(ped + ahit.energyDeposit()*(1. + res) * m_eUnit/m_dyRangeADC*m_capADC);
+          long long adc = std::llround(ped + ahit.energyDeposit()*(1. + resval) * m_eUnit/m_dyRangeADC*m_capADC);
           eic::RawCalorimeterHit rawhit(
               (long long)ahit.cellID(),
               (adc > m_capADC ? m_capADC.value() : adc),
