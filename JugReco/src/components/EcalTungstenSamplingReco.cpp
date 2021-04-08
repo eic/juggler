@@ -31,7 +31,7 @@ namespace Jug::Reco {
   public:
     Gaudi::Property<double>                      m_lUnit{this, "lengthUnit", dd4hep::mm};
     Gaudi::Property<int>                         m_capADC{this, "capacityADC", 8096};
-    Gaudi::Property<double>                      m_dyRangeADC{this, "DynamicRangeADC", 100*MeV};
+    Gaudi::Property<double>                      m_dyRangeADC{this, "dynamicRangeADC", 100*MeV};
     Gaudi::Property<int>                         m_pedMeanADC{this, "pedestalMean", 400};
     Gaudi::Property<double>                      m_pedSigmaADC{this, "pedestalSigma", 3.2};
     Gaudi::Property<double>                      m_thresholdADC{this, "thresholdFactor", 3.0};
