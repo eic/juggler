@@ -22,12 +22,13 @@ emcaldigi = EcalTungstenSamplingDigi("ecal_digi",
                                      inputTimeUnit=units.ns,
                                      energyResolutions=[0., 0.02, 0.],
                                      dynamicRangeADC=700*units.keV,
-                                     pedestalSigma=50,
+                                     pedestalSigma=40,
                                      OutputLevel=DEBUG)
 emcalreco = EcalTungstenSamplingReco("ecal_reco",
                                      inputHitCollection="DigiEcalBarrelHits",
                                      outputHitCollection="RecoEcalBarrelHits",
                                      dynamicRangeADC=700*units.keV,
+                                     pedestalSigma=40,
                                      OutputLevel=DEBUG)
 # readout id definition for barrel ecal
 # <id>system:8,barrel:3,module:4,layer:10,slice:5,x:32:-16,y:-16</id>
@@ -45,7 +46,7 @@ emcalcluster = IslandCluster(inputHitCollection="RecoEcalBarrelHitsXY",
                              outputClusterCollection="EcalBarrelClusters",
                              minClusterCenterEdep=0.5*units.MeV,
                              splitCluster=False,
-                             groupRange=10.0)
+                             groupRanges=[5.*units.cm, 5*units.cm, 5.*units.cm])
 clusterreco = RecoCoG(clusterCollection="EcalBarrelClusters", logWeightBase=6.2, OutputLevel=DEBUG)
 
 

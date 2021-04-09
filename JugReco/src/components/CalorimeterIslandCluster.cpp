@@ -38,6 +38,7 @@ namespace Jug::Reco {
   public:
     Gaudi::Property<bool> m_splitCluster{this, "splitCluster", true};
     Gaudi::Property<double> m_groupRange{this, "groupRange", 1.8};
+    Gaudi::Property<std::vector<double>> u_groupRanges{this, "groupRanges", {}};
     Gaudi::Property<double> m_minClusterCenterEdep{this, "minClusterCenterEdep", 50.0*MeV};
     DataHandle<eic::CalorimeterHitCollection>
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
@@ -100,8 +101,15 @@ private:
     // helper function to group hits
     inline bool is_neighbor(const eic::ConstCalorimeterHit &h1, const eic::ConstCalorimeterHit &h2) const
     {
-        return (std::abs(h1.local_x() - h2.local_x()) <= (h1.dim_x() + h2.dim_y())/2.*m_groupRange) &&
-               (std::abs(h1.local_y() - h2.local_y()) <= (h1.dim_y() + h2.dim_y())/2.*m_groupRange);
+        if (u_groupRanges.size() >= 3) {
+            return (std::abs(h1.local_x() - h2.local_x()) <= u_groupRanges[0]) &&
+                   (std::abs(h1.local_y() - h2.local_y()) <= u_groupRanges[1]) &&
+                   (std::abs(h1.local_z() - h2.local_z()) <= u_groupRanges[2]);
+        } else {
+            return (std::abs(h1.local_x() - h2.local_x()) <= m_groupRange*(h1.dim_x() + h2.dim_x())/2.) &&
+                   (std::abs(h1.local_y() - h2.local_y()) <= m_groupRange*(h1.dim_y() + h2.dim_y())/2.) &&
+                   (std::abs(h1.local_z() - h2.local_z()) <= m_groupRange*(h1.dim_z() + h2.dim_z())/2.);
+        }
     }
 
     // grouping function with Depth-First Search

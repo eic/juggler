@@ -76,9 +76,10 @@ namespace Jug {
         auto                              rawhits          = m_outputHitCollection.createAndPut();
         eic::RawCalorimeterHitCollection* rawHitCollection = new eic::RawCalorimeterHitCollection();
         for (const auto& ahit : *simhits) {
-          double resval = m_normDist()*res[0] / sqrt(ahit.energyDeposit()*m_eUnit/GeV)
-                        + m_normDist()*res[1]
-                        + m_normDist()*res[2] / (ahit.energyDeposit()*m_eUnit/GeV);
+          double resval = std::pow(m_normDist()*res[0] / sqrt(ahit.energyDeposit()*m_eUnit/GeV), 2)
+                        + std::pow(m_normDist()*res[1], 2)
+                        + std::pow(m_normDist()*res[2] / (ahit.energyDeposit()*m_eUnit/GeV), 2);
+          resval = std::sqrt(resval);
           double ped = m_pedMeanADC + m_normDist()*m_pedSigmaADC;
           long long adc = std::llround(ped + ahit.energyDeposit()*(1. + resval) * m_eUnit/m_dyRangeADC*m_capADC);
           eic::RawCalorimeterHit rawhit(
