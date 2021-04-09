@@ -125,7 +125,9 @@ StatusCode GeoSvc::initialize() {
   }
   m_trackingGeo = std::move(Acts::convertDD4hepDetector(m_dd4hepgeo->world(), Acts::Logging::VERBOSE, Acts::equidistant,
                                                         Acts::equidistant, Acts::equidistant));
-  draw_surfaces(m_trackingGeo, "Derp.obj");
+  if (m_trackingGeo) {
+    draw_surfaces(m_trackingGeo, "Derp.obj");
+  }
   return StatusCode::SUCCESS;
 }
 
