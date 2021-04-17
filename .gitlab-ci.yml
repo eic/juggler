@@ -33,6 +33,11 @@ env:
       if [ "${DETECTOR_TAG}" ]; then
         echo "DETECTOR_TAG=$DETECTOR_TAG" >> juggler.env
       fi
+    - |
+      if [ -z "${EIC_DATA_MODEL_VERSION}" ]; then
+        export EIC_DATA_MODEL_VERSION="master"
+      fi
+      echo "EIC_DATA_MODEL_VERSION=$EIC_DATA_MODEL_VERSION" >> juggler.env
   artifacts:
     reports:
       dotenv: juggler.env
