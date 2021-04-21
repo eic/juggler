@@ -1,3 +1,4 @@
+import os
 from Gaudi.Configuration import *
 from GaudiKernel import SystemOfUnits as units
 
@@ -10,6 +11,9 @@ from Configurables import Jug__Reco__EcalTungstenSamplingReco as EcalTungstenSam
 from Configurables import Jug__Reco__SamplingECalHitsMerger as SamplingECalHitsMerger
 from Configurables import Jug__Reco__CalorimeterIslandCluster as IslandCluster
 from Configurables import Jug__Reco__ClusterRecoCoG as RecoCoG
+
+# get sampling fraction from system environment variable, 1.0 by default
+sf = float(os.environ.get('CB_EMCAL_SAMP_FRAC', '1.0'))
 
 geo_service  = GeoSvc("GeoSvc", detectors=["../topside/test.xml"])
 podioevent = EICDataSvc("EventDataSvc", inputs=["../topside/test.root"], OutputLevel=DEBUG)
@@ -47,7 +51,7 @@ emcalcluster = IslandCluster(inputHitCollection="RecoEcalBarrelHitsXY",
                              minClusterCenterEdep=0.5*units.MeV,
                              splitCluster=False,
                              groupRanges=[5.*units.cm, 5*units.cm, 5.*units.cm])
-clusterreco = RecoCoG(clusterCollection="EcalBarrelClusters", logWeightBase=6.2, OutputLevel=DEBUG)
+clusterreco = RecoCoG(clusterCollection="EcalBarrelClusters", logWeightBase=6.2, samplingFraction=sf, OutputLevel=DEBUG)
 
 
 out = PodioOutput("out", filename="barrel_cluster.root")

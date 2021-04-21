@@ -31,6 +31,7 @@ namespace Jug::Reco {
 class ClusterRecoCoG : public GaudiAlgorithm
 {
 public:
+    Gaudi::Property<double> m_sampFrac{this, "samplingFraction", 1.6};
     Gaudi::Property<double> m_logWeightBase{this, "logWeightBase", 3.6};
     Gaudi::Property<double> m_depthCorrection{this, "depthCorrection", 0.0};
     Gaudi::Property<std::string> m_moduleDimZName{this, "moduleDimZName", ""};
@@ -104,7 +105,7 @@ private:
             }
         }
         res.cellID(centerID);
-        res.energy(totalE);
+        res.energy(totalE/m_sampFrac);
 
         // center of gravity with logarithmic weighting
         float tw = 0., x = 0., y = 0., z = 0.;
