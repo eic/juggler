@@ -7,6 +7,11 @@ LABEL maintainer="Whitney Armstrong <warmstrong@anl.gov>" \
       basedist="debian" \
       base="eic_container/eic"
 
+## fix for latest dd4hep cmake file that is somehow unable to find python...
+## just removing the find_package call fixes the issue
+## FIXME
+RUN sed -i "s/FIND_PACKAGE(Python/#&/" /usr/local/cmake/DD4hepBuild.cmake
+
 RUN cd /tmp             \
       && export CLICOLOR_FORCE=1 \
       && git clone  https://eicweb.phy.anl.gov/EIC/NPDet.git \
