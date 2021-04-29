@@ -17,7 +17,7 @@ find_package(Geant4)
 find_package(GaudiProject)
 
 gaudi_project(Juggler v1r0
-              USE Gaudi v33r1)
+              USE Gaudi v34r0)
 
 install(FILES ${CMAKE_BINARY_DIR}/run 
   PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ  GROUP_EXECUTE WORLD_READ  WORLD_EXECUTE 

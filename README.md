@@ -3,6 +3,9 @@ Project Juggler
 
 Concurrent event processor for NP experiments, based on the Gaudi framework.
 
+Dependencies:
+  - v1.5 requires Gaudi v33-34, ACTS 8.1 and DD4hep 1.16.1
+
 Overview
 --------
 
