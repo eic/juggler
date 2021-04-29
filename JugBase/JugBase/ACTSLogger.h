@@ -34,6 +34,9 @@ public:
     case Acts::Logging::FATAL:
       l = MSG::FATAL;
       break;
+     case Acts::Logging::MAX:
+      l = MSG::VERBOSE;
+      break;
     }
 
     return l >= m_owner->outputLevel();
@@ -52,7 +55,7 @@ public:
 
   }
 
-  void flush(const Acts::Logging::Level& lvl, const std::ostringstream& input) {
+  void flush(const Acts::Logging::Level& lvl, const std::string& input) {
     MSG::Level l = MSG::VERBOSE;
     switch (lvl) {
     case Acts::Logging::VERBOSE:
@@ -73,9 +76,12 @@ public:
     case Acts::Logging::FATAL:
       l = MSG::FATAL;
       break;
+     case Acts::Logging::MAX:
+      l = MSG::VERBOSE;
+      break;
     }
 
-    m_messenger << l << m_name << "\t" << input.str() << endmsg;
+    m_messenger << l << m_name << "\t" << input << endmsg;
   }
 
 private:

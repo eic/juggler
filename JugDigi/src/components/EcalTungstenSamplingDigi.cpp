@@ -5,7 +5,7 @@
 #include "GaudiAlg/GaudiTool.h"
 #include "GaudiAlg/Transformer.h"
 #include "GaudiKernel/PhysicalConstants.h"
-#include "GaudiKernel/Property.h"
+#include "Gaudi/Property.h"
 #include "GaudiKernel/RndmGenerators.h"
 
 // FCCSW

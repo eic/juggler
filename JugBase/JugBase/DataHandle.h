@@ -75,7 +75,8 @@ DataHandle<T>::DataHandle(const std::string& descriptor, Gaudi::DataHandle::Mode
     : DataObjectHandle<DataWrapper<T>>(descriptor, a, fatherAlg), m_eds("EventDataSvc", "DataHandle") {
 
   if (a == Gaudi::DataHandle::Writer) {
-    m_eds.retrieve();
+    auto ret = m_eds.retrieve();
+    // FIXME deal with errors
     PodioDataSvc* pds;
     pds = dynamic_cast<PodioDataSvc*>( m_eds.get());
     m_dataPtr = nullptr;

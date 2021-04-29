@@ -3,7 +3,7 @@
 
 // GAUDI
 #include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiKernel/Property.h"
+#include "Gaudi/Property.h"
 
 // FCCSW
 #include "JugBase/DataHandle.h"

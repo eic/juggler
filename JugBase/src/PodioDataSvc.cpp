@@ -68,8 +68,10 @@ void PodioDataSvc::endOfRead() {
     if (m_eventNum++ > m_eventMax) {
       info() << "Reached end of file with event " << m_eventMax << endmsg;
       IEventProcessor* eventProcessor;
-      service("ApplicationMgr", eventProcessor);
-      eventProcessor->stopRun();
+      auto ret = service("ApplicationMgr", eventProcessor);
+      // FIXME: deal with errors
+      ret = eventProcessor->stopRun();
+      // FIXME: deal with errors
     }
   }
 }
