@@ -42,13 +42,13 @@ publish: login ## Publish a tagged container to ECR
 	@echo 'publish $(PUBLISH_TAG) to $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME)'
 	docker tag $(APP_NAME):$(LONG_TAG) $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME):$(PUBLISH_TAG)
 	docker push $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME):$(PUBLISH_TAG)
-	docker rmi  $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME):$(PUBLISH_TAG)
+	docker rmi  $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME):$(PUBLISH_TAG) || true
 
 publish-version: login ## Publish the `{version}` taged container to ECR
 	@echo 'publish $(VERSION) to $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME):$(VERSION)'
 	docker tag $(APP_NAME):$(LONG_TAG) $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME):$(VERSION)
 	docker push $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME):$(VERSION)
-	docker rmi  $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME):$(VERSION)
+	docker rmi  $(REG_NAME)/$(GL_REG_GROUP)/$(APP_NAME):$(VERSION) || true
 
 # ==========================================================================
 # remove container from registry
@@ -60,4 +60,4 @@ unpublish: login
 # cleanup docker registry on system used by runner
 cleanup:
 	@echo 'removing $(REG_NAME):$(LONG_TAG)'
-	docker rmi $(REG_NAME):$(LONG_TAG)
+	docker rmi $(REG_NAME):$(LONG_TAG) || true
