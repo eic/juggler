@@ -32,7 +32,7 @@ if __name__ == '__main__':
     parser.add_argument('file', type=str, help='path to root file')
     parser.add_argument('--plot-dir', type=str, default='./plots', dest='outdir', help='output directory')
     parser.add_argument('--type', type=str, default='unknown', dest='type', help='profile type (used in save)')
-    parser.add_argument('--energy', type=float, default=5000., dest='energy', help='incident particle energy (MeV)')
+    parser.add_argument('--energy', type=float, default=5., dest='energy', help='incident particle energy (GeV)')
     parser.add_argument('--save', type=str, default='', dest='save', help='path to save profile')
     parser.add_argument('--color', type=str, default='royalblue', dest='color', help='colors for bar plots')
     parser.add_argument('-b', '--branch-name', type=str, default='EcalBarrelClustersLayers', dest='branch',
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     dfe = get_layers_data(args.file, branch=args.branch)
     dfe.loc[:, 'total_edep'] = dfe.groupby(['event', 'cluster'])['edep'].transform('sum')
     # dfe.loc[:, 'efrac'] = dfe['edep']/dfe['total_edep']
-    dfe.loc[:, 'efrac'] = dfe['edep']/args.energy
+    dfe.loc[:, 'efrac'] = dfe['edep']/(args.energy*1000.)
     dfe = dfe[dfe['cluster'] == 0]
 
     os.makedirs(args.outdir, exist_ok=True)
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     ax.set_ylabel('Normalized Counts', fontsize=26)
     ax.text(*bpos, 'Mininum Edep\n' + '{:.1f} MeV'.format(1.0),
             transform=ax.transAxes, fontsize=26, verticalalignment='top', bbox=bprops)
-    fig.savefig(os.path.join(args.outdir, 'edep_start.png'))
+    fig.savefig(os.path.join(args.outdir, 'edep_start_{}_{}.png'.format(args.type, int(args.energy)))
 
 
     fig, ax = plt.subplots(figsize=(16, 9), dpi=160)
@@ -88,7 +88,7 @@ if __name__ == '__main__':
     ax.tick_params(labelsize=24)
     ax.set_xlabel('Layer', fontsize=26)
     ax.set_ylabel('Energy Deposit Percentage', fontsize=26)
-    fig.savefig(os.path.join(args.outdir, 'efrac.png'))
+    fig.savefig(os.path.join(args.outdir, 'efrac_{}_{}.png'.format(args.type, int(args.energy)))
 
     layers = np.asarray([
         [1, 5, 8,],
@@ -116,11 +116,11 @@ if __name__ == '__main__':
         ax.set_yscale('log')
     fig.text(0.5, 0.02, 'Energy Deposit Percentage', fontsize=26, ha='center')
     fig.text(0.02, 0.5, 'Normalized Counts', fontsize=26, va='center', rotation=90)
-    fig.savefig(os.path.join(args.outdir, 'efrac_layers.png'))
+    fig.savefig(os.path.join(args.outdir, 'efrac_layers_{}_{}.png'.format(args.type, int(args.energy))))
 
 
     if args.save:
-        prof.loc[:, 'energy'] = args.energy
+        prof.loc[:, 'energy'] = args.energy*1000.
         prof.loc[:, 'type'] = args.type
         if os.path.exists(args.save):
             prev = pd.read_csv(args.save).set_index('layer', drop=True)

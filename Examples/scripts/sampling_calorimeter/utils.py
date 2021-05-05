@@ -100,7 +100,8 @@ def get_layers_data(path, evnums=None, branch="EcalBarrelClustersLayers"):
 
         events.GetEntry(iev)
         for layer in getattr(events, branch):
-            dbuf[idb] = (iev, layer.clusterID, layer.layerID, layer.position.x, layer.position.y, layer.position.z, layer.edep)
+            dbuf[idb] = (iev, layer.clusterID, layer.layerID,
+                         layer.position.x, layer.position.y, layer.position.z, layer.edep)
             idb += 1
 
     return pd.DataFrame(data=dbuf[:idb], columns=['event', 'cluster', 'layer', 'x', 'y', 'z', 'edep'])

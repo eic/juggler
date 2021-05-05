@@ -1,4 +1,5 @@
 import os
+import ROOT
 from Gaudi.Configuration import *
 from GaudiKernel import SystemOfUnits as units
 
@@ -12,19 +13,32 @@ from Configurables import Jug__Reco__EcalTungstenSamplingReco as EcalTungstenSam
 from Configurables import Jug__Reco__TopologicalCellCluster as TopologicalCellCluster
 from Configurables import Jug__Reco__ImagingClusterReco as ImagingReco
 
+
+# input arguments through environment variables
+kwargs = dict()
+kwargs['sf'] = float(os.environ.get('CB_EMCAL_SAMP_FRAC', '1.0'))
+kwargs['input'] = os.environ.get('CB_EMCAL_SIM_FILE', '../topside/barrel_el_5GeV.root')
+kwargs['output'] = os.environ.get('CB_EMCAL_REC_FILE', 'barrel_cluster_el5GeV.root')
+kwargs['compact'] = os.environ.get('CB_EMCAL_COMPACT_PATH', '../topside/test.xml')
+kwargs['nev'] = int(os.environ.get('CB_EMCAL_NUMEV', 1000))
+
+if kwargs['nev'] < 1:
+    f = ROOT.TFile(kwargs['input'])
+    kwargs['nev'] = f.events.GetEntries()
+
 # get sampling fraction from system environment variable, 1.0 by default
 sf = float(os.environ.get('CB_EMCAL_SAMP_FRAC', '1.0'))
 
-geo_service  = GeoSvc("GeoSvc", detectors=["../topside/test.xml"])
-podioevent = EICDataSvc("EventDataSvc", inputs=["../topside/test.root"], OutputLevel=DEBUG)
-out = PodioOutput("out", filename="barrel_cluster.root")
+geo_service  = GeoSvc("GeoSvc", detectors=kwargs['compact'].split(','))
+podioevent = EICDataSvc("EventDataSvc", inputs=kwargs['input'].split(','), OutputLevel=DEBUG)
+out = PodioOutput("out", filename=kwargs['output'])
 
 podioinput = PodioInput("PodioReader", collections=["mcparticles", "EcalBarrelHits"], OutputLevel=DEBUG)
 
 copier = MCCopier("MCCopier",
-         inputCollection="mcparticles",
-         outputCollection="mcparticles2",
-         OutputLevel=DEBUG)
+                  inputCollection="mcparticles",
+                  outputCollection="mcparticles2",
+                  OutputLevel=DEBUG)
 emcaldigi = EcalTungstenSamplingDigi("ecal_digi",
                                      inputHitCollection="EcalBarrelHits",
                                      outputHitCollection="DigiEcalBarrelHits",
@@ -42,8 +56,8 @@ emcalreco = EcalTungstenSamplingReco("ecal_reco",
                                      OutputLevel=DEBUG)
 emcalcluster = TopologicalCellCluster(inputHitCollection="RecoEcalBarrelHits",
                                       outputClusterCollection="EcalBarrelClusters",
-                                      minClusterCenterEdep=0.5*units.MeV,
-                                      groupRanges=[5.*units.cm, 5*units.cm, 5.*units.cm])
+                                      minClusterCenterEdep=0.3*units.MeV,
+                                      groupRanges=[2.*units.cm, 2*units.cm, 2.*units.cm])
 clusterreco = ImagingReco(inputClusterCollection="EcalBarrelClusters",
                           outputClusterCollection="EcalBarrelClustersReco",
                           outputLayerCollection="EcalBarrelClustersLayers",
@@ -54,10 +68,10 @@ clusterreco = ImagingReco(inputClusterCollection="EcalBarrelClusters",
 out.outputCommands = ["keep *"]
 
 ApplicationMgr(
-    TopAlg = [podioinput, copier, emcaldigi, emcalreco, emcalcluster, clusterreco, out],
-    EvtSel = 'NONE',
-    EvtMax   = 10000,
-    ExtSvc = [podioevent],
+    TopAlg=[podioinput, copier, emcaldigi, emcalreco, emcalcluster, clusterreco, out],
+    EvtSel='NONE',
+    EvtMax=kwargs['nev'],
+    ExtSvc=[podioevent],
     OutputLevel=DEBUG
- )
+)
 
