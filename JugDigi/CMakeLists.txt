@@ -9,6 +9,7 @@ find_package(EICD REQUIRED)
 #find_package(podio 0.11.01 REQUIRED)
 #include_directories(${podio_INCLUDE_DIR})
 
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
 find_package(TensorFlow REQUIRED)
 find_package(ROOT COMPONENTS RIO Tree Core REQUIRED)
 find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
