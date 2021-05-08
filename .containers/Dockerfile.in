@@ -13,7 +13,10 @@ RUN cd /tmp \
      && curl -LJO "https://gitlab-runner-downloads.s3.amazonaws.com/latest/deb/gitlab-runner_amd64.deb"  \
      && dpkg -i gitlab-runner_amd64.deb \
      && pip install --upgrade pip \
-     && pip install tensorflow
+     && pip install tensorflow \
+     && git clone https://github.com/FloopCZ/tensorflow_cc.git && cd tensorflow_cc \
+     && mkdir build && cd build &&  cmake ../. -DCMAKE_INSTALL_PREFIX=/usr/local \
+     && make -j20 install
 
 
 RUN cd /tmp             \
