@@ -57,25 +57,25 @@ build:bebop:
   tags: 
     - singularity
   script:
-    - source /usr/local/bin/thisdd4hep.sh
-    - mkdir .local
-    - export LD_LIBRARY_PATH="$(pwd)/.local/lib:$LD_LIBRARY_PATH"
-    - export PATH="$(pwd)/.local/bin:$PATH"
-    - export CLICOLOR_FORCE=1
-    - git clone https://eicweb.phy.anl.gov/EIC/NPDet.git
-    - mkdir -p NPDet/build && cd NPDet/build
-    - cmake ../. -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=../../.local
-    - make -j30 install
-    - cd ../..
-    - git clone -b $EIC_DATA_MODEL_VERSION https://eicweb.phy.anl.gov/EIC/eicd.git
-    - mkdir -p eicd/build && cd eicd/build
-    - cmake ../. -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=../../.local
-    - make -j30  install
-    - cd ../..
-    - git clone -b $JUGGLER_BRANCH https://eicweb.phy.anl.gov/EIC/juggler.git
-    - mkdir -p juggler/build && cd juggler/build
-    - cmake ../. -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=../../.local
-    - make -j30  install
+    #    - source /usr/local/bin/thisdd4hep.sh
+    #    - mkdir .local
+    #    - export LD_LIBRARY_PATH="$(pwd)/.local/lib:$LD_LIBRARY_PATH"
+    #    - export PATH="$(pwd)/.local/bin:$PATH"
+    #    - export CLICOLOR_FORCE=1
+    #    - git clone https://eicweb.phy.anl.gov/EIC/NPDet.git
+    #    - mkdir -p NPDet/build && cd NPDet/build
+    #    - cmake ../. -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=../../.local
+    #    - make -j30 install
+    #    - cd ../..
+    #    - git clone -b $EIC_DATA_MODEL_VERSION https://eicweb.phy.anl.gov/EIC/eicd.git
+    #    - mkdir -p eicd/build && cd eicd/build
+    #    - cmake ../. -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=../../.local
+    #    - make -j30  install
+    #    - cd ../..
+    #    - git clone -b $JUGGLER_BRANCH https://eicweb.phy.anl.gov/EIC/juggler.git
+    #    - mkdir -p juggler/build && cd juggler/build
+    #    - cmake ../. -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=../../.local
+    #    - make -j30  install
     - echo "success"
 
 env:
