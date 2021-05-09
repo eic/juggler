@@ -54,6 +54,8 @@ build:bebop:
   stage: build
   needs:
     - env:bebop
+  tags: 
+    - singularity
   script:
     - |
       mkdir .local
