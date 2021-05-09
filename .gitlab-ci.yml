@@ -58,6 +58,7 @@ build:bebop:
     - singularity
   script:
     - |
+      source /usr/local/bin/thisdd4hep.sh
       mkdir .local
       export LD_LIBRARY_PATH="$(pwd)/.local/lib:$LD_LIBRARY_PATH"
       export PATH="$(pwd)/.local/bin:$PATH"
