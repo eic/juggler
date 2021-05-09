@@ -17,10 +17,10 @@ workflow:
     - if: '$CI_COMMIT_BRANCH == "master"'
     - if: '$CI_COMMIT_TAG'
 
-env:bebop:
+env:singularity_runner:
   stage: config 
   tags: 
-    - singularity
+    - magnesium
   script:
     - export JUGGLER_TAG="latest"
     - |
@@ -50,12 +50,12 @@ env:bebop:
     reports:
       dotenv: juggler.env
 
-build:bebop:
+build:singularity_runner:
   stage: build
   needs:
     - env:bebop
   tags: 
-    - singularity
+    - magnesium
   script:
     #    - source /usr/local/bin/thisdd4hep.sh
     #    - mkdir .local
