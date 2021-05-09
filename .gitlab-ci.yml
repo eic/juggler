@@ -53,7 +53,7 @@ env:singularity_runner:
 build:singularity_runner:
   stage: build
   needs:
-    - env:bebop
+    - env:singularity_runner
   tags: 
     - magnesium
   script:
