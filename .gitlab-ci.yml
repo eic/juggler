@@ -63,7 +63,7 @@ build:bebop:
       export LD_LIBRARY_PATH="$(pwd)/.local/lib:$LD_LIBRARY_PATH"
       export PATH="$(pwd)/.local/bin:$PATH"
       export CLICOLOR_FORCE=1
-      git clone  https://eicweb.phy.anl.gov/EIC/NPDet.git
+      git clone https://eicweb.phy.anl.gov/EIC/NPDet.git
       mkdir -p NPDet/build && cd NPDet/build
       cmake ../. -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=../../.local
       make -j30 install
