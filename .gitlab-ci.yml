@@ -3,8 +3,6 @@ variables:
 
 default:
   image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
-  tags: 
-    - silicon
 
 stages:
   - config
@@ -18,6 +16,65 @@ workflow:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "master"'
     - if: '$CI_COMMIT_TAG'
+
+env:bebop:
+  stage: config 
+  tags: 
+    - singularity
+  script:
+    - export JUGGLER_TAG="latest"
+    - |
+      if [ "x${CI_PIPELINE_SOURCE}" == "xmerge_request_event" ]; then
+        export JUGGLER_TAG="testing-mr-${CI_MERGE_REQUEST_IID}"
+      fi
+    - echo "CI JUGGLER_TAG for this pipeline set to ${JUGGLER_TAG}"
+    - echo "JUGGLER_TAG=$JUGGLER_TAG" >> juggler.env
+    - |
+      if [ -n "${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME}" ] ; then
+        JUGGLER_BRANCH=$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME
+      else 
+        JUGGLER_BRANCH=master
+      fi
+      export JUGGLER_BRANCH
+    - echo "JUGGLER_BRANCH=$JUGGLER_BRANCH" >> juggler.env
+    - |
+      if [ "${DETECTOR_TAG}" ]; then
+        echo "DETECTOR_TAG=$DETECTOR_TAG" >> juggler.env
+      fi
+    - |
+      if [ -z "${EIC_DATA_MODEL_VERSION}" ]; then
+        export EIC_DATA_MODEL_VERSION="master"
+      fi
+      echo "EIC_DATA_MODEL_VERSION=$EIC_DATA_MODEL_VERSION" >> juggler.env
+  artifacts:
+    reports:
+      dotenv: juggler.env
+
+build:bebop:
+  stage: build
+  needs:
+    - env:bebop
+  script:
+    - |
+      mkdir .local
+      export LD_LIBRARY_PATH="$(pwd)/.local/lib:$LD_LIBRARY_PATH"
+      export PATH="$(pwd)/.local/bin:$PATH"
+      export CLICOLOR_FORCE=1
+      git clone  https://eicweb.phy.anl.gov/EIC/NPDet.git
+      mkdir -p NPDet/build && cd NPDet/build
+      cmake ../. -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=../../.local
+      make -j30 install
+      cd ../..
+      git clone -b $EIC_DATA_MODEL_VERSION https://eicweb.phy.anl.gov/EIC/eicd.git
+      mkdir -p eicd/build && cd eicd/build
+      cmake ../. -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=../../.local
+      make -j30  install
+      cd ../..
+      git clone -b $JUGGLER_BRANCH https://eicweb.phy.anl.gov/EIC/juggler.git
+      mkdir -p juggler/build && cd juggler/build
+      cmake ../. -DCMAKE_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=../../.local
+      make -j30  install
+    - echo "success"
 
 env:
   stage: config 
