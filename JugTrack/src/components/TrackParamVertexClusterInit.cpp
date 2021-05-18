@@ -11,7 +11,7 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugReco/Track.hpp"
+#include "JugTrack/Track.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Definitions/Common.hpp"
 

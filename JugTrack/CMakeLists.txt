@@ -1,7 +1,7 @@
 ################################################################################
-# Package: JugReco
+# Package: JugTrack
 ################################################################################
-gaudi_subdir(JugReco v1r0)
+gaudi_subdir(JugTrack v1r0)
 
 find_package(EICD REQUIRED)
 #set(PODIO $ENV{PODIO})
@@ -9,7 +9,7 @@ find_package(EICD REQUIRED)
 #find_package(podio 0.11.01 REQUIRED)
 #include_directories(${podio_INCLUDE_DIR})
 
-#find_package(Acts REQUIRED COMPONENTS Core PluginIdentification PluginTGeo PluginDD4hep )
+find_package(Acts REQUIRED COMPONENTS Core PluginIdentification PluginTGeo PluginDD4hep )
 find_package(ROOT COMPONENTS RIO Tree Core REQUIRED)
 find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 
@@ -27,28 +27,23 @@ gaudi_depends_on_subdirs(GaudiAlg GaudiKernel)
 #  podio::podioRootIO
 #  )
 
-gaudi_add_module(JugRecoPlugins
-  src/components/TrackerHitReconstruction.cpp 
-  src/components/SimpleClustering.cpp 
-  src/components/CalorimeterIslandCluster.cpp 
-  src/components/CrystalEndcapsReco.cpp 
-  src/components/EcalTungstenSamplingReco.cpp
-  src/components/EcalTungstenSamplingCluster.cpp
-  src/components/ClusterRecoCoG.cpp 
-  src/components/PhotoMultiplierReco.cpp 
-  src/components/PhotoRingClusters.cpp 
-  src/components/FuzzyKClusters.cpp 
-  src/components/EMCalReconstruction.cpp 
-  src/components/SamplingECalHitsMerger.cpp 
-  src/components/TopologicalCellCluster.cpp 
-  src/components/ImagingClusterReco.cpp 
-  LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO EICD::eicd DDRec )
+gaudi_add_module(JugTrackPlugins
+  src/components/TrackerSourceLinker.cpp 
+  src/components/Tracker2SourceLinker.cpp 
+  src/components/TrackerSourcesLinker.cpp 
+  src/components/TrackFindingAlgorithm.cpp 
+  src/components/TrackFindingAlgorithmFunction.cpp 
+  #src/components/TrackFittingAlgorithm.cpp 
+  #src/components/TrackFittingFunction.cpp 
+  src/components/TestACTSLogger.cpp 
+  src/components/TrackParamTruthInit.cpp 
+  src/components/TrackParamClusterInit.cpp 
+  src/components/TrackParamVertexClusterInit.cpp 
+  src/components/ParticlesFromTrackFit.cpp 
+  LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO EICD::eicd DDRec Acts)
 
-target_compile_options(JugRecoPlugins PRIVATE -Wno-suggest-override)
+target_compile_options(JugTrackPlugins PRIVATE -Wno-suggest-override)
 
-#gaudi_add_test(ProduceForReadTest
-#               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-#               FRAMEWORK tests/options/simple_producer.py)
 #gaudi_add_test(loggerTest
 #               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 #               FRAMEWORK tests/options/testLogger.py

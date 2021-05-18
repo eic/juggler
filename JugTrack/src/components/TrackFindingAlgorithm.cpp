@@ -32,13 +32,12 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugReco/GeometryContainers.hpp"
-//#include "JugReco/SourceLinks.h"
-#include "JugReco/Measurement.hpp"
-#include "JugReco/Index.hpp"
-#include "JugReco/IndexSourceLink.hpp"
-#include "JugReco/Track.hpp"
-#include "JugReco/BField.h"
+#include "JugTrack/GeometryContainers.hpp"
+#include "JugTrack/Measurement.hpp"
+#include "JugTrack/Index.hpp"
+#include "JugTrack/IndexSourceLink.hpp"
+#include "JugTrack/Track.hpp"
+#include "JugTrack/BField.h"
 
 #include "eicd/TrackerHitCollection.h"
 

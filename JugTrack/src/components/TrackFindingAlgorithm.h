@@ -1,7 +1,7 @@
 #ifndef JUGGLER_JUGRECO_TrackFindingAlgorithm_HH
 #define JUGGLER_JUGRECO_TrackFindingAlgorithm_HH
 
-#include "JugReco/GeometryContainers.hpp"
+#include "JugTrack/GeometryContainers.hpp"
 
 // Gaudi
 #include "Gaudi/Property.h"
@@ -16,11 +16,11 @@
 #include <stdexcept>
 #include <vector>
 
-#include "JugReco/BField.h"
-#include "JugReco/Index.hpp"
-#include "JugReco/IndexSourceLink.hpp"
-#include "JugReco/Measurement.hpp"
-#include "JugReco/Track.hpp"
+#include "JugTrack/BField.h"
+#include "JugTrack/Index.hpp"
+#include "JugTrack/IndexSourceLink.hpp"
+#include "JugTrack/Measurement.hpp"
+#include "JugTrack/Track.hpp"
 
 #include "eicd/TrackerHitCollection.h"
 

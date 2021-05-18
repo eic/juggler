@@ -1,4 +1,4 @@
-#include "JugReco/GeometryContainers.hpp"
+#include "JugTrack/GeometryContainers.hpp"
 
 // Gaudi
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -24,9 +24,9 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 
-#include "JugReco/Index.hpp"
-#include "JugReco/IndexSourceLink.hpp"
-#include "JugReco/Measurement.hpp"
+#include "JugTrack/Index.hpp"
+#include "JugTrack/IndexSourceLink.hpp"
+#include "JugTrack/Measurement.hpp"
 
 #include "eicd/TrackerHitCollection.h"
 

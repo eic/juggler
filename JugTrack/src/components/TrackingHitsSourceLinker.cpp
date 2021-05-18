@@ -1,5 +1,5 @@
 // This file is part of the Acts project.
-#include "JugReco/GeometryContainers.hpp"
+#include "JugTrack/GeometryContainers.hpp"
 
 // Gaudi
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -25,7 +25,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 
-#include "JugReco/SourceLinks.h"
+#include "JugTrack/SourceLinks.h"
 
 #include "eicd/TrackerHitCollection.h"
 

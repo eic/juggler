@@ -18,7 +18,7 @@
 
 #include "TrackFindingAlgorithm.h"
 
-#include "JugReco/BField.h"
+#include "JugTrack/BField.h"
 
 #include <random>
 #include <stdexcept>
