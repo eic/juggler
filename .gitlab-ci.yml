@@ -112,7 +112,7 @@ singularity:latest:
         #      - build/juggler.sif
         #      - build/juggler.def
         #
-benchmarks:reconstruction:
+rec_benchmarks:topside:
   stage: deploy
   needs: 
     - env
@@ -124,13 +124,38 @@ benchmarks:reconstruction:
     strategy: depend
 
   
-benchmarks:physics:
+phy_benchmarks:topside:
   stage: deploy
   needs: 
     - env
     - publish
   variables:
     JUGGLER_TAG: "$JUGGLER_TAG"
+  trigger:
+    project: EIC/benchmarks/physics_benchmarks
+    strategy: depend
+
+rec_benchmarks:athena:
+  stage: deploy
+  needs: 
+    - env
+    - publish
+  variables:
+    JUGGLER_TAG: "$JUGGLER_TAG"
+    JUGGLER_DETECTOR: "athena"
+  trigger:
+    project: EIC/benchmarks/reconstruction_benchmarks
+    strategy: depend
+
+  
+phy_benchmarks:athena:
+  stage: deploy
+  needs: 
+    - env
+    - publish
+  variables:
+    JUGGLER_TAG: "$JUGGLER_TAG"
+    JUGGLER_DETECTOR: "athena"
   trigger:
     project: EIC/benchmarks/physics_benchmarks
     strategy: depend
