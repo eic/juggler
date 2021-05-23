@@ -15,8 +15,6 @@ find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 
 # this declaration will not be needed in the future
 gaudi_depends_on_subdirs(GaudiAlg GaudiKernel)
-#gaudi_install_scripts()
-#gaudi_install_python_modules()
 
 #gaudi_add_library(JugBase
 #  src/*.cpp 
