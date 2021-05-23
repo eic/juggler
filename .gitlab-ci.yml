@@ -163,8 +163,10 @@ phy_benchmarks:athena:
 purge_image:
   stage: cleanup
   needs:
-    - benchmarks:reconstruction
-    - benchmarks:physics
+    - rec_benchmarks:topside
+    - rec_benchmarks:athena
+    - phy_benchmarks:topside
+    - phy_benchmarks:athena
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
   script:
