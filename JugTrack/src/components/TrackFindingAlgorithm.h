@@ -21,6 +21,7 @@
 #include "JugTrack/IndexSourceLink.hpp"
 #include "JugTrack/Measurement.hpp"
 #include "JugTrack/Track.hpp"
+#include "JugTrack/Trajectories.hpp"
 
 #include "eicd/TrackerHitCollection.h"
 
@@ -59,7 +60,7 @@ namespace Jug::Reco {
                                                          Gaudi::DataHandle::Reader, this};
     DataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
         "inputInitialTrackParameters", Gaudi::DataHandle::Reader, this};
-    DataHandle<TrajectoryContainer> m_outputTrajectories{"outputTrajectories",
+    DataHandle<TrajectoriesContainer> m_outputTrajectories{"outputTrajectories",
                                                          Gaudi::DataHandle::Writer, this};
     TrackFinderFunction             m_trackFinderFunc;
     SmartIF<IGeoSvc>                m_geoSvc;

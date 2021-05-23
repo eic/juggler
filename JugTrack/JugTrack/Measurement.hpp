@@ -12,6 +12,8 @@
 #include <cassert>
 #include <vector>
 
+// Copied from ACTS Examples
+
 namespace Jug {
 
   /// Variable measurement type that can contain all possible combinations.
