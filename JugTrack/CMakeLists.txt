@@ -17,9 +17,6 @@ gaudi_depends_on_subdirs(GaudiAlg GaudiKernel)
 #                  INCLUDE_DIRS EICD PODIO ROOT $ENV{HOME}/stow/podio/include
 #                  LINK_LIBRARIES GaudiAlgLib GaudiKernel ROOT DD4hep::DDG4IO
 #                  PUBLIC_HEADERS JugBase)
-#target_link_libraries(JugBase 
-#  podio::podioRootIO
-#  )
 
 gaudi_add_module(JugTrackPlugins
   src/components/TrackerSourceLinker.cpp 
