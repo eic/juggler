@@ -41,7 +41,7 @@ def get_mcp_data(path, evnums=None, branch='mcparticles2'):
     elif isinstance(evnums, int):
         evnums = [evnums]
 
-    dbuf = np.zeros(shape=(2000*len(evnums), 6))
+    dbuf = np.zeros(shape=(5000*len(evnums), 6))
     idb = 0
     for iev in evnums:
         if iev >= events.GetEntries():
@@ -121,4 +121,54 @@ def compact_constants(path, names):
         vals = []
     kernel.terminate()
     return vals
+
+
+# read clusters data from root file
+def get_clusters_data(path, evnums=None, branch='EcalBarrelClustersReco'):
+    f = ROOT.TFile(path)
+    events = f.events
+    if evnums is None:
+        evnums = np.arange(events.GetEntries())
+    elif isinstance(evnums, int):
+        evnums = [evnums]
+
+    dbuf = np.zeros(shape=(20*len(evnums), 6))
+    idb = 0
+    for iev in evnums:
+        if iev >= events.GetEntries():
+            print('Error: event {:d} is out of range (0 - {:d})'.format(iev, events.GetEntries() - 1))
+            continue
+
+        events.GetEntry(iev)
+        for k, cl in enumerate(getattr(events, branch)):
+            dbuf[idb] = (iev, k, cl.nhits, cl.edep, cl.cl_theta, cl.cl_phi)
+            idb += 1
+
+    return pd.DataFrame(data=dbuf[:idb], columns=['event', 'cluster', 'nhits', 'edep', 'cl_theta', 'cl_phi'])
+
+
+# read mc particles from root file
+def get_mcp_simple(path, evnums=None, branch='mcparticles2'):
+    f = ROOT.TFile(path)
+    events = f.events
+    if evnums is None:
+        evnums = np.arange(events.GetEntries())
+    elif isinstance(evnums, int):
+        evnums = [evnums]
+
+    dbuf = np.zeros(shape=(len(evnums), 6))
+    idb = 0
+    for iev in evnums:
+        if iev >= events.GetEntries():
+            print('Error: event {:d} is out of range (0 - {:d})'.format(iev, events.GetEntries() - 1))
+            continue
+
+        events.GetEntry(iev)
+        # extract full mc particle data
+        part = getattr(events, branch)[2]
+        dbuf[idb] = (iev, part.psx, part.psy, part.psz, part.pdgID, part.status)
+        idb += 1
+    return pd.DataFrame(data=dbuf[:idb], columns=['event', 'px', 'py', 'pz', 'pid', 'status'])
+
+
 

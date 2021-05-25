@@ -57,7 +57,7 @@ if __name__ == '__main__':
     dfpi = prepare_data(args.pifile, branch=args.branch)
 
     colors = ['royalblue', 'indianred', 'limegreen']
-    prof = pd.read_csv(args.prof).set_index('layer', drop=True)
+    prof = pd.concat([pd.read_csv(p.strip()) for p in args.prof.split(',')]).reset_index(drop=True)
 
     # profile comparison
     fig, ax = plt.subplots(figsize=(16, 9), dpi=160)
@@ -79,7 +79,7 @@ if __name__ == '__main__':
 
     # check profile
     layer_range = (4, 12)
-    pre = prof[prof['type'].str.lower() == 'em']
+    pre = prof[prof['type'].str.lower() == 'electron']
     fig, ax = plt.subplots(figsize=(16, 9), dpi=160)
     chi2 = dfe.groupby(['event', 'cluster']).apply(lambda x: calc_chi2(x, pre, *layer_range))
     ax.hist(chi2, bins=np.linspace(0, 5, 200), weights=[1/float(len(chi2))]*chi2,

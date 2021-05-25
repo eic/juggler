@@ -67,8 +67,12 @@ if __name__ == '__main__':
 
 
     # we can read these values from xml file
-    desc = compact_constants(args.compact, ['cb_ECal_RMin', 'cb_ECal_ReadoutLayerThickness',
-                                            'cb_ECal_ReadoutLayerNumber', 'cb_ECal_Length'])
+    desc = compact_constants(args.compact, [
+        'cb_ECal_RMin',
+        'cb_ECal_ReadoutLayerThickness',
+        'cb_ECal_ReadoutLayerNumber',
+        'cb_ECal_Length'
+    ])
     if not len(desc):
         # or define Ecal shapes
         rmin, thickness, length = 890, 20*(10. + 1.65), 860*2+500
@@ -82,27 +86,41 @@ if __name__ == '__main__':
     # read data
     load_root_macros(args.macros)
     df = get_hits_data(args.file, args.iev, args.branch)
-    dfmcp = get_mcp_data(args.file, args.iev, 'mcparticles2')
-    vec = dfmcp.loc[dfmcp['status'] == 24578, ['px', 'py', 'pz']].iloc[0].values
-    vec = vec/np.linalg.norm(vec)
     df = df[df['cluster'] == args.icl]
+    if not len(df):
+        print("Error: do not find any hits for cluster {:d} in event {:d}".format(args.icl, args.iev))
+        exit(-1)
     # convert to polar coordinates (mrad), and stack all r values
     df['r'] = np.sqrt(df['x'].values**2 + df['y'].values**2 + df['z'].values**2)
     df['phi'] = np.arctan2(df['y'].values, df['x'].values)*1000.
     df['theta'] = np.arccos(df['z'].values/df['r'].values)*1000.
-    if not len(df):
-        print("Error: do not find any hits for cluster {:d} in event {:d}".format(args.icl, args.iev))
-        exit(-1)
+    df['eta'] = -np.log(np.tan(df['theta'].values/1000./2.))
+
+    # truth
+    dfmcp = get_mcp_simple(args.file, args.iev, 'mcparticles2').iloc[0]
+    pdgbase = ROOT.TDatabasePDG()
+    inpart = pdgbase.GetParticle(int(dfmcp['pid']))
+    print("Incoming particle = {}, pdgcode = {}, charge = {}, mass = {}"\
+          .format(inpart.GetName(), inpart.PdgCode(), inpart.Charge(), inpart.Mass()))
+    # neutral particle, no need to consider magnetic field
+    if np.isclose(inpart.Charge(), 0., rtol=1e-5):
+        vec = dfmcp[['px', 'py', 'pz']].values
+    # charge particle, use the cluster center
+    else:
+        flayer = df[df['layer'] == df['layer'].min()]
+        vec = flayer[['x', 'y', 'z']].mean().values
+    vec = vec/np.linalg.norm(vec)
+
     # particle line from (0, 0, 0) to the inner Ecal surface
     length = rmin/np.sqrt(vec[0]**2 + vec[1]**2)
     pline = np.transpose(vec*np.mgrid[0:length:2j][:, np.newaxis])
     cmap = truncate_colormap(plt.get_cmap('jet'), 0.1, 0.9)
 
-
     # convert truth to mrad
     vecp = np.asarray([np.arccos(vec[2]), np.arctan2(vec[1], vec[0])])*1000.
     phi_rg = np.asarray([vecp[1] - args.topo_range, vecp[1] + args.topo_range])
     th_rg = np.asarray([vecp[0] - args.topo_range, vecp[0] + args.topo_range])
+    eta_rg = np.resize(-np.log(np.tan(vecp[0]/1000./2.)), 2) + np.asarray([-args.topo_range, args.topo_range])/1000.
 
     os.makedirs(args.outdir, exist_ok=True)
     # cluster plot by layers (rebinned)
@@ -112,11 +130,11 @@ if __name__ == '__main__':
     for i in np.arange(1, df['layer'].max() + 1, dtype=int):
         data = df[df['layer'] == i]
         fig, axs = plt.subplots(1, 2, figsize=(17, 16), dpi=160, gridspec_kw={'wspace':0., 'width_ratios': [16, 1]})
-        ax, sm = draw_heatmap(axs[0], data['theta'].values, data['phi'].values, weights=data['edep'].values,
-                              bins=(np.arange(*th_rg, step=args.topo_size), np.arange(*phi_rg, step=args.topo_size)),
+        ax, sm = draw_heatmap(axs[0], data['eta'].values, data['phi'].values, weights=data['edep'].values,
+                              bins=(np.arange(*eta_rg, step=args.topo_size/1000.), np.arange(*phi_rg, step=args.topo_size)),
                               cmap=cmap, vmin=0.0, vmax=1.0, pc_kw=dict(alpha=0.8, edgecolor='k'))
         ax.set_ylabel(r'$\phi$ (mrad)', fontsize=28)
-        ax.set_xlabel(r'$\theta$ (mrad)', fontsize=28)
+        ax.set_xlabel(r'$\eta$', fontsize=28)
         ax.tick_params(labelsize=24)
         ax.xaxis.set_minor_locator(MultipleLocator(5))
         ax.yaxis.set_minor_locator(MultipleLocator(5))
@@ -150,11 +168,11 @@ if __name__ == '__main__':
         fig, axs = plt.subplots(1, 2, figsize=(17, 16), dpi=160, gridspec_kw={'wspace':0., 'width_ratios': [16, 1]})
         ax = axs[0]
         colors = cmap(data['edep']/1.0)
-        ax.scatter(data['theta'].values, data['phi'].values, c=colors, marker='s', s=15.0)
-        ax.set_xlim(*th_rg)
+        ax.scatter(data['eta'].values, data['phi'].values, c=colors, marker='s', s=15.0)
+        ax.set_xlim(*eta_rg)
         ax.set_ylim(*phi_rg)
         ax.set_ylabel(r'$\phi$ (mrad)', fontsize=28)
-        ax.set_xlabel(r'$\theta$ (mrad)', fontsize=28)
+        ax.set_xlabel(r'$\eta$', fontsize=28)
         ax.tick_params(labelsize=24)
         ax.xaxis.set_minor_locator(MultipleLocator(5))
         ax.yaxis.set_minor_locator(MultipleLocator(5))

@@ -30,11 +30,11 @@ def find_start_layer(grp, min_edep=0.5):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate energy profiles')
     parser.add_argument('file', type=str, help='path to root file')
-    parser.add_argument('--plot-dir', type=str, default='./plots', dest='outdir', help='output directory')
-    parser.add_argument('--type', type=str, default='unknown', dest='type', help='profile type (used in save)')
-    parser.add_argument('--energy', type=float, default=5., dest='energy', help='incident particle energy (GeV)')
-    parser.add_argument('--save', type=str, default='', dest='save', help='path to save profile')
-    parser.add_argument('--color', type=str, default='royalblue', dest='color', help='colors for bar plots')
+    parser.add_argument('-o', '--plot-dir', type=str, default='./plots', dest='outdir', help='output directory')
+    parser.add_argument('-t', '--type', type=str, default='unknown', dest='type', help='profile type (used in save)')
+    parser.add_argument('-e', '--energy', type=float, default=5., dest='energy', help='incident particle energy (GeV)')
+    parser.add_argument('-s', '--save', type=str, default='', dest='save', help='path to save profile')
+    parser.add_argument('-c', '--color', type=str, default='royalblue', dest='color', help='colors for bar plots')
     parser.add_argument('-b', '--branch-name', type=str, default='EcalBarrelClustersLayers', dest='branch',
                         help='branch name in the root file (outputLayerCollection from ImagingClusterReco)')
     parser.add_argument('-m', '--macros', type=str, default='rootlogon.C', dest='macros',
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     ax.set_ylabel('Normalized Counts', fontsize=26)
     ax.text(*bpos, 'Mininum Edep\n' + '{:.1f} MeV'.format(1.0),
             transform=ax.transAxes, fontsize=26, verticalalignment='top', bbox=bprops)
-    fig.savefig(os.path.join(args.outdir, 'edep_start_{}_{}.png'.format(args.type, int(args.energy)))
+    fig.savefig(os.path.join(args.outdir, 'edep_start_{}_{}.png'.format(args.type, int(args.energy))))
 
 
     fig, ax = plt.subplots(figsize=(16, 9), dpi=160)
@@ -88,19 +88,21 @@ if __name__ == '__main__':
     ax.tick_params(labelsize=24)
     ax.set_xlabel('Layer', fontsize=26)
     ax.set_ylabel('Energy Deposit Percentage', fontsize=26)
-    fig.savefig(os.path.join(args.outdir, 'efrac_{}_{}.png'.format(args.type, int(args.energy)))
+    fig.savefig(os.path.join(args.outdir, 'efrac_{}_{}.png'.format(args.type, int(args.energy))))
 
+    # edep fraction by layers
     layers = np.asarray([
         [1, 5, 8,],
         [10, 15, 20],
     ])
+    layers_bins = np.linspace(0, 0.5, 50)
 
     fig, ax = plt.subplots(*layers.shape, figsize=(16, 9), dpi=160, sharex='col', sharey='all',
                            gridspec_kw=dict(hspace=0.05, wspace=0.05))
 
     for ax, layer in zip(ax.flat, layers.flatten()):
         data = dfe[dfe['layer'] == layer]
-        ax.hist(data['efrac'].values*100., weights=[1/float(len(data))]*len(data), bins=np.linspace(0, 30, 60),
+        ax.hist(data['efrac'].values*100., weights=[1/float(len(data))]*len(data), bins=layers_bins,
                 ec='black', color=args.color)
         ax.tick_params(labelsize=24)
         ax.xaxis.set_minor_locator(MultipleLocator(1))
