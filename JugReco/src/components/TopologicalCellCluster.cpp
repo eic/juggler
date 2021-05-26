@@ -54,10 +54,10 @@ namespace Jug::Reco {
     // maximum global distance to be considered as neighbors in different sectors
     Gaudi::Property<double> m_adjSectorDist{this, "adjSectorDist", 1.0*cm};
     // minimum cluster center energy (to be considered as a seed for cluster)
-    // @TODO not used for now, as one can not simply find a center by edep with extremely fine granularity
-    // may need to project to (eta, phi) with crude pixel size to determine the center, which
-    // can happen in the following reconstruction step
-    Gaudi::Property<double> m_minClusterCenterEdep{this, "minClusterCenterEdep", 0.5*MeV};
+    // @TODO One can not simply find a center by edep with extremely fine granularity.
+    // Projecting to (eta, phi) with crude pixel size may help determine the center edep, which can happen
+    // in the following reconstruction step
+    Gaudi::Property<double> m_minClusterCenterEdep{this, "minClusterCenterEdep", 50*keV};
     // input hits collection
     DataHandle<eic::CalorimeterHitCollection>
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
@@ -141,12 +141,8 @@ namespace Jug::Reco {
         std::vector<std::vector<eic::CalorimeterHit>> groups;
         for (size_t i = 0; i < hits.size(); ++i)
         {
-            debug() << fmt::format("hit {}, layer {}, sector {}", i,
-                                   id_dec->get(hits[i].cellID(), layer_idx),
-                                   id_dec->get(hits[i].cellID(), sector_idx))
-                    << endmsg;
-            // already in a group
-            if (visits[i]) {
+            // already in a group, or not energetic enough to form a cluster
+            if (visits[i] || hits[i].energy() < m_minClusterCenterEdep) {
                 continue;
             }
             groups.emplace_back();
@@ -216,6 +212,7 @@ private:
         visits[idx] = true;
         for(size_t i = 0; i < hits.size(); ++i)
         {
+            // visited, or not a neighbor
             if(visits[i] || !is_neighbor(hit, hits[i])) {
                 continue;
             }
