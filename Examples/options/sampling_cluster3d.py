@@ -30,7 +30,7 @@ if kwargs['nev'] < 1:
 # get sampling fraction from system environment variable, 1.0 by default
 sf = float(os.environ.get('CB_EMCAL_SAMP_FRAC', '1.0'))
 
-geo_service  = GeoSvc("GeoSvc", detectors=kwargs['compact'].split(','))
+geo_service = GeoSvc("GeoSvc", detectors=kwargs['compact'].split(','))
 podioevent = EICDataSvc("EventDataSvc", inputs=kwargs['input'].split(','), OutputLevel=DEBUG)
 out = PodioOutput("out", filename=kwargs['output'])
 
@@ -63,7 +63,11 @@ emcalreco = EcalTungstenSamplingReco("ecal_reco",
 emcalcluster = TopologicalCellCluster(inputHitCollection="RecoEcalBarrelHits",
                                       outputClusterCollection="EcalBarrelClusters",
                                       minClusterCenterEdep=0.3*units.MeV,
-                                      groupRanges=[2.*units.cm, 2*units.cm, 2.*units.cm])
+                                      localRanges=[2.*units.mm, 2*units.mm],
+                                      adjLayerRanges=[5*units.mrad, 5*units.mrad],
+                                      adjLayerDiff=1,
+                                      layerField="layer",
+                                      sectorField="module")
 clusterreco = ImagingReco(inputClusterCollection="EcalBarrelClusters",
                           outputClusterCollection="EcalBarrelClustersReco",
                           outputLayerCollection="EcalBarrelClustersLayers",

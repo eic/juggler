@@ -94,7 +94,7 @@ public:
         auto res = alg.Fit(data, m_nRings, m_q, m_eps, m_nIters);
 
         // local position
-        for (size_t i = 0; i < res.rows(); ++i) {
+        for (int i = 0; i < res.rows(); ++i) {
             auto cl = clusters.create();
             cl.x(res(i, 0));
             cl.y(res(i, 1));
