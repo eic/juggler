@@ -1,6 +1,7 @@
 /*
  *  Topological Cell Clustering Algorithm for Sampling Calorimetry
  *  1. group all the adjacent modules
+ *  2. TODO split local maxima (seems no need for Imaging Calorimeter with extremely fine granularity)
  *
  *  Author: Chao Peng (ANL), 04/06/2021
  *  References: https://arxiv.org/pdf/1603.02934.pdf
@@ -36,20 +37,38 @@ namespace Jug::Reco {
 
   class TopologicalCellCluster : public GaudiAlgorithm {
   public:
+    // maximum difference in layer numbers that can be considered as neighbours
     Gaudi::Property<int> m_adjLayerDiff{this, "adjLayerDiff", 1};
+    // geometry service name
     Gaudi::Property<std::string> m_geoSvcName{this, "geoServiceName", "GeoSvc"};
+    // name of readout class
     Gaudi::Property<std::string> m_readout{this, "readoutClass", "EcalBarrelHits"};
+    // name of layer field in readout
     Gaudi::Property<std::string> m_layerField{this, "layerField", "layer"};
+    // name of sector field in readout
     Gaudi::Property<std::string> m_sectorField{this, "sectorField", "sector"};
+    // maximum distance of local (x, y) to be considered as neighbors at the same layer
     Gaudi::Property<std::vector<double>> u_localRanges{this, "localRanges", {1.0*mm, 1.0*mm}};
+    // maximum distance of global (eta, phi) to be considered as neighbors at different layers
     Gaudi::Property<std::vector<double>> u_adjLayerRanges{this, "adjLayerRanges", {0.01*M_PI, 0.01*M_PI}};
+    // maximum global distance to be considered as neighbors in different sectors
+    Gaudi::Property<double> m_adjSectorDist{this, "adjSectorDist", 1.0*cm};
+    // minimum cluster center energy (to be considered as a seed for cluster)
+    // @TODO not used for now, as one can not simply find a center by edep with extremely fine granularity
+    // may need to project to (eta, phi) with crude pixel size to determine the center, which
+    // can happen in the following reconstruction step
     Gaudi::Property<double> m_minClusterCenterEdep{this, "minClusterCenterEdep", 0.5*MeV};
+    // input hits collection
     DataHandle<eic::CalorimeterHitCollection>
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+    // output cluster collection
     DataHandle<eic::ClusterCollection>
         m_outputClusterCollection{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
-    DataHandle<eic::CalorimeterHitCollection>
-        m_splitHitCollection{"splitHitCollection", Gaudi::DataHandle::Writer, this};
+    // output split hits collection
+    // @TODO not implemented, as with extreme fine granularity, there is no need to split hits
+    // DataHandle<eic::CalorimeterHitCollection>
+    //     m_splitHitCollection{"splitHitCollection", Gaudi::DataHandle::Writer, this};
+
     SmartIF<IGeoSvc> m_geoSvc;
     // visit readout fields
     dd4hep::BitFieldCoder *id_dec;
@@ -61,7 +80,6 @@ namespace Jug::Reco {
     {
         declareProperty("inputHitCollection",       m_inputHitCollection,       "");
         declareProperty("outputClusterCollection",  m_outputClusterCollection,  "");
-        declareProperty("splitHitCollection",       m_splitHitCollection,       "");
     }
 
     StatusCode initialize() override
@@ -117,7 +135,6 @@ namespace Jug::Reco {
 	    const auto &hits = *m_inputHitCollection.get();
         // Create output collections
         auto &clusters = *m_outputClusterCollection.createAndPut();
-        auto &split_hits = *m_splitHitCollection.createAndPut();
 
         // group neighboring hits
         std::vector<bool> visits(hits.size(), false);
@@ -138,7 +155,6 @@ namespace Jug::Reco {
         }
         debug() << "we have " << groups.size() << " groups of hits" << endmsg;
 
-        // TODO: add splitting
         for (auto &group : groups) {
             auto cl = clusters.create();
             for (auto &hit : group) {
@@ -150,13 +166,17 @@ namespace Jug::Reco {
     }
 
 private:
+    template<typename T> static inline T pow2(const T &x) { return x*x; }
+
     // helper function to group hits
     bool is_neighbor(const eic::ConstCalorimeterHit &h1, const eic::ConstCalorimeterHit &h2) const
     {
         // we will merge different sectors later using global positions
         int s1 = id_dec->get(h1.cellID(), sector_idx);
         int s2 = id_dec->get(h2.cellID(), sector_idx);
-        if (s1 != s2) { return false; }
+        if (s1 != s2) {
+            return std::sqrt(pow2(h1.x() - h2.x()) + pow2(h1.y() - h2.y()) + pow2(h1.z() - h2.z())) <= m_adjSectorDist;
+        }
 
         int l1 = id_dec->get(h1.cellID(), layer_idx);
         int l2 = id_dec->get(h2.cellID(), layer_idx);

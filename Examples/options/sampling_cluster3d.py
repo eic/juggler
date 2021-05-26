@@ -66,6 +66,7 @@ emcalcluster = TopologicalCellCluster(inputHitCollection="RecoEcalBarrelHits",
                                       localRanges=[2.*units.mm, 2*units.mm],
                                       adjLayerRanges=[5*units.mrad, 5*units.mrad],
                                       adjLayerDiff=1,
+                                      adjSectorDist=1*units.cm,
                                       layerField="layer",
                                       sectorField="module")
 clusterreco = ImagingReco(inputClusterCollection="EcalBarrelClusters",
