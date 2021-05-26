@@ -42,6 +42,7 @@ gaudi_add_module(JugRecoPlugins
   src/components/SamplingECalHitsMerger.cpp 
   src/components/TopologicalCellCluster.cpp 
   src/components/ImagingClusterReco.cpp 
+  src/components/ImagingCalMLDataSorter.cpp 
   LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO EICD::eicd DDRec )
 
 target_compile_options(JugRecoPlugins PRIVATE -Wno-suggest-override)
