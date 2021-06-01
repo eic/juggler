@@ -1,5 +1,5 @@
 variables:
-  EIC_TAG: "2.9-stable"
+  EIC_TAG: "3.0-stable"
 
 default:
   image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
