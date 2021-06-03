@@ -31,7 +31,6 @@
 // Event Model related classes
 #include "eicd/ImagingPixel.h"
 #include "eicd/ImagingPixelCollection.h"
-#include "eicd/CalorimeterHitCollection.h"
 
 using namespace Gaudi::Units;
 
@@ -51,8 +50,7 @@ public:
     Gaudi::Property<int> m_nLayers{this, "numberOfLayers", 20};
     Gaudi::Property<double> m_etaSize{this, "etaSize", 0.001};
     Gaudi::Property<double> m_phiSize{this, "phiSize", 0.001};
-    Gaudi::Property<std::vector<int>> u_layerIDMaskRange{this, "layerIDMaskRange", {}};
-    DataHandle<eic::CalorimeterHitCollection>
+    DataHandle<eic::ImagingPixelCollection>
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::ImagingPixelCollection>
         m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
@@ -71,22 +69,6 @@ public:
             return StatusCode::FAILURE;
         }
 
-        // info() << "z_length " << depth << endmsg;
-        auto vals = u_layerIDMaskRange.value();
-        if (vals.size() != 2) {
-            error() << "Need layerIDMaskRange to proceed." << endmsg;
-            return StatusCode::FAILURE;
-        }
-
-        // build masks from range
-        id_shift = vals[0];
-        id_mask = 0;
-        debug() << "masking bit " << vals[0] << " - " << vals[1] << endmsg;
-        for (int64_t k = 0; k <= vals[1] - vals[0]; ++k) {
-            id_mask |= (int64_t(1) << k);
-        }
-        debug() << "layer mask = " << std::bitset<64>(id_mask) << endmsg;
-
         return StatusCode::SUCCESS;
     }
 
@@ -100,7 +82,7 @@ public:
         // group the hits by layer
         std::vector<std::unordered_map<std::pair<int, int>, double, pair_hash>> group_hits(m_nLayers);
         for (auto &h : hits) {
-            auto k = get_subid(h.cellID(), id_mask, id_shift) - 1;
+            auto k = h.layerID();
             if ((int) k >= m_nLayers) {
                 continue;
             }
@@ -115,9 +97,9 @@ public:
             auto it = layer.find(g);
             // merge energy
             if (it != layer.end()) {
-                it->second += h.energy();
+                it->second += h.edep();
             } else {
-                layer[g] = h.energy();
+                layer[g] = h.edep();
             }
         }
 
@@ -149,14 +131,6 @@ public:
         }
 
         return StatusCode::SUCCESS;
-    }
-
-private:
-    uint64_t id_mask, id_shift;
-    // helper function to unfold layer id
-    inline uint64_t get_subid(int64_t cid, int64_t mask, int64_t shift) const
-    {
-        return (cid >> shift) & mask;
     }
 
 }; // class ImagingPixelMerger
