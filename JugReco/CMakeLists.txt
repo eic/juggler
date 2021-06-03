@@ -41,6 +41,9 @@ gaudi_add_module(JugRecoPlugins
   src/components/EMCalReconstruction.cpp 
   src/components/SamplingECalHitsMerger.cpp 
   src/components/TopologicalCellCluster.cpp 
+  src/components/ImagingPixelReco.cpp 
+  src/components/ImagingPixelMerger.cpp 
+  src/components/ImagingTopoCluster.cpp 
   src/components/ImagingClusterReco.cpp 
   LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO EICD::eicd DDRec )
 

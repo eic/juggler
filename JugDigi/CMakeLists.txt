@@ -27,8 +27,16 @@ gaudi_depends_on_subdirs(GaudiAlg GaudiKernel)
 #  )
 
 gaudi_add_module(JugDigiPlugins
-                 src/components/*.cpp 
-                 LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO EICD::eicd)
+  src/components/CalorimeterHitDigi.cpp 
+  src/components/CrystalEndcapsDigi.cpp 
+  src/components/EMCalorimeterDigi.cpp 
+  src/components/EcalTungstenSamplingDigi.cpp 
+  src/components/ExampleCaloDigi.cpp 
+  src/components/HadronicCalDigi.cpp 
+  src/components/PhotoMultiplierDigi.cpp 
+  src/components/SOIPIXTrackerDigi.cpp 
+  src/components/UFSDTrackerDigi.cpp 
+  LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO EICD::eicd)
 target_compile_options(JugDigiPlugins PRIVATE -Wno-suggest-override)
 
 #gaudi_add_test(ProduceForReadTest

@@ -56,8 +56,32 @@ def get_mcp_data(path, evnums=None, branch='mcparticles2'):
     return pd.DataFrame(data=dbuf[:idb], columns=['event', 'px', 'py', 'pz', 'pid', 'status'])
 
 
+# read mc particles from root file
+def get_mcp_simple(path, evnums=None, branch='mcparticles2'):
+    f = ROOT.TFile(path)
+    events = f.events
+    if evnums is None:
+        evnums = np.arange(events.GetEntries())
+    elif isinstance(evnums, int):
+        evnums = [evnums]
+
+    dbuf = np.zeros(shape=(len(evnums), 6))
+    idb = 0
+    for iev in evnums:
+        if iev >= events.GetEntries():
+            print('Error: event {:d} is out of range (0 - {:d})'.format(iev, events.GetEntries() - 1))
+            continue
+
+        events.GetEntry(iev)
+        # extract full mc particle data
+        part = getattr(events, branch)[2]
+        dbuf[idb] = (iev, part.psx, part.psy, part.psz, part.pdgID, part.status)
+        idb += 1
+    return pd.DataFrame(data=dbuf[:idb], columns=['event', 'px', 'py', 'pz', 'pid', 'status'])
+
+
 # read hits data from root file
-def get_hits_data(path, evnums=None, branch='EcalBarrelClustersLayers'):
+def get_hits_data(path, evnums=None, branch='RecoEcalBarrelHits'):
     f = ROOT.TFile(path)
     events = f.events
     if evnums is None:
@@ -73,11 +97,9 @@ def get_hits_data(path, evnums=None, branch='EcalBarrelClustersLayers'):
             continue
 
         events.GetEntry(iev)
-        for layer in getattr(events, branch):
-            for k, hit in enumerate(layer.hits):
-                if k < layer.nhits:
-                    dbuf[idb] = (iev, layer.clusterID, layer.layerID, hit.x, hit.y, hit.z, hit.E)
-                    idb += 1
+        for hit in getattr(events, branch):
+            dbuf[idb] = (iev, hit.clusterID, hit.layerID, hit.position.x, hit.position.y, hit.position.z, hit.edep)
+            idb += 1
 
     return pd.DataFrame(data=dbuf[:idb], columns=['event', 'cluster', 'layer', 'x', 'y', 'z', 'edep'])
 
@@ -107,22 +129,6 @@ def get_layers_data(path, evnums=None, branch="EcalBarrelClustersLayers"):
     return pd.DataFrame(data=dbuf[:idb], columns=['event', 'cluster', 'layer', 'x', 'y', 'z', 'edep'])
 
 
-def compact_constants(path, names):
-    if not os.path.exists(path):
-        print('Cannot find compact file \"{}\".'.format(path))
-        return []
-    kernel = DDG4.Kernel()
-    description = kernel.detectorDescription()
-    kernel.loadGeometry("file:{}".format(path))
-    try:
-        vals = [description.constantAsDouble(n) for n in names]
-    except:
-        print('Fail to extract values from {}, return empty.'.format(names))
-        vals = []
-    kernel.terminate()
-    return vals
-
-
 # read clusters data from root file
 def get_clusters_data(path, evnums=None, branch='EcalBarrelClustersReco'):
     f = ROOT.TFile(path)
@@ -147,28 +153,20 @@ def get_clusters_data(path, evnums=None, branch='EcalBarrelClustersReco'):
     return pd.DataFrame(data=dbuf[:idb], columns=['event', 'cluster', 'nhits', 'edep', 'cl_theta', 'cl_phi'])
 
 
-# read mc particles from root file
-def get_mcp_simple(path, evnums=None, branch='mcparticles2'):
-    f = ROOT.TFile(path)
-    events = f.events
-    if evnums is None:
-        evnums = np.arange(events.GetEntries())
-    elif isinstance(evnums, int):
-        evnums = [evnums]
-
-    dbuf = np.zeros(shape=(len(evnums), 6))
-    idb = 0
-    for iev in evnums:
-        if iev >= events.GetEntries():
-            print('Error: event {:d} is out of range (0 - {:d})'.format(iev, events.GetEntries() - 1))
-            continue
-
-        events.GetEntry(iev)
-        # extract full mc particle data
-        part = getattr(events, branch)[2]
-        dbuf[idb] = (iev, part.psx, part.psy, part.psz, part.pdgID, part.status)
-        idb += 1
-    return pd.DataFrame(data=dbuf[:idb], columns=['event', 'px', 'py', 'pz', 'pid', 'status'])
+def compact_constants(path, names):
+    if not os.path.exists(path):
+        print('Cannot find compact file \"{}\".'.format(path))
+        return []
+    kernel = DDG4.Kernel()
+    description = kernel.detectorDescription()
+    kernel.loadGeometry("file:{}".format(path))
+    try:
+        vals = [description.constantAsDouble(n) for n in names]
+    except:
+        print('Fail to extract values from {}, return empty.'.format(names))
+        vals = []
+    kernel.terminate()
+    return vals
 
 
 

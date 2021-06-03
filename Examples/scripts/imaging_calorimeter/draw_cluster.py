@@ -95,13 +95,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Visualize the cluster from analysis')
     parser.add_argument('file', type=str, help='path to root file')
     parser.add_argument('-e', type=int, default=0, dest='iev', help='event number to plot')
-    parser.add_argument('-c', type=int, default=0, dest='icl', help='cluster number to plot')
+    parser.add_argument('-c', type=int, default=0, dest='icl', help='cluster number to plot (0: all, -1: no cluster)')
     parser.add_argument('-s', type=int, default=8, dest='stop', help='stop layer for track fit')
     parser.add_argument('-o', type=str, default='./plots', dest='outdir', help='output directory')
     parser.add_argument('--compact', type=str, default='', dest='compact', help='compact file')
     parser.add_argument('-m', '--macros', type=str, default='rootlogon.C', dest='macros',
                         help='root macros to load (accept multiple paths separated by \",\")')
-    parser.add_argument('-b', '--branch-name', type=str, default='EcalBarrelClustersLayers', dest='branch',
+    parser.add_argument('-b', '--branch-name', type=str, default='RecoEcalBarrelHits', dest='branch',
                         help='branch name in the root file (outputLayerCollection from ImagingClusterReco)')
     parser.add_argument('--topo-size', type=float, default=2.0, dest='topo_size',
                         help='bin size for projection plot (mrad)')
@@ -132,7 +132,8 @@ if __name__ == '__main__':
     # read data
     load_root_macros(args.macros)
     df = get_hits_data(args.file, args.iev, branch=args.branch)
-    df = df[df['cluster'] == args.icl]
+    if args.icl != 0:
+        df = df[df['cluster'] == args.icl]
     if not len(df):
         print("Error: do not find any hits for cluster {:d} in event {:d}".format(args.icl, args.iev))
         exit(-1)

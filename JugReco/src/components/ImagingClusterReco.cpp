@@ -1,8 +1,8 @@
 /*
- *  Reconstruct the cluster for imaging calorimeter
- *  Logarithmic weighting is used for mimicing energy deposit in transverse direction
+ *  Reconstruct the cluster/layer info for imaging calorimeter
+ *  Logarithmic weighting is used to describe energy deposit in transverse direction
  *
- *  Author: Chao Peng (ANL), 09/27/2020
+ *  Author: Chao Peng (ANL), 06/02/2021
  */
 #include <algorithm>
 #include <Eigen/Dense>
@@ -26,8 +26,7 @@
 #include "JugBase/Utilities/Utils.hpp"
 
 // Event Model related classes
-#include "eicd/CalorimeterHit.h"
-#include "eicd/ClusterCollection.h"
+#include "eicd/ImagingPixel.h"
 #include "eicd/ImagingLayerCollection.h"
 #include "eicd/ImagingClusterCollection.h"
 
@@ -35,31 +34,23 @@ using namespace Gaudi::Units;
 using namespace Eigen;
 
 namespace Jug::Reco {
+
 class ImagingClusterReco : public GaudiAlgorithm
 {
 public:
     Gaudi::Property<double> m_sampFrac{this, "samplingFraction", 1.6};
-    Gaudi::Property<double> m_minEdep{this, "mininumEnergyDeposit", 0.5*MeV};
-    Gaudi::Property<int> m_minNhits{this, "miniumNumberOfHits", 10};
     Gaudi::Property<int> m_trackStopLayer{this, "trackStopLayer", 9};
-    Gaudi::Property<std::vector<int>> u_layerIDMaskRange{this, "layerIDMaskRange", {}};
 
-    DataHandle<eic::ClusterCollection>
-        m_inputClusterCollection{"inputClusterCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::ImagingClusterCollection>
-        m_outputClusterCollection{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
+        m_inputClusterCollection{"inputClusterCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::ImagingLayerCollection>
         m_outputLayerCollection{"outputLayerCollection", Gaudi::DataHandle::Writer, this};
-    // Pointer to the geometry service
-    SmartIF<IGeoSvc> m_geoSvc;
-    double m_depthCorr;
 
     // ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     ImagingClusterReco(const std::string& name, ISvcLocator* svcLoc)
         : GaudiAlgorithm(name, svcLoc)
     {
         declareProperty("inputClusterCollection", m_inputClusterCollection, "");
-        declareProperty("outputClusterCollection", m_outputClusterCollection, "");
         declareProperty("outputLayerCollection", m_outputLayerCollection, "");
     }
 
@@ -68,28 +59,6 @@ public:
         if (GaudiAlgorithm::initialize().isFailure()) {
             return StatusCode::FAILURE;
         }
-        m_geoSvc = service("GeoSvc");
-        if (!m_geoSvc) {
-            error() << "Unable to locate Geometry Service. "
-                    << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
-            return StatusCode::FAILURE;
-        }
-
-        // info() << "z_length " << depth << endmsg;
-        auto vals = u_layerIDMaskRange.value();
-        if (vals.size() != 2) {
-            error() << "Need layerIDMaskRange to proceed." << endmsg;
-            return StatusCode::FAILURE;
-        }
-
-        // build masks from range
-        id_shift = vals[0];
-        id_mask = 0;
-        debug() << "masking bit " << vals[0] << " - " << vals[1] << endmsg;
-        for (int64_t k = 0; k <= vals[1] - vals[0]; ++k) {
-            id_mask |= (int64_t(1) << k);
-        }
-        debug() << "layer mask = " << std::bitset<64>(id_mask) << endmsg;
 
         return StatusCode::SUCCESS;
     }
@@ -98,35 +67,21 @@ public:
     {
         // input collections
         auto &input = *m_inputClusterCollection.get();
-        auto &output = *m_outputClusterCollection.createAndPut();
         auto &layers = *m_outputLayerCollection.createAndPut();
 
         int ncl = 0;
         for (auto cl : input) {
-            // basic information inherited from the cluster
-            eic::ImagingCluster img;
-            double edep = 0.;
-            for (auto hit : cl.hits()) {
-                edep += hit.energy();
-            }
-            img.nhits(cl.hits().size());
-            img.edep(edep);
-            img.energy(edep / m_sampFrac);
-
-            // check if the cluster passes the filter
-            if ((img.nhits() < m_minNhits) || (img.edep() < m_minEdep)) {
-                continue;
-            }
+            // simple energy reconstruction
+            cl.energy(cl.edep() / m_sampFrac);
 
             // group hits to layers
-            group_by_layer(img, cl, layers, ncl++);
+            group_by_layer(cl, layers, ncl++);
 
             // fit intrinsic theta/phi
-            fit_track(img, m_trackStopLayer);
-            output.push_back(img);
+            fit_track(cl, m_trackStopLayer);
         }
 
-        for (auto [k, cl] : Jug::Utils::Enumerate(output)) {
+        for (auto [k, cl] : Jug::Utils::Enumerate(input)) {
             debug() << fmt::format("Cluster {:d}: Edep = {:.3f} MeV, Dir = ({:.3f}, {:.3f}) deg",
                                    k + 1, cl.edep()/MeV, cl.cl_theta()/M_PI*180., cl.cl_phi()/M_PI*180.)
                     << endmsg;
@@ -136,22 +91,16 @@ public:
     }
 
 private:
-    uint64_t id_mask, id_shift;
-    // helper function to unfold layer id
-    inline uint64_t get_subid(int64_t cid, int64_t mask, int64_t shift) const
-    {
-        return (cid >> shift) & mask;
-    }
 
-    void group_by_layer(eic::ImagingCluster &img, eic::Cluster &cluster, eic::ImagingLayerCollection &container, int cid)
+    void group_by_layer(eic::ImagingCluster &cluster, eic::ImagingLayerCollection &container, int cid)
     const
     {
         // using map to have id sorted
-        std::map<int, std::vector<int>> hits_map;
+        std::map<int, std::vector<size_t>> hits_map;
 
         // group hits
         for (auto [ih, hit] : Jug::Utils::Enumerate(cluster.hits())) {
-            auto lid = get_subid(hit.cellID(), id_mask, id_shift);
+            auto lid = hit.layerID();
             auto it = hits_map.find(lid);
             if (it == hits_map.end()) {
                 hits_map[lid] = {ih};
@@ -168,27 +117,21 @@ private:
             layer.edep(0.);
             layer.position({0., 0., 0.});
             double mx = 0., my = 0., mz = 0.;
-            for (auto [k, hid] : Jug::Utils::Enumerate(it.second)) {
-                if (k >= layer.hits().size()) {
-                    warning() << fmt::format("Discard hit {:d} at layer {:d} because container caps at {:d}",
-                                             k + 1, it.first, layer.hits().size())
-                              << endmsg;
-                    continue;
-                }
+            for (auto hid : it.second) {
                 auto hit = cluster.hits(hid);
-                layer.hits()[k] = eic::BaseHit{hit.x(), hit.y(), hit.z(), hit.energy()};
+                layer.addhits(hit);
                 mx += hit.x();
                 my += hit.y();
                 mz += hit.z();
-                layer.edep(layer.edep() + hit.energy());
-                layer.nhits(k + 1);
+                layer.edep(layer.edep() + hit.edep());
             }
+            layer.nhits(layer.hits_size());
             layer.x(mx/layer.nhits());
             layer.y(my/layer.nhits());
             layer.z(mz/layer.nhits());
             // add relation
             container.push_back(layer);
-            img.addlayers(layer);
+            cluster.addlayers(layer);
         }
     }
 
