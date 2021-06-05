@@ -39,6 +39,7 @@ gaudi_add_module(JugRecoPlugins
   src/components/PhotoRingClusters.cpp 
   src/components/FuzzyKClusters.cpp 
   src/components/EMCalReconstruction.cpp 
+  src/components/HCalReconstruction.cpp
   src/components/SamplingECalHitsMerger.cpp 
   src/components/TopologicalCellCluster.cpp 
   src/components/ImagingPixelReco.cpp 
