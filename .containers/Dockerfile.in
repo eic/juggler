@@ -1,6 +1,6 @@
 #syntax=docker/dockerfile:1.2
 
-FROM  eicweb.phy.anl.gov:4567/containers/eic_container/jug_dev:@EIC_TAG@
+FROM  eicweb.phy.anl.gov:4567/containers/eic_container/eic:@EIC_TAG@
 
 LABEL maintainer="Whitney Armstrong <warmstrong@anl.gov>" \
       name="juggler" \
