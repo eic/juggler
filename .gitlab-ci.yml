@@ -172,7 +172,7 @@ cleanup:
   dependencies:
     - version
   script:
-    ## remove the pipeline specific export from eicweb if needed
+    ## remove the pipeline specific export from eicweb if needed 
     - echo "Cleaning up pipeline specific docker tags if needed"
     - git clone https://eicweb.phy.anl.gov/containers/eic_container.git
     - ./eic_container/gitlab-ci/cleanup_registry.sh -i ${BUILD_IMAGE} -r 50 ${INTERNAL_TAG}
