@@ -6,7 +6,7 @@ variables:
   ##  - juggler:testing (for CI usage)
   ##  - We also trigger the eic_container master to rebuild the jug_xl nightly
   EIC_DEV_TAG: "testing"
-  BUILD_IMAGE: "juggler" # would be better if this was jug_xl, but historic reasons
+  JUGGLER_IMAGE: "juggler" # would be better if this was jug_xl, but historic reasons
   DEFAULT_TAG: "testing"
   ## We have:
   ##   - Juggler triggers eic_container on a master pipeline
@@ -74,6 +74,7 @@ version:
       echo "INTERNAL_TAG=$INTERNAL_TAG" >> build.env
       echo "CI_REGISTRY=$CI_REGISTRY" >> build.env
       echo "CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE" >> build.env
+      echo "BUILD_IMAGE=$JUGGLER_IMAGE" >> build.env
       cat build.env
   artifacts:
     reports:
