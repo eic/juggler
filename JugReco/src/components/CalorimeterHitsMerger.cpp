@@ -1,7 +1,6 @@
 /*
- *  A clustering algorithm to reduce 3D clustering to 2D (x, y) + 1D (depth)
- *  2D clustering is formed by summing all layers in the same module
- *  1D clustering is formed by summing all modules in the same layer
+ *  An algorithm to group readout hits from a calorimeter
+ *  Energy is summed
  *
  *  Author: Chao Peng (ANL), 03/31/2021
  */
@@ -20,6 +19,10 @@
 #include "DDRec/CellIDPositionConverter.h"
 #include "DDRec/SurfaceManager.h"
 #include "DDRec/Surface.h"
+#include "DDSegmentation/BitFieldCoder.h"
+
+#include "fmt/ranges.h"
+#include "fmt/format.h"
 
 // FCCSW
 #include "JugBase/DataHandle.h"
@@ -32,18 +35,21 @@ using namespace Gaudi::Units;
 
 namespace Jug::Reco {
 
-class SamplingECalHitsMerger : public GaudiAlgorithm {
+class CalorimeterHitsMerger : public GaudiAlgorithm {
 public:
-    Gaudi::Property<std::vector<std::pair<int, int>>>
-        u_cellIDMaskRanges{this, "cellIDMaskRanges", {{0, 31}}};
+    Gaudi::Property<std::string>                m_geoSvcName{this, "geoServiceName", "GeoSvc"};
+    Gaudi::Property<std::string>                m_readout{this, "readoutClass", "EcalBarrelHits"};
+    Gaudi::Property<std::vector<std::string>>   m_fields{this, "fields", {"layer"}};
     DataHandle<eic::CalorimeterHitCollection>
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::CalorimeterHitCollection>
         m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
-    int64_t id_mask;
+
+    SmartIF<IGeoSvc> m_geoSvc;
+    uint64_t id_mask;
 
     // ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
-    SamplingECalHitsMerger(const std::string& name, ISvcLocator* svcLoc)
+    CalorimeterHitsMerger(const std::string& name, ISvcLocator* svcLoc)
         : GaudiAlgorithm(name, svcLoc)
     {
         declareProperty("inputHitCollection",       m_inputHitCollection,       "");
@@ -56,17 +62,27 @@ public:
             return StatusCode::FAILURE;
         }
 
-        // build masks from input
-        id_mask = 0;
-        for (auto &p : u_cellIDMaskRanges) {
-            debug() << "masking bit " << p.first << " - " << p.second << endmsg;
-            for (int64_t k = p.first; k <= p.second; ++k) {
-                id_mask |= (int64_t(1) << k);
+        m_geoSvc = service(m_geoSvcName);
+        if (!m_geoSvc) {
+            error() << "Unable to locate Geometry Service. "
+                    << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
+            return StatusCode::FAILURE;
+        }
+
+        try {
+            auto id_desc = m_geoSvc->detector()->readout(m_readout).idSpec();
+            id_mask = 0;
+            for (auto &f : m_fields) {
+                id_mask |= id_desc.field(f)->mask();
             }
+        } catch (...) {
+            error() << "Failed to load ID decoder for " << m_readout << endmsg;
+            return StatusCode::FAILURE;
         }
         id_mask = ~id_mask;
-        debug() << "cellID mask = " << std::bitset<64>(id_mask) << endmsg;
-
+        info() << fmt::format("ID mask for [{:s}] fields in {:s}: {:#064b}",
+                              fmt::join(m_fields, ", "), m_readout, id_mask)
+               << endmsg;
         return StatusCode::SUCCESS;
     }
 
@@ -92,9 +108,11 @@ public:
             }
         }
 
+        /*
         for (auto &h : mhits) {
             debug() << h.cellID() << ": " << h.energy() << endmsg;
         }
+        */
 
         debug() << "Size before = " << hits.size() << ", after = " << mhits.size() << endmsg;
 
@@ -102,9 +120,9 @@ public:
     }
 
 
-}; // class SamplingECalHitsMerger
+}; // class CalorimeterHitsMerger
 
-DECLARE_COMPONENT(SamplingECalHitsMerger)
+DECLARE_COMPONENT(CalorimeterHitsMerger)
 
 } // namespace Jug::Reco
 

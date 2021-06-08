@@ -30,6 +30,7 @@ gaudi_depends_on_subdirs(GaudiAlg GaudiKernel)
 gaudi_add_module(JugRecoPlugins
   src/components/TrackerHitReconstruction.cpp 
   src/components/SimpleClustering.cpp 
+  src/components/CalorimeterHitsMerger.cpp 
   src/components/CalorimeterIslandCluster.cpp 
   src/components/CrystalEndcapsReco.cpp 
   src/components/EcalTungstenSamplingReco.cpp
@@ -40,7 +41,6 @@ gaudi_add_module(JugRecoPlugins
   src/components/FuzzyKClusters.cpp 
   src/components/EMCalReconstruction.cpp 
   src/components/HCalReconstruction.cpp
-  src/components/SamplingECalHitsMerger.cpp 
   src/components/TopologicalCellCluster.cpp 
   src/components/ImagingPixelReco.cpp 
   src/components/ImagingPixelMerger.cpp 
