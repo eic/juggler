@@ -74,8 +74,11 @@ public:
         // reconstruct hit position for the cluster
         for (auto cl : clusters) {
             auto hit = reconstruct(cl);
-            cl.energy(hit.energy());
+            cl.nhits(cl.hits_size());
+            cl.edep(hit.energy());
+            cl.energy(hit.energy()/m_sampFrac);
             cl.position(hit.position());
+            cl.polar(cart_to_polar(hit.position()));
             debug() << cl.hits_size() << " hits: " << cl.energy()/GeV << " GeV, (" << cl.position().x/mm << ", "
                     << cl.position().y/mm << ", " << cl.position().z/mm << ")" << endmsg;
         }
@@ -84,6 +87,12 @@ public:
     }
 
 private:
+    template<typename T1>
+    eic::VectorPolar cart_to_polar(const T1 &cart) {
+        auto r = std::sqrt(cart.x*cart.x + cart.y*cart.y + cart.z*cart.z);
+        return eic::VectorPolar{r, std::acos(cart.z/r), std::atan2(cart.y, cart.x)};
+    }
+
     eic::CalorimeterHit reconstruct(eic::Cluster cl) const
     {
         eic::CalorimeterHit res;
@@ -105,7 +114,7 @@ private:
             }
         }
         res.cellID(centerID);
-        res.energy(totalE/m_sampFrac);
+        res.energy(totalE);
 
         // center of gravity with logarithmic weighting
         float tw = 0., x = 0., y = 0., z = 0.;

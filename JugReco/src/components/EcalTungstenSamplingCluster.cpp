@@ -108,7 +108,10 @@ namespace Jug::Reco {
 	}
 	// Save info as a cluster
 	// TODO: position x and y determination
-	clusters.push_back(eic::Cluster{tot_edep,{pos_x,pos_y,pos_z}, {0,0,0,0,0,0}, 0, 0});
+    eic::Cluster cl;
+    cl.edep(tot_edep);
+    cl.position({pos_x,pos_y,pos_z});
+	clusters.push_back(cl);
 	return;
     }
   };
