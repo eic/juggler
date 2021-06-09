@@ -101,14 +101,12 @@ private:
     // helper function to group hits
     inline bool is_neighbor(const eic::ConstCalorimeterHit &h1, const eic::ConstCalorimeterHit &h2) const
     {
-        if (u_groupRanges.size() >= 3) {
+        if (u_groupRanges.size() >= 2) {
             return (std::abs(h1.local_x() - h2.local_x()) <= u_groupRanges[0]) &&
-                   (std::abs(h1.local_y() - h2.local_y()) <= u_groupRanges[1]) &&
-                   (std::abs(h1.local_z() - h2.local_z()) <= u_groupRanges[2]);
+                   (std::abs(h1.local_y() - h2.local_y()) <= u_groupRanges[1]);
         } else {
             return (std::abs(h1.local_x() - h2.local_x()) <= m_groupRange*(h1.dim_x() + h2.dim_x())/2.) &&
-                   (std::abs(h1.local_y() - h2.local_y()) <= m_groupRange*(h1.dim_y() + h2.dim_y())/2.) &&
-                   (std::abs(h1.local_z() - h2.local_z()) <= m_groupRange*(h1.dim_z() + h2.dim_z())/2.);
+                   (std::abs(h1.local_y() - h2.local_y()) <= m_groupRange*(h1.dim_y() + h2.dim_y())/2.);
         }
     }
 
