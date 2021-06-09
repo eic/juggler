@@ -78,9 +78,8 @@ public:
             std::vector<std::pair<std::string, int>> ref_fields;
             for (size_t i = 0; i < u_fields.size(); ++i) {
                 id_mask |= id_desc.field(u_fields[i])->mask();
-                // use the same ref number if the length of two vectors do not much
-                // or default number (1) if emepty vector provied
-                int ref = u_refs.empty() ? 1 : (i < u_refs.size() ? u_refs[i] : u_refs.value().back());
+                // use the provided id number to find ref cell, or use 0
+                int ref =  i < u_refs.size() ? u_refs[i] : 0;
                 ref_fields.push_back({u_fields[i], ref});
             }
             ref_mask = id_desc.encode(ref_fields);
