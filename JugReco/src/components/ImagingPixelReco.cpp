@@ -111,7 +111,7 @@ public:
             auto gpos = m_geoSvc->cellIDPositionConverter()->position(id);
             // local positions
             auto volman = m_geoSvc->detector()->volumeManager();
-            auto alignment = volman.lookupDetector(id).nominal();
+            auto alignment = volman.lookupDetElement(id).nominal();
             auto pos = alignment.worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
             // polar coordinates
             double r = std::sqrt(gpos.x()*gpos.x() + gpos.y()*gpos.y() + gpos.z()*gpos.z());

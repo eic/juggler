@@ -108,23 +108,26 @@ public:
         // sum energies that has the same id
         std::unordered_map<long long, size_t> merge_map;
         for (auto &h : hits) {
-            auto id = (h.cellID() & id_mask);
+            int64_t id = h.cellID() & id_mask;
+            // use the reference field position
+            int64_t ref_id = id | ref_mask;
             // debug() << h.cellID() << " - " << std::bitset<64>(h.cellID()) << endmsg;
             auto it = merge_map.find(id);
+            debug() << fmt::format("{:#064b} - {:#064b}, ref: {:#064b}",
+                                   h.cellID(), id, ref_id) << endmsg;
             if (it == merge_map.end()) {
                 merge_map[id] = mhits.size();
                 auto ahit = h.clone();
-                // use the reference field position
-                int ref_id = id | ref_mask;
+                ahit.cellID(ref_id);
                 // global positions
                 auto gpos = poscon->position(ref_id);
                 // local positions
-                auto alignment = volman.lookupDetector(ref_id).nominal();
+                auto alignment = volman.lookupDetElement(ref_id).nominal();
+                // debug() << volman.lookupDetElement(ref_id).path() << ", " << volman.lookupDetector(ref_id).path() << endmsg;
                 auto pos = alignment.worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
                 ahit.position({gpos.x()/dd4hep::mm, gpos.y()/dd4hep::mm, gpos.z()/dd4hep::mm});
                 ahit.local({pos.x()/dd4hep::mm, pos.y()/dd4hep::mm, pos.z()/dd4hep::mm});
                 mhits.push_back(ahit);
-                debug() << mhits[mhits.size() - 1].cellID() << " - " << std::bitset<64>(id) << endmsg;
             } else {
                 mhits[it->second].energy(mhits[it->second].energy() + h.energy());
             }
