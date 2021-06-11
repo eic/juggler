@@ -5,7 +5,7 @@ variables:
   ## the nightly release. For now we tag the master as:
   ##  - juggler:testing (for CI usage)
   ##  - We also trigger the eic_container master to rebuild the jug_xl nightly
-  EIC_DEV_TAG: "testing"
+  EIC_DEV_TAG: "3.1-unstable"
   JUGGLER_IMAGE: "juggler" # would be better if this was jug_xl, but historic reasons
   DEFAULT_TAG: "testing"
   ## We have:
