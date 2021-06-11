@@ -137,7 +137,7 @@ private:
 
         // convert local position to global position, use the cell with max edep as a reference
         auto volman = m_geoSvc->detector()->volumeManager();
-        auto alignment = volman.lookupDetector(centerID).nominal();
+        auto alignment = volman.lookupDetElement(centerID).nominal();
         auto gpos = alignment.localToWorld(dd4hep::Position(res.local_x(), res.local_y(), res.local_z()));
 
         res.position({gpos.x(), gpos.y(), gpos.z()});
