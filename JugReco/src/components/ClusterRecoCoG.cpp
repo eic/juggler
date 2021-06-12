@@ -37,7 +37,7 @@ using namespace Gaudi::Units;
 namespace Jug::Reco {
 
 // weighting functions (with place holders for hit energy, total energy, one parameter and module type enum
-static double noWeight(double /*E*/, double /*tE*/, double /*p*/, int /*type*/) { return 1.0; }
+static double constWeight(double /*E*/, double /*tE*/, double /*p*/, int /*type*/) { return 1.0; }
 static double linearWeight(double E, double /*tE*/, double /*p*/, int /*type*/) { return E; }
 static double logWeight(double E, double tE, double base, int /*type*/)
 {
@@ -45,7 +45,7 @@ static double logWeight(double E, double tE, double base, int /*type*/)
 }
 
 static const std::map<std::string, std::function<double(double, double, double, int)>> weightMethods {
-    {"none", noWeight},
+    {"none", constWeight},
     {"linear", linearWeight},
     {"log", logWeight},
 };
@@ -56,7 +56,7 @@ public:
     Gaudi::Property<double> m_sampFrac{this, "samplingFraction", 1.6};
     Gaudi::Property<double> m_logWeightBase{this, "logWeightBase", 3.6};
     Gaudi::Property<double> m_depthCorrection{this, "depthCorrection", 0.0};
-    Gaudi::Property<std::string> m_weightMethod{this, "weightMethod", "log"};
+    Gaudi::Property<std::string> m_energyWeight{this, "energyWeight", "log"};
     Gaudi::Property<std::string> m_moduleDimZName{this, "moduleDimZName", ""};
     DataHandle<eic::ClusterCollection>
         m_clusterCollection{"clusterCollection", Gaudi::DataHandle::Reader, this};
@@ -88,13 +88,16 @@ public:
             m_depthCorrection = m_geoSvc->detector()->constantAsDouble(m_moduleDimZName);
         }
 
-        std::string method = m_weightMethod.value();
+        // select weighting method
+        std::string ew = m_energyWeight.value();
         // make it case-insensitive
-        std::transform(method.begin(), method.end(), method.begin(), [] (char s) { return std::tolower(s); });
-        auto it = weightMethods.find(method);
+        std::transform(ew.begin(), ew.end(), ew.begin(), [] (char s) { return std::tolower(s); });
+        auto it = weightMethods.find(ew);
         if (it == weightMethods.end()) {
-            error() << fmt::format("Cannot find weight method {}, it only supports [{}]", method,
-                                   boost::algorithm::join(weightMethods | boost::adaptors::map_keys, ", ")) << endmsg;
+            error() << fmt::format("Cannot find energy weighting method {}, choose one from [{}]",
+                                   m_energyWeight,
+                                   boost::algorithm::join(weightMethods | boost::adaptors::map_keys, ", "))
+                    << endmsg;
             return StatusCode::FAILURE;
         }
         weightFunc = it->second;
