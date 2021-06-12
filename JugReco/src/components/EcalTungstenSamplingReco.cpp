@@ -39,8 +39,14 @@ namespace Jug::Reco {
                                                                       this};
     DataHandle<eic::CalorimeterHitCollection>    m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                     this};
-    /// Pointer to the geometry service
+    // geometry service
+    Gaudi::Property<std::string>    m_geoSvcName{this, "geoServiceName", "GeoSvc"};
+    Gaudi::Property<std::string>    m_readout{this, "readoutClass", ""};
+    Gaudi::Property<std::string>    m_layerField{this, "layerField", ""};
+    Gaudi::Property<std::string>    m_sectorField{this, "sectorField", ""};
     SmartIF<IGeoSvc> m_geoSvc;
+    dd4hep::BitFieldCoder *id_dec = nullptr;
+    size_t sector_idx, layer_idx;
 
     // ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     EcalTungstenSamplingReco(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
@@ -54,11 +60,30 @@ namespace Jug::Reco {
       if (GaudiAlgorithm::initialize().isFailure()) {
         return StatusCode::FAILURE;
       }
-      m_geoSvc = service("GeoSvc");
+
+      m_geoSvc = service(m_geoSvcName);
       if (!m_geoSvc) {
         error() << "Unable to locate Geometry Service. "
                 << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
         return StatusCode::FAILURE;
+      }
+
+      // do not get the layer/sector ID if no readout class provided
+      if (m_readout.value().empty()) {
+          return StatusCode::SUCCESS;
+      }
+
+      try {
+        id_dec = m_geoSvc->detector()->readout(m_readout).idSpec().decoder();
+        if (m_sectorField.value().size()) {
+            sector_idx = id_dec->index(m_sectorField);
+        }
+        if (m_layerField.value().size()) {
+            layer_idx = id_dec->index(m_layerField);
+        }
+      } catch (...) {
+         error() << "Failed to load ID decoder for " << m_readout << endmsg;
+         return StatusCode::FAILURE;
       }
       return StatusCode::SUCCESS;
     }
@@ -79,6 +104,9 @@ namespace Jug::Reco {
         float energy = (rh.amplitude() - m_pedMeanADC) / (float) m_capADC * m_dyRangeADC; // convert ADC -> energy
         float time = rh.timeStamp(); // ns
         auto id = rh.cellID();
+        int lid = (id_dec != nullptr & m_layerField.value().size()) ? static_cast<int>(id_dec->get(id, layer_idx)) : -1;
+        int sid = (id_dec != nullptr & m_sectorField.value().size()) ? static_cast<int>(id_dec->get(id, sector_idx)) : -1;
+
         // global positions
         auto gpos = m_geoSvc->cellIDPositionConverter()->position(id);
         // local positions
@@ -94,7 +122,7 @@ namespace Jug::Reco {
         }
         // info() << std::bitset<64>(id) << "\n"
         //        << m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().volIDs().str() << endmsg;
-        hits.push_back(eic::CalorimeterHit{id,
+        hits.push_back(eic::CalorimeterHit{id, -1, lid, sid,
                                            energy,
                                            time,
                                            {gpos.x() / m_lUnit, gpos.y() / m_lUnit, gpos.z() / m_lUnit},

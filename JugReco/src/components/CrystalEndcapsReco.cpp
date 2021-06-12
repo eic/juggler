@@ -74,7 +74,8 @@ namespace Jug::Reco {
           // cell dimension
           auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
           hits.push_back(eic::CalorimeterHit{
-              id, energy, time, {gpos.x(), gpos.y(), gpos.z()}, {pos.x(), pos.y(), pos.z()}, {dim[0], dim[1], 0.0}, 0});
+              id, -1, -1, -1, energy, time, {gpos.x(), gpos.y(), gpos.z()}, {pos.x(), pos.y(), pos.z()},
+              {dim[0], dim[1], 0.0}, 0});
         }
       }
 

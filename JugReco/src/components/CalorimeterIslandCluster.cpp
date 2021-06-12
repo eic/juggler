@@ -181,7 +181,7 @@ private:
 
     // split a group of hits according to the local maxima
     // split_hits is used to persistify the data
-    void split_group(const std::vector<eic::CalorimeterHit> &group, const eic::Cluster &maxima,
+    void split_group(std::vector<eic::CalorimeterHit> &group, const eic::Cluster &maxima,
                      eic::ClusterCollection &clusters, eic::CalorimeterHitCollection &split_hits) const
     {
         // special cases
@@ -191,6 +191,7 @@ private:
             auto cl = clusters.create();
             for (auto &hit : group) {
                 cl.addhits(hit);
+                hit.clusterID(clusters.size());
             }
             return;
         }
@@ -231,6 +232,7 @@ private:
                 hit.type(1);
                 split_hits.push_back(hit);
                 splits[k].addhits(hit);
+                hit.clusterID(k + 1);
             }
         }
 

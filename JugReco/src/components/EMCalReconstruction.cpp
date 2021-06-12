@@ -77,7 +77,7 @@ namespace Jug::Reco {
           auto pos = m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().position();
           // cell dimension
           auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
-          hits.push_back(eic::CalorimeterHit{id,
+          hits.push_back(eic::CalorimeterHit{id, -1, -1, -1,
                                              energy / m_samplingFraction,
                                              time,
                                              {gpos.x() / dd4hep::mm, gpos.y() / dd4hep::mm, gpos.z() / dd4hep::mm},
