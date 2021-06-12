@@ -4,7 +4,14 @@
  *
  *  Author: Chao Peng (ANL), 09/27/2020
  */
+#include <map>
+#include <cstring>
 #include <algorithm>
+#include <functional>
+
+#include "fmt/format.h"
+#include <boost/range/adaptor/map.hpp>
+#include "boost/algorithm/string/join.hpp"
 
 #include "Gaudi/Property.h"
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -28,18 +35,35 @@
 using namespace Gaudi::Units;
 
 namespace Jug::Reco {
+
+// weighting functions (with place holders for hit energy, total energy, one parameter and module type enum
+static double noWeight(double /*E*/, double /*tE*/, double /*p*/, int /*type*/) { return 1.0; }
+static double linearWeight(double E, double /*tE*/, double /*p*/, int /*type*/) { return E; }
+static double logWeight(double E, double tE, double base, int /*type*/)
+{
+    return std::max(0., base + std::log(E/tE));
+}
+
+static const std::map<std::string, std::function<double(double, double, double, int)>> weightMethods {
+    {"none", noWeight},
+    {"linear", linearWeight},
+    {"log", logWeight},
+};
+
 class ClusterRecoCoG : public GaudiAlgorithm
 {
 public:
     Gaudi::Property<double> m_sampFrac{this, "samplingFraction", 1.6};
     Gaudi::Property<double> m_logWeightBase{this, "logWeightBase", 3.6};
     Gaudi::Property<double> m_depthCorrection{this, "depthCorrection", 0.0};
+    Gaudi::Property<std::string> m_weightMethod{this, "weightMethod", "log"};
     Gaudi::Property<std::string> m_moduleDimZName{this, "moduleDimZName", ""};
     DataHandle<eic::ClusterCollection>
         m_clusterCollection{"clusterCollection", Gaudi::DataHandle::Reader, this};
     // Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
     double m_depthCorr;
+    std::function<double(double, double, double, int)> weightFunc;
 
     // ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     ClusterRecoCoG(const std::string& name, ISvcLocator* svcLoc)
@@ -63,6 +87,17 @@ public:
         if (!m_moduleDimZName.value().empty()) {
             m_depthCorrection = m_geoSvc->detector()->constantAsDouble(m_moduleDimZName);
         }
+
+        std::string method = m_weightMethod.value();
+        // make it case-insensitive
+        std::transform(method.begin(), method.end(), method.begin(), [] (char s) { return std::tolower(s); });
+        auto it = weightMethods.find(method);
+        if (it == weightMethods.end()) {
+            error() << fmt::format("Cannot find weight method {}, it only supports [{}]", method,
+                                   boost::algorithm::join(weightMethods | boost::adaptors::map_keys, ", ")) << endmsg;
+            return StatusCode::FAILURE;
+        }
+        weightFunc = it->second;
         //info() << "z_length " << depth << endmsg;
         return StatusCode::SUCCESS;
     }
@@ -121,11 +156,11 @@ private:
         for (auto &hit : cl.hits()) {
             // suppress low energy contributions
             // info() << std::log(hit.energy()/totalE) << endmsg;
-            float w = std::max(0., m_logWeightBase + std::log(hit.energy()/totalE));
+            float w = weightFunc(hit.energy(), totalE, m_logWeightBase.value(), 0);
             tw += w;
-            x += hit.local_x() * w;
-            y += hit.local_y() * w;
-            z += hit.local_z() * w;
+            x += hit.x() * w;
+            y += hit.y() * w;
+            z += hit.z() * w;
             /*
             debug() << hit.cellID()
                     << "(" << hit.local_x() << ", " << hit.local_y() << ", " << hit.local_z() << "), "
@@ -133,14 +168,14 @@ private:
                     << endmsg;
             */
         }
-        res.local({x/tw, y/tw, z/tw + m_depthCorrection});
-
-        // convert local position to global position, use the cell with max edep as a reference
+        res.position({x/tw, y/tw, z/tw});
+        // convert global position to local position, use the cell with max edep as a reference
         auto volman = m_geoSvc->detector()->volumeManager();
         auto alignment = volman.lookupDetElement(centerID).nominal();
-        auto gpos = alignment.localToWorld(dd4hep::Position(res.local_x(), res.local_y(), res.local_z()));
+        auto lpos = alignment.worldToLocal(dd4hep::Position(res.x(), res.y(), res.z()));
 
-        res.position({gpos.x(), gpos.y(), gpos.z()});
+        // TODO: may need convert back to have depthCorrection in global positions
+        res.local({lpos.x(), lpos.y(), lpos.z() + m_depthCorrection});
         return res;
     }
 };
