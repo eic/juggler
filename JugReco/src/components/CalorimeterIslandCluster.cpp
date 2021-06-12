@@ -98,15 +98,28 @@ namespace Jug::Reco {
     }
 
 private:
+    template<typename T> inline T dist2d(T t1, T t2) const { return std::sqrt(t1*t1 + t2*t2); }
+    template<typename T> inline T dist3d(T t1, T t2, T t3) const { return std::sqrt(t1*t1 + t2*t2 + t3*t3); }
     // helper function to group hits
     inline bool is_neighbor(const eic::ConstCalorimeterHit &h1, const eic::ConstCalorimeterHit &h2) const
     {
-        if (u_groupRanges.size() >= 2) {
-            return (std::abs(h1.local_x() - h2.local_x()) <= u_groupRanges[0]) &&
-                   (std::abs(h1.local_y() - h2.local_y()) <= u_groupRanges[1]);
+        // in the same sector
+        if (h1.sectorID() == h2.sectorID()) {
+            if (u_groupRanges.size() >= 2) {
+                return (std::abs(h1.local_x() - h2.local_x()) <= u_groupRanges[0]) &&
+                       (std::abs(h1.local_y() - h2.local_y()) <= u_groupRanges[1]);
+            } else {
+                return (std::abs(h1.local_x() - h2.local_x()) <= m_groupRange*(h1.dim_x() + h2.dim_x())/2.) &&
+                       (std::abs(h1.local_y() - h2.local_y()) <= m_groupRange*(h1.dim_y() + h2.dim_y())/2.);
+            }
+        // different sector
         } else {
-            return (std::abs(h1.local_x() - h2.local_x()) <= m_groupRange*(h1.dim_x() + h2.dim_x())/2.) &&
-                   (std::abs(h1.local_y() - h2.local_y()) <= m_groupRange*(h1.dim_y() + h2.dim_y())/2.);
+            double range = (u_groupRanges.size() >= 2) ?
+                           std::sqrt(std::accumulate(u_groupRanges.begin(), u_groupRanges.end(), 0.,
+                                                     [] (double s, double x) { return s + x*x; })) :
+                           m_groupRange*dist2d((h1.dim_x() + h2.dim_x())/2., (h1.dim_y() + h2.dim_y())/2.);
+            // sector may have rotation (barrel), so z is included
+            return dist3d(h1.x() - h2.x(), h1.y() - h2.y(), h1.z() - h2.z()) <= range;
         }
     }
 
