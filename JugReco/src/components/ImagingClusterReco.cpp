@@ -116,9 +116,15 @@ private:
 
         // create layers
         for (auto it : hits_map) {
-            eic::ImagingLayer layer;
-            layer.clusterID(cid);
-            layer.layerID(it.first);
+            // use full members initialization here so it could catch changes in ecid
+            eic::ImagingLayer layer{
+                cid,                            // cluster id
+                it.first,                       // layer id
+                (int)it.second.size(),          // number of hits
+                0., 0., 0., 0.,                 // edep, radius, skewness, eta
+                eic::VectorXYZ{0., 0., 0.},     // global position
+                eic::VectorPolar{0., 0., 0.}    // polar coorindates
+            };
             for (auto hid : it.second) {
                 auto hit = cluster.hits(hid);
                 layer.addhits(hit);
