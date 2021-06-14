@@ -69,7 +69,7 @@ public:
         auto &input = *m_inputClusterCollection.get();
         auto &layers = *m_outputLayerCollection.createAndPut();
 
-        int ncl = 0;
+        int ncl = 1;
         for (auto cl : input) {
             // simple energy reconstruction
             cl.energy(cl.edep() / m_sampFrac);
@@ -77,6 +77,11 @@ public:
             // group hits to layers
             group_by_layer(cl, layers, ncl++);
 
+            for (auto &layer : layers) {
+                reconstruct_layer(layer);
+            }
+
+            reconstruct_cluster(cl);
             // fit intrinsic theta/phi
             fit_track(cl, m_trackStopLayer);
         }
@@ -91,9 +96,9 @@ public:
     }
 
 private:
+    template<typename T> static inline T pow2(const T& x) { return x*x; }
 
-    void group_by_layer(eic::ImagingCluster &cluster, eic::ImagingLayerCollection &container, int cid)
-    const
+    void group_by_layer(eic::ImagingCluster &cluster, eic::ImagingLayerCollection &container, int cid) const
     {
         // using map to have id sorted
         std::map<int, std::vector<size_t>> hits_map;
@@ -114,25 +119,60 @@ private:
             eic::ImagingLayer layer;
             layer.clusterID(cid);
             layer.layerID(it.first);
-            layer.edep(0.);
-            layer.position({0., 0., 0.});
-            double mx = 0., my = 0., mz = 0.;
             for (auto hid : it.second) {
                 auto hit = cluster.hits(hid);
                 layer.addhits(hit);
-                mx += hit.x();
-                my += hit.y();
-                mz += hit.z();
-                layer.edep(layer.edep() + hit.edep());
             }
-            layer.nhits(layer.hits_size());
-            layer.x(mx/layer.nhits());
-            layer.y(my/layer.nhits());
-            layer.z(mz/layer.nhits());
             // add relation
             container.push_back(layer);
             cluster.addlayers(layer);
         }
+    }
+
+    void reconstruct_layer(eic::ImagingLayer layer) const
+    {
+        // number of hits
+        layer.nhits(layer.hits_size());
+        // mean position and total edep
+        double mx = 0., my = 0., mz = 0., edep = 0.;
+        for (auto hit : layer.hits()) {
+            mx += hit.x();
+            my += hit.y();
+            mz += hit.z();
+            edep += hit.edep();
+        }
+
+        layer.x(mx/layer.nhits());
+        layer.y(my/layer.nhits());
+        layer.z(mz/layer.nhits());
+        layer.edep(edep);
+
+        double radius = 0.;
+        for (auto hit : layer.hits()) {
+            radius += std::sqrt(pow2(hit.x() - layer.x()) + pow2(hit.y() - layer.y()) + pow2(hit.z() - layer.z()));
+        }
+        layer.radius(radius/layer.nhits());
+    }
+
+    void reconstruct_cluster(eic::ImagingCluster cluster) const
+    {
+        // eta, phi center, weighted by energy
+        double meta = 0., mphi = 0., edep = 0.;
+        for (auto hit : cluster.hits()) {
+            meta += hit.eta()*hit.edep();
+            mphi += hit.phi()*hit.edep();
+            edep += hit.edep();
+        }
+        cluster.nhits(cluster.hits_size());
+        cluster.edep(edep);
+        cluster.eta(meta/edep);
+        cluster.phi(mphi/edep);
+
+        double radius = 0.;
+        for (auto hit : cluster.hits()) {
+            radius += std::sqrt(pow2(hit.eta() - cluster.eta()) + pow2(hit.phi() - cluster.phi()));
+        }
+        cluster.radius(radius/cluster.nhits());
     }
 
     void fit_track(eic::ImagingCluster &img, int stop_layer) const
