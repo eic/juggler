@@ -32,7 +32,8 @@ public:
     // additional smearing resolutions
     Gaudi::Property<std::vector<double>>    u_eRes{this, "energyResolutions", {}}; // a/sqrt(E/GeV) + b + c/(E/GeV)
     Gaudi::Property<double>                 m_tRes{this, "timineResolution", 0.0*ns};
-    // input units
+
+    // input units, should be fixed
     Gaudi::Property<double>                 m_eUnit{this, "inputEnergyUnit", GeV};
     Gaudi::Property<double>                 m_tUnit{this, "inputTimeUnit", ns};
 

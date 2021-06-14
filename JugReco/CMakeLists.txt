@@ -30,6 +30,7 @@ gaudi_depends_on_subdirs(GaudiAlg GaudiKernel)
 gaudi_add_module(JugRecoPlugins
   src/components/TrackerHitReconstruction.cpp 
   src/components/SimpleClustering.cpp 
+  src/components/CalorimeterHitReco.cpp 
   src/components/CalorimeterHitsMerger.cpp 
   src/components/CalorimeterIslandCluster.cpp 
   src/components/CrystalEndcapsReco.cpp 
