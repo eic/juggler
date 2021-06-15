@@ -90,7 +90,7 @@ juggler:default:
     - ./eic_container/gitlab-ci/docker_login.sh --ci -n $DOCKER_NTRIES -t $DOCKER_WAIT_TIME
     - echo ${CI_COMMIT_BRANCH}
     - docker build -t ${CI_REGISTRY_IMAGE}/${BUILD_IMAGE}:${INTERNAL_TAG}
-                   -f eic_container/containers/jug/Dockerfile.xl
+                   -f eic_container/containers/jug/xl.Dockerfile
                    --build-arg INTERNAL_TAG=${EIC_DEV_TAG}
                    --build-arg CACHEBUST=${CACHEBUST}
                    --build-arg JUGGLER_VERSION=${CI_COMMIT_REF_NAME}
