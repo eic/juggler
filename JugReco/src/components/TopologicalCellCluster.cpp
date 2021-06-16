@@ -42,7 +42,7 @@ namespace Jug::Reco {
     // geometry service name
     Gaudi::Property<std::string> m_geoSvcName{this, "geoServiceName", "GeoSvc"};
     // name of readout class
-    Gaudi::Property<std::string> m_readout{this, "readoutClass", "EcalBarrelHits"};
+    Gaudi::Property<std::string> m_readout{this, "readoutClass", ""};
     // name of layer field in readout
     Gaudi::Property<std::string> m_layerField{this, "layerField", "layer"};
     // name of sector field in readout
@@ -114,6 +114,11 @@ namespace Jug::Reco {
         if (!m_geoSvc) {
             error() << "Unable to locate Geometry Service. "
                     << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
+            return StatusCode::FAILURE;
+        }
+
+        if (m_readout.value().empty()) {
+            error() << "readoutClass is not provided, it is needed to know the fields in readout ids" << endmsg;
             return StatusCode::FAILURE;
         }
 

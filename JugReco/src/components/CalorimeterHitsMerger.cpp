@@ -38,7 +38,7 @@ namespace Jug::Reco {
 class CalorimeterHitsMerger : public GaudiAlgorithm {
 public:
     Gaudi::Property<std::string>                m_geoSvcName{this, "geoServiceName", "GeoSvc"};
-    Gaudi::Property<std::string>                m_readout{this, "readoutClass", "EcalBarrelHits"};
+    Gaudi::Property<std::string>                m_readout{this, "readoutClass", ""};
     // field names to generate id mask, the hits will be grouped by masking the field
     Gaudi::Property<std::vector<std::string>>   u_fields{this, "fields", {"layer"}};
     // reference field numbers to locate position for each merged hits group
@@ -69,6 +69,11 @@ public:
         if (!m_geoSvc) {
             error() << "Unable to locate Geometry Service. "
                     << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
+            return StatusCode::FAILURE;
+        }
+
+        if (m_readout.value().empty()) {
+            error() << "readoutClass is not provided, it is needed to know the fields in readout ids" << endmsg;
             return StatusCode::FAILURE;
         }
 

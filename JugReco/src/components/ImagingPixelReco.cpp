@@ -34,7 +34,7 @@ class ImagingPixelReco : public GaudiAlgorithm {
 public:
     // geometry service
     Gaudi::Property<std::string>    m_geoSvcName{this, "geoServiceName", "GeoSvc"};
-    Gaudi::Property<std::string>    m_readout{this, "readoutClass", "EcalBarrelHits"};
+    Gaudi::Property<std::string>    m_readout{this, "readoutClass", ""};
     Gaudi::Property<std::string>    m_layerField{this, "layerField", "layer"};
     Gaudi::Property<std::string>    m_sectorField{this, "sectorField", "sector"};
     // length unit (from dd4hep geometry service)
@@ -73,6 +73,11 @@ public:
         if (!m_geoSvc) {
             error() << "Unable to locate Geometry Service. "
                     << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
+            return StatusCode::FAILURE;
+        }
+
+        if (m_readout.value().empty()) {
+            error() << "readoutClass is not provided, it is needed to know the fields in readout ids" << endmsg;
             return StatusCode::FAILURE;
         }
 

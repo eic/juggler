@@ -53,7 +53,7 @@ static const std::map<std::string, std::function<double(double, double, double, 
 class ClusterRecoCoG : public GaudiAlgorithm
 {
 public:
-    Gaudi::Property<double> m_sampFrac{this, "samplingFraction", 1.6};
+    Gaudi::Property<double> m_sampFrac{this, "samplingFraction", 1.0};
     Gaudi::Property<double> m_logWeightBase{this, "logWeightBase", 3.6};
     Gaudi::Property<double> m_depthCorrection{this, "depthCorrection", 0.0};
     Gaudi::Property<std::string> m_energyWeight{this, "energyWeight", "log"};

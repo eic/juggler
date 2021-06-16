@@ -38,7 +38,7 @@ namespace Jug::Reco {
 class ImagingClusterReco : public GaudiAlgorithm
 {
 public:
-    Gaudi::Property<double> m_sampFrac{this, "samplingFraction", 1.6};
+    Gaudi::Property<double> m_sampFrac{this, "samplingFraction", 1.0};
     Gaudi::Property<int> m_trackStopLayer{this, "trackStopLayer", 9};
 
     DataHandle<eic::ImagingClusterCollection>
