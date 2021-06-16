@@ -163,17 +163,30 @@ private:
     void reconstruct_cluster(eic::ImagingCluster cluster) const
     {
         // eta, phi center, weighted by energy
-        double meta = 0., mphi = 0., edep = 0.;
+        double meta = 0., mphi = 0., edep = 0., r = 9999*cm;
         for (auto hit : cluster.hits()) {
             meta += hit.eta()*hit.edep();
             mphi += hit.phi()*hit.edep();
             edep += hit.edep();
+            r = std::min(hit.r(), r);
         }
+        double eta = meta/edep;
+        double phi = mphi/edep;
+        double theta = 2.*std::atan(std::exp(-eta));
         cluster.nhits(cluster.hits_size());
         cluster.edep(edep);
-        cluster.eta(meta/edep);
-        cluster.phi(mphi/edep);
+        cluster.eta(eta);
+        cluster.phi(phi);
+        cluster.theta(theta);
+        // project it to the inner surface (the shallowest hit)
+        cluster.r(r);
+        // cartesian coordinates
+        ROOT::Math::Polar3DVectorD polar(r, theta, phi > M_PI ? phi - M_PI : phi);
+        cluster.x(polar.x());
+        cluster.y(polar.y());
+        cluster.z(polar.z());
 
+        // shower radius estimate (eta-phi plane)
         double radius = 0.;
         for (auto hit : cluster.hits()) {
             radius += std::sqrt(pow2(hit.eta() - cluster.eta()) + pow2(hit.phi() - cluster.phi()));
