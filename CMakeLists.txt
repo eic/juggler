@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
 
-set(CMAKE_PREFIX_PATH $ENV{HOME}/lib CMAKE_PREFIX_PATH)
+set(CMAKE_CXX_STANDARD 17)
+
+find_package(EICD REQUIRED)
+#set(CMAKE_PREFIX_PATH $ENV{HOME}/lib CMAKE_PREFIX_PATH)
 find_package(NPDet  REQUIRED)
 #---------------------------------------------------------------
 # to use ROOT targets, find_package ROOT must come before find_package Gaudi
@@ -12,7 +15,6 @@ include_directories(${podio_INCLUDE_DIR})
 find_package(ROOT COMPONENTS MathCore GenVector Geom REQUIRED)
 find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 find_package(Geant4)
-
 
 find_package(GaudiProject)
 
