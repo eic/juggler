@@ -4,6 +4,8 @@
 
 #include <algorithm>
 #include <bitset>
+#include "fmt/format.h"
+#include "fmt/ranges.h"
 
 #include "Gaudi/Property.h"
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -58,6 +60,13 @@ public:
     dd4hep::BitFieldCoder *id_dec = nullptr;
     size_t sector_idx, layer_idx;
 
+    // name of detelment or fields to find the local detector (for global->local transform)
+    // if nothing is provided, the lowest level DetElement (from cellID) will be used
+    Gaudi::Property<std::string>    m_localDetElement{this, "localDetElement", ""};
+    Gaudi::Property<std::vector<std::string>> u_localDetFields{this, "localDetFields", {}};
+    dd4hep::Alignment local;
+    size_t local_mask = ~0;
+
     // ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     CalorimeterHitReco(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
     {
@@ -83,14 +92,39 @@ public:
             return StatusCode::SUCCESS;
         }
 
+        auto id_spec = m_geoSvc->detector()->readout(m_readout).idSpec();
         try {
-            id_dec = m_geoSvc->detector()->readout(m_readout).idSpec().decoder();
+            id_dec = id_spec.decoder();
             if (m_sectorField.value().size()) { sector_idx = id_dec->index(m_sectorField); }
             if (m_layerField.value().size()) { layer_idx = id_dec->index(m_layerField); }
         } catch (...) {
             error() << "Failed to load ID decoder for " << m_readout << endmsg;
             return StatusCode::FAILURE;
         }
+
+        // local detector name has higher priority
+        if (m_localDetElement.value().size()) {
+            try {
+                local = m_geoSvc->detector()->detector(m_localDetElement.value()).nominal();
+                info() << "Local coordinate system from DetElement " << m_localDetElement.value() << endmsg;
+            } catch (...) {
+                error() << "Failed to locate local coordinate system from DetElement " << m_localDetElement.value()
+                        << endmsg;
+                return StatusCode::FAILURE;
+            }
+        // or get from fields
+        } else {
+            std::vector<std::pair<std::string, int>> fields;
+            for (auto &f : u_localDetFields.value()) {
+                fields.push_back({f, 0});
+            }
+            local_mask = id_spec.get_mask(fields);
+            // use all fields if nothing provided
+            if (fields.empty()) { local_mask = ~0; }
+            info() << fmt::format("Local DetElement mask {:#064b} from fields [{}]", local_mask, fmt::join(fields, ", "))
+                   << endmsg;
+        }
+
         return StatusCode::SUCCESS;
     }
 
@@ -119,16 +153,18 @@ public:
             int lid = ((id_dec != nullptr) & m_layerField.value().size())
                     ? static_cast<int>(id_dec->get(id, layer_idx))
                     : -1;
-            int sid = (id_dec != nullptr & m_sectorField.value().size())
+            int sid = ((id_dec != nullptr) & m_sectorField.value().size())
                     ? static_cast<int>(id_dec->get(id, sector_idx))
                     : -1;
 
             // global positions
             auto gpos = m_geoSvc->cellIDPositionConverter()->position(id);
             // local positions
-            auto volman = m_geoSvc->detector()->volumeManager();
-            auto alignment = volman.lookupDetElement(id).nominal();
-            auto pos = alignment.worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
+            if (m_localDetElement.value().empty()) {
+                auto volman = m_geoSvc->detector()->volumeManager();
+                local = volman.lookupDetElement(id & local_mask).nominal();
+            }
+            auto pos = local.worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
             // auto pos = m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().position();
             // cell dimension
             auto cdim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
