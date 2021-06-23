@@ -30,11 +30,10 @@
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 #include "JugTrack/GeometryContainers.hpp"
-#include "JugTrack/SourceLinks.h"
+#include "JugTrack/IndexSourceLink.hpp"
 #include "JugTrack/Track.hpp"
 #include "JugTrack/BField.h"
 #include "JugTrack/Measurement.hpp"
-#include "JugTrack/SourceLinks.h"
 
 #include "eicd/TrackerHitCollection.h"
 
@@ -53,6 +52,7 @@ namespace Jug::Reco {
   {
     declareProperty("inputSourceLinks", m_inputSourceLinks, "");
     declareProperty("initialTrackParameters", m_initialTrackParameters, "");
+    declareProperty("inputMeasurements", m_inputMeasurements, "");
     declareProperty("foundTracks", m_foundTracks, "");
     declareProperty("outputTrajectories", m_outputTrajectories, "");
   }
@@ -80,8 +80,9 @@ namespace Jug::Reco {
   StatusCode TrackFittingAlgorithm::execute()
   {
     // Read input data
-    const SourceLinkContainer*      src_links       = m_inputSourceLinks.get();
+    const IndexSourceLinkContainer* src_links       = m_inputSourceLinks.get();
     const TrackParametersContainer* init_trk_params = m_initialTrackParameters.get();
+    const MeasurementContainer*     measurements    = m_inputMeasurements.get();
 
     // TrajectoryContainer trajectories;
     auto trajectories = m_outputTrajectories.createAndPut();
@@ -91,38 +92,82 @@ namespace Jug::Reco {
     auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3{0., 0., 0.});
     ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("TrackFittingAlgorithm Logger", Acts::Logging::INFO));
 
+    std::vector<IndexSourceLink> trackSourceLinks;
+
     // Perform the track finding for each starting parameter
     // @TODO: use seeds from track seeding algorithm as starting parameter
+    // initial track params and proto tracks might likely have the same size. 
     for (std::size_t iseed = 0; iseed < init_trk_params->size(); ++iseed) {
+
+      // this will eventually be per-track. for now we assume all src links are from the same single track!
+      for (auto& lnk : (*src_links)) {
+        //   auto sourceLink = sourceLinks.nth(hitIndex);
+        trackSourceLinks.push_back(lnk);
+      }
+
 
       const auto& initialParams = (*init_trk_params)[iseed];
       Acts::PropagatorPlainOptions pOptions;
       pOptions.maxSteps = 10000;
 
-      Acts::KalmanFitterOptions<Acts::VoidOutlierFinder> kfOptions(
-        m_geoctx, m_fieldctx, m_calibctx,
-        Acts::VoidOutlierFinder(), Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(), &(*pSurface));
+      //Acts::KalmanFitterOptions<Acts::VoidOutlierFinder> kfOptions(
+      //    m_geoctx, m_fieldctx, m_calibctx, Acts::VoidOutlierFinder(),
+      //    Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(), &(*pSurface));
+      //    // Set the KalmanFitter options
+      Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder> kfOptions(
+          m_geoctx, m_fieldctx, m_calibctx,
+          MeasurementCalibrator(*measurements), Acts::VoidOutlierFinder(),
+          Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(), &(*pSurface));
 
       debug() << "Invoke track fitting ...  " << iseed << endmsg;
-      auto result = m_trackFittingFunc(*src_links, initialParams, kfOptions);
+      auto result = fitTrack(trackSourceLinks, initialParams, kfOptions);
       debug() << "fitting done." << endmsg;
-      if (result.ok()) {
-        // Get the track finding output object
-        const auto& trackFindingOutput = result.value();
-        // Create a SimMultiTrajectory
-        trajectories->emplace_back(std::move(trackFindingOutput.fittedStates), std::move(trackFindingOutput.trackTips),
-                                   std::move(trackFindingOutput.fittedParameters));
+      // if (result.ok()) {
+      //  // Get the track finding output object
+      //  const auto& trackFindingOutput = result.value();
+      //  // Create a SimMultiTrajectory
+      //  trajectories->emplace_back(std::move(trackFindingOutput.fittedStates),
+      //  std::move(trackFindingOutput.trackTips),
+      //                             std::move(trackFindingOutput.fittedParameters));
+      //} else {
+      //  debug() << "Track finding failed for truth seed " << iseed << endmsg;
+      //  ACTS_WARNING("Track finding failed for truth seed " << iseed << " with error" <<
+      //  result.error());
+      //  // Track finding failed, but still create an empty SimMultiTrajectory
+      //  // trajectories->push_back(SimMultiTrajectory());
+      //}
+      if (result.ok())
+      {
+        // Get the fit output object
+        const auto& fitOutput = result.value();
+        // The track entry indices container. One element here.
+        std::vector<size_t> trackTips;
+        trackTips.reserve(1);
+        trackTips.emplace_back(fitOutput.lastMeasurementIndex);
+        // The fitted parameters container. One element (at most) here.
+        Trajectories::IndexedParameters indexedParams;
+        //if (fitOutput.fittedParameters) {
+        //  const auto& params = fitOutput.fittedParameters.value();
+        //  ACTS_VERBOSE("Fitted paramemeters for track " << itrack);
+        //  ACTS_VERBOSE("  " << params.parameters().transpose());
+        //  // Push the fitted parameters to the container
+        //  indexedParams.emplace(fitOutput.lastMeasurementIndex, std::move(params));
+        //} else {
+        //  ACTS_DEBUG("No fitted paramemeters for track " << itrack);
+        //}
+        // store the result
+        trajectories->emplace_back(std::move(fitOutput.fittedStates), std::move(trackTips),
+                                  std::move(indexedParams));
       } else {
-        debug() << "Track finding failed for truth seed " << iseed << endmsg;
-        ACTS_WARNING("Track finding failed for truth seed " << iseed << " with error" << result.error());
-        // Track finding failed, but still create an empty SimMultiTrajectory
-        // trajectories->push_back(SimMultiTrajectory());
+        ACTS_WARNING("Fit failed for track " << iseed << " with error" << result.error());
+        // Fit failed. Add an empty result so the output container has
+        // the same number of entries as the input.
+        trajectories->push_back(Trajectories());
       }
     }
 
     // ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
     return StatusCode::SUCCESS;
-
 
     ///////////////////////////
     // acts example
