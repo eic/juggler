@@ -57,6 +57,8 @@ namespace Jug::Reco {
 
     StatusCode initialize() override
     {
+      warning() << "Deprecated algorithm for digi/reco, use Jug::Digi::CalorimeterHitDigi"
+                   "and Jug::Reco::CalorimeterHitReco instead" << endmsg;
       if (GaudiAlgorithm::initialize().isFailure()) {
         return StatusCode::FAILURE;
       }
@@ -104,8 +106,8 @@ namespace Jug::Reco {
         float energy = (rh.amplitude() - m_pedMeanADC) / (float) m_capADC * m_dyRangeADC; // convert ADC -> energy
         float time = rh.timeStamp(); // ns
         auto id = rh.cellID();
-        int lid = (id_dec != nullptr & m_layerField.value().size()) ? static_cast<int>(id_dec->get(id, layer_idx)) : -1;
-        int sid = (id_dec != nullptr & m_sectorField.value().size()) ? static_cast<int>(id_dec->get(id, sector_idx)) : -1;
+        int lid = ((id_dec != nullptr) & m_layerField.value().size()) ? static_cast<int>(id_dec->get(id, layer_idx)) : -1;
+        int sid = ((id_dec != nullptr) & m_sectorField.value().size()) ? static_cast<int>(id_dec->get(id, sector_idx)) : -1;
 
         // global positions
         auto gpos = m_geoSvc->cellIDPositionConverter()->position(id);

@@ -46,6 +46,8 @@ namespace Jug::Reco {
 
     StatusCode initialize() override
     {
+        warning() << "Deprecated algorithm for digi/reco, use Jug::Digi::CalorimeterHitDigi"
+                     "and Jug::Reco::CalorimeterHitReco instead" << endmsg;
         if (GaudiAlgorithm::initialize().isFailure()) {
             return StatusCode::FAILURE;
         }

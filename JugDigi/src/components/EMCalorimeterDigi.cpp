@@ -35,6 +35,8 @@ namespace Jug {
       }
       StatusCode initialize() override
       {
+        warning() << "Deprecated algorithm for digi/reco, use Jug::Digi::CalorimeterHitDigi"
+                     "and Jug::Reco::CalorimeterHitReco instead" << endmsg;
         IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
         StatusCode   sc      = m_gaussDist.initialize(randSvc, Rndm::Gauss(0.0, m_energyResolution.value()));
         if (!sc.isSuccess()) {
