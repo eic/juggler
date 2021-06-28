@@ -28,6 +28,7 @@
 
 // Event Model related classes
 #include "eicd/ImagingPixelCollection.h"
+#include "eicd/ImagingLayerCollection.h"
 #include "eicd/ImagingClusterCollection.h"
 
 using namespace Gaudi::Units;
@@ -123,24 +124,7 @@ public:
         debug() << "we have " << groups.size() << " groups of hits" << endmsg;
 
         for (auto &group : groups) {
-            if ((int) group.size() < m_minNhits) {
-                continue;
-            }
-            double edep = 0.;
-            for (auto &hit : group) {
-                edep += hit.edep();
-            }
-            if (edep < m_minEdep) {
-                continue;
-            }
-            auto cl = clusters.create();
-            cl.edep(edep);
-            cl.nhits(group.size());
-            for (auto &hit : group) {
-                cl.addhits(hit);
-                hit.clusterID(clusters.size());
-                hit.hitID(cl.hits_size());
-            }
+            add_cluster_layers(group, clusters, layers);
         }
 
         return StatusCode::SUCCESS;
@@ -186,6 +170,56 @@ private:
                 continue;
             }
             dfs_group(group, i, hits, visits);
+        }
+    }
+
+    void add_cluster_layers(std::vector<eic::ImagingPixel> &group, eic::ImagingClusterCollection &clusters,
+                            eic::ImagingLayerCollection &layers)
+    {
+        // criteria
+        if ((int) group.size() < m_minNhits) {
+            return;
+        }
+        double edep = 0.;
+        for (auto &hit : group) {
+            edep += hit.edep();
+        }
+        if (edep < m_minEdep) {
+            return;
+        }
+
+        // build cluster
+        auto cl = clusters.create();
+        int cid = clusters.size();
+        cl.edep(edep);
+        cl.nhits(group.size());
+        // group hits by layers
+        std::map<int, std::vector<size_t>> layer_group;
+        for (size_t i = 0; i < group.size(); ++i) {
+            auto &hit = group[i];
+            int hid = cl.hits_size();
+            cl.addhits(hit);
+            hit.clusterID(cid);
+            hit.hitID(hid);
+            auto it = layer_group.find(hit.layerID());
+            if (it != layer_group.end()) {
+                it->second.push_back(i);
+            } else {
+                layer_group[hit.layerID()] = {i};
+            }
+        }
+
+        for (auto &it : layer_group) {
+            auto ly = layers.create();
+            ly.clusterID(cid);
+            ly.layerID(it.first);
+            ly.nhits(it.second.size());
+            double ledep = 0.;
+            for (auto &i : it.second) {
+                ly.addhits(group[i]);
+                ledep += group[i].edep();
+            }
+            ly.edep(ledep);
         }
     }
 
