@@ -53,6 +53,9 @@ public:
     // input hits collection
     DataHandle<eic::ImagingPixelCollection>
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+    // output layer collection
+    DataHandle<eic::ImagingLayerCollection>
+        m_outputLayerCollection{"outputLayerCollection", Gaudi::DataHandle::Writer, this};
     // output cluster collection
     DataHandle<eic::ImagingClusterCollection>
         m_outputClusterCollection{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
@@ -63,6 +66,7 @@ public:
     {
         declareProperty("inputHitCollection",       m_inputHitCollection,       "");
         declareProperty("outputClusterCollection",  m_outputClusterCollection,  "");
+        declareProperty("outputLayerCollection",  m_outputClusterCollection,  "");
     }
 
     StatusCode initialize() override
@@ -101,6 +105,7 @@ public:
 	    const auto &hits = *m_inputHitCollection.get();
         // Create output collections
         auto &clusters = *m_outputClusterCollection.createAndPut();
+        auto &layers = *m_outputLayerCollection.createAndPut();
 
         // group neighboring hits
         std::vector<bool> visits(hits.size(), false);
