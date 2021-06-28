@@ -1,10 +1,7 @@
-// A general digitization for CalorimeterHit from simulation
-// 1. Smear energy deposit with a/sqrt(E/GeV) + b + c/E or a/sqrt(E/GeV) (relative value)
-// 2. Digitize the energy with dynamic ADC range and add pedestal (mean +- sigma)
-// 3. Time conversion with smearing resolution (absolute value)
+// A specialized digitization for GlueX-like barrel ecal
 //
-// Author: Chao Peng
-// Date: 06/02/2021
+// Author: Chao Peng, Maria Zurek (ANL)
+// Date: 06/27/2021
 
 #include <algorithm>
 #include <cmath>
@@ -17,6 +14,7 @@
 
 // FCCSW
 #include "JugBase/DataHandle.h"
+#include "JugBase/IGeoSvc.h"
 
 // Event Model related classes
 #include "dd4pod/CalorimeterHitCollection.h"
@@ -27,22 +25,30 @@ using namespace Gaudi::Units;
 
 namespace Jug::Digi {
 
-class CalorimeterHitDigi : public GaudiAlgorithm {
+class ScFiBarrelCalDigi : public GaudiAlgorithm {
 public:
     // additional smearing resolutions
-    Gaudi::Property<std::vector<double>>    u_eRes{this, "energyResolutions", {}}; // a/sqrt(E/GeV) + b + c/(E/GeV)
-    Gaudi::Property<double>                 m_tRes{this, "timingResolution", 0.0*ns};
+    Gaudi::Property<std::vector<double>>        u_eRes{this, "energyResolutions", {}}; // a/sqrt(E/GeV) + b + c/(E/GeV)
+    Gaudi::Property<double>                     m_tRes{this, "timingResolution", 0.0*ns};
 
-    // input units, should be fixed
-    Gaudi::Property<double>                 m_eUnit{this, "inputEnergyUnit", GeV};
-    Gaudi::Property<double>                 m_tUnit{this, "inputTimeUnit", ns};
+    // @TODO, this may be a vector of parameters, need some reference
+    Gaudi::Property<std::vector<double>>        u_atten{this, "lightAttenuation", {0.}};
+    // geometry service to decode readout ids, merging fibers with the same light guide
+    Gaudi::Property<std::string>                m_geoSvcName{this, "geoServiceName", "GeoSvc"};
+    Gaudi::Property<std::string>                m_readout{this, "readoutClass", ""};
+    Gaudi::Property<std::vector<std::string>>   u_mfields{this, "mergingFields", {}};
+    SmartIF<IGeoSvc> m_geoSvc;
+
+    // input units, should not be changed
+    Gaudi::Property<double>                     m_eUnit{this, "inputEnergyUnit", GeV};
+    Gaudi::Property<double>                     m_tUnit{this, "inputTimeUnit", ns};
 
     // digitization settings
-    Gaudi::Property<int>                    m_capADC{this, "capacityADC", 8096};
-    Gaudi::Property<double>                 m_dyRangeADC{this, "dynamicRangeADC", 100*MeV};
-    Gaudi::Property<int>                    m_pedMeanADC{this, "pedestalMean", 400};
-    Gaudi::Property<double>                 m_pedSigmaADC{this, "pedestalSigma", 3.2};
-    Rndm::Numbers                           m_normDist;
+    Gaudi::Property<int>                        m_capADC{this, "capacityADC", 8096};
+    Gaudi::Property<double>                     m_dyRangeADC{this, "dynamicRangeADC", 100*MeV};
+    Gaudi::Property<int>                        m_pedMeanADC{this, "pedestalMean", 400};
+    Gaudi::Property<double>                     m_pedSigmaADC{this, "pedestalSigma", 3.2};
+    Rndm::Numbers                               m_normDist;
 
     DataHandle<dd4pod::CalorimeterHitCollection>
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
@@ -51,7 +57,7 @@ public:
     double res[3] = {0., 0., 0.};
 
       //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
-    CalorimeterHitDigi(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
+    ScFiBarrelCalDigi(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
     {
         declareProperty("inputHitCollection", m_inputHitCollection, "");
         declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -72,11 +78,28 @@ public:
         for (size_t i = 0; i < u_eRes.size() && i < 3; ++i) {
             res[i] = u_eRes[i];
         }
+
+        // geometry service
+        m_geoSvc = service(m_geoSvcName);
+        if (!m_geoSvc) {
+            error() << "Unable to locate Geometry Service. "
+                    << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
+            return StatusCode::FAILURE;
+        }
+
+        if (m_readout.value().empty() || u_mfields.value().empty()) {
+            warning() << "No readout class or ID fields provided, taking single fiber signals without any merge."
+                      << endmsg;
+            return StatusCode::SUCCESS;
+        }
+
+        // @TODO: get id mask
         return StatusCode::SUCCESS;
     }
 
     StatusCode execute() override
     {
+        // @TODO: implement light attenuation and grid merging
         // input collections
         const auto simhits = m_inputHitCollection.get();
         // Create output collections
@@ -97,6 +120,7 @@ public:
         return StatusCode::SUCCESS;
     }
 };
-DECLARE_COMPONENT(CalorimeterHitDigi)
+
+DECLARE_COMPONENT(ScFiBarrelCalDigi)
 
 } // namespace Jug::Digi

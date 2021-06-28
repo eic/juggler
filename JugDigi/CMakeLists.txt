@@ -36,6 +36,7 @@ gaudi_add_module(JugDigiPlugins
   src/components/PhotoMultiplierDigi.cpp 
   src/components/SOIPIXTrackerDigi.cpp 
   src/components/UFSDTrackerDigi.cpp 
+  src/components/ScFiBarrelCalDigi.cpp 
   LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO EICD::eicd)
 target_compile_options(JugDigiPlugins PRIVATE -Wno-suggest-override)
 
