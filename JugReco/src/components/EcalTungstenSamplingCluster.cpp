@@ -27,16 +27,16 @@ namespace Jug::Reco {
   class EcalTungstenSamplingCluster : public GaudiAlgorithm {
   public:
     Gaudi::Property<double>                   m_minModuleEdep{this, "minModuleEdep", 0.5 * MeV};
-    DataHandle<eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
-                                                                   this};
-    DataHandle<eic::ClusterCollection> m_outputClusterCollection{"outputClusterCollection", Gaudi::DataHandle::Writer,
-                                                                 this};
+    DataHandle<eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection",
+                                                                   Gaudi::DataHandle::Reader, this};
+    DataHandle<eic::ClusterCollection>        m_outputClusterCollection{"outputClusterCollection",
+                                                                 Gaudi::DataHandle::Writer, this};
 
     /// Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
 
-    // ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
-    EcalTungstenSamplingCluster(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
+    EcalTungstenSamplingCluster(const std::string& name, ISvcLocator* svcLoc)
+        : GaudiAlgorithm(name, svcLoc)
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputClusterCollection", m_outputClusterCollection, "");
@@ -50,7 +50,8 @@ namespace Jug::Reco {
       m_geoSvc = service("GeoSvc");
       if (!m_geoSvc) {
         error() << "Unable to locate Geometry Service. "
-                << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
+                << "Make sure you have GeoSvc and SimSvc in the right order in the configuration."
+                << endmsg;
         return StatusCode::FAILURE;
       }
       return StatusCode::SUCCESS;
@@ -65,54 +66,55 @@ namespace Jug::Reco {
 
       // Loop over hits
       std::vector<bool> visits(hits.size(), false);
-      double ref_pos_z = 0.0;
-      for (size_t i = 0; i < hits.size(); i++)
-      {
-	// Ignore hits that already visited
-	if (visits[i]) {
-		continue;
-	}
-	// Select above minimum energy deposit
-      	if (hits[i].energy() > m_minModuleEdep/GeV) {
+      double            ref_pos_z = 0.0;
+      for (size_t i = 0; i < hits.size(); i++) {
+        // Ignore hits that already visited
+        if (visits[i]) {
+          continue;
+        }
+        // Select above minimum energy deposit
+        if (hits[i].energy() > m_minModuleEdep / GeV) {
           // Reference z position of hit
-	  ref_pos_z = hits[i].position().z;
-	  std::cout << "Before ref_pos_z: " << ref_pos_z << std::endl;
-	  // Call function to add up energy deposit in the same layer based on z position
-	  group_by_layer(i, ref_pos_z, hits, visits, clusters);
-	}
+          ref_pos_z = hits[i].position().z;
+          debug() << "Before ref_pos_z: " << ref_pos_z << std::endl;
+          // Call function to add up energy deposit in the same layer based on z position
+          clusters.push_back(group_by_layer(i, ref_pos_z, hits, visits));
+        }
       }
       return StatusCode::SUCCESS;
     }
+
   private:
     // Grouping hits by layers
-    void group_by_layer(int index, double ref_pos_z, const eic::CalorimeterHitCollection &hits, std::vector<bool> &visits, eic::ClusterCollection &clusters) const
+    eic::Cluster group_by_layer(int index, double ref_pos_z,
+                                const eic::CalorimeterHitCollection& hits,
+                                std::vector<bool>&                   visits) const
     {
-	visits[index] = true;
-	auto tot_edep = hits[index].energy();
-	double pos_x = hits[index].position().x;
-	double pos_y = hits[index].position().y;
-	double pos_z = hits[index].position().z;
-	double temp = ref_pos_z;
-	std::cout << "After ref_pos_z: " << temp << std::endl;
-	std::cout << "Reprint pos_z: " << pos_z << std::endl;
-	// Loop over hits to find hits on the same layer
-	for (size_t i = 0; i < hits.size(); i++) {
-		if(visits[i]) {
-			continue;
-		}
-		// Add up energy deposit based on the same z position and above energy threshold
-		if((double)hits[i].position().z == ref_pos_z && hits[i].energy() > m_minModuleEdep/GeV) {
-			tot_edep += hits[i].energy();
-			visits[i] = true;
-		}
-	}
-	// Save info as a cluster
-	// TODO: position x and y determination
-    eic::Cluster cl;
-    cl.edep(tot_edep);
-    cl.position({pos_x,pos_y,pos_z});
-	clusters.push_back(cl);
-	return;
+      visits[index]   = true;
+      auto   tot_edep = hits[index].energy();
+      double pos_x    = hits[index].position().x;
+      double pos_y    = hits[index].position().y;
+      double pos_z    = hits[index].position().z;
+      double temp     = ref_pos_z;
+      debug() << "After ref_pos_z: " << temp << std::endl;
+      debug() << "Reprint pos_z: " << pos_z << std::endl;
+      // Loop over hits to find hits on the same layer
+      for (size_t i = 0; i < hits.size(); i++) {
+        if (visits[i]) {
+          continue;
+        }
+        // Add up energy deposit based on the same z position and above energy threshold
+        if ((double)hits[i].position().z == ref_pos_z && hits[i].energy() > m_minModuleEdep / GeV) {
+          tot_edep += hits[i].energy();
+          visits[i] = true;
+        }
+      }
+      // Save info as a cluster
+      // TODO: position x and y determination
+      eic::Cluster cl;
+      cl.edep(tot_edep);
+      cl.position({pos_x, pos_y, pos_z});
+      return cl;
     }
   };
   DECLARE_COMPONENT(EcalTungstenSamplingCluster)
