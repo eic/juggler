@@ -29,13 +29,14 @@ void draw_surfaces(std::shared_ptr<const Acts::TrackingGeometry> trk_geo, const 
   trk_geo->visitSurfaces([&](const Acts::Surface* surface) {
     // for now we just require a valid surface
     if (not surface) {
+      std::cout << " Not a surface \n";
       return;
     }
     surfaces.push_back(surface);
   });
   std::ofstream os;
   os.open(fname);
-  os << std::fixed << std::setprecision(4);
+  os << std::fixed << std::setprecision(6);
   size_t nVtx = 0;
   for (const auto& srfx : surfaces) {
     const PlaneSurface*                 srf    = dynamic_cast<const PlaneSurface*>(srfx);
@@ -126,8 +127,24 @@ StatusCode GeoSvc::initialize() {
   m_trackingGeo = std::move(Acts::convertDD4hepDetector(m_dd4hepgeo->world(), Acts::Logging::VERBOSE, Acts::equidistant,
                                                         Acts::equidistant, Acts::equidistant));
   if (m_trackingGeo) {
-    draw_surfaces(m_trackingGeo, "Derp.obj");
+    draw_surfaces(m_trackingGeo, "tracking_geometry.obj");
   }
+
+  debug() << "visiting all the surfaces  " << endmsg;
+  m_trackingGeo->visitSurfaces([this](const Acts::Surface* surface) {
+    // for now we just require a valid surface
+    if (not surface) {
+      return;
+    }
+    auto det_element =
+        dynamic_cast<const Acts::DD4hepDetectorElement*>(surface->associatedDetectorElement());
+    if (!det_element) {
+      debug() << "invalid det_element!!! " << endmsg;
+      return;
+    }
+    this->m_surfaces.insert_or_assign(det_element->identifier(), surface);
+  });
+
   return StatusCode::SUCCESS;
 }
 

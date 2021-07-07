@@ -28,6 +28,8 @@ find_package(ROOT COMPONENTS MathCore GenVector Geom REQUIRED)
 find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 find_package(Geant4)
 
+find_library(genfit2 genfit2 /usr/local/lib REQUIRED)
+
 find_package(GaudiProject)
 
 gaudi_project(Juggler v1r0

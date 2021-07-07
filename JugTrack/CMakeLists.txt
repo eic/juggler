@@ -13,6 +13,8 @@ find_package(Acts REQUIRED COMPONENTS Core PluginIdentification PluginTGeo Plugi
 find_package(ROOT COMPONENTS RIO Tree Core REQUIRED)
 find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 
+find_library(genfit2 genfit2 /usr/local/lib REQUIRED)
+
 # this declaration will not be needed in the future
 gaudi_depends_on_subdirs(GaudiAlg GaudiKernel)
 #gaudi_install_scripts()
@@ -28,6 +30,8 @@ gaudi_depends_on_subdirs(GaudiAlg GaudiKernel)
 #  )
 
 gaudi_add_module(JugTrackPlugins
+  src/components/GenFitTrackFitter.cpp 
+  src/components/SingleTrackSourceLinker.cpp 
   src/components/TrackerSourceLinker.cpp 
   src/components/Tracker2SourceLinker.cpp 
   src/components/TrackerSourcesLinker.cpp 
@@ -40,7 +44,7 @@ gaudi_add_module(JugTrackPlugins
   src/components/TrackParamClusterInit.cpp 
   src/components/TrackParamVertexClusterInit.cpp 
   src/components/ParticlesFromTrackFit.cpp 
-  LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO EICD::eicd DDRec Acts)
+  LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO EICD::eicd DDRec Acts genfit2)
 
 target_compile_options(JugTrackPlugins PRIVATE -Wno-suggest-override)
 

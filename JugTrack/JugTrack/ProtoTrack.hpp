@@ -11,7 +11,7 @@
 #include <cstddef>
 #include <vector>
 
-namespace FW {
+namespace Jug {
 
 /// A proto track is a collection of hits identified by their indices.
 using ProtoTrack = std::vector<size_t>;

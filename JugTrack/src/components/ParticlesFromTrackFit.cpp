@@ -70,7 +70,6 @@ namespace Jug {
         for (size_t itraj = 0; itraj < trajectories->size(); ++itraj) {
           const auto& traj = (*trajectories)[itraj];
 
-
           // Get the entry index for the single trajectory
           // The trajectory entry indices and the multiTrajectory
           const auto& mj        = traj.multiTrajectory();

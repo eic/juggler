@@ -29,6 +29,7 @@
 #include "JugTrack/BField.h"
 #include "JugTrack/Measurement.hpp"
 #include "JugTrack/Trajectories.hpp"
+#include "JugTrack/ProtoTrack.hpp"
 
 #include "eicd/TrackerHitCollection.h"
 
@@ -73,11 +74,12 @@ namespace Jug::Reco {
       const std::vector<IndexSourceLink>&, const TrackParameters&, const TrackFitterOptions&)>;
 
   public:
-    DataHandle<IndexSourceLinkContainer>      m_inputSourceLinks{"inputSourceLinks", Gaudi::DataHandle::Reader, this};
+    DataHandle<IndexSourceLinkContainer> m_inputSourceLinks{"inputSourceLinks", Gaudi::DataHandle::Reader, this};
     DataHandle<TrackParametersContainer> m_initialTrackParameters{"initialTrackParameters", Gaudi::DataHandle::Reader, this};
     DataHandle<MeasurementContainer>     m_inputMeasurements{"inputMeasurements", Gaudi::DataHandle::Reader, this};
-    DataHandle<TrajectoriesContainer>      m_foundTracks{"foundTracks", Gaudi::DataHandle::Reader, this};
-    DataHandle<TrajectoriesContainer>      m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
+    DataHandle<ProtoTrackContainer>      m_inputProtoTracks{"inputProtoTracks", Gaudi::DataHandle::Reader, this};
+    DataHandle<TrajectoriesContainer>    m_foundTracks{"foundTracks", Gaudi::DataHandle::Reader, this};
+    DataHandle<TrajectoriesContainer>    m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
 
     FitterFunction                        m_trackFittingFunc;
     SmartIF<IGeoSvc>                      m_geoSvc;
@@ -112,10 +114,10 @@ namespace Jug::Reco {
         //, const std::vector<const Acts::Surface*>& surfSequence) const;
   };
 
-  inline TrackFittingAlgorithm::FitterResult TrackFittingAlgorithm::fitTrack(
-      const std::vector<IndexSourceLink>& sourceLinks, const TrackParameters& initialParameters,
-      const Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder>& options)
-      const
+  inline TrackFittingAlgorithm::FitterResult
+  TrackFittingAlgorithm::fitTrack(const std::vector<IndexSourceLink>& sourceLinks,
+                                  const TrackParameters&              initialParameters,
+                                  const TrackFitterOptions&           options) const
   {
     // const std::vector<const Acts::Surface*>& surfSequence) const
     // if (m_cfg.directNavigation) {

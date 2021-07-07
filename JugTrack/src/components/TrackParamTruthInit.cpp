@@ -83,19 +83,19 @@ namespace Jug::Reco {
 
         // build some track cov matrix
         Acts::BoundSymMatrix cov        = Acts::BoundSymMatrix::Zero();
-        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = 25*um*25*um;
-        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = 100*um*100*um;
-        cov(Acts::eBoundPhi, Acts::eBoundPhi)     = 0.005*0.005;
-        cov(Acts::eBoundTheta, Acts::eBoundTheta) = 0.001*0.001;
+        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = 1000*um*1000*um;
+        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = 1000*um*1000*um;
+        cov(Acts::eBoundPhi, Acts::eBoundPhi)     = 0.05*0.05;
+        cov(Acts::eBoundTheta, Acts::eBoundTheta) = 0.01*0.01;
         cov(Acts::eBoundQOverP, Acts::eBoundQOverP)     = (0.1*0.1) / (GeV*GeV);
-        cov(Acts::eBoundTime, Acts::eBoundTime)         = 1.0e9*ns*1.0e9*ns;
+        cov(Acts::eBoundTime, Acts::eBoundTime)         = 10.0e9*ns*10.0e9*ns;
 
         Acts::BoundVector  params;
         params(Acts::eBoundLoc0)   = 0.0 * mm ;  // cylinder radius
         params(Acts::eBoundLoc1)   = 0.0 * mm ; // cylinder length
         params(Acts::eBoundPhi)    = momentum.Phi();
         params(Acts::eBoundTheta)  = momentum.Theta();
-        params(Acts::eBoundQOverP) = 1/p;
+        params(Acts::eBoundQOverP) = -1/p;
         params(Acts::eBoundTime)   = part.time() * ns;
         /// \todo create or find better particle data interface.
         // get the particle charge
@@ -110,7 +110,7 @@ namespace Jug::Reco {
             Acts::Vector3{part.vsx() * mm, part.vsy() * mm, part.vsz() * mm});
 
         //params(Acts::eBoundQOverP) = charge/p;
-        init_trk_params->push_back({pSurface, params, charge});
+        init_trk_params->push_back({pSurface, params, charge,cov});
         // std::make_optional(std::move(cov))
 
         debug() << "Invoke track finding seeded by truth particle with p = " << p/GeV  << " GeV" << endmsg;

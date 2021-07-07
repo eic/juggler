@@ -53,6 +53,7 @@ namespace Jug::Reco {
     declareProperty("inputSourceLinks", m_inputSourceLinks, "");
     declareProperty("initialTrackParameters", m_initialTrackParameters, "");
     declareProperty("inputMeasurements", m_inputMeasurements, "");
+    declareProperty("inputProtoTracks", m_inputProtoTracks, "");
     declareProperty("foundTracks", m_foundTracks, "");
     declareProperty("outputTrajectories", m_outputTrajectories, "");
   }
@@ -80,46 +81,79 @@ namespace Jug::Reco {
   StatusCode TrackFittingAlgorithm::execute()
   {
     // Read input data
-    const IndexSourceLinkContainer* src_links       = m_inputSourceLinks.get();
-    const TrackParametersContainer* init_trk_params = m_initialTrackParameters.get();
-    const MeasurementContainer*     measurements    = m_inputMeasurements.get();
+    const IndexSourceLinkContainer* sourceLinks       = m_inputSourceLinks.get();
+    const TrackParametersContainer* initialParameters = m_initialTrackParameters.get();
+    const MeasurementContainer*     measurements      = m_inputMeasurements.get();
+    const ProtoTrackContainer*      protoTracks       = m_inputProtoTracks.get();
+    ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("TrackFittingAlgorithm Logger", Acts::Logging::INFO));
+
+    // Consistency cross checks
+    if (protoTracks->size() != initialParameters->size()) {
+      ACTS_FATAL("Inconsistent number of proto tracks and initial parameters");
+      return StatusCode::FAILURE;
+    }
 
     // TrajectoryContainer trajectories;
     auto trajectories = m_outputTrajectories.createAndPut();
-    trajectories->reserve(init_trk_params->size());
+    trajectories->reserve(initialParameters->size());
 
-    //// Construct a perigee surface as the target surface
+    // Construct a perigee surface as the target surface
     auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3{0., 0., 0.});
-    ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("TrackFittingAlgorithm Logger", Acts::Logging::INFO));
 
-    std::vector<IndexSourceLink> trackSourceLinks;
+    //Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder> kfOptions(
+    //    ctx.geoContext, ctx.magFieldContext, ctx.calibContext, MeasurementCalibrator(measurements),
+    //    Acts::VoidOutlierFinder(), Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(),
+    //    &(*pSurface));
+
+    // kfOptions.multipleScattering = m_cfg.multipleScattering;
+    // kfOptions.energyLoss         = m_cfg.energyLoss;
+    // Acts::KalmanFitterOptions<Acts::VoidOutlierFinder> kfOptions(
+    //    m_geoctx, m_fieldctx, m_calibctx, Acts::VoidOutlierFinder(),
+    //    Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(), &(*pSurface));
+    //    // Set the KalmanFitter options
+
+    Acts::PropagatorPlainOptions pOptions;
+    pOptions.maxSteps = 10000;
+
+    Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder> kfOptions(
+        m_geoctx, m_fieldctx, m_calibctx, MeasurementCalibrator(*measurements),
+        Acts::VoidOutlierFinder(), Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
+
+    // used for processing the data
+    std::vector<IndexSourceLink>      trackSourceLinks;
+    std::vector<const Acts::Surface*> surfSequence;
+
+    debug() << "initialParams size:  " << initialParameters->size() << endmsg;
+    debug() << "measurements size:  " << measurements->size() << endmsg;
 
     // Perform the track finding for each starting parameter
     // @TODO: use seeds from track seeding algorithm as starting parameter
-    // initial track params and proto tracks might likely have the same size. 
-    for (std::size_t iseed = 0; iseed < init_trk_params->size(); ++iseed) {
+    // initial track params and proto tracks might likely have the same size.
+    //for (std::size_t iseed = 0; iseed < init_trk_params->size(); ++iseed) {
+    for (std::size_t itrack = 0; itrack < (*protoTracks).size(); ++itrack) {
 
-      // this will eventually be per-track. for now we assume all src links are from the same single track!
-      for (auto& lnk : (*src_links)) {
-        //   auto sourceLink = sourceLinks.nth(hitIndex);
-        trackSourceLinks.push_back(lnk);
+      const auto& protoTrack    = (*protoTracks)[itrack];
+      const auto& initialParams = (*initialParameters)[itrack];
+
+      debug() << "protoTrack size:  " << protoTrack.size() << endmsg;
+
+      trackSourceLinks.clear();
+      trackSourceLinks.reserve(protoTrack.size());
+
+      for (auto hitIndex : protoTrack) {
+        debug() << " hit  index = " << hitIndex << endmsg;
+        auto sourceLink = sourceLinks->nth(hitIndex);
+        auto geoId      = sourceLink->geometryId();
+        if (sourceLink == sourceLinks->end()) {
+          ACTS_FATAL("Proto track " << itrack << " contains invalid hit index"
+                                    << hitIndex);
+          return StatusCode::FAILURE;
+        }
+        trackSourceLinks.push_back(*sourceLink);
+        //surfSequence.push_back(m_cfg.trackingGeometry->findSurface(geoId));
       }
 
-
-      const auto& initialParams = (*init_trk_params)[iseed];
-      Acts::PropagatorPlainOptions pOptions;
-      pOptions.maxSteps = 10000;
-
-      //Acts::KalmanFitterOptions<Acts::VoidOutlierFinder> kfOptions(
-      //    m_geoctx, m_fieldctx, m_calibctx, Acts::VoidOutlierFinder(),
-      //    Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(), &(*pSurface));
-      //    // Set the KalmanFitter options
-      Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder> kfOptions(
-          m_geoctx, m_fieldctx, m_calibctx,
-          MeasurementCalibrator(*measurements), Acts::VoidOutlierFinder(),
-          Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(), &(*pSurface));
-
-      debug() << "Invoke track fitting ...  " << iseed << endmsg;
+      debug() << "Invoke track fitting ...  " << itrack << endmsg;
       auto result = fitTrack(trackSourceLinks, initialParams, kfOptions);
       debug() << "fitting done." << endmsg;
       // if (result.ok()) {
@@ -159,7 +193,7 @@ namespace Jug::Reco {
         trajectories->emplace_back(std::move(fitOutput.fittedStates), std::move(trackTips),
                                   std::move(indexedParams));
       } else {
-        ACTS_WARNING("Fit failed for track " << iseed << " with error" << result.error());
+        ACTS_WARNING("Fit failed for track " << itrack << " with error" << result.error());
         // Fit failed. Add an empty result so the output container has
         // the same number of entries as the input.
         trajectories->push_back(Trajectories());

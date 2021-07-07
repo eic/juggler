@@ -10,22 +10,26 @@
 #define IGEOSVC_H
 
 #include "GaudiKernel/IService.h"
+#include  <unordered_map>
 
 namespace dd4hep {
-class Detector;
-class DetElement;
-namespace rec {
-class CellIDPositionConverter;
-}
-}
+  class Detector;
+  class DetElement;
+  namespace rec {
+    class CellIDPositionConverter;
+  }
+} // namespace dd4hep
 
 namespace Acts {
-class TrackingGeometry;
+  class TrackingGeometry;
+  class Surface;
 }
 
 class G4VUserDetectorConstruction;
 
 class GAUDI_API IGeoSvc : virtual public IService {
+public:
+  using VolumeSurfaceMap = std::unordered_map<uint64_t, const Acts::Surface*>;
 
 public:
   /// InterfaceID
@@ -39,6 +43,7 @@ public:
   virtual double centralMagneticField() const = 0;
   // receive Geant4 Geometry
   //virtual G4VUserDetectorConstruction* getGeant4Geo() = 0;
+  virtual const VolumeSurfaceMap& surfaceMap() const = 0;
 
   virtual ~IGeoSvc() {}
 };
