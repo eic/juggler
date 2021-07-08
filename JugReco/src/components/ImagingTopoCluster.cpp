@@ -122,6 +122,13 @@ namespace Jug::Reco {
       std::vector<bool>                           visits(hits.size(), false);
       std::vector<std::vector<eic::ImagingPixel>> groups;
       for (size_t i = 0; i < hits.size(); ++i) {
+        /*
+        debug() << fmt::format("hit {:d}: local position = ({}, {}, {}), global position = ({}, {}, {})",
+                i + 1,
+                hits[i].local_x(), hits[i].local_y(), hits[i].local_z(),
+                hits[i].x(), hits[i].y(), hits[i].z())
+            << endmsg;
+        */
         // already in a group, or not energetic enough to form a cluster
         if (visits[i] || hits[i].edep() < minClusterCenterEdep) {
           continue;
@@ -130,8 +137,14 @@ namespace Jug::Reco {
         // create a new group, and group all the neighboring hits
         dfs_group(groups.back(), i, hits, visits);
       }
-      debug() << "we have " << groups.size() << " groups of hits" << endmsg;
+      debug() << "found " << groups.size() << " potential clusters (groups of hits)" << endmsg;
+      /*
+      for (size_t i = 0; i < groups.size(); ++i) {
+        debug() << fmt::format("group {}: {} hits", i, groups[i].size()) << endmsg;
+      }
+      */
 
+      // form clusters
       size_t clusterID = 0;
       for (const auto& group : groups) {
         if (static_cast<int>(group.size()) < m_minClusterNhits.value()) {
@@ -148,6 +161,7 @@ namespace Jug::Reco {
           hit.clusterID(clusterID);
           clustered_hits.push_back(hit);
         }
+        clusterID += 1;
       }
 
       return StatusCode::SUCCESS;
