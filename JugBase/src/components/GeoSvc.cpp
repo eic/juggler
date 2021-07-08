@@ -128,22 +128,22 @@ StatusCode GeoSvc::initialize() {
                                                         Acts::equidistant, Acts::equidistant));
   if (m_trackingGeo) {
     draw_surfaces(m_trackingGeo, "tracking_geometry.obj");
-  }
 
-  debug() << "visiting all the surfaces  " << endmsg;
-  m_trackingGeo->visitSurfaces([this](const Acts::Surface* surface) {
-    // for now we just require a valid surface
-    if (not surface) {
-      return;
-    }
-    auto det_element =
-        dynamic_cast<const Acts::DD4hepDetectorElement*>(surface->associatedDetectorElement());
-    if (!det_element) {
-      debug() << "invalid det_element!!! " << endmsg;
-      return;
-    }
-    this->m_surfaces.insert_or_assign(det_element->identifier(), surface);
-  });
+    debug() << "visiting all the surfaces  " << endmsg;
+    m_trackingGeo->visitSurfaces([this](const Acts::Surface* surface) {
+      // for now we just require a valid surface
+      if (not surface) {
+        return;
+      }
+      auto det_element =
+          dynamic_cast<const Acts::DD4hepDetectorElement*>(surface->associatedDetectorElement());
+      if (!det_element) {
+        debug() << "invalid det_element!!! " << endmsg;
+        return;
+      }
+      this->m_surfaces.insert_or_assign(det_element->identifier(), surface);
+    });
+  }
 
   return StatusCode::SUCCESS;
 }
