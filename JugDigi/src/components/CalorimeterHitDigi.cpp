@@ -33,10 +33,6 @@ public:
     Gaudi::Property<std::vector<double>>    u_eRes{this, "energyResolutions", {}}; // a/sqrt(E/GeV) + b + c/(E/GeV)
     Gaudi::Property<double>                 m_tRes{this, "timineResolution", 0.0*ns};
 
-    // input units, should be fixed
-    Gaudi::Property<double>                 m_eUnit{this, "inputEnergyUnit", GeV};
-    Gaudi::Property<double>                 m_tUnit{this, "inputTimeUnit", ns};
-
     // digitization settings
     Gaudi::Property<int>                    m_capADC{this, "capacityADC", 8096};
     Gaudi::Property<double>                 m_dyRangeADC{this, "dynamicRangeADC", 100*MeV};
@@ -48,7 +44,8 @@ public:
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::RawCalorimeterHitCollection>
         m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
-    double res[3] = {0., 0., 0.};
+    // unitless counterparts of inputs
+    double dyRangeADC, tRes, eRes[3] = {0., 0., 0.};
 
       //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     CalorimeterHitDigi(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
@@ -70,8 +67,13 @@ public:
         }
         // set energy resolution numbers
         for (size_t i = 0; i < u_eRes.size() && i < 3; ++i) {
-            res[i] = u_eRes[i];
+            eRes[i] = u_eRes[i];
         }
+
+        // using juggler internal units (GeV, mm, radian, ns)
+        dyRangeADC = m_dyRangeADC.value()/GeV;
+        tRes = m_tRes.value()/ns;
+
         return StatusCode::SUCCESS;
     }
 
@@ -82,15 +84,16 @@ public:
         // Create output collections
         auto rawhits = m_outputHitCollection.createAndPut();
         for (const auto& ahit : *simhits) {
-            double eres = std::sqrt(std::pow(m_normDist()*res[0] / sqrt(ahit.energyDeposit()*m_eUnit/GeV), 2)
-                                    + std::pow(m_normDist()*res[1], 2)
-                                    + std::pow(m_normDist()*res[2] / (ahit.energyDeposit()*m_eUnit/GeV), 2));
+            // Note: juggler internal unit of energy is GeV
+            double eResRel = std::sqrt(std::pow(m_normDist()*eRes[0] / sqrt(ahit.energyDeposit()), 2)
+                                       + std::pow(m_normDist()*eRes[1], 2)
+                                       + std::pow(m_normDist()*eRes[2] / (ahit.energyDeposit()), 2));
             double ped = m_pedMeanADC + m_normDist()*m_pedSigmaADC;
-            long long adc = std::llround(ped + ahit.energyDeposit()*(1. + eres) * m_eUnit/m_dyRangeADC*m_capADC);
+            long long adc = std::llround(ped + ahit.energyDeposit()*(1. + eResRel)/dyRangeADC*m_capADC);
             eic::RawCalorimeterHit rawhit(
                 (long long) ahit.cellID(),
-                (adc > m_capADC ? m_capADC.value() : adc),
-                (double) ahit.truth().time*m_tUnit/ns + m_normDist()*m_tRes/ns
+                (adc > m_capADC.value() ? m_capADC.value() : adc),
+                (double) ahit.truth().time + m_normDist()*tRes
                 );
             rawhits->push_back(rawhit);
         }

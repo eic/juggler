@@ -37,26 +37,32 @@ namespace Jug::Reco {
   class ImagingTopoCluster : public GaudiAlgorithm {
   public:
     // maximum difference in layer numbers that can be considered as neighbours
-    Gaudi::Property<int> m_adjLayerDiff{this, "adjLayerDiff", 1};
+    Gaudi::Property<int> m_neighbourLayersRange{this, "neighbourLayersRange", 1};
     // maximum distance of local (x, y) to be considered as neighbors at the same layer
-    Gaudi::Property<std::vector<double>> u_localRanges{this, "localRanges", {1.0 * mm, 1.0 * mm}};
+    Gaudi::Property<std::vector<double>> u_localDistXY{this, "localDistXY", {1.0 * mm, 1.0 * mm}};
     // maximum distance of global (eta, phi) to be considered as neighbors at different layers
-    Gaudi::Property<std::vector<double>> u_adjLayerRanges{
-        this, "adjLayerRanges", {0.01 * M_PI, 0.01 * M_PI}};
+    Gaudi::Property<std::vector<double>> u_layerDistEtaPhi{this, "layerDistEtaPhi", {0.01, 0.01}};
     // maximum global distance to be considered as neighbors in different sectors
-    Gaudi::Property<double> m_adjSectorDist{this, "adjSectorDist", 1.0 * cm};
+    Gaudi::Property<double> m_sectorDist{this, "sectorDist", 1.0 * cm};
+
+    // minimum hit energy to participate clustering
+    Gaudi::Property<double> m_minClusterHitEdep{this, "minClusterHitEdep", 0.};
     // minimum cluster center energy (to be considered as a seed for cluster)
     Gaudi::Property<double> m_minClusterCenterEdep{this, "minClusterCenterEdep", 0.};
     // minimum cluster energy (to save this cluster)
-    Gaudi::Property<double> m_minEdep{this, "minClusterEdep", 0.5 * MeV};
+    Gaudi::Property<double> m_minClusterEdep{this, "minClusterEdep", 0.5 * MeV};
     // minimum number of hits (to save this cluster)
-    Gaudi::Property<int> m_minNhits{this, "minClusterNhits", 10};
+    Gaudi::Property<int> m_minClusterNhits{this, "minClusterNhits", 10};
     // input hits collection
     DataHandle<eic::ImagingPixelCollection> m_inputHitCollection{"inputHitCollection",
                                                                  Gaudi::DataHandle::Reader, this};
     // output clustered hits
     DataHandle<eic::ImagingPixelCollection> m_outputHitCollection{"outputHitCollection",
                                                                   Gaudi::DataHandle::Writer, this};
+
+    // unitless counterparts of the input parameters
+    double localDistXY[2], layerDistEtaPhi[2], sectorDist;
+    double minClusterHitEdep, minClusterCenterEdep, minClusterEdep, minClusterNhits;
 
     ImagingTopoCluster(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
     {
@@ -70,25 +76,37 @@ namespace Jug::Reco {
         return StatusCode::FAILURE;
       }
 
-      // check local clustering range
-      if (u_localRanges.size() < 2) {
-        error() << "Need 2-dimensional ranges for same-layer clustering, only have "
-                << u_localRanges.size() << endmsg;
+      // unitless conversion
+      // sanity checks
+      if (u_localDistXY.size() != 2) {
+        error() << "Expected 2 values (x_dist, y_dist) for localDistXY" << endmsg;
         return StatusCode::FAILURE;
       }
-      info() << "Same layer hits group ranges"
-             << " (" << u_localRanges[0] / mm << " mm, " << u_localRanges[1] / mm << " mm)"
-             << endmsg;
+      if (u_layerDistEtaPhi.size() != 2) {
+        error() << "Expected 2 values (eta_dist, phi_dist) for layerDistEtaPhi" << endmsg;
+        return StatusCode::FAILURE;
+      }
 
-      // check adjacent layer clustering range
-      if (u_adjLayerRanges.size() < 2) {
-        error() << "Need 2-dimensional ranges for adjacent-layer clustering, only have "
-                << u_adjLayerRanges.size() << endmsg;
-        return StatusCode::FAILURE;
-      }
-      info() << "Same layer hits group ranges"
-             << " (" << u_adjLayerRanges[0] / M_PI * 1000. << " mrad, "
-             << u_adjLayerRanges[1] / M_PI * 1000. << " mrad)" << endmsg;
+      // using juggler internal units (GeV, mm, ns, rad)
+      localDistXY[0] = u_localDistXY.value()[0]/mm;
+      localDistXY[1] = u_localDistXY.value()[1]/mm;
+      layerDistEtaPhi[0] = u_layerDistEtaPhi.value()[0];
+      layerDistEtaPhi[1] = u_layerDistEtaPhi.value()[1]/rad;
+      sectorDist = m_sectorDist.value()/mm;
+      minClusterHitEdep = m_minClusterHitEdep.value()/GeV;
+      minClusterCenterEdep = m_minClusterCenterEdep.value()/GeV;
+      minClusterEdep = m_minClusterEdep.value()/GeV;
+
+      // summarize the clustering parameters
+      info() << fmt::format("Local clustering (same sector and same layer): "
+                            "Local [x, y] distance between hits <= [{:.4f} mm, {:.4f} mm].",
+                            localDistXY[0], localDistXY[1]) << endmsg;
+      info() << fmt::format("Neighbour layers clustering (same sector and layer id within +- {:d}: "
+                            "Global [eta, phi] distance between hits <= [{:.4f}, {:.4f} rad].",
+                            m_neighbourLayersRange.value(), layerDistEtaPhi[0], layerDistEtaPhi[1]) << endmsg;
+      info() << fmt::format("Neighbour sectors clustering (different sector): "
+                            "Global distance between hits <= {:.4f} mm.",
+                            sectorDist) << endmsg;
 
       return StatusCode::SUCCESS;
     }
@@ -105,7 +123,7 @@ namespace Jug::Reco {
       std::vector<std::vector<eic::ImagingPixel>> groups;
       for (size_t i = 0; i < hits.size(); ++i) {
         // already in a group, or not energetic enough to form a cluster
-        if (visits[i] || hits[i].edep() < m_minClusterCenterEdep) {
+        if (visits[i] || hits[i].edep() < minClusterCenterEdep) {
           continue;
         }
         groups.emplace_back();
@@ -116,14 +134,14 @@ namespace Jug::Reco {
 
       size_t clusterID = 0;
       for (const auto& group : groups) {
-        if ((int)group.size() < m_minNhits) {
+        if (static_cast<int>(group.size()) < m_minClusterNhits.value()) {
           continue;
         }
         double edep = 0.;
         for (const auto& hit : group) {
           edep += hit.edep();
         }
-        if (edep < m_minEdep) {
+        if (edep < minClusterEdep) {
           continue;
         }
         for (auto hit : group) {
@@ -148,18 +166,18 @@ namespace Jug::Reco {
       // different sectors, simple distance check
       if (h1.sectorID() != h2.sectorID()) {
         return std::sqrt(pow2(h1.x() - h2.x()) + pow2(h1.y() - h2.y()) + pow2(h1.z() - h2.z())) <=
-               m_adjSectorDist;
+               sectorDist;
       }
 
       // layer check
       int ldiff = std::abs(h1.layerID() - h2.layerID());
       // same layer, check local positions
       if (!ldiff) {
-        return (std::abs(h1.local_x() - h2.local_x()) <= u_localRanges[0]) &&
-               (std::abs(h1.local_y() - h2.local_y()) <= u_localRanges[1]);
-      } else if (ldiff <= m_adjLayerDiff) {
-        return (std::abs(h1.eta() - h2.eta()) <= u_adjLayerRanges[0]) &&
-               (std::abs(h1.phi() - h2.phi()) <= u_adjLayerRanges[1]);
+        return (std::abs(h1.local_x() - h2.local_x()) <= localDistXY[0]) &&
+               (std::abs(h1.local_y() - h2.local_y()) <= localDistXY[1]);
+      } else if (ldiff <= m_neighbourLayersRange) {
+        return (std::abs(h1.eta() - h2.eta()) <= layerDistEtaPhi[0]) &&
+               (std::abs(h1.phi() - h2.phi()) <= layerDistEtaPhi[1]);
       }
 
       // not in adjacent layers
@@ -170,6 +188,12 @@ namespace Jug::Reco {
     void dfs_group(std::vector<eic::ImagingPixel>& group, int idx,
                    const eic::ImagingPixelCollection& hits, std::vector<bool>& visits) const
     {
+      // not a qualified hit to participate in clustering, stop here
+      if (hits[idx].edep() < minClusterHitEdep) {
+        visits[idx] = true;
+        return;
+      }
+
       eic::ImagingPixel hit{hits[idx].clusterID(), hits[idx].layerID(), hits[idx].sectorID(),
                             hits[idx].hitID(),     hits[idx].edep(),    hits[idx].time(),
                             hits[idx].eta(),       hits[idx].local(),   hits[idx].position(),

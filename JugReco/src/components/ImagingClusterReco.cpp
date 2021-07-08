@@ -102,7 +102,7 @@ namespace Jug::Reco {
       // debug output
       for (const auto& cl : clusters) {
         debug() << fmt::format("Cluster {:d}: Edep = {:.3f} MeV, Dir = ({:.3f}, {:.3f}) deg",
-                               cl.clusterID(), cl.edep() / MeV, cl.cl_theta() / M_PI * 180.,
+                               cl.clusterID(), cl.edep()*1000., cl.cl_theta() / M_PI * 180.,
                                cl.cl_phi() / M_PI * 180.)
                 << endmsg;
       }

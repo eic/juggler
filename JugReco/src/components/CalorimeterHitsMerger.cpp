@@ -4,8 +4,9 @@
  *
  *  Author: Chao Peng (ANL), 03/31/2021
  */
-#include <algorithm>
+#include <tuple>
 #include <bitset>
+#include <algorithm>
 #include <unordered_map>
 
 #include "Gaudi/Property.h"
@@ -102,50 +103,60 @@ namespace Jug::Reco {
     StatusCode execute() override
     {
       // input collections
-      const auto& hits = *m_inputHitCollection.get();
+      const auto& inputs = *m_inputHitCollection.get();
       // Create output collections
-      auto& mhits = *m_outputHitCollection.createAndPut();
+      auto& outputs = *m_outputHitCollection.createAndPut();
 
+      // find the hits that belong to the same group (for merging)
+      std::unordered_map<long long, std::vector<eic::ConstCalorimeterHit>> merge_map;
+      for (const auto& h : inputs) {
+        int64_t id = h.cellID() & id_mask;
+        // use the reference field position
+        auto it = merge_map.find(id);
+        if (it == merge_map.end()) {
+          merge_map[id] = {h};
+        } else {
+          it->second.push_back(h);
+        }
+      }
+
+      // reconstruct info for merged hits
       // dd4hep decoders
       auto poscon = m_geoSvc->cellIDPositionConverter();
       auto volman = m_geoSvc->detector()->volumeManager();
 
-      // sum energies that has the same id
-      std::unordered_map<long long, size_t> merge_map;
-      for (const auto& h : hits) {
-        int64_t id = h.cellID() & id_mask;
-        // use the reference field position
+      for (auto &[id, hits] : merge_map) {
+        // reference fields id
         int64_t ref_id = id | ref_mask;
-        // debug() << h.cellID() << " - " << std::bitset<64>(h.cellID()) << endmsg;
-        auto it = merge_map.find(id);
-        debug() << fmt::format("{:#064b} - {:#064b}, ref: {:#064b}", h.cellID(), id, ref_id)
-                << endmsg;
-        if (it == merge_map.end()) {
-          merge_map[id] = mhits.size();
-          // global positions
-          auto gpos = poscon->position(ref_id);
-          // local positions
-          auto alignment = volman.lookupDetElement(ref_id).nominal();
-          // debug() << volman.lookupDetElement(ref_id).path() << ", " <<
-          // volman.lookupDetector(ref_id).path() << endmsg;
-          auto pos = alignment.worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
-
-          mhits.push_back({ref_id,
-                           h.clusterID(),
-                           h.layerID(),
-                           h.sectorID(),
-                           h.energy(),
-                           h.time(),
-                           {gpos.x() / dd4hep::mm, gpos.y() / dd4hep::mm, gpos.z() / dd4hep::mm},
-                           {pos.x() / dd4hep::mm, pos.y() / dd4hep::mm, pos.z() / dd4hep::mm},
-                           h.dimension(),
-                           h.type()});
-        } else {
-          mhits[it->second].energy(mhits[it->second].energy() + h.energy());
+        // global positions
+        auto gpos = poscon->position(ref_id);
+        // local positions
+        auto alignment = volman.lookupDetElement(ref_id).nominal();
+        auto pos = alignment.worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
+        // debug() << volman.lookupDetElement(ref_id).path() << ", "
+        //         << volman.lookupDetector(ref_id).path() << endmsg;
+        // sum energy
+        float energy = 0.;
+        for (auto &hit : hits) {
+          energy += hit.energy();
+          // debug() << fmt::format("{:#064b} - {:#064b}, ref: {:#064b}", hit.cellID(), id, ref_id)
+          //         << endmsg;
         }
+        const auto &href = hits.front();
+        outputs.push_back(eic::CalorimeterHit{
+                            ref_id,
+                            href.clusterID(),
+                            href.layerID(),
+                            href.sectorID(),
+                            energy,
+                            href.time(),
+                            {gpos.x() / dd4hep::mm, gpos.y() / dd4hep::mm, gpos.z() / dd4hep::mm},
+                            {pos.x() / dd4hep::mm, pos.y() / dd4hep::mm, pos.z() / dd4hep::mm},
+                            href.dimension(),
+                            href.type()});
       }
 
-      debug() << "Size before = " << hits.size() << ", after = " << mhits.size() << endmsg;
+      debug() << "Size before = " << inputs.size() << ", after = " << outputs.size() << endmsg;
 
       return StatusCode::SUCCESS;
     }

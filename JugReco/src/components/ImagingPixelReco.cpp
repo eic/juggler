@@ -44,6 +44,10 @@ namespace Jug::Reco {
     Gaudi::Property<double> m_dyRangeADC{this, "dynamicRangeADC", 100 * MeV};
     Gaudi::Property<double> m_pedSigmaADC{this, "pedestalSigma", 3.2};
     Gaudi::Property<double> m_thresholdADC{this, "thresholdFactor", 3.0};
+
+    // unitless counterparts for the input parameters
+    double dyRangeADC;
+
     // hits containers
     DataHandle<eic::RawCalorimeterHitCollection> m_inputHitCollection{
         "inputHitCollection", Gaudi::DataHandle::Reader, this};
@@ -90,6 +94,9 @@ namespace Jug::Reco {
         return StatusCode::FAILURE;
       }
 
+      // unitless conversion
+      dyRangeADC = m_dyRangeADC.value()/GeV;
+
       return StatusCode::SUCCESS;
     }
 
@@ -106,8 +113,7 @@ namespace Jug::Reco {
         if ((rh.amplitude() - m_pedMeanADC) < m_thresholdADC * m_pedSigmaADC) {
           continue;
         }
-        double edep = (rh.amplitude() - m_pedMeanADC) / (double)m_capADC *
-                      m_dyRangeADC;   // convert ADC -> energy
+        double edep = (rh.amplitude() - m_pedMeanADC) / (double)m_capADC * dyRangeADC;   // convert ADC -> energy
         double time = rh.timeStamp(); // ns
         auto   id   = rh.cellID();
         int    lid  = (int)id_dec->get(id, layer_idx);

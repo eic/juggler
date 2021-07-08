@@ -1,8 +1,8 @@
 /*
  *  Island Clustering Algorithm for Calorimeter Blocks
  *  1. group all the adjacent modules
- *  2. split the groups between their local maxima with the energy deposit above
- * <minClusterCenterEdep>
+ *  2. split the groups between their local maxima with the energy deposit above <minClusterCenterEdep>
+ *  Output hits collection with clusterID
  *
  *  Author: Chao Peng (ANL), 09/27/2020
  *  References:
@@ -11,6 +11,7 @@
  */
 #include <algorithm>
 
+#include "fmt/format.h"
 #include "Gaudi/Property.h"
 #include "GaudiAlg/GaudiAlgorithm.h"
 #include "GaudiAlg/GaudiTool.h"
@@ -37,14 +38,18 @@ namespace Jug::Reco {
 
   class CalorimeterIslandCluster : public GaudiAlgorithm {
   public:
-    Gaudi::Property<bool>                m_splitCluster{this, "splitCluster", true};
-    Gaudi::Property<double>              m_groupRange{this, "groupRange", 1.8};
-    Gaudi::Property<std::vector<double>> u_groupRanges{this, "groupRanges", {}};
-    Gaudi::Property<double> m_minClusterCenterEdep{this, "minClusterCenterEdep", 50.0 * MeV};
-    DataHandle<eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection",
-                                                                   Gaudi::DataHandle::Reader, this};
-    DataHandle<eic::CalorimeterHitCollection> m_splitHitCollection{"outputHitCollection",
-                                                                   Gaudi::DataHandle::Writer, this};
+    Gaudi::Property<bool>                       m_splitCluster{this, "splitCluster", true};
+    Gaudi::Property<double>                     m_dimScaledDist{this, "dimScaledDist", 1.8};
+    Gaudi::Property<std::vector<double>>        u_localDistXY{this, "localDistXY", {}};
+    Gaudi::Property<double>                     m_minClusterHitEdep{this, "minClusterHitEdep", 0.};
+    Gaudi::Property<double>                     m_minClusterCenterEdep{this, "minClusterCenterEdep", 50.0 * MeV};
+    DataHandle<eic::CalorimeterHitCollection>   m_inputHitCollection{"inputHitCollection",
+                                                                      Gaudi::DataHandle::Reader, this};
+    DataHandle<eic::CalorimeterHitCollection>   m_splitHitCollection{"outputHitCollection",
+                                                                      Gaudi::DataHandle::Writer, this};
+
+    // unitless counterparts of the input parameters
+    double minClusterHitEdep, minClusterCenterEdep, localDistXY[2] = {0., 0.};
 
     CalorimeterIslandCluster(const std::string& name, ISvcLocator* svcLoc)
         : GaudiAlgorithm(name, svcLoc)
@@ -57,6 +62,21 @@ namespace Jug::Reco {
     {
       if (GaudiAlgorithm::initialize().isFailure()) {
         return StatusCode::FAILURE;
+      }
+
+      // unitless conversion, keep consistency with juggler internal units (GeV, mm, ns, rad)
+      minClusterHitEdep = m_minClusterHitEdep.value() / GeV;
+      minClusterCenterEdep = m_minClusterCenterEdep.value() / GeV;
+      // sanity check
+      if (u_localDistXY.size() == 2) {
+        localDistXY[0] = u_localDistXY.value()[0] / mm;
+        localDistXY[1] = u_localDistXY.value()[1] / mm;
+        info() << fmt::format("Clustering using distance [x, y] <= [{:.4f} mm, {:.4f} mm]",
+                              localDistXY[0], localDistXY[1]) << endmsg;
+      } else if (u_localDistXY.size() > 0) {
+        warning() << fmt::format("Expect two values (x, y) from localDistXY, got {}. "
+                                 "Using dimScaledDist = {} instead",
+                                 u_localDistXY.size(), m_dimScaledDist.value()) << endmsg;
       }
       return StatusCode::SUCCESS;
     }
@@ -73,6 +93,11 @@ namespace Jug::Reco {
 
       std::vector<bool> visits(hits.size(), false);
       for (size_t i = 0; i < hits.size(); ++i) {
+        debug() << fmt::format("hit {:d}: energy = {:.4f} MeV, local = ({:.4f}, {:.4f}) mm, "
+                               "global=({:.4f}, {:.4f}, {:.4f}) mm, layer = {:d}, sector = {:d}.",
+                               i, hits[i].energy()*1000., hits[i].local_x(), hits[i].local_y(),
+                               hits[i].x(), hits[i].y(), hits[i].z(),
+                               hits[i].layerID(), hits[i].sectorID()) << endmsg;
         // already in a group
         if (visits[i]) {
           continue;
@@ -81,14 +106,16 @@ namespace Jug::Reco {
         // create a new group, and group all the neighboring hits
         dfs_group(groups.back(), i, hits, visits);
       }
-      debug() << "we have " << groups.size() << " groups of hits" << endmsg;
 
       size_t clusterID = 0;
       for (auto& group : groups) {
-        auto maxima = find_maxima(group, !m_splitCluster);
+        if (group.empty()) {
+          continue;
+        }
+        auto maxima = find_maxima(group, !m_splitCluster.value());
         split_group(group, maxima, clusterID, clustered_hits);
         debug() << "hits in a group: " << group.size() << ", "
-                << "local maxima: " << maxima.hits_size() << endmsg;
+                << "local maxima: " << maxima.size() << endmsg;
         debug() << "total number of clusters so far: " << clusterID << ", " << endmsg;
       }
 
@@ -112,23 +139,23 @@ namespace Jug::Reco {
     {
       // in the same sector
       if (h1.sectorID() == h2.sectorID()) {
-        if (u_groupRanges.size() >= 2) {
-          return (std::abs(h1.local_x() - h2.local_x()) <= u_groupRanges[0]) &&
-                 (std::abs(h1.local_y() - h2.local_y()) <= u_groupRanges[1]);
+        // use absolute value
+        if (u_localDistXY.size() == 2) {
+          return (std::abs(h1.local_x() - h2.local_x()) <= localDistXY[0]) &&
+                 (std::abs(h1.local_y() - h2.local_y()) <= localDistXY[1]);
+        // use scaled value (module size as the scales)
         } else {
           return (std::abs(h1.local_x() - h2.local_x()) <=
-                  m_groupRange * (h1.dim_x() + h2.dim_x()) / 2.) &&
+                  m_dimScaledDist * (h1.dim_x() + h2.dim_x()) / 2.) &&
                  (std::abs(h1.local_y() - h2.local_y()) <=
-                  m_groupRange * (h1.dim_y() + h2.dim_y()) / 2.);
+                  m_dimScaledDist * (h1.dim_y() + h2.dim_y()) / 2.);
         }
-        // different sector
+      // different sector, local coordinates do not work, using global coordinates
       } else {
         double range =
-            (u_groupRanges.size() >= 2)
-                ? std::sqrt(std::accumulate(u_groupRanges.begin(), u_groupRanges.end(), 0.,
-                                            [](double s, double x) { return s + x * x; }))
-                : m_groupRange *
-                      dist2d((h1.dim_x() + h2.dim_x()) / 2., (h1.dim_y() + h2.dim_y()) / 2.);
+          (u_localDistXY.size() == 2)
+            ? dist2d(localDistXY[0], localDistXY[1])
+            : m_dimScaledDist * dist2d((h1.dim_x() + h2.dim_x()) / 2., (h1.dim_y() + h2.dim_y()) / 2.);
         // sector may have rotation (barrel), so z is included
         return dist3d(h1.x() - h2.x(), h1.y() - h2.y(), h1.z() - h2.z()) <= range;
       }
@@ -138,6 +165,12 @@ namespace Jug::Reco {
     void dfs_group(std::vector<eic::CalorimeterHit>& group, int idx,
                    const eic::CalorimeterHitCollection& hits, std::vector<bool>& visits) const
     {
+      // not a qualified hit to particpate clustering, stop here
+      if (hits[idx].energy() < minClusterHitEdep) {
+        visits[idx] = true;
+        return;
+      }
+
       eic::CalorimeterHit hit{hits[idx].cellID(),    hits[idx].clusterID(),
                               hits[idx].layerID(),   hits[idx].sectorID(),
                               hits[idx].energy(),    hits[idx].time(),
@@ -154,10 +187,10 @@ namespace Jug::Reco {
     }
 
     // find local maxima that above a certain threshold
-    eic::Cluster find_maxima(const std::vector<eic::CalorimeterHit>& group,
-                             bool                                    global = false) const
+    std::vector<eic::ConstCalorimeterHit> find_maxima(const std::vector<eic::CalorimeterHit>& group,
+                                                      bool global = false) const
     {
-      eic::Cluster maxima;
+      std::vector<eic::ConstCalorimeterHit> maxima;
       if (group.empty()) {
         return maxima;
       }
@@ -169,13 +202,15 @@ namespace Jug::Reco {
             mpos = i;
           }
         }
-        maxima.addhits(group[mpos]);
+        if (group[mpos].energy() >= minClusterCenterEdep) {
+            maxima.push_back(group[mpos]);
+        }
         return maxima;
       }
 
       for (auto& hit : group) {
         // not a qualified center
-        if (hit.energy() < m_minClusterCenterEdep / GeV) {
+        if (hit.energy() < minClusterCenterEdep) {
           continue;
         }
 
@@ -191,7 +226,7 @@ namespace Jug::Reco {
         }
 
         if (maximum) {
-          maxima.addhits(hit);
+          maxima.push_back(hit);
         }
       }
 
@@ -212,13 +247,14 @@ namespace Jug::Reco {
 
     // split a group of hits according to the local maxima
     // split_hits is used to persistify the data
-    void split_group(std::vector<eic::CalorimeterHit>& group, const eic::Cluster& maxima,
+    void split_group(std::vector<eic::CalorimeterHit>& group,
+                     const std::vector<eic::ConstCalorimeterHit>& maxima,
                      size_t& clusterID, eic::CalorimeterHitCollection& clustered_hits) const
     {
       // special cases
-      if (maxima.hits_size() == 0) {
+      if (maxima.size() == 0) {
         return;
-      } else if (maxima.hits_size() == 1) {
+      } else if (maxima.size() == 1) {
         for (auto& hit : group) {
           hit.clusterID(clusterID);
           clustered_hits.push_back(hit);
@@ -228,15 +264,15 @@ namespace Jug::Reco {
       }
 
       // split between maxima
-      std::vector<double>       weights(maxima.hits_size());
-      std::vector<eic::Cluster> splits(maxima.hits_size());
+      std::vector<double>       weights(maxima.size());
+      std::vector<eic::Cluster> splits(maxima.size());
       size_t                    n_clus = clusterID + 1;
       size_t                    i      = 0;
       for (auto it = group.begin(); it != group.end(); ++it, ++i) {
         auto   hedep = it->energy();
         size_t j     = 0;
         // calculate weights for local maxima
-        for (auto cit = maxima.hits_begin(); cit != maxima.hits_end(); ++cit, ++j) {
+        for (auto cit = maxima.begin(); cit != maxima.end(); ++cit, ++j) {
           double dist_ref = cit->dim_x();
           double energy   = cit->energy();
           double dist     = std::sqrt(std::pow(it->local_x() - cit->local_x(), 2) +

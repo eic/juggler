@@ -44,7 +44,9 @@ namespace Jug::Reco {
 
     // zero suppression values
     Gaudi::Property<double> m_thresholdADC{this, "thresholdFactor", 3.0};
-    Gaudi::Property<double> m_minEdep{this, "minimumHitEdep", 0.};
+
+    // unitless counterparts of the input parameters
+    double                  dyRangeADC;
 
     DataHandle<eic::RawCalorimeterHitCollection> m_inputHitCollection{
         "inputHitCollection", Gaudi::DataHandle::Reader, this};
@@ -87,6 +89,9 @@ namespace Jug::Reco {
         return StatusCode::FAILURE;
       }
 
+      // unitless conversion
+      dyRangeADC = m_dyRangeADC.value()/GeV;
+
       // do not get the layer/sector ID if no readout class provided
       if (m_readout.value().empty()) {
         return StatusCode::SUCCESS;
@@ -97,9 +102,11 @@ namespace Jug::Reco {
         id_dec = id_spec.decoder();
         if (m_sectorField.value().size()) {
           sector_idx = id_dec->index(m_sectorField);
+          info() << "Find sector field " << m_sectorField.value() << ", index = " << sector_idx << endmsg;
         }
         if (m_layerField.value().size()) {
           layer_idx = id_dec->index(m_layerField);
+          info() << "Find layer field " << m_layerField.value() << ", index = " << sector_idx << endmsg;
         }
       } catch (...) {
         error() << "Failed to load ID decoder for " << m_readout << endmsg;
@@ -117,7 +124,7 @@ namespace Jug::Reco {
                   << m_localDetElement.value() << endmsg;
           return StatusCode::FAILURE;
         }
-        // or get from fields
+      // or get from fields
       } else {
         std::vector<std::pair<std::string, int>> fields;
         for (auto& f : u_localDetFields.value()) {
@@ -151,20 +158,16 @@ namespace Jug::Reco {
         }
 
         // convert ADC -> energy
-        float energy = (rh.amplitude() - m_pedMeanADC) / (float)m_capADC * m_dyRangeADC;
-        if (energy < m_minEdep) {
-          continue;
-        }
+        float energy = (rh.amplitude() - m_pedMeanADC) / static_cast<float>(m_capADC.value()) * dyRangeADC;
 
         float time = rh.timeStamp(); // ns
         auto  id   = rh.cellID();
-        int   lid  = ((id_dec != nullptr) & m_layerField.value().size())
+        int   lid  = ((id_dec != nullptr) && m_layerField.value().size())
                       ? static_cast<int>(id_dec->get(id, layer_idx))
                       : -1;
-        int sid = ((id_dec != nullptr) & m_sectorField.value().size())
+        int   sid  = ((id_dec != nullptr) && m_sectorField.value().size())
                       ? static_cast<int>(id_dec->get(id, sector_idx))
                       : -1;
-
         // global positions
         auto gpos = m_geoSvc->cellIDPositionConverter()->position(id);
         // local positions
@@ -173,9 +176,8 @@ namespace Jug::Reco {
           local       = volman.lookupDetElement(id & local_mask).nominal();
         }
         auto pos = local.worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
-        // auto pos =
-        // m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().position(); cell
-        // dimension
+        // auto pos = m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().position();
+        // cell dimension
         auto   cdim   = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
         double dim[3] = {0., 0., 0.};
         for (size_t i = 0; i < cdim.size() && i < 3; ++i) {
