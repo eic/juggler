@@ -66,7 +66,7 @@ namespace Jug::Reco {
     // if nothing is provided, the lowest level DetElement (from cellID) will be used
     Gaudi::Property<std::string>              m_localDetElement{this, "localDetElement", ""};
     Gaudi::Property<std::vector<std::string>> u_localDetFields{this, "localDetFields", {}};
-    dd4hep::Alignment                         local;
+    dd4hep::DetElement                        local;
     size_t                                    local_mask = ~0;
 
     CalorimeterHitReco(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
@@ -116,7 +116,7 @@ namespace Jug::Reco {
       // local detector name has higher priority
       if (m_localDetElement.value().size()) {
         try {
-          local = m_geoSvc->detector()->detector(m_localDetElement.value()).nominal();
+          local = m_geoSvc->detector()->detector(m_localDetElement.value());
           info() << "Local coordinate system from DetElement " << m_localDetElement.value()
                  << endmsg;
         } catch (...) {
@@ -149,6 +149,7 @@ namespace Jug::Reco {
       const auto& rawhits = *m_inputHitCollection.get();
       // create output collections
       auto& hits = *m_outputHitCollection.createAndPut();
+      auto converter = m_geoSvc->cellIDPositionConverter();
 
       // energy time reconstruction
       for (const auto& rh : rawhits) {
@@ -169,16 +170,27 @@ namespace Jug::Reco {
                       ? static_cast<int>(id_dec->get(id, sector_idx))
                       : -1;
         // global positions
-        auto gpos = m_geoSvc->cellIDPositionConverter()->position(id);
+        auto gpos = converter->position(id);
         // local positions
         if (m_localDetElement.value().empty()) {
           auto volman = m_geoSvc->detector()->volumeManager();
-          local       = volman.lookupDetElement(id & local_mask).nominal();
+          local       = volman.lookupDetElement(id & local_mask);
         }
-        auto pos = local.worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
+        auto pos = local.nominal().worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
         // auto pos = m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().position();
         // cell dimension
-        auto   cdim   = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
+        std::vector<double> cdim;
+        // get segmentation dimensions
+        if (converter->findReadout(local).segmentation().type() != "NoSegmentation") {
+          cdim  = converter->cellDimensions(id);
+        // get volume dimensions (multiply by two to get fullsize)
+        } else {
+          // cdim = converter->findContext(id)->volumePlacement().volume().solid().dimensions();
+          // Using bounding box instead of actual solid so the dimensions are always in dim_x, dim_y, dim_z
+          cdim = converter->findContext(id)->volumePlacement().volume().boundingBox().dimensions();
+          std::transform(cdim.begin(), cdim.end(), cdim.begin(),
+               std::bind(std::multiplies<double>(), std::placeholders::_1, 2));
+        }
         double dim[3] = {0., 0., 0.};
         for (size_t i = 0; i < cdim.size() && i < 3; ++i) {
           dim[i] = cdim[i] / m_lUnit;

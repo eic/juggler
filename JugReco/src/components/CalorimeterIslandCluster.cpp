@@ -10,8 +10,13 @@
  *      https://www.jlab.org/primex/weekly_meetings/primexII/slides_2012_01_20/island_algorithm.pdf
  */
 #include <algorithm>
+#include <functional>
+#include <tuple>
 
 #include "fmt/format.h"
+#include "Math/Point2D.h"
+#include "Math/Point3D.h"
+
 #include "Gaudi/Property.h"
 #include "GaudiAlg/GaudiAlgorithm.h"
 #include "GaudiAlg/GaudiTool.h"
@@ -33,14 +38,48 @@
 #include "eicd/ClusterCollection.h"
 
 using namespace Gaudi::Units;
+typedef ROOT::Math::XYPoint Point;
+typedef ROOT::Math::XYZPoint Point3D;
 
 namespace Jug::Reco {
+  // helper functions to get distance between hits
+  static Point localDistXY(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
+    return Point(h1.local_x() - h2.local_x(), h1.local_y() - h2.local_y());
+  }
+  static Point localDistXZ(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
+    return Point(h1.local_x() - h2.local_x(), h1.local_z() - h2.local_z());
+  }
+  static Point localDistYZ(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
+    return Point(h1.local_y() - h2.local_y(), h1.local_z() - h2.local_z());
+  }
+  static Point dimScaledLocalDistXY(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
+    return Point(2.*(h1.local_x() - h2.local_x())/(h1.dim_x() + h2.dim_x()),
+                 2.*(h1.local_y() - h2.local_y())/(h1.dim_y() + h2.dim_y()));
+  }
+  static Point globalDistRPhi(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
+    Point3D p1(h1.x(), h1.y(), h1.z()), p2(h2.x(), h2.y(), h2.z());
+    return Point(p1.r() - p2.r(), p1.phi() - p2.phi());
+  }
+  static Point globalDistEtaPhi(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
+    Point3D p1(h1.x(), h1.y(), h1.z()), p2(h2.x(), h2.y(), h2.z());
+    return Point(p1.eta() - p2.eta(), p1.phi() - p2.phi());
+  }
+  // name: {method, units}
+  static std::map< std::string, std::tuple<
+    std::function<Point(eic::ConstCalorimeterHit, eic::ConstCalorimeterHit)>,
+    std::vector<double> > > distMethods {
+      {"localDistXY", {localDistXY, {mm, mm}}},
+      {"localDistXZ", {localDistXZ, {mm, mm}}},
+      {"localDistYZ", {localDistYZ, {mm, mm}}},
+      {"dimScaledLocalDistXY", {dimScaledLocalDistXY, {1., 1.}}},
+      {"globalDistRPhi", {globalDistRPhi, {mm, rad}}},
+      {"globalDistEtaPhi", {globalDistEtaPhi, {1., rad}}},
+  };
+
 
   class CalorimeterIslandCluster : public GaudiAlgorithm {
   public:
     Gaudi::Property<bool>                       m_splitCluster{this, "splitCluster", true};
-    Gaudi::Property<double>                     m_dimScaledDist{this, "dimScaledDist", 1.8};
-    Gaudi::Property<std::vector<double>>        u_localDistXY{this, "localDistXY", {}};
     Gaudi::Property<double>                     m_minClusterHitEdep{this, "minClusterHitEdep", 0.};
     Gaudi::Property<double>                     m_minClusterCenterEdep{this, "minClusterCenterEdep", 50.0 * MeV};
     DataHandle<eic::CalorimeterHitCollection>   m_inputHitCollection{"inputHitCollection",
@@ -48,8 +87,20 @@ namespace Jug::Reco {
     DataHandle<eic::CalorimeterHitCollection>   m_splitHitCollection{"outputHitCollection",
                                                                       Gaudi::DataHandle::Writer, this};
 
+    // neighbour checking distances
+    Gaudi::Property<double>                     m_sectorDist{this, "sectorDist", 5.0 * cm};
+    Gaudi::Property<std::vector<double>>        u_localDistXY{this, "localDistXY", {}};
+    Gaudi::Property<std::vector<double>>        u_localDistXZ{this, "localDistXZ", {}};
+    Gaudi::Property<std::vector<double>>        u_localDistYZ{this, "localDistYZ", {}};
+    Gaudi::Property<std::vector<double>>        u_globalDistRPhi{this, "globalDistRPhi", {}};
+    Gaudi::Property<std::vector<double>>        u_globalDistEtaPhi{this, "globalDistEtaPhi", {}};
+    Gaudi::Property<std::vector<double>>        u_dimScaledLocalDistXY{this, "dimScaledLocalDistXY", {1.8, 1.8}};
+    // neightbor checking function
+    std::function<Point(eic::ConstCalorimeterHit, eic::ConstCalorimeterHit)> hitsDist;
+
     // unitless counterparts of the input parameters
-    double minClusterHitEdep, minClusterCenterEdep, localDistXY[2] = {0., 0.};
+    double minClusterHitEdep, minClusterCenterEdep, sectorDist;
+    std::array<double, 2> neighbourDist = {0., 0.};
 
     CalorimeterIslandCluster(const std::string& name, ISvcLocator* svcLoc)
         : GaudiAlgorithm(name, svcLoc)
@@ -67,17 +118,46 @@ namespace Jug::Reco {
       // unitless conversion, keep consistency with juggler internal units (GeV, mm, ns, rad)
       minClusterHitEdep = m_minClusterHitEdep.value() / GeV;
       minClusterCenterEdep = m_minClusterCenterEdep.value() / GeV;
-      // sanity check
-      if (u_localDistXY.size() == 2) {
-        localDistXY[0] = u_localDistXY.value()[0] / mm;
-        localDistXY[1] = u_localDistXY.value()[1] / mm;
-        info() << fmt::format("Clustering using distance [x, y] <= [{:.4f} mm, {:.4f} mm]",
-                              localDistXY[0], localDistXY[1]) << endmsg;
-      } else if (u_localDistXY.size() > 0) {
-        warning() << fmt::format("Expect two values (x, y) from localDistXY, got {}. "
-                                 "Using dimScaledDist = {} instead",
-                                 u_localDistXY.size(), m_dimScaledDist.value()) << endmsg;
+      sectorDist = m_sectorDist.value() / mm;
+
+      // set coordinate system
+      auto set_dist_method = [this] (const Gaudi::Property<std::vector<double>> &uprop) {
+        if (not uprop.size()) { return false; }
+        auto &[method, units] = distMethods[uprop.name()];
+        if (uprop.size() != units.size()) {
+          info() << units.size() << endmsg;
+          warning() << fmt::format("Expect {} values from {}, received {}: ({}), ignored it.", units.size(),
+                                   uprop.name(), uprop.size(), fmt::join(uprop.value(), ", ")) << endmsg;
+          return false;
+        } else {
+          for (size_t i = 0; i < units.size(); ++i) { neighbourDist[i] = uprop.value()[i]/units[i]; }
+          hitsDist = method;
+          info() << fmt::format("Clustering uses {} with distances <= [{}]",
+                                uprop.name(), fmt::join(neighbourDist, ","))
+                 << endmsg;
+        }
+        return true;
+      };
+
+      std::vector<Gaudi::Property<std::vector<double>>> uprops {
+          u_localDistXY,
+          u_localDistXZ,
+          u_localDistYZ,
+          u_globalDistRPhi,
+          u_globalDistEtaPhi,
+          // default one should be the last one
+          u_dimScaledLocalDistXY,
+      };
+
+      bool method_found = false;
+      for (auto &uprop : uprops) {
+        if (set_dist_method(uprop)) { method_found = true; break; }
       }
+      if (not method_found) {
+        error() << "Cannot determine the clustering coordinates" << endmsg;
+        return StatusCode::FAILURE;
+      }
+
       return StatusCode::SUCCESS;
     }
 
@@ -124,40 +204,21 @@ namespace Jug::Reco {
 
   private:
     template <typename T>
-    inline T dist2d(T t1, T t2) const
-    {
-      return std::sqrt(t1 * t1 + t2 * t2);
-    }
-    template <typename T>
     inline T dist3d(T t1, T t2, T t3) const
     {
       return std::sqrt(t1 * t1 + t2 * t2 + t3 * t3);
     }
     // helper function to group hits
-    inline bool is_neighbor(const eic::ConstCalorimeterHit& h1,
-                            const eic::ConstCalorimeterHit& h2) const
+    inline bool is_neighbour(const eic::ConstCalorimeterHit& h1, const eic::ConstCalorimeterHit& h2) const
     {
       // in the same sector
       if (h1.sectorID() == h2.sectorID()) {
-        // use absolute value
-        if (u_localDistXY.size() == 2) {
-          return (std::abs(h1.local_x() - h2.local_x()) <= localDistXY[0]) &&
-                 (std::abs(h1.local_y() - h2.local_y()) <= localDistXY[1]);
-        // use scaled value (module size as the scales)
-        } else {
-          return (std::abs(h1.local_x() - h2.local_x()) <=
-                  m_dimScaledDist * (h1.dim_x() + h2.dim_x()) / 2.) &&
-                 (std::abs(h1.local_y() - h2.local_y()) <=
-                  m_dimScaledDist * (h1.dim_y() + h2.dim_y()) / 2.);
-        }
+        auto dist = hitsDist(h1, h2);
+        return (dist.x() <= neighbourDist[0]) && (dist.y() <= neighbourDist[1]);
       // different sector, local coordinates do not work, using global coordinates
       } else {
-        double range =
-          (u_localDistXY.size() == 2)
-            ? dist2d(localDistXY[0], localDistXY[1])
-            : m_dimScaledDist * dist2d((h1.dim_x() + h2.dim_x()) / 2., (h1.dim_y() + h2.dim_y()) / 2.);
         // sector may have rotation (barrel), so z is included
-        return dist3d(h1.x() - h2.x(), h1.y() - h2.y(), h1.z() - h2.z()) <= range;
+        return dist3d(h1.x() - h2.x(), h1.y() - h2.y(), h1.z() - h2.z()) <= sectorDist;
       }
     }
 
@@ -179,7 +240,7 @@ namespace Jug::Reco {
       group.push_back(hit);
       visits[idx] = true;
       for (size_t i = 0; i < hits.size(); ++i) {
-        if (visits[i] || !is_neighbor(hit, hits[i])) {
+        if (visits[i] || !is_neighbour(hit, hits[i])) {
           continue;
         }
         dfs_group(group, i, hits, visits);
@@ -219,7 +280,7 @@ namespace Jug::Reco {
           if (hit == hit2)
             continue;
 
-          if (is_neighbor(hit, hit2) && hit2.energy() > hit.energy()) {
+          if (is_neighbour(hit, hit2) && hit2.energy() > hit.energy()) {
             maximum = false;
             break;
           }
@@ -275,8 +336,7 @@ namespace Jug::Reco {
         for (auto cit = maxima.begin(); cit != maxima.end(); ++cit, ++j) {
           double dist_ref = cit->dim_x();
           double energy   = cit->energy();
-          double dist     = std::sqrt(std::pow(it->local_x() - cit->local_x(), 2) +
-                                  std::pow(it->local_y() - cit->local_y(), 2));
+          double dist     = hitsDist(*cit, *it).r();
           weights[j]      = std::exp(-dist / dist_ref) * energy;
         }
 

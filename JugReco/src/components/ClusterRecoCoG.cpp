@@ -47,11 +47,11 @@ namespace Jug::Reco {
   }
 
   static const std::map<std::string, std::function<double(double, double, double, int)>>
-      weightMethods{
-          {"none", constWeight},
-          {"linear", linearWeight},
-          {"log", logWeight},
-      };
+    weightMethods {
+      {"none", constWeight},
+      {"linear", linearWeight},
+      {"log", logWeight},
+    };
 
   class ClusterRecoCoG : public GaudiAlgorithm {
   public:
