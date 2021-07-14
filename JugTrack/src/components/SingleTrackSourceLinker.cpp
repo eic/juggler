@@ -1,4 +1,5 @@
 #include "JugTrack/GeometryContainers.hpp"
+#include "fmt/format.h"
 
 // Gaudi
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -108,21 +109,33 @@ namespace Jug::Reco {
         // A "Measurement" is constructed to for each hit which makes the connection to
         // the tracking surface and covariance matrix
 
-        dd4hep::Position global_position(ahit.x(), ahit.y(), ahit.z());
-
         auto volman         = m_geoSvc->detector()->volumeManager();
-        auto alignment      = volman.lookupDetElement(vol_id).nominal();
-        auto local_position = alignment.worldToLocal(global_position);
+        auto detelem        = volman.lookupDetElement(vol_id&0x3FFF);
+        auto center         = surface->center(Acts::GeometryContext());
+        auto gcenter        = surface->localToGlobal(Acts::GeometryContext(), {center(0), center(1)}, {0, 0, 0});
+        dd4hep::Position global_position(ahit.x(), ahit.y(), ahit.z());
+        // dd4hep::Position global_position(ahit.x() - center(0), ahit.y() - center(1), ahit.z() - center(2));
+        auto local_position = detelem.nominal().worldToLocal(global_position);
 
         debug() << "===== Debugging hit =====" << endmsg;
-        debug() << "global pos (" << global_position.x() << "," << global_position.y() << ","
+        debug() << vol_ctx->volumePlacement().volIDs().str() << ", " << detelem.name() << endmsg;
+        debug() << fmt::format("cell id: {:#064b}", ahit.cellID()) << endmsg;
+        debug() << fmt::format("vol id:  {:#064b}", vol_id) << endmsg;
+        debug() << " surface center : (" << center(0) << ", " << center(1) << ", " << center(2) << ")" << endmsg;
+        debug() << " surface gcenter: (" << gcenter(0) << ", " << gcenter(1) << ", " << gcenter(2) << ")" << endmsg;
+        debug() << " detelem center: " << detelem.nominal().localToWorld({0, 0, 0}) << endmsg;
+        debug() << "global pos (" << global_position.x() << ", " << global_position.y() << ", "
                 << global_position.z() << ")" << endmsg;
-        //debug() << "local  pos (" << local_position.x() << "," << local_position.y() << ","
-        //        << local_position.z() << ")" << endmsg;
-        auto acts_pos = surface->globalToLocal(Acts::GeometryContext(), {ahit.x(), ahit.y(), ahit.z()}, {0, 0, 0}).value();//, pos);
-        debug() << " ACTS local position : (" << acts_pos[0] << "," << acts_pos[1] << "," << acts_pos[2] << ")"<< endmsg;
+        debug() << "local  pos (" << local_position.x() << ", " << local_position.y() << ", "
+                << local_position.z() << ")" << endmsg;
+        auto acts_pos = surface->globalToLocal(Acts::GeometryContext(),
+                {ahit.x()*Acts::UnitConstants::mm, ahit.y()*Acts::UnitConstants::mm, ahit.z()*Acts::UnitConstants::mm},
+                {0, 0, 0}).value();//, pos);
+        Acts::Vector2 pos(acts_pos[0], acts_pos[1]);
+        Acts::Vector3 gpos = surface->localToGlobal(Acts::GeometryContext(), pos, {0, 0, 0});//, pos);
+        debug() << " ACTS local position  : (" << acts_pos[0] << ", " << acts_pos[1] << ")"<< endmsg;
+        debug() << " ACTS global position  : (" << gpos(0) << ", " << gpos(1) << ", " << gpos(2) << ")"<< endmsg;
         // construct the vector of measured parameters (2d position in this case)
-        Acts::Vector2 pos(acts_pos.x(), acts_pos.y());
 
         // construct the covariance matrix
         Acts::SymMatrix2 cov = Acts::SymMatrix2::Zero();

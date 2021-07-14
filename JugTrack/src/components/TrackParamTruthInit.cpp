@@ -18,6 +18,7 @@
 #include "Math/Vector3D.h"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
+#include "TDatabasePDG.h"
 
   ///// (Reconstructed) track parameters e.g. close to the vertex.
   //using TrackParameters = Acts::CurvilinearTrackParameters;
@@ -43,6 +44,7 @@ namespace Jug::Reco {
                                                                     this};
     DataHandle<TrackParametersContainer>         m_outputInitialTrackParameters{"outputInitialTrackParameters",
                                                                         Gaudi::DataHandle::Writer, this};
+    TDatabasePDG pdgData;
 
   public:
     TrackParamTruthInit(const std::string& name, ISvcLocator* svcLoc)
@@ -68,7 +70,7 @@ namespace Jug::Reco {
 
       for(const auto& part : *mcparts) {
 
-        // genStatus = 1 means thrown G4Primary 
+        // genStatus = 1 means thrown G4Primary
         if(part.genStatus() != 1 ) {
           continue;
         }
@@ -97,20 +99,15 @@ namespace Jug::Reco {
         params(Acts::eBoundTheta)  = momentum.Theta();
         params(Acts::eBoundQOverP) = -1/p;
         params(Acts::eBoundTime)   = part.time() * ns;
-        /// \todo create or find better particle data interface.
         // get the particle charge
-        int charge = ((part.pdgID() > 0) ? 1 : -1);
-        // electron is negative but positive pdg code
-        if( std::abs(part.pdgID()) == 11 ) {
-          charge *= -1;
-        }
+        double charge = pdgData.GetParticle(part.pdgID()) -> Charge();
 
         //// Construct a perigee surface as the target surface
         auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
             Acts::Vector3{part.vsx() * mm, part.vsy() * mm, part.vsz() * mm});
 
         //params(Acts::eBoundQOverP) = charge/p;
-        init_trk_params->push_back({pSurface, params, charge,cov});
+        init_trk_params->push_back({pSurface, params, charge, cov});
         // std::make_optional(std::move(cov))
 
         debug() << "Invoke track finding seeded by truth particle with p = " << p/GeV  << " GeV" << endmsg;
