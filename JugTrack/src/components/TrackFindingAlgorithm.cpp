@@ -96,7 +96,7 @@ namespace Jug::Reco {
     //// Construct a perigee surface as the target surface
     auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3{0., 0., 0.});
 
-    ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("TrackFindingAlgorithm Logger", Acts::Logging::INFO));
+    ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("TrackFindingAlgorithm Logger", Acts::Logging::VERBOSE));
 
     // Perform the track finding for each starting parameter
     // @TODO: use seeds from track seeding algorithm as starting parameter
