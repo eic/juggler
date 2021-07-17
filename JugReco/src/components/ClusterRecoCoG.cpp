@@ -190,9 +190,14 @@ namespace Jug::Reco {
         x += hit.x() * w;
         y += hit.y() * w;
         z += hit.z() * w;
-        debug() << hit.cellID() << "(" << hit.local_x() << ", " << hit.local_y() << ", "
+        /*
+        debug() << hit.cellID() << ": (" << hit.local_x() << ", " << hit.local_y() << ", "
                 << hit.local_z() << "), "
                 << "(" << hit.x() << ", " << hit.y() << ", " << hit.z() << "), " << endmsg;
+        */
+      }
+      if (tw == 0.) {
+        warning() << "zero total weights encountered, you may want to adjust your weighting parameter." << endmsg;
       }
       res.position({x / tw, y / tw, z / tw});
       // convert global position to local position, use the cell with max edep as a reference

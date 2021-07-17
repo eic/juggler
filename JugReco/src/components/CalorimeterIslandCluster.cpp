@@ -325,6 +325,7 @@ namespace Jug::Reco {
       }
 
       // split between maxima
+      // TODO, here we can implement iterations with profile, or even ML for better splits
       std::vector<double>       weights(maxima.size());
       std::vector<eic::Cluster> splits(maxima.size());
       size_t                    n_clus = clusterID + 1;
