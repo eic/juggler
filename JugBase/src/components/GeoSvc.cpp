@@ -159,36 +159,37 @@ StatusCode GeoSvc::initialize() {
                              {s->v().x(), s->v().y(), s->v().z()}));
   }
 
+  // ACTS
   m_trackingGeo = std::move(Acts::convertDD4hepDetector(m_dd4hepGeo->world(), Acts::Logging::VERBOSE, Acts::equidistant,
                                                         Acts::equidistant, Acts::equidistant));
   if (m_trackingGeo) {
     draw_surfaces(m_trackingGeo, "tracking_geometry.obj");
-
     debug() << "visiting all the surfaces  " << endmsg;
     m_trackingGeo->visitSurfaces([this](const Acts::Surface* surface) {
       // for now we just require a valid surface
       if (not surface) {
-        debug() << "no surface??? " << endmsg;
+        info() << "no surface??? " << endmsg;
         return;
       }
       auto det_element =
           dynamic_cast<const Acts::DD4hepDetectorElement*>(surface->associatedDetectorElement());
 
       if (!det_element) {
-        debug() << "invalid det_element!!! " << endmsg;
+        error() << "invalid det_element!!! " << endmsg;
         return;
       }
       // more verbose output is lower enum value
+      debug() << " det_element->identifier() " << det_element->identifier() << endmsg;
+      auto volman  = m_dd4hepGeo->volumeManager();
+      auto vol_ctx = volman.lookupContext(det_element->identifier());
+      auto vol_id  = vol_ctx->identifier;
+
       if (msgLevel() <= MSG::DEBUG) {
-        debug() << " det_element->identifier() " << det_element->identifier() << endmsg;
-        auto volman  = m_dd4hepGeo->volumeManager();
-        auto vol_ctx = volman.lookupContext(det_element->identifier());
-        auto vol_id  = vol_ctx->identifier;
         auto de  = vol_ctx->element;
         debug() << de.path() << endmsg;
         debug() << de.placementPath() << endmsg;
       }
-      this->m_surfaces.insert_or_assign(det_element->identifier(), surface);
+      this->m_surfaces.insert_or_assign(vol_id, surface);
     });
   }
 
