@@ -186,7 +186,7 @@ namespace Jug::Reco {
           // the measurement container is unordered and the index under which the
           // measurement will be stored is known before adding it.
           Index           hitIdx = measurements->size();
-          IndexSourceLink sourceLink(vol_id, ihit);
+          IndexSourceLink sourceLink(surface->geometryId(), ihit);
           auto            meas = Acts::makeMeasurement(sourceLink, loc, cov, Acts::eBoundLoc0, Acts::eBoundLoc1);
 
           // add to output containers. since the input is already geometry-order,

@@ -137,7 +137,7 @@ namespace Jug::Reco {
         //Acts::Vector3 par(localX, localY, simHit.time());
 
         Index           hitIdx = ihit;
-        IndexSourceLink sourceLink(vol_id, ihit);
+        IndexSourceLink sourceLink(surface->geometryId(), ihit);
         auto meas = Acts::makeMeasurement(sourceLink, pos, cov,
                                           Acts::eBoundLoc0, Acts::eBoundLoc1);//, Acts::eBoundTime);
 
