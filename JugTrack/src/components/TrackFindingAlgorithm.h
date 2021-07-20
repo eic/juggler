@@ -71,6 +71,7 @@ namespace Jug::Reco {
     Acts::MagneticFieldContext            m_fieldctx;
 
     Acts::MeasurementSelector::Config m_sourcelinkSelectorCfg;
+    Acts::Logging::Level m_actsLoggingLevel = Acts::Logging::INFO;
 
     TrackFindingAlgorithm(const std::string& name, ISvcLocator* svcLoc);
 

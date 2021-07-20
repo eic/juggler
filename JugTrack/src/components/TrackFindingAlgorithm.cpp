@@ -48,6 +48,15 @@
 #include <stdexcept>
 
 
+static const std::map<int, Acts::Logging::Level> _msgMap = {
+    {MSG::DEBUG, Acts::Logging::DEBUG},
+    {MSG::VERBOSE, Acts::Logging::VERBOSE},
+    {MSG::INFO, Acts::Logging::INFO},
+    {MSG::WARNING, Acts::Logging::WARNING},
+    {MSG::FATAL, Acts::Logging::FATAL},
+    {MSG::ERROR, Acts::Logging::ERROR},
+};
+
 namespace Jug::Reco {
 
   using namespace Acts::UnitLiterals;
@@ -78,6 +87,10 @@ namespace Jug::Reco {
         {Acts::GeometryIdentifier(), {15, 10}},
     };
     m_trackFinderFunc = TrackFindingAlgorithm::makeTrackFinderFunction(m_geoSvc->trackingGeometry(), m_BField);
+    auto im = _msgMap.find(msgLevel());
+    if (im != _msgMap.end()) {
+        m_actsLoggingLevel = im->second;
+    }
     return StatusCode::SUCCESS;
   }
 
@@ -96,7 +109,7 @@ namespace Jug::Reco {
     //// Construct a perigee surface as the target surface
     auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3{0., 0., 0.});
 
-    ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("TrackFindingAlgorithm Logger", Acts::Logging::VERBOSE));
+    ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("TrackFindingAlgorithm Logger", m_actsLoggingLevel));
 
     // Perform the track finding for each starting parameter
     // @TODO: use seeds from track seeding algorithm as starting parameter

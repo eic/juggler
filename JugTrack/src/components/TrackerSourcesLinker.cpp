@@ -139,7 +139,7 @@ namespace Jug::Reco {
             continue;
           }
           const Acts::Surface* surface = is->second;
-          debug() << " surface center : " << surface->center(Acts::GeometryContext()) << endmsg;
+          debug() << " surface center : " << surface->center(Acts::GeometryContext()).transpose() << endmsg;
 //=======
 //
 //          //allHits->push_back(ahit.clone());

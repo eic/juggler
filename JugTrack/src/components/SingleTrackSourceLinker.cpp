@@ -108,19 +108,17 @@ namespace Jug::Reco {
         // A "Measurement" is constructed to for each hit which makes the connection to
         // the tracking surface and covariance matrix
 
-        dd4hep::Position global_position(ahit.x(), ahit.y(), ahit.z());
-
-        auto volman         = m_geoSvc->detector()->volumeManager();
-        auto alignment      = volman.lookupDetElement(vol_id).nominal();
-        auto local_position = alignment.worldToLocal(global_position);
+        auto volman    = m_geoSvc->detector()->volumeManager();
+        auto detelem   = volman.lookupDetElement(vol_id);
+        auto local_pos = detelem.nominal().worldToLocal({ahit.x(), ahit.y(), ahit.z()});
+        auto acts_pos = surface->globalToLocal(Acts::GeometryContext(), {ahit.x(), ahit.y(), ahit.z()}, {0, 0, 0}).value();
 
         debug() << "===== Debugging hit =====" << endmsg;
-        debug() << "global pos (" << global_position.x() << "," << global_position.y() << ","
-                << global_position.z() << ")" << endmsg;
-        //debug() << "local  pos (" << local_position.x() << "," << local_position.y() << ","
-        //        << local_position.z() << ")" << endmsg;
-        auto acts_pos = surface->globalToLocal(Acts::GeometryContext(), {ahit.x(), ahit.y(), ahit.z()}, {0, 0, 0}).value();//, pos);
-        debug() << " ACTS local position : (" << acts_pos[0] << "," << acts_pos[1] << "," << acts_pos[2] << ")"<< endmsg;
+        debug() << "DD4hep global pos (" << ahit.x() << "," << ahit.y() << "," << ahit.z() << ")" << endmsg;
+        debug() << "DD4hep local  pos (" << local_pos.x() << "," << local_pos.y() << "," << local_pos.z() << ")" << endmsg;
+        debug() << "ACTS local position : (" << acts_pos[0] << "," << acts_pos[1] << ")"<< endmsg;
+        debug() << "ACTS surface center : " << surface->center(Acts::GeometryContext()).transpose() << endmsg;
+        debug() << "DD4hep DetElement center : " << detelem.nominal().localToWorld(detelem.placement().position())/dd4hep::mm << endmsg;
         // construct the vector of measured parameters (2d position in this case)
         Acts::Vector2 pos(acts_pos.x(), acts_pos.y());
 

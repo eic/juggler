@@ -106,7 +106,7 @@ namespace Jug::Reco {
         }
         const Acts::Surface* surface = is->second;
         auto surf_center = surface->center(Acts::GeometryContext());
-        debug() << " surface center : " << surface->center(Acts::GeometryContext()) << endmsg;
+        debug() << " surface center : " << surface->center(Acts::GeometryContext()).transpose() << endmsg;
         // transform global position into local coordinates
         Acts::Vector2 pos(0, 0);
         // geometry context contains nothing here
