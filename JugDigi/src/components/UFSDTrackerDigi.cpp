@@ -59,6 +59,11 @@ namespace Jug::Digi {
       // eic::RawTrackerHitCollection* rawHitCollection = new eic::RawTrackerHitCollection();
       std::map<long long, int> cell_hit_map;
       for (const auto& ahit : *simhits) {
+        debug() << "--------------------" << ahit.cellID() << endmsg;
+        debug() << "Hit in cellID = " << ahit.cellID() << endmsg;
+        debug() << "     position = (" << ahit.position().x  << "," << ahit.position().y <<","<< ahit.position().z << ")" << endmsg;
+        debug() << "    xy_radius = " << std::hypot(ahit.position().x  , ahit.position().y ) << endmsg;
+        debug() << "     momentum = (" << ahit.momentum().x  << "," << ahit.momentum().y <<","<< ahit.momentum().z << ")" << endmsg;
         // std::cout << ahit << "\n";
         if (cell_hit_map.count(ahit.cellID()) == 0) {
           cell_hit_map[ahit.cellID()] = rawhits->size();

@@ -25,6 +25,10 @@ namespace Acts {
   class Surface;
 }
 
+namespace genfit {
+  class DetPlane;
+}
+
 class G4VUserDetectorConstruction;
 
 class GAUDI_API IGeoSvc : virtual public IService {
@@ -44,6 +48,12 @@ public:
   // receive Geant4 Geometry
   //virtual G4VUserDetectorConstruction* getGeant4Geo() = 0;
   virtual const VolumeSurfaceMap& surfaceMap() const = 0;
+
+  // Note this hsould return a const& but is just copied for the moment to get around genfit's api
+  /// Genfit DetPlane map
+  virtual std::map<int64_t, std::shared_ptr<genfit::DetPlane>> getDetPlaneMap() const = 0;
+
+  //virtual std::map< int64_t, dd4hep::rec::Surface* > getDetPlaneMap() const = 0 ;
 
   virtual ~IGeoSvc() {}
 };

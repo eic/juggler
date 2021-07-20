@@ -76,9 +76,9 @@ namespace Jug::Reco {
       return StatusCode::FAILURE;
     }
 
-    genfit::FieldManager::getInstance()->init(new genfit::ConstField(
-        0., 0., m_geoSvc->centralMagneticField() * 10.0)); // gentfit uses kilo-Gauss
-    genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
+    //genfit::FieldManager::getInstance()->init(new genfit::ConstField(
+    //    0., 0., m_geoSvc->centralMagneticField() * 10.0)); // gentfit uses kilo-Gauss
+    //genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
 
     return StatusCode::SUCCESS;
   }
@@ -94,12 +94,17 @@ namespace Jug::Reco {
     // TrajectoryContainer trajectories;
     //auto trajectories = m_outputTrajectories.createAndPut();
 
+    // copy the map to get around genfit's interface
+    // this should be returning a const&
+    auto detPlaneMap = m_geoSvc->getDetPlaneMap();
+
     debug() <<  "Single track mom : " <<  single_track_param.absoluteMomentum() << endmsg;
     if( hits->size() < 2 ) {
     return StatusCode::SUCCESS;
     }
     // init fitter
-    genfit::AbsKalmanFitter* fitter = new genfit::KalmanFitterRefTrack();
+    genfit::KalmanFitterRefTrack fitter;
+    //genfit::AbsKalmanFitter* fitter = new genfit::KalmanFitterRefTrack();
 
     // particle pdg code; pion hypothesis
     const int pdg = 11;
@@ -121,6 +126,8 @@ namespace Jug::Reco {
       //auto volman         = m_geoSvc->detector()->volumeManager();
       //auto alignment      = volman.lookupDetElement(vol_id).nominal();
       //auto local_position = alignment.worldToLocal(global_position);
+      auto       vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID());
+      auto       vol_id  = vol_ctx->identifier;
       TMatrixDSym hitCov(2);
       hitCov.UnitMatrix();
       hitCov(0,0) = ahit.covsym_xx()*ahit.covsym_xx();
@@ -137,7 +144,8 @@ namespace Jug::Reco {
       hitCoords[1] = 0;
       auto measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, ahit.cellID(), ihit, nullptr);
 
-      measurement->setPlane(genfit::SharedPlanePtr(new genfit::DetPlane(point, u_dir, v_dir)),
+      //measurement->setPlane(genfit::SharedPlanePtr(new genfit::DetPlane(point, u_dir, v_dir)),
+      measurement->setPlane(detPlaneMap[vol_id],
                             ihit);
       fitTrack.insertPoint(new genfit::TrackPoint(measurement, &fitTrack));
 
@@ -147,7 +155,7 @@ namespace Jug::Reco {
     fitTrack.checkConsistency();
 
     // do the fit
-    fitter->processTrack(&fitTrack);
+    fitter.processTrack(&fitTrack);
 
     // print fit result
     fitTrack.getFittedState().Print();
@@ -155,7 +163,7 @@ namespace Jug::Reco {
     //check
     fitTrack.checkConsistency();
 
-    delete fitter;
+    //delete fitter;
 
     return StatusCode::SUCCESS;
   }

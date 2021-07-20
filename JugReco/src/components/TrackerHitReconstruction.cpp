@@ -74,6 +74,8 @@ namespace Jug {
         const eic::RawTrackerHitCollection* rawhits = m_inputHitCollection.get();
         // Create output collections
         auto rec_hits = m_outputHitCollection.createAndPut();
+
+        debug() << " raw hits size : " <<  std::size(*rawhits) << endmsg;
         for (const auto& ahit : *rawhits) {
           // debug() << "cell ID : " << ahit.cellID() << endmsg;
           auto pos = m_geoSvc->cellIDPositionConverter()->position(ahit.cellID());

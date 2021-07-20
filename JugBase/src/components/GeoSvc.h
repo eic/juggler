@@ -31,14 +31,12 @@
 #include "DDRec/Surface.h"
 #include "DD4hep/DD4hepUnits.h"
 
-// Create a test context
-//#define CHECK_ROTATION_ANGLE(t, a, tolerance)               \
-//  {                                                         \
-//    Vector3 v = (*t) * Vector3(1, 0, 0);                    \
-//    CHECK_CLOSE_ABS(VectorHelpers::phi(v), (a), tolerance); \
-//  }
 
-//using SrfVec = std::vector<std::shared_ptr<const Surface>>;
+
+/** Draw the surfaces and save to obj file.
+ *  This is useful for debugging the ACTS geometry. The obj file can
+ *  be loaded into various tools, such as FreeCAD, for inspection.
+ */
 void draw_surfaces(std::shared_ptr<const Acts::TrackingGeometry> trk_geo, const std::string& fname);
 
 class GeoSvc : public extends<Service, IGeoSvc> {
@@ -46,23 +44,36 @@ public:
   using VolumeSurfaceMap = std::unordered_map<uint64_t, const Acts::Surface*>;
 
 private:
+
+  /** DD4hep detector interface class.
+   * This is the main dd4hep detector handle.
+   * <a href="https://dd4hep.web.cern.ch/dd4hep/reference/classdd4hep_1_1Detector.html">See DD4hep Detector documentation</a>
+   */
+  dd4hep::Detector* m_dd4hepGeo = nullptr;
+
+  /// DD4hep surface map
+  std::map< int64_t, dd4hep::rec::Surface* > m_surfaceMap ;
+
+  /// Genfit DetPlane map
+  std::map< int64_t, std::shared_ptr<genfit::DetPlane> > m_detPlaneMap ;
+
   /// ACTS Tracking  Geometry
   std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeo;
 
-  /// Lookup container for hit surfaces that generate smeared hits
+  /// ACTS surface lookup container for hit surfaces that generate smeared hits
   VolumeSurfaceMap m_surfaces;
 
-  /// Pointer to the interface to the DD4hep geometry
-  dd4hep::Detector* m_dd4hepgeo;
-
-  std::shared_ptr<const dd4hep::rec::CellIDPositionConverter> m_cellid_converter =
-      nullptr; //(*(m_geoSvc->detector()));
+  /** DD4hep CellID tool.
+   *  Use to lookup geometry information for a hit with cellid number (int64_t).
+   *  <a href="https://dd4hep.web.cern.ch/dd4hep/reference/classdd4hep_1_1rec_1_1CellIDPositionConverter.html">See DD4hep CellIDPositionConverter documentation</a>
+   */
+  std::shared_ptr<const dd4hep::rec::CellIDPositionConverter> m_cellid_converter = nullptr;
 
   /// XML-files with the detector description
   Gaudi::Property<std::vector<std::string>> m_xmlFileNames{
       this, "detectors", {}, "Detector descriptions XML-files"};
 
-  /// output
+  /// Gaudi logging output
   MsgStream m_log;
 
 public:
@@ -84,14 +95,18 @@ public:
    */
   virtual dd4hep::DetElement getDD4HepGeo() override;
 
-  virtual std::shared_ptr<const dd4hep::rec::CellIDPositionConverter>
-  cellIDPositionConverter() const
+  /** Get the CellID geometry tool.
+   *  It is constructed in init.
+   *  <a href="https://dd4hep.web.cern.ch/dd4hep/reference/classdd4hep_1_1rec_1_1CellIDPositionConverter.html">See DD4hep CellIDPositionConverter documentation</a>
+   */
+  virtual std::shared_ptr<const dd4hep::rec::CellIDPositionConverter> cellIDPositionConverter() const
   {
     return m_cellid_converter;
   }
 
   /** Get the main dd4hep Detector.
    * Returns the pointer to the main dd4hep detector class.
+   * <a href="https://dd4hep.web.cern.ch/dd4hep/reference/classdd4hep_1_1Detector.html">See DD4hep Detector documentation</a>
    */
   virtual dd4hep::Detector* detector() override;
 
@@ -101,11 +116,13 @@ public:
 
   virtual double centralMagneticField() const
   {
-    return m_dd4hepgeo->field().magneticField({0, 0, 0}).z() *
-           (Acts::UnitConstants::T / dd4hep::tesla);
+    return m_dd4hepGeo->field().magneticField({0, 0, 0}).z() * (Acts::UnitConstants::T / dd4hep::tesla);
   }
 
   virtual const VolumeSurfaceMap& surfaceMap() const { return m_surfaces; }
+
+  // Note this hsould return a const& but is just copied for the moment to get around genfit's api
+  virtual std::map<int64_t, std::shared_ptr<genfit::DetPlane>> getDetPlaneMap() const { return m_detPlaneMap; }
 };
 
 inline std::shared_ptr<const Acts::TrackingGeometry> GeoSvc::trackingGeometry() const

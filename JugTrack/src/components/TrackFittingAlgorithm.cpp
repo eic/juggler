@@ -136,6 +136,7 @@ namespace Jug::Reco {
       const auto& initialParams = (*initialParameters)[itrack];
 
       debug() << "protoTrack size:  " << protoTrack.size() << endmsg;
+      debug() << "sourceLinks size:  " << sourceLinks->size() << endmsg;
 
       trackSourceLinks.clear();
       trackSourceLinks.reserve(protoTrack.size());
@@ -145,7 +146,7 @@ namespace Jug::Reco {
         auto sourceLink = sourceLinks->nth(hitIndex);
         auto geoId      = sourceLink->geometryId();
         if (sourceLink == sourceLinks->end()) {
-          ACTS_FATAL("Proto track " << itrack << " contains invalid hit index"
+          ACTS_FATAL("Proto track " << itrack << " contains invalid hit index "
                                     << hitIndex);
           return StatusCode::FAILURE;
         }

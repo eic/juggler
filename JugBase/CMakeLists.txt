@@ -4,15 +4,12 @@
 gaudi_subdir(JugBase v1r0)
 
 find_package(EICD)
-#set(PODIO $ENV{PODIO})
-#set(CMAKE_MODULE_PATH CMAKE_MODULE_PATH PODIO)
-#find_package(podio 0.11.01 REQUIRED)
-#include_directories(${podio_INCLUDE_DIR})
 
 find_package(Acts REQUIRED COMPONENTS Core PluginIdentification PluginTGeo PluginDD4hep )
-
 find_package(ROOT COMPONENTS RIO Tree Core REQUIRED)
 find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
+find_library(genfit2 genfit2 /usr/local/lib REQUIRED)
+
 
 # this declaration will not be needed in the future
 gaudi_depends_on_subdirs(GaudiAlg GaudiKernel)
@@ -37,7 +34,7 @@ target_compile_options(JugBase PRIVATE -Wno-suggest-override)
 gaudi_add_module(JugBasePlugins
                  src/components/*.cpp 
                  src/components/ReadTestConsumer.cxx
-                 LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO  ActsCore ActsPluginDD4hep EICD::eicd)
+                 LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT DD4hep::DDRec NPDet::DD4podIO  ActsCore ActsPluginDD4hep EICD::eicd genfit2)
 target_compile_options(JugBasePlugins PRIVATE -Wno-suggest-override)
 
 #gaudi_add_test(ProduceForReadTest
