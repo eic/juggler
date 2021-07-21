@@ -40,9 +40,6 @@ namespace Jug::Reco {
     /// Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
 
-    /// Lookup container for hit surfaces that generate smeared hits
-    std::unordered_map<uint64_t, const Acts::Surface*> m_surfaces;
-
   public:
     TrackerSourceLinker(const std::string& name, ISvcLocator* svcLoc)
         : GaudiAlgorithm(name, svcLoc) {
@@ -61,19 +58,6 @@ namespace Jug::Reco {
                 << endmsg;
         return StatusCode::FAILURE;
       }
-      debug() << "visiting all the surfaces  " << endmsg;
-      m_geoSvc->trackingGeometry()->visitSurfaces([this](const Acts::Surface* surface) {
-        // for now we just require a valid surface
-        if (not surface) {
-          return;
-        }
-        auto det_element = dynamic_cast<const Acts::DD4hepDetectorElement*>(surface->associatedDetectorElement());
-        if(!det_element) {
-          debug() << "invalid det_element!!! " << endmsg;
-          return;
-        }
-        this->m_surfaces.insert_or_assign(det_element->identifier(), surface);
-      });
 
       return StatusCode::SUCCESS;
     }
@@ -99,8 +83,8 @@ namespace Jug::Reco {
 
         auto       vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID());
         auto       vol_id  = vol_ctx->identifier;
-        const auto is      = m_surfaces.find(vol_id);
-        if (is == m_surfaces.end()) {
+        const auto is      = m_geoSvc->surfaceMap().find(vol_id);
+        if (is == m_geoSvc->surfaceMap().end()) {
           debug() << " vol_id (" <<  vol_id << ")  not found in m_surfaces." <<endmsg;
           continue;
         }

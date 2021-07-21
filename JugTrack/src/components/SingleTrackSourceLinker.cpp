@@ -46,9 +46,6 @@ namespace Jug::Reco {
     /// Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
 
-    /// Lookup container for hit surfaces that generate smeared hits
-    std::unordered_map<uint64_t, const Acts::Surface*> m_surfaces;
-
   public:
     SingleTrackSourceLinker(const std::string& name, ISvcLocator* svcLoc)
         : GaudiAlgorithm(name, svcLoc) {
@@ -97,7 +94,7 @@ namespace Jug::Reco {
         auto       vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID());
         auto       vol_id  = vol_ctx->identifier;
         const auto is      = m_geoSvc->surfaceMap().find(vol_id);
-        if (is == m_surfaces.end()) {
+        if (is == m_geoSvc->surfaceMap().end()) {
           debug() << " vol_id (" << vol_id << ")  not found in m_surfaces!!!!" << endmsg;
           continue;
         }
