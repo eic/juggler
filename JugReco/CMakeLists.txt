@@ -1,36 +1,18 @@
 ################################################################################
 # Package: JugReco
 ################################################################################
-gaudi_subdir(JugReco v1r0)
 
 find_package(EICD REQUIRED)
-#set(PODIO $ENV{PODIO})
-#set(CMAKE_MODULE_PATH CMAKE_MODULE_PATH PODIO)
-#find_package(podio 0.11.01 REQUIRED)
-#include_directories(${podio_INCLUDE_DIR})
-
-#find_package(Acts REQUIRED COMPONENTS Core PluginIdentification PluginTGeo PluginDD4hep )
 find_package(ROOT COMPONENTS RIO Tree Core REQUIRED)
 find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 
-# this declaration will not be needed in the future
-gaudi_depends_on_subdirs(GaudiAlg GaudiKernel)
-#gaudi_install_scripts()
-#gaudi_install_python_modules()
-
-#gaudi_add_library(JugBase
-#  src/*.cpp 
-#                  INCLUDE_DIRS EICD PODIO ROOT $ENV{HOME}/stow/podio/include
-#                  LINK_LIBRARIES GaudiAlgLib GaudiKernel ROOT DD4hep::DDG4IO
-#                  PUBLIC_HEADERS JugBase)
-#target_link_libraries(JugBase 
-#  podio::podioRootIO
-#  )
-
+file(GLOB JugRecoPlugins_sources src/components/*.cpp)
 gaudi_add_module(JugRecoPlugins
+  SOURCES
   src/components/TrackerHitReconstruction.cpp 
   src/components/SimpleClustering.cpp 
   src/components/CalorimeterHitReco.cpp 
+  src/components/CalorimeterHitsEtaPhiProjector.cpp 
   src/components/CalorimeterHitsMerger.cpp 
   src/components/CalorimeterIslandCluster.cpp 
   src/components/CrystalEndcapsReco.cpp 
@@ -47,20 +29,17 @@ gaudi_add_module(JugRecoPlugins
   src/components/ImagingPixelMerger.cpp 
   src/components/ImagingTopoCluster.cpp 
   src/components/ImagingClusterReco.cpp 
-  src/components/CalorimeterHitsEtaPhiProjector.cpp 
-  LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO EICD::eicd DDRec )
+  LINK
+  Gaudi::GaudiAlgLib Gaudi::GaudiKernel
+  JugBase
+  ROOT::Core ROOT::RIO ROOT::Tree
+  NPDet::DD4podIO
+  EICD::eicd
+  DD4hep::DDRec
+)
+
+target_include_directories(JugRecoPlugins PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 target_compile_options(JugRecoPlugins PRIVATE -Wno-suggest-override)
-
-#gaudi_add_test(ProduceForReadTest
-#               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-#               FRAMEWORK tests/options/simple_producer.py)
-#gaudi_add_test(loggerTest
-#               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-#               FRAMEWORK tests/options/testLogger.py
-#               )
-#gaudi_add_test(CheckReadCollectionSize
-#               ENVIRONMENT PYTHONPATH+=${PODIO_PYTHON_DIR}
-#               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-#               COMMAND python FWCore/tests/scripts/check_coll_after_read.py
-#               DEPENDS ReadTest)

@@ -1,35 +1,16 @@
 ################################################################################
 # Package: JugTrack
 ################################################################################
-gaudi_subdir(JugTrack v1r0)
 
 find_package(EICD REQUIRED)
-#set(PODIO $ENV{PODIO})
-#set(CMAKE_MODULE_PATH CMAKE_MODULE_PATH PODIO)
-#find_package(podio 0.11.01 REQUIRED)
-#include_directories(${podio_INCLUDE_DIR})
-
 find_package(Acts REQUIRED COMPONENTS Core PluginIdentification PluginTGeo PluginDD4hep )
 find_package(ROOT COMPONENTS RIO Tree Core REQUIRED)
 find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
-
 find_library(genfit2 genfit2 /usr/local/lib REQUIRED)
 
-# this declaration will not be needed in the future
-gaudi_depends_on_subdirs(GaudiAlg GaudiKernel)
-#gaudi_install_scripts()
-#gaudi_install_python_modules()
-
-#gaudi_add_library(JugBase
-#  src/*.cpp 
-#                  INCLUDE_DIRS EICD PODIO ROOT $ENV{HOME}/stow/podio/include
-#                  LINK_LIBRARIES GaudiAlgLib GaudiKernel ROOT DD4hep::DDG4IO
-#                  PUBLIC_HEADERS JugBase)
-#target_link_libraries(JugBase 
-#  podio::podioRootIO
-#  )
-
+file(GLOB JugTrackPlugins_sources src/components/*.cpp)
 gaudi_add_module(JugTrackPlugins
+  SOURCES
   src/components/GenFitTrackFitter.cpp 
   src/components/SingleTrackSourceLinker.cpp 
   src/components/TrackerSourceLinker.cpp 
@@ -44,7 +25,20 @@ gaudi_add_module(JugTrackPlugins
   src/components/TrackParamClusterInit.cpp 
   src/components/TrackParamVertexClusterInit.cpp 
   src/components/ParticlesFromTrackFit.cpp 
-  LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT NPDet::DD4podIO EICD::eicd DDRec Acts genfit2)
+  LINK
+  Gaudi::GaudiAlgLib Gaudi::GaudiKernel
+  JugBase
+  ROOT::Core ROOT::RIO ROOT::Tree
+  NPDet::DD4podIO
+  EICD::eicd
+  DD4hep::DDRec
+  ActsCore
+  ${genfit2}
+)
+
+target_include_directories(JugTrackPlugins PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 target_compile_options(JugTrackPlugins PRIVATE -Wno-suggest-override)
 
@@ -52,8 +46,3 @@ target_compile_options(JugTrackPlugins PRIVATE -Wno-suggest-override)
 #               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 #               FRAMEWORK tests/options/testLogger.py
 #               )
-#gaudi_add_test(CheckReadCollectionSize
-#               ENVIRONMENT PYTHONPATH+=${PODIO_PYTHON_DIR}
-#               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-#               COMMAND python FWCore/tests/scripts/check_coll_after_read.py
-#               DEPENDS ReadTest)

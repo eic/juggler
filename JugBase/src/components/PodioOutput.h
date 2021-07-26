@@ -51,6 +51,8 @@ private:
   TTree* m_metadatatree;
   /// The stored collections
   std::vector<podio::CollectionBase*> m_storedCollections;
+  /// The metadata map
+  std::map<std::string, std::string> m_metadata;
 };
 
 #endif

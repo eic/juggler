@@ -148,19 +148,19 @@ const T* DataHandle<T>::get() {
       DataObjectHandle<DataWrapper<T>>::setRead();
       return reinterpret_cast<const T*>(tmp->collectionBase());
     } else {
-      std::string errorMsg("The type provided for " + DataObjectHandle<DataWrapper<T>>::toString() +
+      std::string errorMsg("The type provided for " + DataObjectHandle<DataWrapper<T>>::pythonRepr() +
                            " is different from the one of the object in the store.");
       throw GaudiException(errorMsg, "wrong product type", StatusCode::FAILURE);
     }
   }
-  std::string msg("Could not retrieve product " + DataObjectHandle<DataWrapper<T>>::toString());
+  std::string msg("Could not retrieve product " + DataObjectHandle<DataWrapper<T>>::pythonRepr());
   throw GaudiException(msg, "wrong product name", StatusCode::FAILURE);
 }
 
 //---------------------------------------------------------------------------
 template <typename T>
 void DataHandle<T>::put(T* objectp) {
-  DataWrapper<T>* dw = new DataWrapper<T>();
+  std::unique_ptr<DataWrapper<T>> dw = std::make_unique<DataWrapper<T>>();
   // in case T is of primitive type, we must not change the pointer address
   // (see comments in ctor) instead copy the value of T into allocated memory
   if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>) {
@@ -169,7 +169,7 @@ void DataHandle<T>::put(T* objectp) {
     m_dataPtr = objectp;
   }
   dw->setData(objectp);
-  DataObjectHandle<DataWrapper<T>>::put(dw);
+  DataObjectHandle<DataWrapper<T>>::put(std::move(dw));
 
 }
 //---------------------------------------------------------------------------
@@ -188,9 +188,9 @@ T* DataHandle<T>::createAndPut() {
 // temporary to allow property declaration
 namespace Gaudi {
 template <class T>
-class Property<::DataHandle<T>&> : public ::DataObjectHandleProperty {
+class Property<::DataHandle<T>&> : public ::DataHandleProperty {
 public:
-  Property(const std::string& name, ::DataHandle<T>& value) : ::DataObjectHandleProperty(name, value) {}
+  Property(const std::string& name, ::DataHandle<T>& value) : ::DataHandleProperty(name, value) {}
 
   /// virtual Destructor
   virtual ~Property() {}

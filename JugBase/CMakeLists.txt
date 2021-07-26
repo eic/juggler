@@ -1,53 +1,93 @@
 ################################################################################
 # Package: JugBase
 ################################################################################
-gaudi_subdir(JugBase v1r0)
 
 find_package(EICD)
-
 find_package(Acts REQUIRED COMPONENTS Core PluginIdentification PluginTGeo PluginDD4hep )
 find_package(ROOT COMPONENTS RIO Tree Core REQUIRED)
 find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 find_library(genfit2 genfit2 /usr/local/lib REQUIRED)
 
-
-# this declaration will not be needed in the future
-gaudi_depends_on_subdirs(GaudiAlg GaudiKernel)
-#gaudi_install_scripts()
-#gaudi_install_python_modules()
-
 gaudi_add_library(JugBase
-  src/*.cpp 
-  src/Utilities/*.cpp
-  src/Plugins/BFieldOptions.cpp  
-  #src/Plugins/BFieldScalor.cpp  
+  SOURCES
+  src/ACTSLogger.cpp
+  src/PodioDataSvc.cpp
+  src/KeepDropSwitch.cpp
+  src/Utilities/Helpers.cpp
+  src/Utilities/Paths.cpp
+  src/Utilities/Options.cpp
+  src/Plugins/BFieldOptions.cpp
+  #src/Plugins/BFieldScalor.cpp
   src/Plugins/BFieldUtils.cpp
-                  INCLUDE_DIRS EICD PODIO ROOT $ENV{HOME}/stow/podio/include
-                  LINK_LIBRARIES GaudiAlgLib GaudiKernel ROOT DD4hep::DDG4IO
-                  PUBLIC_HEADERS JugBase )
-target_link_libraries(JugBase 
+  LINK
+  Gaudi::GaudiKernel Gaudi::GaudiAlgLib
   podio::podioRootIO
+  ROOT::Core ROOT::RIO ROOT::Tree
+  DD4hep::DDG4IO DD4hep::DDRec
   ActsCore ActsPluginDD4hep
-  )
+  ${genfit2}
+)
+
+target_include_directories(JugBase PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+
 target_compile_options(JugBase PRIVATE -Wno-suggest-override)
 
+file(GLOB JugBasePlugins_sources src/components/*.cpp)
 gaudi_add_module(JugBasePlugins
-                 src/components/*.cpp 
-                 src/components/ReadTestConsumer.cxx
-                 LINK_LIBRARIES GaudiAlgLib GaudiKernel JugBase ROOT DD4hep::DDRec NPDet::DD4podIO  ActsCore ActsPluginDD4hep EICD::eicd genfit2)
+  SOURCES
+  src/components/ConstPileUp.cpp
+  src/components/EICDataSvc.cpp
+  src/components/GeoSvc.cpp
+  src/components/InputCopier.cpp
+  src/components/MC2DummyParticle.cpp
+  src/components/PileupOverlayAlg.cpp
+  src/components/PodioInput.cpp
+  src/components/PodioOutput.cpp
+  src/components/PoissonPileUp.cpp
+  src/components/RangePileUp.cpp
+  src/components/type.cpp
+  src/components/ReadTestConsumer.cxx
+  LINK
+  Gaudi::GaudiKernel Gaudi::GaudiAlgLib
+  GaudiKernel GaudiAlgLib
+  ROOT::Core ROOT::RIO ROOT::Tree
+  JugBase
+  NPDet::DD4podIO
+  DD4hep::DDRec
+  ActsCore ActsPluginDD4hep
+  EICD::eicd
+  ${genfit2}
+)
+
+target_include_directories(JugBasePlugins PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+
 target_compile_options(JugBasePlugins PRIVATE -Wno-suggest-override)
 
-#gaudi_add_test(ProduceForReadTest
-#               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-#               FRAMEWORK tests/options/simple_producer.py)
-gaudi_add_test(ReadTest
-               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-               FRAMEWORK tests/options/simple_reader.py)
-gaudi_add_test(ReadGeoTest
-               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-               FRAMEWORK tests/options/reader_with_geosvc.py)
-#gaudi_add_test(CheckReadCollectionSize
-#               ENVIRONMENT PYTHONPATH+=${PODIO_PYTHON_DIR}
-#               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-#               COMMAND python JugBase/tests/scripts/check_coll_after_read.py
-#               DEPENDS ReadTest)
+install(TARGETS JugBase JugBasePlugins
+  EXPORT JugBaseTargets
+  RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT bin
+  LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shlib
+  COMPONENT dev)
+
+if(BUILD_TESTING)
+  enable_testing()
+endif()
+
+#add_test(NAME ProduceForReadTest
+#         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+#         COMMAND ${CMAKE_BINARY_DIR}/run ${PROJECT_SOURCE_DIR}/JugBase/scripts/gaudirun tests/options/simple_producer.py)
+#add_test(NAME ReadTest
+#         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+#         COMMAND ${CMAKE_BINARY_DIR}/run ${PROJECT_SOURCE_DIR}/JugBase/scripts/gaudirun tests/options/simple_reader.py)
+#add_test(NAME ReadGeoTest
+#         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+#         COMMAND ${CMAKE_BINARY_DIR}/run ${PROJECT_SOURCE_DIR}/JugBase/scripts/gaudirun tests/options/reader_with_geosvc.py)
+#add_test(NAME CheckReadCollectionSize
+#         ENVIRONMENT PYTHONPATH+=${PODIO_PYTHON_DIR}
+#         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+#         COMMAND python JugBase/tests/scripts/check_coll_after_read.py
+#         DEPENDS ReadTest)

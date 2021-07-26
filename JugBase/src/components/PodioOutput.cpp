@@ -1,5 +1,5 @@
 #include "PodioOutput.h"
-#include "GaudiKernel/IJobOptionsSvc.h"
+#include "GaudiKernel/ISvcLocator.h"
 #include "JugBase/PodioDataSvc.h"
 #include "TFile.h"
 #include "type.h"
@@ -118,38 +118,12 @@ StatusCode PodioOutput::execute() {
 */
 StatusCode PodioOutput::finalize() {
   if (GaudiAlgorithm::finalize().isFailure()) return StatusCode::FAILURE;
-  //// prepare job options metadata ///////////////////////
-  // retrieve the configuration of the job
-  // and write it to file as vector of strings
-  std::vector<std::string> config_data;
-  auto jobOptionsSvc = service<IJobOptionsSvc>("JobOptionsSvc");
-  auto configured_components = jobOptionsSvc->getClients();
-  for (const auto& name : configured_components) {
-    auto properties = jobOptionsSvc->getProperties(name);
-    std::stringstream config_stream;
-    for (const auto& property : *properties) {
-      // sample output:
-      // HepMCToEDMConverter.genparticles = "GenParticles";
-      // Note that quotes are added to all property values,
-      // which leads to problems with ints, lists, dicts and bools. 
-      // For theses types, the quotes must be removed in postprocessing.
-      config_stream << name << "." << property->name() << " = \"" << property->toString() << "\";" << std::endl;
-    }
-    config_data.push_back(config_stream.str());
-  }
-  // Some default components are not captured by the job option service
-  // and have to be traversed like this. Note that Gaudi!577 will improve this.
-  for (const auto* name : {"ApplicationMgr", "MessageSvc", "NTupleSvc"}) {
-    std::stringstream config_stream;
-    auto svc = service<IProperty>( name );
-    if (!svc.isValid()) continue;
-    for (const auto* property : svc->getProperties()) {
-      config_stream << name << "." << property->name() << " = \"" << property->toString() << "\";" << std::endl;
-    }
-    config_data.push_back(config_stream.str());
-  }
+
+  //// save options for all clients
+  for ( const auto& p : serviceLocator()->getOptsSvc().items() ) { m_metadata[std::get<0>( p )] = std::get<1>( p ); }
+
   //// finalize trees and file //////////////////////////////
-  m_metadatatree->Branch("gaudiConfigOptions", &config_data);
+  m_metadatatree->Branch("gaudiConfigOptions", &m_metadata);
   m_metadatatree->Branch("CollectionIDs", m_podioDataSvc->getCollectionIDs());
   m_metadatatree->Fill();
   m_datatree->Write();
