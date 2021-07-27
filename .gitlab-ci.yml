@@ -165,6 +165,20 @@ benchmarks:physics:
     strategy: depend
   allow_failure: false
 
+pages:
+  image: eicweb.phy.anl.gov:4567/containers/eic_container/alpine
+  stage: deploy
+  rules:
+    - if: '$CI_SERVER_HOST == "gitlab.phy.anl.gov" && $CI_COMMIT_BRANCH == "master"' 
+  script:
+    - apk update && apk add doxygen  graphviz ttf-ubuntu-font-family
+    - cd doc && doxygen Doxyfile  && cd ..
+    - mkdir -p public && cp -r doc/docs/html/* public/.
+  artifacts:
+    paths:
+    - public
+
+
 cleanup:
   stage: finalize
   rules:
