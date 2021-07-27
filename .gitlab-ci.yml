@@ -113,6 +113,7 @@ juggler:default:
                                                ${INTERNAL_TAG} --eicweb
 juggler:singularity:default:
   stage: deploy
+  
   artifacts:
       expire_in: 90 days
       paths:
@@ -122,7 +123,7 @@ juggler:singularity:default:
     - juggler:default
   script:
     - mkdir build
-    - singularity pull build/${EXPORT_IMAGE}.sif 
+    - singularity pull build/${JUGGLER_IMAGE}.sif 
                   docker://${CI_REGISTRY_IMAGE}/${BUILD_IMAGE}:${INTERNAL_TAG}
 
 jug_xl:master:
