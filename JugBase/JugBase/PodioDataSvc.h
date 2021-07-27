@@ -17,6 +17,8 @@
  *   An EvtDataSvc for PODIO classes
  *
  *  @author B. Hegner
+ *
+ *  \ingroup base
  */
 class PodioDataSvc : public DataSvc {
 public:

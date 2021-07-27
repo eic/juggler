@@ -30,6 +30,7 @@ namespace Jug::Reco {
    * The momentum of the initial track is estimated from the cluster  energy and 
    * the direction is set using the vertex hits.
    *
+   * \ingroup track
    */
   class TrackParamVertexClusterInit : public GaudiAlgorithm {
   public:

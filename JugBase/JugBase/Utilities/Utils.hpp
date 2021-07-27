@@ -1,14 +1,16 @@
 #pragma once
 #include <tuple>
 
-namespace Jug::Utils
-{
-// ref: https://www.reedbeta.com/blog/python-like-enumerate-in-cpp17/
-template <typename T,
-          typename TIter = decltype(std::begin(std::declval<T>())),
-          typename = decltype(std::end(std::declval<T>()))>
-constexpr auto Enumerate(T && iterable)
-{
+namespace Jug::Utils {
+
+  /** Enumerate helper.
+   *
+   * ref: https://www.reedbeta.com/blog/python-like-enumerate-in-cpp17/
+   */
+  template <typename T, typename TIter = decltype(std::begin(std::declval<T>())),
+            typename = decltype(std::end(std::declval<T>()))>
+  constexpr auto Enumerate(T&& iterable)
+  {
     struct iterator
     {
         size_t i;

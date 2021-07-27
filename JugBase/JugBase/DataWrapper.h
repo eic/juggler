@@ -7,6 +7,10 @@
 #include "GaudiKernel/DataObject.h"
 #include "podio/CollectionBase.h"
 
+/** Data wrapper.
+ *
+ * \ingroup base
+ */
 class GAUDI_API DataWrapperBase : public DataObject {
 public:
   // ugly hack to circumvent the usage of boost::any yet
@@ -15,6 +19,10 @@ public:
   virtual ~DataWrapperBase(){};
 };
 
+/** Data wrapper.
+ *
+ * \ingroup base
+ */
 template <class T>
 class GAUDI_API DataWrapper : public DataWrapperBase {
 public:

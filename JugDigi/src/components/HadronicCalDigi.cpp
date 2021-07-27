@@ -28,7 +28,7 @@ namespace Jug {
      * Resolution terms are added in quadrature. 
      * When digitizing they are assumed to be independent random variables and are sampled as such.
      *
-     *
+     * \ingroup digi
      */
     class HadronicCalDigi : public GaudiAlgorithm {
     public:

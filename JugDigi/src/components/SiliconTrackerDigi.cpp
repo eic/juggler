@@ -19,11 +19,11 @@
 
 namespace Jug::Digi {
 
-  /** UFSD detector digitization.
+  /** Silicon detector digitization.
    *
    * \ingroup digi
    */
-  class UFSDTrackerDigi : public GaudiAlgorithm {
+  class SiliconTrackerDigi : public GaudiAlgorithm {
   public:
     Gaudi::Property<double>                  m_timeResolution{this, "timeResolution", 10}; // todo : add units
     Rndm::Numbers                            m_gaussDist;
@@ -34,7 +34,7 @@ namespace Jug::Digi {
 
   public:
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
-    UFSDTrackerDigi(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
+    SiliconTrackerDigi(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -81,6 +81,6 @@ namespace Jug::Digi {
       return StatusCode::SUCCESS;
     }
   };
-  DECLARE_COMPONENT(UFSDTrackerDigi)
+  DECLARE_COMPONENT(SiliconTrackerDigi)
 
 } // namespace Jug::Digi

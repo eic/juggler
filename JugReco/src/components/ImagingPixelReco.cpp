@@ -29,6 +29,13 @@ using namespace Gaudi::Units;
 
 namespace Jug::Reco {
 
+  /** Imaging calorimeter pixel hit reconstruction.
+   *
+   * Reconstruct digitized outputs of ImagingCalorimeter
+   * It converts digitized ADC/TDC values to energy/time, and looks for geometrical information of the
+   *
+   * \ingroup reco
+   */
   class ImagingPixelReco : public GaudiAlgorithm {
   public:
     // geometry service

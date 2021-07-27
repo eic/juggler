@@ -32,12 +32,18 @@
 using namespace Gaudi::Units;
 
 namespace Jug::Reco {
+
+  /**  General PhotoMultiplier Reconstruction
+   *
+   *  Estimate the number of photo-electrons and convert timeStamp to time
+   *  Collect cell information
+   *
+   * \ingroup reco
+   */
   class PhotoMultiplierReco : public GaudiAlgorithm {
   public:
-    DataHandle<eic::RawPMTHitCollection> m_inputHitCollection{"inputHitCollection",
-                                                              Gaudi::DataHandle::Reader, this};
-    DataHandle<eic::PMTHitCollection>    m_outputHitCollection{"outputHitCollection",
-                                                            Gaudi::DataHandle::Writer, this};
+    DataHandle<eic::RawPMTHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+    DataHandle<eic::PMTHitCollection>    m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
     Gaudi::Property<double>              m_timeStep{this, "timeStep", 0.0625 * ns};
     Gaudi::Property<double>              m_minNpe{this, "minNpe", 0.0};
     Gaudi::Property<double>              m_speMean{this, "speMean", 80.0};

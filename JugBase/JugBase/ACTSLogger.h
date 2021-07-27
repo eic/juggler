@@ -8,6 +8,10 @@
 #include "GaudiKernel/IMessageSvc.h"
 #include "GaudiKernel/MsgStream.h"
 
+/** Filter
+ *
+ * \ingroup base
+ */
 class GaudiFilterPolicy : public Acts::Logging::OutputFilterPolicy {
 public:
   GaudiFilterPolicy(IMessageSvc* owner) : m_owner(owner) {}

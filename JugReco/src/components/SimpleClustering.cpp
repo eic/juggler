@@ -25,6 +25,10 @@ using namespace Gaudi::Units;
 
 namespace Jug::Reco {
 
+  /** Simple clustering algorithm.
+   *
+   * \ingroup reco
+   */
   class SimpleClustering : public GaudiAlgorithm {
   public:
     using RecHits  = eic::CalorimeterHitCollection;

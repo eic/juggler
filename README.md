@@ -1,7 +1,6 @@
 [TOC]
 
-Project Juggler
-===============
+# Project Juggler
 
 Concurrent event processor for NP experiments, based on the Gaudi framework.
 
@@ -13,15 +12,16 @@ Dependencies:
 Overview
 --------
 
+### Components
+
+ - [Juggler Base](@ref base)
+ - [Digitization Algorithms](@ref digi)
+ - [Reconstruction Algorithms](@ref reco)
+ - [Tracking Algorithms](@ref track) 
 
 ### Internal Units
 
 The juggler internal units are (`GeV`, `mm`, `ns`, and `radians`).
-
-#### Units Table
-
-| G4 | DD4hep | Gaudi | Juggler |
-|----|--------|-------|---------|
 
 
 ### Running Juggler
@@ -32,38 +32,52 @@ Here is an example for topside
 ../where_ever/../juggler/build/run gaudirun.py options/example_reconstruction.py
 ```
 
-## Components
+# Outline of tracking
 
-### `JugBase`
+## The ACTS way of tracking
 
-### `JugDigi`
+First, the geometry has to be constructed.  Assuming this is already done, we describe the data processing.
 
-### `JugReco`
-
-#### Hit reconstruction algorithms
-
-#### Source Linkers
-
-#### Initial Track Parameters 
-
-#### Track Fitting
+### Source Links and Measurements
 
 ```
-CalorimeterIslandCluster.cpp
-ClusterRecoCoG.cpp
-CrystalEndcapsReco.cpp
-EMCalReconstruction.cpp
-FuzzyKClusters.cpp
-ParticlesFromTrackFit.cpp
-PhotoMultiplierReco.cpp
-PhotoRingClusters.cpp
-SimpleClustering.cpp
-TestACTSLogger.cpp
-TrackerHitReconstruction.cpp
-TrackerSourceLinker.cpp
-TrackFindingAlgorithm.cpp
-TrackingHitsSourceLinker.cpp
-TrackParamClusterInit.cpp
-TrackParamTruthInit.cpp
-TrackParamVertexClusterInit.cpp
+  Tracker Hit  +  Geometry --> Measurement
+  Hit CellID   +  Surface  --> Source Link
 ```
+
+A `SourceLinker` is an algorithm that looks up the surface and maps it to the hit's `cellID`.
+Naturally the same algorithm outputs measurements which are also mapped to the hit and contain the position 
+and sensor size information (via covariance matrix).
+
+
+### Proto tracks
+
+Both track finding and fitting will use the information contained in the source links and measurements.
+Track finding produces `proto tracks` or groupings of hits.  Each proto track is simply a `std::vector<int>` storing the index of the
+hits associated with a track seed.
+
+### Initial Track parameters and Seeding
+
+A Kalman filter needs a starting point and those are the `Initial Track Parameters`. These can be determined many different ways. 
+Conceptually the process of determining these parameters begins with track seeding.
+
+
+
+
+
+
+
+\defgroup base Base
+\defgroup digi Digitization
+\defgroup reco Reconstruction
+\defgroup track Tracking
+
+
+\defgroup services Services
+This is the services
+
+\defgroup subsytems Detector Subsystems
+Various subsystems
+
+
+

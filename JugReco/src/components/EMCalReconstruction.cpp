@@ -25,6 +25,11 @@ using namespace Gaudi::Units;
 
 namespace Jug::Reco {
 
+  /** Generic EM calorimeter hit reconstruction.
+   *
+   *
+   * \ingroup reco
+   */
   class EMCalReconstruction : public GaudiAlgorithm {
   public:
     using RawHits = eic::RawCalorimeterHitCollection;

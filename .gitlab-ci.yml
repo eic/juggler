@@ -30,10 +30,6 @@ variables:
   ## build. This is to avoid circular dependencies
   TRIGGERED_BY_NIGHTLY: 0
 
-default:
-  tags: 
-    - silicon
-
 stages:
   - config    
   - build     ## build new version of juggler
@@ -60,6 +56,8 @@ workflow:
 
 version:
   stage: config 
+  rules:
+    - if:  '$CI_SERVER_HOST == "eicweb.phy.anl.gov"'
   script:
     - |
       ## version info
@@ -82,6 +80,8 @@ version:
  
 juggler:default:
   stage: build
+  rules:
+    - if:  '$CI_SERVER_HOST == "eicweb.phy.anl.gov"'
   needs:
     - version
   script:
@@ -113,6 +113,8 @@ juggler:default:
                                                ${INTERNAL_TAG} --eicweb
 juggler:singularity:default:
   stage: deploy
+  rules:
+    - if:  '$CI_SERVER_HOST == "eicweb.phy.anl.gov"'
   artifacts:
       expire_in: 90 days
       paths:
@@ -128,7 +130,7 @@ juggler:singularity:default:
 jug_xl:master:
   stage: deploy
   rules:
-    - if: '$CI_COMMIT_BRANCH == "master" && $TRIGGERED_BY_NIGHTLY == "0"'
+    - if: '$CI_COMMIT_BRANCH == "master" && $TRIGGERED_BY_NIGHTLY == "0" && $CI_SERVER_HOST == "eicweb.phy.anl.gov"'
       when: on_success
     - when: never
   needs:
@@ -140,6 +142,8 @@ jug_xl:master:
 
 benchmarks:reconstruction:
   stage: deploy
+  rules:
+    - if:  '$CI_SERVER_HOST == "eicweb.phy.anl.gov"'
   needs: 
     - version
     - juggler:default
@@ -154,6 +158,8 @@ benchmarks:reconstruction:
   
 benchmarks:physics:
   stage: deploy
+  rules:
+    - if:  '$CI_SERVER_HOST == "eicweb.phy.anl.gov"'
   needs: 
     - version
     - juggler:default
@@ -181,6 +187,8 @@ pages:
 
 cleanup:
   stage: finalize
+  rules:
+    - if:  '$CI_SERVER_HOST == "eicweb.phy.anl.gov"'
   rules:
     - when: always
   dependencies:

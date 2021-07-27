@@ -45,6 +45,17 @@ struct pair_hash {
 
 namespace Jug::Reco {
 
+  /** Calorimeter eta-phi projector
+   *
+   *  A hits converter to prepare dataset for machine learning
+   *  It converts hits with (x, y, z, E) to (E, eta, phi) layer by layer
+   *  With a defined grid size and ranges, it merge the hits within one grid and drop-off hits
+   * out-of-range The capacity of each layer is fixed (padding with zeros), and the hits with least
+   * energies that exceed the capacity will be discarded.
+   *
+   *
+   * \ingroup reco
+   */
   class CalorimeterHitsEtaPhiProjector : public GaudiAlgorithm {
   public:
     Gaudi::Property<std::vector<double>>        u_gridSizes{this, "gridSizes", {0.001, 0.001*rad}};

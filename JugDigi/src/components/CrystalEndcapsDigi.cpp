@@ -20,7 +20,7 @@ namespace Jug {
 
     /** Crystal Endcaps Calorimeter detector digitization.
      *
-     *
+     * \ingroup digi
      */
    class CrystalEndcapsDigi : public GaudiAlgorithm {
    public:

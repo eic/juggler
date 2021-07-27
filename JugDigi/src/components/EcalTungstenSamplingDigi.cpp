@@ -23,7 +23,7 @@ namespace Jug {
 
     /** Ecal Tungsten Sampling Calorimeter detector digitization.
      *
-     *
+     * \ingroup digi
      */
     class EcalTungstenSamplingDigi : public GaudiAlgorithm {
     public:

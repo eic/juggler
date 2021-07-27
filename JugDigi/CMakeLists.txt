@@ -23,6 +23,7 @@ gaudi_add_module(JugDigiPlugins
   src/components/PhotoMultiplierDigi.cpp 
   src/components/SOIPIXTrackerDigi.cpp 
   src/components/UFSDTrackerDigi.cpp 
+  src/components/SiliconTrackerDigi.cpp 
   LINK
   Gaudi::GaudiAlgLib Gaudi::GaudiKernel
   JugBase

@@ -33,6 +33,10 @@
 
 namespace Jug::Reco {
 
+/** Source source Linker.
+ *
+ * \ingroup track
+ */
   class Tracker2SourceLinker : public GaudiAlgorithm {
   public:
 

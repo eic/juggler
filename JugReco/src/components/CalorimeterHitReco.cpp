@@ -31,6 +31,12 @@ using namespace Gaudi::Units;
 
 namespace Jug::Reco {
 
+
+  /** Calorimeter hit reconstruction.
+   *
+   * Reconstruct digitized outputs, paired with Jug::Digi::CalorimeterHitDigi
+   * \ingroup reco
+   */
   class CalorimeterHitReco : public GaudiAlgorithm {
   public:
     // length unit from dd4hep, should be fixed

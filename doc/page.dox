@@ -1,0 +1,43 @@
+/** 
+ *    \addtogroup services 
+ */
+//@{
+
+/**
+ * \defgroup geosvc Geometry Services
+ * \defgroup detasvc Data Services
+ * \defgroup magsvc Magnetic Field Services
+ */
+
+//@}
+
+
+
+/**
+ *    \addtogroup subsytems 
+ */
+//@{
+/**
+ * \defgroup rich         RICH detectors 
+ * \defgroup trackers     Trackers
+ * \defgroup ecal         Electromagnetic Calorimeters
+ * \defgroup hcal         Hadronic Calorimeters
+ * \defgroup magnets      Magnets
+ */
+//@}
+
+
+/**
+ *    \addtogroup algorithms 
+ */
+//@{
+/**
+ * \defgroup tracking     Tracking
+ * \defgroup clustering   Clustering
+ * \defgroup pid          Particle Identification
+ */
+//@}
+
+
+
+

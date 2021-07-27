@@ -32,6 +32,10 @@ namespace {
   using Propagator = Acts::Propagator<Stepper, Navigator>;
   using CKF        = Acts::CombinatorialKalmanFilter<Propagator, Updater, Smoother>;
 
+  /** Finder implmentation .
+   *
+   * \ingroup track
+   */
   struct TrackFinderFunctionImpl {
     CKF trackFinder;
 

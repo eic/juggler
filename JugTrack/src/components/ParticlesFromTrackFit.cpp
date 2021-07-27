@@ -17,7 +17,7 @@
 
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
- 
+
 // Event Model related classes
 #include "eicd/ParticleCollection.h"
 #include "eicd/TrackerHitCollection.h"
@@ -28,13 +28,13 @@
 
 #include "Acts/Utilities/Helpers.hpp"
 
+namespace Jug::Reco {
 
-namespace Jug {
-  namespace Reco {
-  
-    /** Ultra-fast silicon detector digitization.
-     *
-     */
+  /** Extrac the particles form fit trajectories.
+   *
+   * \ingroup track
+   * \ingroup tracking
+   */
    class ParticlesFromTrackFit : public GaudiAlgorithm {
    public:
     //DataHandle<eic::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
@@ -164,6 +164,4 @@ namespace Jug {
   };
   DECLARE_COMPONENT(ParticlesFromTrackFit)
 
-  } // namespace Examples
-} // namespace Gaudi
-
+} // namespace Jug::Reco

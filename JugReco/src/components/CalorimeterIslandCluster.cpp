@@ -76,7 +76,19 @@ namespace Jug::Reco {
       {"globalDistEtaPhi", {globalDistEtaPhi, {1., rad}}},
   };
 
-
+  /**
+   *  Island Clustering Algorithm for Calorimeter Blocks.
+   *
+   *  1. group all the adjacent modules
+   *  2. split the groups between their local maxima with the energy deposit above <minClusterCenterEdep>
+   *  3. Output hits collection with clusterID
+   *
+   *  References:
+   *      https://cds.cern.ch/record/687345/files/note01_034.pdf
+   *      https://www.jlab.org/primex/weekly_meetings/primexII/slides_2012_01_20/island_algorithm.pdf
+   *
+   * \ingroup reco
+   */
   class CalorimeterIslandCluster : public GaudiAlgorithm {
   public:
     Gaudi::Property<bool>                       m_splitCluster{this, "splitCluster", true};

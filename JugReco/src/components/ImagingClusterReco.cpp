@@ -35,6 +35,13 @@ using namespace Eigen;
 
 namespace Jug::Reco {
 
+  /** Imaging cluster reconstruction.
+   *
+   *  Reconstruct the cluster/layer info for imaging calorimeter
+   *  Logarithmic weighting is used to describe energy deposit in transverse direction
+   *
+   *  \ingroup reco
+   */
   class ImagingClusterReco : public GaudiAlgorithm {
   public:
     Gaudi::Property<double> m_sampFrac{this, "samplingFraction", 1.0};

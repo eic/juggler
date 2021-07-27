@@ -32,6 +32,10 @@
 
 namespace Jug::Reco {
 
+  /** Source source Linker.
+   *
+   * \ingroup track
+   */
   class TrackerSourceLinker : public GaudiAlgorithm {
   public:
     DataHandle<eic::TrackerHitCollection>    m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};

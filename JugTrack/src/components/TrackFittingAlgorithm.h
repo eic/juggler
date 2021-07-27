@@ -59,6 +59,10 @@
 
 namespace Jug::Reco {
 
+  /** Fitting algorithm implmentation .
+   *
+   * \ingroup track
+   */
   class TrackFittingAlgorithm : public GaudiAlgorithm {
   public:
     /// Track fitter function that takes input measurements, initial trackstate

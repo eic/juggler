@@ -53,6 +53,13 @@ namespace Jug::Reco {
       {"log", logWeight},
     };
 
+  /** Clustering with center of gravity method.
+   *
+   *  Reconstruct the cluster with Center of Gravity method
+   *  Logarithmic weighting is used for mimicing energy deposit in transverse direction
+   *
+   * \ingroup reco
+   */
   class ClusterRecoCoG : public GaudiAlgorithm {
   public:
     Gaudi::Property<double>                   m_sampFrac{this, "samplingFraction", 1.0};

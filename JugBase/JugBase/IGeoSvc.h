@@ -1,11 +1,3 @@
-//
-//  IGeoSvc.h
-//
-//
-//  Created by Julia Hrdinka on 30/03/15.
-//
-//
-
 #ifndef IGEOSVC_H
 #define IGEOSVC_H
 
@@ -31,6 +23,11 @@ namespace genfit {
 
 class G4VUserDetectorConstruction;
 
+/** Geometry service interface.
+ *
+ * \ingroup base
+ * \ingroup geosvc
+ */
 class GAUDI_API IGeoSvc : virtual public IService {
 public:
   using VolumeSurfaceMap = std::unordered_map<uint64_t, const Acts::Surface*>;

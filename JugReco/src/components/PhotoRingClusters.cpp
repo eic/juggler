@@ -33,6 +33,12 @@ using namespace Eigen;
 
 
 namespace Jug::Reco {
+
+
+/**  Clustering Algorithm for Ring Imaging Cherenkov (RICH) events.
+ *
+ * \ingroup reco
+ */
 class PhotoRingClusters : public GaudiAlgorithm
 {
 public:

@@ -26,8 +26,9 @@
 namespace Jug {
   namespace Reco {
 
-    /** Ultra-fast silicon detector digitization.
+    /** Tracker hit reconstruction.
      *
+     * \ingroup reco
      */
     class TrackerHitReconstruction : public GaudiAlgorithm {
     public:

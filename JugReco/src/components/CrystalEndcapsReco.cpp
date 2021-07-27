@@ -23,6 +23,12 @@
 using namespace Gaudi::Units;
 
 namespace Jug::Reco {
+
+
+  /** Crystal endcap hit reconstruction.
+   *
+   * \ingroup reco
+   */
   class CrystalEndcapsReco : public GaudiAlgorithm {
   public:
     Gaudi::Property<double>                      m_minModuleEdep{this, "minModuleEdep", 0.5 * MeV};

@@ -27,79 +27,81 @@ using namespace Gaudi::Units;
 
 namespace Jug::Digi {
 
-class CalorimeterHitDigi : public GaudiAlgorithm {
-public:
+  /** Generic calorimeter hit digitiziation.
+   *
+   * \ingroup digi
+   * \ingroup calorimetry
+   */
+  class CalorimeterHitDigi : public GaudiAlgorithm {
+  public:
     // additional smearing resolutions
-    Gaudi::Property<std::vector<double>>    u_eRes{this, "energyResolutions", {}}; // a/sqrt(E/GeV) + b + c/(E/GeV)
-    Gaudi::Property<double>                 m_tRes{this, "timineResolution", 0.0*ns};
+    Gaudi::Property<std::vector<double>> u_eRes{this, "energyResolutions", {}}; // a/sqrt(E/GeV) + b + c/(E/GeV)
+    Gaudi::Property<double>              m_tRes{this, "timineResolution", 0.0 * ns};
 
     // digitization settings
-    Gaudi::Property<int>                    m_capADC{this, "capacityADC", 8096};
-    Gaudi::Property<double>                 m_dyRangeADC{this, "dynamicRangeADC", 100*MeV};
-    Gaudi::Property<int>                    m_pedMeanADC{this, "pedestalMean", 400};
-    Gaudi::Property<double>                 m_pedSigmaADC{this, "pedestalSigma", 3.2};
-    Rndm::Numbers                           m_normDist;
+    Gaudi::Property<int>    m_capADC{this, "capacityADC", 8096};
+    Gaudi::Property<double> m_dyRangeADC{this, "dynamicRangeADC", 100 * MeV};
+    Gaudi::Property<int>    m_pedMeanADC{this, "pedestalMean", 400};
+    Gaudi::Property<double> m_pedSigmaADC{this, "pedestalSigma", 3.2};
+    Rndm::Numbers           m_normDist;
 
-    DataHandle<dd4pod::CalorimeterHitCollection>
-        m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-    DataHandle<eic::RawCalorimeterHitCollection>
-        m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
+    DataHandle<dd4pod::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+                                                                      this};
+    DataHandle<eic::RawCalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+                                                                       this};
     // unitless counterparts of inputs
     double dyRangeADC, tRes, eRes[3] = {0., 0., 0.};
 
-      //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
+    //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     CalorimeterHitDigi(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
     {
-        declareProperty("inputHitCollection", m_inputHitCollection, "");
-        declareProperty("outputHitCollection", m_outputHitCollection, "");
+      declareProperty("inputHitCollection", m_inputHitCollection, "");
+      declareProperty("outputHitCollection", m_outputHitCollection, "");
     }
 
     StatusCode initialize() override
     {
-        if (GaudiAlgorithm::initialize().isFailure()) {
-            return StatusCode::FAILURE;
-        }
-        // random number generator from service
-        auto randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
-        auto sc = m_normDist.initialize(randSvc, Rndm::Gauss(0.0, 1.0));
-        if (!sc.isSuccess()) {
-            return StatusCode::FAILURE;
-        }
-        // set energy resolution numbers
-        for (size_t i = 0; i < u_eRes.size() && i < 3; ++i) {
-            eRes[i] = u_eRes[i];
-        }
+      if (GaudiAlgorithm::initialize().isFailure()) {
+        return StatusCode::FAILURE;
+      }
+      // random number generator from service
+      auto randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
+      auto sc      = m_normDist.initialize(randSvc, Rndm::Gauss(0.0, 1.0));
+      if (!sc.isSuccess()) {
+        return StatusCode::FAILURE;
+      }
+      // set energy resolution numbers
+      for (size_t i = 0; i < u_eRes.size() && i < 3; ++i) {
+        eRes[i] = u_eRes[i];
+      }
 
-        // using juggler internal units (GeV, mm, radian, ns)
-        dyRangeADC = m_dyRangeADC.value()/GeV;
-        tRes = m_tRes.value()/ns;
+      // using juggler internal units (GeV, mm, radian, ns)
+      dyRangeADC = m_dyRangeADC.value() / GeV;
+      tRes       = m_tRes.value() / ns;
 
-        return StatusCode::SUCCESS;
+      return StatusCode::SUCCESS;
     }
 
     StatusCode execute() override
     {
-        // input collections
-        const auto simhits = m_inputHitCollection.get();
-        // Create output collections
-        auto rawhits = m_outputHitCollection.createAndPut();
-        for (const auto& ahit : *simhits) {
-            // Note: juggler internal unit of energy is GeV
-            double eResRel = std::sqrt(std::pow(m_normDist()*eRes[0] / sqrt(ahit.energyDeposit()), 2)
-                                       + std::pow(m_normDist()*eRes[1], 2)
-                                       + std::pow(m_normDist()*eRes[2] / (ahit.energyDeposit()), 2));
-            double ped = m_pedMeanADC + m_normDist()*m_pedSigmaADC;
-            long long adc = std::llround(ped + ahit.energyDeposit()*(1. + eResRel)/dyRangeADC*m_capADC);
-            eic::RawCalorimeterHit rawhit(
-                (long long) ahit.cellID(),
-                (adc > m_capADC.value() ? m_capADC.value() : adc),
-                (double) ahit.truth().time + m_normDist()*tRes
-                );
-            rawhits->push_back(rawhit);
-        }
-        return StatusCode::SUCCESS;
+      // input collections
+      const auto simhits = m_inputHitCollection.get();
+      // Create output collections
+      auto rawhits = m_outputHitCollection.createAndPut();
+      for (const auto& ahit : *simhits) {
+        // Note: juggler internal unit of energy is GeV
+        double                 eResRel = std::sqrt(std::pow(m_normDist() * eRes[0] / sqrt(ahit.energyDeposit()), 2) +
+                                   std::pow(m_normDist() * eRes[1], 2) +
+                                   std::pow(m_normDist() * eRes[2] / (ahit.energyDeposit()), 2));
+        double                 ped     = m_pedMeanADC + m_normDist() * m_pedSigmaADC;
+        long long              adc = std::llround(ped + ahit.energyDeposit() * (1. + eResRel) / dyRangeADC * m_capADC);
+        eic::RawCalorimeterHit rawhit((long long)ahit.cellID(), (adc > m_capADC.value() ? m_capADC.value() : adc),
+                                      (double)ahit.truth().time + m_normDist() * tRes);
+        rawhits->push_back(rawhit);
+      }
+      return StatusCode::SUCCESS;
     }
-};
-DECLARE_COMPONENT(CalorimeterHitDigi)
+  };
+  DECLARE_COMPONENT(CalorimeterHitDigi)
 
 } // namespace Jug::Digi

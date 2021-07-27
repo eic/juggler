@@ -44,6 +44,16 @@ struct pair_hash {
 
 namespace Jug::Reco {
 
+  /** Converter  for ML algorithm input.
+   *
+   *  A hits converter to prepare dataset for machine learning
+   *  It converts hits with (x, y, z, E) to (E, eta, phi) layer by layer
+   *  With a defined grid size and ranges, it merge the hits within one grid and drop-off hits
+   * out-of-range The capacity of each layer is fixed (padding with zeros), and the hits with least
+   * energies that exceed the capacity will be discarded.
+   *
+   * \ingroup reco
+   */
   class ImagingPixelMerger : public GaudiAlgorithm {
   public:
     Gaudi::Property<int>                    m_nHits{this, "numberOfHits", 20};

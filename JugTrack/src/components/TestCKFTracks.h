@@ -9,6 +9,10 @@
 #include "JugBase/DataHandle.h"
 
 
+/** CKF track finding/fitting.
+ *
+ * \ingroup track
+ */
 class TestCKFTracks : public GaudiAlgorithm {
 public:
 

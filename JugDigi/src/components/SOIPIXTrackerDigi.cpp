@@ -19,7 +19,7 @@ namespace Jug {
   
     /** Ultra-fast silicon detector digitization.
      *
-     *
+     * \ingroup digi
      */
    class SOIPIXTrackerDigi : public GaudiAlgorithm {
    public:

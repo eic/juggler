@@ -25,6 +25,11 @@ using namespace Gaudi::Units;
 
 namespace Jug::Reco {
 
+  /**  Hadronic calorimeter hit reconstruction.
+   *
+   *
+   * \ingroup reco
+   */
   class HCalReconstruction : public GaudiAlgorithm {
   public:
     using RawHits = eic::RawCalorimeterHitCollection;

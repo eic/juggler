@@ -28,6 +28,10 @@ using namespace Gaudi::Units;
 
 namespace Jug::Digi {
 
+/** PhotoMultiplierDigi.
+ *
+ * \ingroup digi
+ */
 class PhotoMultiplierDigi : public GaudiAlgorithm
 {
 public:

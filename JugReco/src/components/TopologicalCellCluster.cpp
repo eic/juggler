@@ -36,6 +36,14 @@ using namespace Gaudi::Units;
 
 namespace Jug::Reco {
 
+  /** Topological Cell Clustering Algorithm for Sampling Calorimetry.
+   *
+   *  1. group all the adjacent modules
+   *  2. TODO split local maxima (seems no need for Imaging Calorimeter with extremely fine
+   * granularity)
+   *
+   * \ingroup reco
+   */
   class TopologicalCellCluster : public GaudiAlgorithm {
   public:
     // maximum difference in layer numbers that can be considered as neighbours

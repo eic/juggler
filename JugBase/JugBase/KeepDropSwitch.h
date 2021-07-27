@@ -9,6 +9,10 @@ std::vector<std::string> split(const std::string& s, char delim);
 
 int wildcmp(const char* wild, const char* string);
 
+/** Data output controller.
+ *
+ * \ingroup base
+ */
 class KeepDropSwitch {
 public:
   enum Cmd { KEEP, DROP, UNKNOWN };

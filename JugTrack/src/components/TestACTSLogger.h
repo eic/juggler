@@ -8,7 +8,10 @@
 // FCCSW
 #include "JugBase/DataHandle.h"
 
-
+/** Logging for ACTS.
+ *
+ * \ingroup track
+ */
 class TestACTSLogger : public GaudiAlgorithm {
 public:
   explicit TestACTSLogger(const std::string&, ISvcLocator*);
@@ -25,6 +28,5 @@ public:
    *   @return status code
    */
   virtual StatusCode finalize() final;
-
 };
 #endif /* TESTRECONSTRUCTION_TESTACTSLOGGER_H */

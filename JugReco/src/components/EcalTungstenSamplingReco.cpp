@@ -27,6 +27,12 @@
 using namespace Gaudi::Units;
 
 namespace Jug::Reco {
+
+  /** EM cal  hit reconstruction algorithm.
+   *
+   *
+   * \ingroup reco
+   */
   class EcalTungstenSamplingReco : public GaudiAlgorithm {
   public:
     Gaudi::Property<double>                      m_lUnit{this, "lengthUnit", dd4hep::mm};

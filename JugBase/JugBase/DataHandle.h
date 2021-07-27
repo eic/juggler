@@ -15,10 +15,11 @@
 
 #include <type_traits>
 
-/**
- * Specialisation of the Gaudi DataHandle
+/** Specialisation of the Gaudi DataHandle
  * for use with podio collections.
- */ 
+ *
+ * \ingroup base
+ */
 template <typename T>
 class DataHandle : public DataObjectHandle<DataWrapper<T>> {
 

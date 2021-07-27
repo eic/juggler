@@ -12,6 +12,8 @@ class EventStore;
  * Interface for the tool used in the overlay algorithm. 
  * Must implement the correct collection and I/O and merging behavior,
  * especially for the case when there are associations between parts of the EDM.
+ *
+ * \ingroup base
  */
 class IEDMMergeTool : virtual public IAlgTool {
 public:

@@ -18,6 +18,10 @@
 namespace Jug {
   namespace Digi {
 
+    /** Electromagnetic calorimeter digitization.
+     *
+     * \ingroup digi
+     */
     class EMCalorimeterDigi : public GaudiAlgorithm {
     public:
       using SimHit = dd4pod::CalorimeterHitCollection;

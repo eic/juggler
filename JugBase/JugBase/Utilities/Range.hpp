@@ -13,16 +13,16 @@
 
 namespace Jug {
 
-/// A wrapper around a pair of iterators to simplify range-based loops.
-///
-/// Some standard library algorithms return pairs of iterators to identify
-/// a sub-range. This wrapper simplifies the iteration and should be used as
-/// follows:
-///
-///     for (auto x : makeRange(std::equal_range(...)) {
-///         ...
-///     }
-///
+/** A wrapper around a pair of iterators to simplify range-based loops.
+ *
+ *  Some standard library algorithms return pairs of iterators to identify
+ *  a sub-range. This wrapper simplifies the iteration and should be used as
+ *  follows:
+ *
+ *      for (auto x : makeRange(std::equal_range(...)) {
+ *          ...
+ *      }
+ */
 template <typename Iterator>
 class Range {
  public:

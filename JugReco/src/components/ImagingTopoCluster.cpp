@@ -34,6 +34,16 @@ using namespace Gaudi::Units;
 
 namespace Jug::Reco {
 
+  /** Topological Cell Clustering Algorithm.
+   *
+   * Topological Cell Clustering Algorithm for Imaging Calorimetry
+   *  1. group all the adjacent pixels
+   *
+   *  Author: Chao Peng (ANL), 06/02/2021
+   *  References: https://arxiv.org/pdf/1603.02934.pdf
+   *
+   * \ingroup reco
+   */
   class ImagingTopoCluster : public GaudiAlgorithm {
   public:
     // maximum difference in layer numbers that can be considered as neighbours

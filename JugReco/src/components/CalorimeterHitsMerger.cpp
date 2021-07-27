@@ -36,6 +36,13 @@ using namespace Gaudi::Units;
 
 namespace Jug::Reco {
 
+  /** Calorimeter hits merging algorithm.
+   *
+   *  An algorithm to group readout hits from a calorimeter
+   *  Energy is summed
+   *
+   *  \ingroup reco
+   */
   class CalorimeterHitsMerger : public GaudiAlgorithm {
   public:
     Gaudi::Property<std::string> m_geoSvcName{this, "geoServiceName", "GeoSvc"};

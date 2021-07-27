@@ -24,6 +24,11 @@ using namespace Gaudi::Units;
 
 namespace Jug::Reco {
 
+  /** EM Sampling calorimeter Clustering algorithm.
+   *
+   *
+   * \ingroup reco
+   */
   class EcalTungstenSamplingCluster : public GaudiAlgorithm {
   public:
     Gaudi::Property<double>                   m_minModuleEdep{this, "minModuleEdep", 0.5 * MeV};

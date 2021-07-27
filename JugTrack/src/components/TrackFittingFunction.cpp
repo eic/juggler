@@ -27,6 +27,10 @@ namespace {
   using DirectFitter     = Acts::KalmanFitter<DirectPropagator, Updater, Smoother>;
 
 
+  /** Fitter implmentation .
+   *
+   * \ingroup track
+   */
   template <typename track_fitter_t>
   struct TrackFitterFunctionImpl {
     track_fitter_t trackFitter;
