@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
-project(Juggler)
+project(Juggler VERSION 2.0.0)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -28,6 +28,7 @@ add_subdirectory(JugReco)
 add_subdirectory(JugTrack)
 gaudi_install(CMAKE)
 
-# create and install Juggler.xenv file as it still has a use-case
+# create and install the juggler executable
+# additionally, creates and installs Juggler.xenv file as it still has a use-case
 # TODO: update workflow to not need xenv files anymore
-include(cmake/xenv.cmake)
+include(cmake/install.cmake)

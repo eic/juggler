@@ -1,0 +1,106 @@
+#!/bin/bash
+
+## simple launcher for juggler, to be replaced
+## with a python script that properly deals with all gaudi configuration
+## and input/output file management
+
+export JUGGLER_VERSION=@CMAKE_VERSION@
+
+## preload detector plugins if available
+if [ -f /opt/detector/setup.sh ]; then
+  source /opt/detector/setup.sh
+fi
+
+## ensure we find the current Juggler plugins
+export LD_LIBRARY_PATH=@JUGGLER_LIB_PATH@/lib:$LD_LIBRARY_PATH
+export PYTHONPATH=@JUGGLER_PYTHONPATH@:$PYTHONPATH
+
+## good defaults
+JUGGLER_DETECTOR="athena"
+DETECTOR_PATH="/opt/detector/share/athena"
+
+function print_the_help {
+  echo "USAGE:  juggler [OPTIONS] <your_options.py>"
+  echo "OPTIONAL ARGUMENTS:"
+  echo "          -i,--input      Input files (comma separated list)"
+  echo "          -o,--output     Output file name"
+	echo "				  -n,--n-events   Number of events to process"
+  echo "          -v,--version    print Juggler version"
+  echo "          -h,--help       Print this message"
+  echo ""
+  echo "  Launch Juggler (Digitization and/or reconstruction)."
+  echo ""
+  echo "EXAMPLE: juggler <your_options.py>"
+  exit
+}
+
+SIM_FILES=
+
+GAUDI_ARGS=()
+
+while [ $# -gt 0 ]; do
+  key=$1
+  case $key in
+    -i|--input)
+			if [ ! -z ${SIM_FILES} ]; then
+				SIM_FILES="${SIM_FILES},$2"
+		  else
+				SIM_FILES=$2
+			fi
+      shift
+      shift
+      ;;
+    -o|--output)
+      JUGGLER_REC_FILE=$2
+      shift
+      shift
+      ;;
+    -n|--n-events)
+      JUGGLER_N_EVENTS=$2
+      shift
+      shift
+      ;;
+    -v|--version)
+			echo "Juggler version: ${JUGGLER_VERSION}"
+      exit 0
+      ;;
+    -h|--help)
+      print_the_help
+      exit 0
+      ;;
+    *)
+			GAUDIRUN_ARGS+=($1)
+			shift
+      ;;
+  esac
+done
+if [ ! -z SIM_FILES ]; then
+	JUGGLER_SIM_FILES="${SIM_FILES}"
+fi
+
+## sanitize input
+if [ -z ${JUGGLER_SIM_FILES} ]; then
+	echo "ERROR: No input files provided, please either use the --input flag, or set the JUGGLER_SIM_FILES variable. See 'juggler --help' for more info."
+  exit 1
+fi
+if [ -z ${JUGGLER_REC_FILE} ]; then
+	echo "ERROR: No output file provided, please use the --output flag, or set the JUGGLER_REC_FILE variable. See 'juggler --help' for more info."
+  exit 1
+fi
+if [ -z ${JUGGLER_N_EVENTS} ]; then
+	echo "ERROR: No event count provided, please use the --n-events flag, or set the JUGGLER_N_EVENTS variable. See 'juggler --help' for more info."
+  exit 1
+fi
+
+## Now launch Gaudi
+echo "Launching Juggler"
+echo " - Input files: ${JUGGLER_SIM_FILES}"
+echo " - Output file: ${JUGGLER_REC_FILE}"
+echo " - Number of events: ${JUGGLER_N_EVENTS}"
+echo " - Detector: ${JUGGLER_DETECTOR}"
+echo " - Detector path: ${DETECTOR_PATH}"
+
+echo "exec gaudirun.py ${GAUDIRUN_ARGS[@]}"
+exec gaudirun.py ${GAUDIRUN_ARGS[@]}
+
+## That's all!
