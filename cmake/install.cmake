@@ -22,7 +22,7 @@ configure_file("cmake/juggler.in"
   @ONLY)
 
 ## install tree
-set (JUGGLER_LIB_PATH ${CMAKE_INSTALL_LIBDIR})
+set (JUGGLER_LIB_PATH ${CMAKE_INSTALL_PREFIX}/lib)
 set (JUGGLER_PYTHONPATH ${CMAKE_INSTALL_PREFIX}/python)
 configure_file("cmake/juggler.in"
   "${PROJECT_BINARY_DIR}/${CMAKE_FILES_DIRECTORY}/juggler"

@@ -12,29 +12,43 @@ if [ -f /opt/detector/setup.sh ]; then
 fi
 
 ## ensure we find the current Juggler plugins
-export LD_LIBRARY_PATH=@JUGGLER_LIB_PATH@/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=@JUGGLER_LIB_PATH@:$LD_LIBRARY_PATH
 export PYTHONPATH=@JUGGLER_PYTHONPATH@:$PYTHONPATH
 
+echo $LD_LIBRARY_PATH
+echo ""
+echo $PYTHONPATH
+echo ""
+
 ## good defaults
-JUGGLER_DETECTOR="athena"
-DETECTOR_PATH="/opt/detector/share/athena"
+if [ -z ${JUGGLER_DETECTOR} ]; then
+  JUGGLER_DETECTOR="athena"
+fi
+if [ -z ${DETECTOR_PATH} ]; then 
+  DETECTOR_PATH="/opt/detector/share/athena"
+fi
 
 function print_the_help {
   echo "USAGE:  juggler [OPTIONS] <your_options.py>"
   echo "OPTIONAL ARGUMENTS:"
   echo "          -i,--input      Input files (comma separated list)"
   echo "          -o,--output     Output file name"
-	echo "				  -n,--n-events   Number of events to process"
+	echo "          -n,--n-events   Number of events to process"
+  echo "          --detector-name Detector name (D: ${JUGGLER_DETECTOR})"
+  echo "          --detector-path Detector geometry path (D: ${DETECTOR_PATH})"
   echo "          -v,--version    print Juggler version"
+  echo "          -g,--gaudi      Pass args to gaudi (unknown options automatically passed)"
   echo "          -h,--help       Print this message"
   echo ""
   echo "  Launch Juggler (Digitization and/or reconstruction)."
+  echo "  (Run juggler -g -h to get the gaudirun.py help.)"
   echo ""
-  echo "EXAMPLE: juggler <your_options.py>"
+  echo "EXAMPLE: juggler -i sim1.root,sim2.root -o rec.root -n 100 <your_options.py>"
+  echo ""
   exit
 }
 
-SIM_FILES=
+SIM_FILE=
 
 GAUDI_ARGS=()
 
@@ -42,11 +56,11 @@ while [ $# -gt 0 ]; do
   key=$1
   case $key in
     -i|--input)
-			if [ ! -z ${SIM_FILES} ]; then
-				SIM_FILES="${SIM_FILES},$2"
-		  else
-				SIM_FILES=$2
-			fi
+      if [ ! -z ${SIM_FILE} ]; then
+        SIM_FILE="${SIM_FILE},$2"
+      else
+        SIM_FILE=$2
+      fi
       shift
       shift
       ;;
@@ -60,47 +74,70 @@ while [ $# -gt 0 ]; do
       shift
       shift
       ;;
+    --detector-name)
+      JUGGLER_DETECTOR=$2
+      shift
+      shift
+      ;;
+    --detector-path)
+      DETECTOR_PATH=$2
+      shift
+      shift
+      ;;
     -v|--version)
-			echo "Juggler version: ${JUGGLER_VERSION}"
+      echo "Juggler version: ${JUGGLER_VERSION}"
       exit 0
       ;;
     -h|--help)
       print_the_help
       exit 0
       ;;
+    -g|--gaudi)
+      GAUDIRUN_ARGS+=($2)
+      shift
+      shift
+      ;;
     *)
-			GAUDIRUN_ARGS+=($1)
-			shift
+      GAUDIRUN_ARGS+=($1)
+      shift
       ;;
   esac
 done
-if [ ! -z SIM_FILES ]; then
-	JUGGLER_SIM_FILES="${SIM_FILES}"
+if [ ! -z SIM_FILE ]; then
+  JUGGLER_SIM_FILE="${SIM_FILE}"
 fi
 
 ## sanitize input
-if [ -z ${JUGGLER_SIM_FILES} ]; then
-	echo "ERROR: No input files provided, please either use the --input flag, or set the JUGGLER_SIM_FILES variable. See 'juggler --help' for more info."
+if [ -z ${JUGGLER_SIM_FILE} ]; then
+  echo "ERROR: No input files provided, please either use the --input flag, or set the JUGGLER_SIM_FILE variable. See 'juggler --help' for more info."
   exit 1
 fi
 if [ -z ${JUGGLER_REC_FILE} ]; then
-	echo "ERROR: No output file provided, please use the --output flag, or set the JUGGLER_REC_FILE variable. See 'juggler --help' for more info."
+  echo "ERROR: No output file provided, please use the --output flag, or set the JUGGLER_REC_FILE variable. See 'juggler --help' for more info."
   exit 1
 fi
 if [ -z ${JUGGLER_N_EVENTS} ]; then
-	echo "ERROR: No event count provided, please use the --n-events flag, or set the JUGGLER_N_EVENTS variable. See 'juggler --help' for more info."
+  echo "ERROR: No event count provided, please use the --n-events flag, or set the JUGGLER_N_EVENTS variable. See 'juggler --help' for more info."
   exit 1
 fi
 
+export DETECTOR_PATH
+export JUGGLER_DETECTOR
+export JUGGLER_N_EVENTS
+export JUGGLER_REC_FILE
+export JUGGLER_SIM_FILE
+
 ## Now launch Gaudi
 echo "Launching Juggler"
-echo " - Input files: ${JUGGLER_SIM_FILES}"
-echo " - Output file: ${JUGGLER_REC_FILE}"
-echo " - Number of events: ${JUGGLER_N_EVENTS}"
-echo " - Detector: ${JUGGLER_DETECTOR}"
-echo " - Detector path: ${DETECTOR_PATH}"
+echo " - Input files      : ${JUGGLER_SIM_FILE}"
+echo " - Output file      : ${JUGGLER_REC_FILE}"
+echo " - Number of events : ${JUGGLER_N_EVENTS}"
+echo " - Detector         : ${JUGGLER_DETECTOR}"
+echo " - Detector path    : ${DETECTOR_PATH}"
+echo ""
 
 echo "exec gaudirun.py ${GAUDIRUN_ARGS[@]}"
+echo ""
 exec gaudirun.py ${GAUDIRUN_ARGS[@]}
 
 ## That's all!
