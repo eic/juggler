@@ -82,29 +82,30 @@ namespace Jug::Reco {
         double p = std::hypot( part.psx() * GeV, part.psy() * GeV, part.psz() * GeV);
         ROOT::Math::XYZVector  momentum(part.psx() * GeV, part.psy() * GeV, part.psz() * GeV);
 
+        /// \todo create or find better particle data interface.
+        // get the particle charge
+        double charge = ((part.pdgID() > 0) ? 1 : -1);
+        // electron is negative but positive pdg code
+        if( std::abs(part.pdgID()) == 11 ) {
+          charge *= -1;
+        }
+
         // build some track cov matrix
-        Acts::BoundSymMatrix cov        = Acts::BoundSymMatrix::Zero();
-        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = 1000*um*1000*um;
-        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = 1000*um*1000*um;
-        cov(Acts::eBoundPhi, Acts::eBoundPhi)     = 0.05*0.05;
-        cov(Acts::eBoundTheta, Acts::eBoundTheta) = 0.01*0.01;
-        cov(Acts::eBoundQOverP, Acts::eBoundQOverP)     = (0.1*0.1) / (GeV*GeV);
-        cov(Acts::eBoundTime, Acts::eBoundTime)         = 10.0e9*ns*10.0e9*ns;
+        Acts::BoundSymMatrix cov                    = Acts::BoundSymMatrix::Zero();
+        cov(Acts::eBoundLoc0, Acts::eBoundLoc0)     = 1000*um*1000*um;
+        cov(Acts::eBoundLoc1, Acts::eBoundLoc1)     = 1000*um*1000*um;
+        cov(Acts::eBoundPhi, Acts::eBoundPhi)       = 0.05*0.05;
+        cov(Acts::eBoundTheta, Acts::eBoundTheta)   = 0.01*0.01;
+        cov(Acts::eBoundQOverP, Acts::eBoundQOverP) = (0.1*0.1) / (GeV*GeV);
+        cov(Acts::eBoundTime, Acts::eBoundTime)     = 10.0e9*ns*10.0e9*ns;
 
         Acts::BoundVector  params;
         params(Acts::eBoundLoc0)   = 0.0 * mm ;  // cylinder radius
         params(Acts::eBoundLoc1)   = 0.0 * mm ; // cylinder length
         params(Acts::eBoundPhi)    = momentum.Phi();
         params(Acts::eBoundTheta)  = momentum.Theta();
-        params(Acts::eBoundQOverP) = -1/p;
+        params(Acts::eBoundQOverP) = charge / p;
         params(Acts::eBoundTime)   = part.time() * ns;
-        /// \todo create or find better particle data interface.
-        // get the particle charge
-        int charge = ((part.pdgID() > 0) ? 1 : -1);
-        // electron is negative but positive pdg code
-        if( std::abs(part.pdgID()) == 11 ) {
-          charge *= -1;
-        }
 
         //// Construct a perigee surface as the target surface
         auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
