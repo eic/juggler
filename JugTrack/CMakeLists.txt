@@ -24,6 +24,7 @@ gaudi_add_module(JugTrackPlugins
   src/components/TrackParamTruthInit.cpp 
   src/components/TrackParamClusterInit.cpp 
   src/components/TrackParamVertexClusterInit.cpp 
+  src/components/TrackParamImagingClusterInit.cpp 
   src/components/ParticlesFromTrackFit.cpp 
   LINK
   Gaudi::GaudiAlgLib Gaudi::GaudiKernel
