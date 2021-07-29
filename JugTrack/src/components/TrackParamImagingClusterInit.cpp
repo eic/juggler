@@ -86,7 +86,7 @@ namespace Jug::Reco {
 
         // assume relativistic, unit charge, 3 T constant field (FIXME get field from Acts)
         double B = 3*T;
-        double p_perp = p * cos(momentum.Theta());
+        double p_perp = p * sin(momentum.Theta());
         double gyroradius = p_perp / B;
         double ecalradius = len; // chord length in circle of gyroradius
         if (gyroradius < ecalradius) continue; // no intersection; skip
