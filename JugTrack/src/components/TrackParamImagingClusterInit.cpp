@@ -75,6 +75,7 @@ namespace Jug::Reco {
         using Acts::UnitConstants::MeV;
         using Acts::UnitConstants::mm;
         using Acts::UnitConstants::ns;
+        using Acts::UnitConstants::T;
 
         double p = c.energy()*GeV;
         if( p < 0.1*GeV) {
@@ -82,6 +83,14 @@ namespace Jug::Reco {
         }
         double len =  std::hypot( c.position().x , c.position().y , c.position().z );
         ROOT::Math::XYZVector  momentum(c.position().x * p / len, c.position().y * p / len, c.position().z * p / len);
+
+        // assume relativistic, unit charge, 3 T constant field (FIXME get field from Acts)
+        double B = 3*T;
+        double p_perp = p * cos(momentum.Theta());
+        double gyroradius = p_perp / B;
+        double ecalradius = len; // chord length in circle of gyroradius
+        if (gyroradius < ecalradius) continue; // no intersection; skip
+        double alpha = 2 * asin(ecalradius / 2 / gyroradius); // center angle in circle of gyroradius from beam to ecal cluster
 
         // build some track cov matrix
         //Acts::BoundSymMatrix cov        = Acts::BoundSymMatrix::Zero();
@@ -95,7 +104,7 @@ namespace Jug::Reco {
         Acts::BoundVector  params;
         params(Acts::eBoundLoc0)   = 0.0 * mm ;
         params(Acts::eBoundLoc1)   = 0.0 * mm ;
-        params(Acts::eBoundPhi)    = momentum.Phi();
+        params(Acts::eBoundPhi)    = momentum.Phi() - alpha;
         params(Acts::eBoundTheta)  = momentum.Theta();
         params(Acts::eBoundQOverP) = 1/p;
         params(Acts::eBoundTime)   = 0 * ns;
@@ -110,7 +119,7 @@ namespace Jug::Reco {
         Acts::BoundVector  params2;
         params2(Acts::eBoundLoc0)   = 0.0 * mm ;
         params2(Acts::eBoundLoc1)   = 0.0 * mm ;
-        params2(Acts::eBoundPhi)    = momentum.Phi();
+        params2(Acts::eBoundPhi)    = momentum.Phi() + alpha;
         params2(Acts::eBoundTheta)  = momentum.Theta();
         params2(Acts::eBoundQOverP) = -1/p;
         params2(Acts::eBoundTime)   = 0 * ns;
