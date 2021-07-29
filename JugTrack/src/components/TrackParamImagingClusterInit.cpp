@@ -104,7 +104,7 @@ namespace Jug::Reco {
         Acts::BoundVector  params;
         params(Acts::eBoundLoc0)   = 0.0 * mm ;
         params(Acts::eBoundLoc1)   = 0.0 * mm ;
-        params(Acts::eBoundPhi)    = momentum.Phi() - alpha;
+        params(Acts::eBoundPhi)    = momentum.Phi() - alpha / 2;
         params(Acts::eBoundTheta)  = momentum.Theta();
         params(Acts::eBoundQOverP) = 1/p;
         params(Acts::eBoundTime)   = 0 * ns;
@@ -119,7 +119,7 @@ namespace Jug::Reco {
         Acts::BoundVector  params2;
         params2(Acts::eBoundLoc0)   = 0.0 * mm ;
         params2(Acts::eBoundLoc1)   = 0.0 * mm ;
-        params2(Acts::eBoundPhi)    = momentum.Phi() + alpha;
+        params2(Acts::eBoundPhi)    = momentum.Phi() + alpha / 2;
         params2(Acts::eBoundTheta)  = momentum.Theta();
         params2(Acts::eBoundQOverP) = -1/p;
         params2(Acts::eBoundTime)   = 0 * ns;
