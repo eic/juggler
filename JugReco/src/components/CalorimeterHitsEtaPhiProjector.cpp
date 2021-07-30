@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <bitset>
 #include <unordered_map>
+#include <cmath>
 
 #include "Gaudi/Property.h"
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -99,7 +100,7 @@ namespace Jug::Reco {
       for (const auto h : *m_inputHitCollection.get()) {
         Point3D p(h.x(), h.y(), h.z());
         auto bins = std::make_pair(static_cast<int64_t>(pos2bin(p.eta(), gridSizes[0], 0.)),
-                                   static_cast<int64_t>(pos2bin(p.phi(), gridSizes[1], 0.)));
+                                   static_cast<int64_t>(pos2bin(p.phi() + M_PI, gridSizes[1], 0.)));
         merged_hits[bins].push_back(h);
       }
 
