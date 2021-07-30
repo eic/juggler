@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <functional>
 #include <tuple>
+#include <cmath>
 
 #include "fmt/format.h"
 #include "Math/Point2D.h"
@@ -58,11 +59,11 @@ namespace Jug::Reco {
   }
   static Point globalDistRPhi(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
     Point3D p1(h1.x(), h1.y(), h1.z()), p2(h2.x(), h2.y(), h2.z());
-    return Point(p1.r() - p2.r(), p1.phi() - p2.phi());
+    return Point(p1.r() - p2.r(), (p1.phi() - p2.phi()) + M_PI);
   }
   static Point globalDistEtaPhi(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
     Point3D p1(h1.x(), h1.y(), h1.z()), p2(h2.x(), h2.y(), h2.z());
-    return Point(p1.eta() - p2.eta(), p1.phi() - p2.phi());
+    return Point(p1.eta() - p2.eta(), (p1.phi() - p2.phi()) + M_PI);
   }
   // name: {method, units}
   static std::map< std::string, std::tuple<
