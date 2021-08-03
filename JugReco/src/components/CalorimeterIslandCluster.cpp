@@ -59,11 +59,33 @@ namespace Jug::Reco {
   }
   static Point globalDistRPhi(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
     Point3D p1(h1.x(), h1.y(), h1.z()), p2(h2.x(), h2.y(), h2.z());
-    return Point(p1.r() - p2.r(), (p1.phi() - p2.phi()) + M_PI);
+    // Conversion phi from [-M_PI,M_PI] to [0.0,2*M_PI]
+    auto p1_phi = 0.0;
+    auto p2_phi = 0.0;
+    if (p1.phi() > 0.)
+      p1_phi = p1.phi();
+    else
+      p1_phi = p1.phi() + (2. * M_PI);
+    if (p2.phi() > 0.)
+      p2_phi = p2.phi();
+    else  
+      p2_phi = p2.phi() + (2. * M_PI);
+    return Point(p1.r() - p2.r(), p1_phi - p2_phi);
   }
   static Point globalDistEtaPhi(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
     Point3D p1(h1.x(), h1.y(), h1.z()), p2(h2.x(), h2.y(), h2.z());
-    return Point(p1.eta() - p2.eta(), (p1.phi() - p2.phi()) + M_PI);
+    // Conversion phi from [-M_PI,M_PI] to [0.0,2*M_PI]
+    auto p1_phi = 0.0;
+    auto p2_phi = 0.0;
+    if (p1.phi() > 0.)
+      p1_phi = p1.phi();
+    else
+      p1_phi = p1.phi() + (2. * M_PI);
+    if (p2.phi() > 0.)
+      p2_phi = p2.phi();
+    else  
+      p2_phi = p2.phi() + (2. * M_PI);
+    return Point(p1.eta() - p2.eta(), p1_phi - p2_phi);
   }
   // name: {method, units}
   static std::map< std::string, std::tuple<
