@@ -83,8 +83,8 @@ namespace Jug::Reco {
 
           // Collect the trajectory summary info
           auto trajState       = Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
-          int  m_nMeasurements = trajState.nMeasurements;
-          int  m_nStates       = trajState.nStates;
+          //int  m_nMeasurements = trajState.nMeasurements;
+          //int  m_nStates       = trajState.nStates;
 
           // Get the fitted track parameter
           bool m_hasFittedParams = false;
@@ -148,9 +148,11 @@ namespace Jug::Reco {
               return;
             }
 
-            eic::Particle p({params[Acts::eBoundPhi], params[Acts::eBoundTheta],
-                             1.0 / std::abs(params[Acts::eBoundQOverP]), 0.000511},
+            eic::Particle p({params[Acts::eBoundPhi], 
+                             params[Acts::eBoundTheta],
+                             1.0 / std::abs(params[Acts::eBoundQOverP])},
                             {0.0, 0.0, 0.0, params[Acts::eBoundTime]},
+                            0.000511,
                             (long long)11 * params[Acts::eBoundQOverP] /
                                 std::abs(params[Acts::eBoundQOverP]),
                             0);

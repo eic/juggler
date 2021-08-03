@@ -82,8 +82,8 @@ namespace Jug::Reco {
       for(const auto& ahit : *hits) {
 
         Acts::SymMatrix2 cov = Acts::SymMatrix2::Zero();
-        cov(0,0) = ahit.covMatrix().covsym_xx*Acts::UnitConstants::mm;//*ahit.covsym_xx()*Acts::UnitConstants::mm;
-        cov(1,1) = ahit.covMatrix().covsym_yy*Acts::UnitConstants::mm;//*ahit.covsym_yy()*Acts::UnitConstants::mm;
+        cov(0,0) = ahit.covMatrix().xx*Acts::UnitConstants::mm;//*ahit.xx()*Acts::UnitConstants::mm;
+        cov(1,1) = ahit.covMatrix().yy*Acts::UnitConstants::mm;//*ahit.yy()*Acts::UnitConstants::mm;
 
         auto       vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID());
         auto       vol_id  = vol_ctx->identifier;

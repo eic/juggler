@@ -135,7 +135,7 @@ namespace Jug::Reco {
         /*
         debug() << fmt::format("hit {:d}: local position = ({}, {}, {}), global position = ({}, {}, {})",
                 i + 1,
-                hits[i].local().local_x, hits[i].local().local_y, hits[i].local_z(),
+                hits[i].local().x, hits[i].local().y, hits[i].z(),
                 hits[i].position().x, hits[i].position().y, hits[i].position().z)
             << endmsg;
         */
@@ -197,8 +197,8 @@ namespace Jug::Reco {
       int ldiff = std::abs(h1.layerID() - h2.layerID());
       // same layer, check local positions
       if (!ldiff) {
-        return (std::abs(h1.local().local_x - h2.local().local_x) <= localDistXY[0]) &&
-               (std::abs(h1.local().local_y - h2.local().local_y) <= localDistXY[1]);
+        return (std::abs(h1.local().x - h2.local().x) <= localDistXY[0]) &&
+               (std::abs(h1.local().y - h2.local().y) <= localDistXY[1]);
       } else if (ldiff <= m_neighbourLayersRange) {
         return (std::abs(h1.eta() - h2.eta()) <= layerDistEtaPhi[0]) &&
                (std::abs(h1.polar().phi - h2.polar().phi) <= layerDistEtaPhi[1]);

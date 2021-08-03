@@ -109,9 +109,9 @@ namespace Jug::Reco {
           // setup local covariance
           Acts::BoundMatrix cov = Acts::BoundMatrix::Zero();
           cov(Acts::eBoundLoc0, Acts::eBoundLoc0) =
-              ahit.covsym_xx() * Acts::UnitConstants::mm * ahit.covsym_xx() * Acts::UnitConstants::mm;
+              ahit.xx() * Acts::UnitConstants::mm * ahit.xx() * Acts::UnitConstants::mm;
           cov(Acts::eBoundLoc1, Acts::eBoundLoc1) =
-              ahit.covsym_yy() * Acts::UnitConstants::mm * ahit.covsym_yy() * Acts::UnitConstants::mm;
+              ahit.yy() * Acts::UnitConstants::mm * ahit.yy() * Acts::UnitConstants::mm;
 
           auto vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID());
           auto vol_id  = vol_ctx->identifier;

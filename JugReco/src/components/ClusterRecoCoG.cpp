@@ -188,25 +188,19 @@ namespace Jug::Reco {
       res.energy(totalE);
 
       // center of gravity with logarithmic weighting
-      float tw = 0., x = 0., y = 0., z = 0.;
+      float tw = 0.;
+      eic::VectorXYZ v;
       for (auto& hit : hits) {
         // suppress low energy contributions
         // info() << std::log(hit.energy()/totalE) << endmsg;
         float w = weightFunc(hit.energy(), totalE, m_logWeightBase.value(), 0);
         tw += w;
-        x += hit.position().x * w;
-        y += hit.position().y * w;
-        z += hit.position().z * w;
-        /*
-        debug() << hit.cellID() << ": (" << hit.local_x() << ", " << hit.local_y() << ", "
-                << hit.local_z() << "), "
-                << "(" << hit.position().x << ", " << hit.position().y << ", " << hit.position().z << "), " << endmsg;
-        */
+        v = v.add(hit.position().scale(w));
       }
       if (tw == 0.) {
         warning() << "zero total weights encountered, you may want to adjust your weighting parameter." << endmsg;
       }
-      res.position({x / tw, y / tw, z / tw});
+      res.position(v.scale(1/tw));
       // convert global position to local position, use the cell with max edep as a reference
       const auto volman    = m_geoSvc->detector()->volumeManager();
       const auto alignment = volman.lookupDetElement(centerID).nominal();

@@ -14,8 +14,6 @@
 #include <tuple>
 
 #include "fmt/format.h"
-#include "Math/Point2D.h"
-#include "Math/Point3D.h"
 
 #include "Gaudi/Property.h"
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -36,38 +34,37 @@
 // Event Model related classes
 #include "eicd/CalorimeterHitCollection.h"
 #include "eicd/ClusterCollection.h"
+#include "eicd/VectorXY.h"
+#include "eicd/VectorXYZ.h"
 
 using namespace Gaudi::Units;
-typedef ROOT::Math::XYPoint Point;
-typedef ROOT::Math::XYZPoint Point3D;
 
 namespace Jug::Reco {
   // helper functions to get distance between hits
-  static Point localDistXY(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
-    return Point(h1.local().local_x - h2.local().local_x, h1.local().local_y - h2.local().local_y);
+  static eic::VectorXY localDistXY(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
+    return {h1.local().x - h2.local().x, h1.local().y - h2.local().y}; 
   }
-  static Point localDistXZ(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
-    return Point(h1.local().local_x - h2.local().local_x, h1.local().local_z - h2.local().local_z);
+  static eic::VectorXY localDistXZ(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
+    return {h1.local().x - h2.local().x, h1.local().z - h2.local().z};
   }
-  static Point localDistYZ(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
-    return Point(h1.local().local_y - h2.local().local_y, h1.local().local_z - h2.local().local_z);
+  static eic::VectorXY localDistYZ(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
+    return {h1.local().y - h2.local().y, h1.local().z - h2.local().z};
   }
-  static Point dimScaledLocalDistXY(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
-    return Point(2.*(h1.local().local_x - h2.local().local_x)/(h1.dimension().dim_x + h2.dimension().dim_x),
-                 2.*(h1.local().local_y - h2.local().local_y)/(h1.dimension().dim_y + h2.dimension().dim_y));
+  static eic::VectorXY dimScaledLocalDistXY(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
+    return {2.*(h1.local().x - h2.local().x)/(h1.dimension().x + h2.dimension().x),
+            2.*(h1.local().y - h2.local().y)/(h1.dimension().y + h2.dimension().y)};
   }
-  static Point globalDistRPhi(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
-    Point3D p1(h1.position().x, h1.position().y, h1.position().z), p2(h2.position().x, h2.position().y, h2.position().z);
-    return Point(p1.r() - p2.r(), p1.phi() - p2.phi());
+  static eic::VectorXY globalDistRPhi(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
+    return {h1.position().r() - h2.position().r(), h1.position().phi() - h2.position().phi()};
   }
-  static Point globalDistEtaPhi(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
-    Point3D p1(h1.position().x, h1.position().y, h1.position().z), p2(h2.position().x, h2.position().y, h2.position().z);
-    return Point(p1.eta() - p2.eta(), p1.phi() - p2.phi());
+  static eic::VectorXY globalDistEtaPhi(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
+    return {h1.position().eta() - h2.position().eta(), h1.position().phi() - h2.position().phi()};
   }
   // name: {method, units}
-  static std::map< std::string, std::tuple<
-    std::function<Point(eic::ConstCalorimeterHit, eic::ConstCalorimeterHit)>,
-    std::vector<double> > > distMethods {
+  static std::map<std::string, 
+                  std::tuple<
+                    std::function<eic::VectorXY(eic::ConstCalorimeterHit, eic::ConstCalorimeterHit)>,
+                    std::vector<double>>> distMethods {
       {"localDistXY", {localDistXY, {mm, mm}}},
       {"localDistXZ", {localDistXZ, {mm, mm}}},
       {"localDistYZ", {localDistYZ, {mm, mm}}},
@@ -108,7 +105,7 @@ namespace Jug::Reco {
     Gaudi::Property<std::vector<double>>        u_globalDistEtaPhi{this, "globalDistEtaPhi", {}};
     Gaudi::Property<std::vector<double>>        u_dimScaledLocalDistXY{this, "dimScaledLocalDistXY", {1.8, 1.8}};
     // neightbor checking function
-    std::function<Point(eic::ConstCalorimeterHit, eic::ConstCalorimeterHit)> hitsDist;
+    std::function<eic::VectorXY(eic::ConstCalorimeterHit, eic::ConstCalorimeterHit)> hitsDist;
 
     // unitless counterparts of the input parameters
     double minClusterHitEdep, minClusterCenterEdep, sectorDist;
@@ -187,7 +184,7 @@ namespace Jug::Reco {
       for (size_t i = 0; i < hits.size(); ++i) {
         debug() << fmt::format("hit {:d}: energy = {:.4f} MeV, local = ({:.4f}, {:.4f}) mm, "
                                "global=({:.4f}, {:.4f}, {:.4f}) mm, layer = {:d}, sector = {:d}.",
-                               i, hits[i].energy()*1000., hits[i].local().local_x, hits[i].local().local_y,
+                               i, hits[i].energy()*1000., hits[i].local().x, hits[i].local().y,
                                hits[i].position().x, hits[i].position().y, hits[i].position().z,
                                hits[i].layerID(), hits[i].sectorID()) << endmsg;
         // already in a group
@@ -215,22 +212,17 @@ namespace Jug::Reco {
     }
 
   private:
-    template <typename T>
-    inline T dist3d(T t1, T t2, T t3) const
-    {
-      return std::sqrt(t1 * t1 + t2 * t2 + t3 * t3);
-    }
     // helper function to group hits
     inline bool is_neighbour(const eic::ConstCalorimeterHit& h1, const eic::ConstCalorimeterHit& h2) const
     {
       // in the same sector
       if (h1.sectorID() == h2.sectorID()) {
         auto dist = hitsDist(h1, h2);
-        return (dist.x() <= neighbourDist[0]) && (dist.y() <= neighbourDist[1]);
+        return (dist.x <= neighbourDist[0]) && (dist.y <= neighbourDist[1]);
       // different sector, local coordinates do not work, using global coordinates
       } else {
         // sector may have rotation (barrel), so z is included
-        return dist3d(h1.position().x - h2.position().x, h1.position().y - h2.position().y, h1.position().z - h2.position().z) <= sectorDist;
+        return (h1.position().subtract(h2.position())).mag() <= sectorDist;
       }
     }
 
@@ -347,9 +339,9 @@ namespace Jug::Reco {
         size_t j     = 0;
         // calculate weights for local maxima
         for (auto cit = maxima.begin(); cit != maxima.end(); ++cit, ++j) {
-          double dist_ref = cit->dimension().dim_x;
+          double dist_ref = cit->dimension().x;
           double energy   = cit->energy();
-          double dist     = hitsDist(*cit, *it).r();
+          double dist     = hitsDist(*cit, *it).mag();
           weights[j]      = std::exp(-dist / dist_ref) * energy;
         }
 

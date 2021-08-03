@@ -198,8 +198,8 @@ namespace Jug::Reco {
       int ldiff = std::abs(l1 - l2);
       // same layer, check local positions
       if (!ldiff) {
-        return (std::abs(h1.local().local_x - h2.local().local_x) <= u_localRanges[0]) &&
-               (std::abs(h1.local().local_y - h2.local().local_y) <= u_localRanges[1]);
+        return (std::abs(h1.local().x - h2.local().x) <= u_localRanges[0]) &&
+               (std::abs(h1.local().y - h2.local().y) <= u_localRanges[1]);
       } else if (ldiff <= m_adjLayerDiff) {
         double eta1, phi1, r1, eta2, phi2, r2;
         calc_eta_phi_r(h1.position().x, h1.position().y, h1.position().z, eta1, phi1, r1);

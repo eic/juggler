@@ -87,7 +87,7 @@ namespace Jug::Reco {
       MatrixXd data(rawhits.size(), 2);
       for (int i = 0; i < data.rows(); ++i) {
         if (rawhits[i].npe() > m_minNpe) {
-          data.row(i) << rawhits[i].local().local_x, rawhits[i].local().local_y;
+          data.row(i) << rawhits[i].local().x, rawhits[i].local().y;
         }
       }
 
@@ -97,7 +97,7 @@ namespace Jug::Reco {
       // local position
       for (int i = 0; i < res.rows(); ++i) {
         auto cl = clusters.create();
-        cl.position({res(i, 0), res(i, 1)});
+        cl.position({res(i, 0), res(i, 1), 0});
         cl.radius(res(i, 2));
       }
 

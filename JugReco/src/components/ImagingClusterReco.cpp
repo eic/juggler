@@ -185,7 +185,7 @@ namespace Jug::Reco {
       double meta = 0.;
       double mphi = 0.;
       double edep = 0.;
-      double r    = 9999 * cm;
+      float r    = 9999 * cm;
       for (const auto& hit : hits) {
         meta += hit.eta() * hit.edep();
         mphi += hit.polar().phi * hit.edep();

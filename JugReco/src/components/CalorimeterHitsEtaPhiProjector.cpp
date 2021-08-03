@@ -31,6 +31,7 @@
 
 // Event Model related classes
 #include "eicd/CalorimeterHitCollection.h"
+#include "eicd/VectorPolar.h"
 
 using namespace Gaudi::Units;
 typedef ROOT::Math::XYZPoint Point3D;
@@ -97,9 +98,8 @@ namespace Jug::Reco {
       std::unordered_map<std::pair<int64_t, int64_t>, std::vector<eic::ConstCalorimeterHit>, pair_hash> merged_hits;
 
       for (const auto h : *m_inputHitCollection.get()) {
-        Point3D p(h.position().x, h.position().y, h.position().z);
-        auto bins = std::make_pair(static_cast<int64_t>(pos2bin(p.eta(), gridSizes[0], 0.)),
-                                   static_cast<int64_t>(pos2bin(p.phi(), gridSizes[1], 0.)));
+        auto bins = std::make_pair(static_cast<int64_t>(pos2bin(h.position().eta(), gridSizes[0], 0.)),
+                                   static_cast<int64_t>(pos2bin(h.position().phi(), gridSizes[1], 0.)));
         merged_hits[bins].push_back(h);
       }
 
@@ -111,14 +111,12 @@ namespace Jug::Reco {
         hit.layerID(ref.layerID());
         // TODO, we can do timing cut to reject noises
         hit.time(ref.time());
-        double r = std::hypot(ref.position().x, ref.position().y, ref.position().z);
+        double r = ref.position().mag();
         double eta = bin2pos(bins.first, gridSizes[0], 0.);
         double phi = bin2pos(bins.second, gridSizes[1], 1.);
         double theta = std::atan(std::exp(-eta))*2.;
-        ROOT::Math::Polar3DVector p(r, theta, phi);
-        // TODO, we can do global to local conversion, which gives a better estimate
         hit.local(ref.local());
-        hit.position({p.x(), p.y(), p.z()});
+        hit.position(eic::VectorPolar(r, theta, phi));
         hit.dimension({gridSizes[0], gridSizes[1], 0.});
         // merge energy
         hit.energy(0.);

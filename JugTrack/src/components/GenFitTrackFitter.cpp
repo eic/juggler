@@ -85,7 +85,7 @@ namespace Jug::Reco {
     // Read input data
     const eic::TrackerHitCollection* hits              = m_inputHitCollection.get();
     const TrackParametersContainer*  initialParameters = m_initialTrackParameters.get();
-    const ProtoTrackContainer*       protoTracks       = m_inputProtoTracks.get();
+    //const ProtoTrackContainer*       protoTracks       = m_inputProtoTracks.get();
 
     const auto& single_track_param = (*initialParameters)[0];
     // TrajectoryContainer trajectories;
@@ -127,8 +127,8 @@ namespace Jug::Reco {
       auto        vol_id  = vol_ctx->identifier;
       TMatrixDSym hitCov(2);
       hitCov.UnitMatrix();
-      hitCov(0, 0) = ahit.covMatrix().covsym_xx * ahit.covMatrix().covsym_xx;
-      hitCov(1, 1) = ahit.covMatrix().covsym_yy * ahit.covMatrix().covsym_yy;
+      hitCov(0, 0) = ahit.covMatrix().xx * ahit.covMatrix().xx;
+      hitCov(1, 1) = ahit.covMatrix().yy * ahit.covMatrix().yy;
 
       TVector3 point = {ahit.position().x, ahit.position().y, ahit.position().z};
       TVector3 u_dir = {1, 0, 0};

@@ -130,9 +130,9 @@ namespace Jug::Reco {
         // construct the covariance matrix
         Acts::SymMatrix2 cov = Acts::SymMatrix2::Zero();
         cov(0, 0) =
-            ahit.covMatrix().covsym_xx * Acts::UnitConstants::mm * ahit.covMatrix().covsym_xx * Acts::UnitConstants::mm;
+            ahit.covMatrix().xx * Acts::UnitConstants::mm * ahit.covMatrix().xx * Acts::UnitConstants::mm;
         cov(1, 1) =
-            ahit.covMatrix().covsym_yy * Acts::UnitConstants::mm * ahit.covMatrix().covsym_yy * Acts::UnitConstants::mm;
+            ahit.covMatrix().yy * Acts::UnitConstants::mm * ahit.covMatrix().yy * Acts::UnitConstants::mm;
 
         // Above we only consider the two position coordinates the comment below shows how to add time
         // which we will probably want to try later.
@@ -141,7 +141,6 @@ namespace Jug::Reco {
         // cov << 0.05, 0., 0., 0., 0.05, 0., 0., 0., 900. * Acts::UnitConstants::ps * Acts::UnitConstants::ps;
         // Acts::Vector3 par(localX, localY, simHit.time());
 
-        Index           hitIdx = ihit;
         IndexSourceLink sourceLink(surface->geometryId(), ihit);
         auto            meas =
             Acts::makeMeasurement(sourceLink, pos, cov, Acts::eBoundLoc0, Acts::eBoundLoc1); //, Acts::eBoundTime);
