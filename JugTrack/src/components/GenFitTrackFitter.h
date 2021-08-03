@@ -15,9 +15,10 @@
 #include <stdexcept>
 #include <vector>
 
+#include "JugBase/BField/DD4hepBField.h"
+
 #include "JugTrack/IndexSourceLink.hpp"
 #include "JugTrack/Track.hpp"
-#include "JugTrack/BField.h"
 #include "JugTrack/Measurement.hpp"
 #include "JugTrack/Trajectories.hpp"
 #include "JugTrack/ProtoTrack.hpp"

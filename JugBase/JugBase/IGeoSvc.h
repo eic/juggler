@@ -15,6 +15,7 @@ namespace dd4hep {
 namespace Acts {
   class TrackingGeometry;
   class Surface;
+  class MagneticFieldProvider;
 }
 
 namespace genfit {
@@ -41,7 +42,9 @@ public:
   virtual std::shared_ptr<const dd4hep::rec::CellIDPositionConverter> cellIDPositionConverter() const = 0;
   virtual std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry() const = 0;
 
+  virtual std::shared_ptr<const Acts::MagneticFieldProvider>  getFieldProvider() const = 0;
   virtual double centralMagneticField() const = 0;
+
   // receive Geant4 Geometry
   //virtual G4VUserDetectorConstruction* getGeant4Geo() = 0;
   virtual const VolumeSurfaceMap& surfaceMap() const = 0;

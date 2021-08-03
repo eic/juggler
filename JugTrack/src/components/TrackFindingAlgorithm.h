@@ -16,7 +16,8 @@
 #include <stdexcept>
 #include <vector>
 
-#include "JugTrack/BField.h"
+#include "JugBase/BField/DD4hepBField.h"
+
 #include "JugTrack/Index.hpp"
 #include "JugTrack/IndexSourceLink.hpp"
 #include "JugTrack/Measurement.hpp"
@@ -28,7 +29,6 @@
 //#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 
@@ -69,7 +69,7 @@ namespace Jug::Reco {
     TrackFinderFunction             m_trackFinderFunc;
     SmartIF<IGeoSvc>                m_geoSvc;
 
-    std::shared_ptr<Acts::ConstantBField> m_BField = nullptr;
+    std::shared_ptr<const Jug::BField::DD4hepBField> m_BField = nullptr;
     Acts::GeometryContext                 m_geoctx;
     Acts::CalibrationContext              m_calibctx;
     Acts::MagneticFieldContext            m_fieldctx;

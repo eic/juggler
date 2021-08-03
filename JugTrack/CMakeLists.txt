@@ -38,8 +38,10 @@ gaudi_add_module(JugTrackPlugins
 )
 
 target_include_directories(JugTrackPlugins PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/JugBase>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  )
 
 target_compile_options(JugTrackPlugins PRIVATE -Wno-suggest-override)
 

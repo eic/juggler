@@ -19,7 +19,7 @@ Various subsystems
 
 /**
  * \defgroup geosvc Geometry Services
- * \defgroup detasvc Data Services
+ * \defgroup datasvc Data Services
  * \defgroup magsvc Magnetic Field Services
  */
 

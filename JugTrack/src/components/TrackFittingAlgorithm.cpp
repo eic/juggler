@@ -29,10 +29,11 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
+#include "JugBase/BField/DD4hepBField.h"
+
 #include "JugTrack/GeometryContainers.hpp"
 #include "JugTrack/IndexSourceLink.hpp"
 #include "JugTrack/Track.hpp"
-#include "JugTrack/BField.h"
 #include "JugTrack/Measurement.hpp"
 
 #include "eicd/TrackerHitCollection.h"
@@ -68,8 +69,10 @@ namespace Jug::Reco {
               << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
       return StatusCode::FAILURE;
     }
-    m_BField   = std::make_shared<Acts::ConstantBField>(Acts::Vector3{0.0, 0.0, m_geoSvc->centralMagneticField()});
-    m_fieldctx = BFieldVariant(m_BField);
+    //m_BField   = std::shared_ptr<const Jug::BField::DD4hepBField>(m_geoSvc->getFieldProvider());
+    m_BField   = std::dynamic_pointer_cast<const Jug::BField::DD4hepBField>(m_geoSvc->getFieldProvider());
+    //std::make_shared<Acts::ConstantBField>(Acts::Vector3{0.0, 0.0, m_geoSvc->centralMagneticField()});
+    m_fieldctx = Jug::BField::BFieldVariant(m_BField);
     // chi2 and #sourclinks per surface cutoffs
     //m_sourcelinkSelectorCfg = {
     //    {Acts::GeometryIdentifier(), {15, 10}},

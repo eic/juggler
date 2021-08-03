@@ -31,6 +31,7 @@
 #include "DDRec/Surface.h"
 #include "DD4hep/DD4hepUnits.h"
 
+#include "JugBase/BField/DD4hepBField.h"
 
 
 /** Draw the surfaces and save to obj file.
@@ -68,6 +69,9 @@ private:
    *  <a href="https://dd4hep.web.cern.ch/dd4hep/reference/classdd4hep_1_1rec_1_1CellIDPositionConverter.html">See DD4hep CellIDPositionConverter documentation</a>
    */
   std::shared_ptr<const dd4hep::rec::CellIDPositionConverter> m_cellid_converter = nullptr;
+
+  /// Acts magnetic field
+  std::shared_ptr<const Jug::BField::DD4hepBField> m_magneticField = nullptr;
 
   /// XML-files with the detector description
   Gaudi::Property<std::vector<std::string>> m_xmlFileNames{
@@ -113,6 +117,8 @@ public:
   /** Gets the ACTS tracking geometry.
    */
   virtual std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry() const;
+
+  virtual std::shared_ptr<const Acts::MagneticFieldProvider> getFieldProvider() const override { return m_magneticField; }
 
   virtual double centralMagneticField() const
   {

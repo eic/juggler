@@ -17,7 +17,7 @@ gaudi_add_library(JugBase
   src/Utilities/Paths.cpp
   src/Utilities/Options.cpp
   src/Plugins/BFieldOptions.cpp
-  #src/Plugins/BFieldScalor.cpp
+  src/Plugins/DD4hepBField.cpp
   src/Plugins/BFieldUtils.cpp
   LINK
   Gaudi::GaudiKernel Gaudi::GaudiAlgLib

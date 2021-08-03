@@ -13,7 +13,7 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugTrack/BField.h"
+#include "JugBase/BField/DD4hepBField.h"
 #include "JugTrack/GeometryContainers.hpp"
 #include "JugTrack/IndexSourceLink.hpp"
 #include "JugTrack/Measurement.hpp"

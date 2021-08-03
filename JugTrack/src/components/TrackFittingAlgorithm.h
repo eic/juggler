@@ -24,9 +24,10 @@
 #include <stdexcept>
 #include <vector>
 
+#include "JugBase/BField/DD4hepBField.h"
+
 #include "JugTrack/IndexSourceLink.hpp"
 #include "JugTrack/Track.hpp"
-#include "JugTrack/BField.h"
 #include "JugTrack/Measurement.hpp"
 #include "JugTrack/Trajectories.hpp"
 #include "JugTrack/ProtoTrack.hpp"
@@ -87,7 +88,7 @@ namespace Jug::Reco {
 
     FitterFunction                        m_trackFittingFunc;
     SmartIF<IGeoSvc>                      m_geoSvc;
-    std::shared_ptr<Acts::ConstantBField> m_BField = nullptr;
+    std::shared_ptr<const Jug::BField::DD4hepBField> m_BField = nullptr;
     Acts::GeometryContext                 m_geoctx;
     Acts::CalibrationContext              m_calibctx;
     Acts::MagneticFieldContext            m_fieldctx;

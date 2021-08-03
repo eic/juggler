@@ -193,6 +193,12 @@ StatusCode GeoSvc::initialize() {
     });
   }
 
+  m_magneticField = std::make_shared<const Jug::BField::DD4hepBField>(m_dd4hepGeo);
+  for (int z : {0, 1000, 2000, 4000}) {
+    auto b = m_magneticField->getField({0.0, 0.0, double(z)});
+    debug() << "B(z=" << z << " mm) = " << b.transpose()  << " T" << endmsg;
+  }
+
   return StatusCode::SUCCESS;
 }
 
