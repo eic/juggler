@@ -97,7 +97,7 @@ namespace Jug::Reco {
       std::unordered_map<std::pair<int64_t, int64_t>, std::vector<eic::ConstCalorimeterHit>, pair_hash> merged_hits;
 
       for (const auto h : *m_inputHitCollection.get()) {
-        Point3D p(h.x(), h.y(), h.z());
+        Point3D p(h.position().x, h.position().y, h.position().z);
         auto bins = std::make_pair(static_cast<int64_t>(pos2bin(p.eta(), gridSizes[0], 0.)),
                                    static_cast<int64_t>(pos2bin(p.phi(), gridSizes[1], 0.)));
         merged_hits[bins].push_back(h);
@@ -111,7 +111,7 @@ namespace Jug::Reco {
         hit.layerID(ref.layerID());
         // TODO, we can do timing cut to reject noises
         hit.time(ref.time());
-        double r = std::hypot(ref.x(), ref.y(), ref.z());
+        double r = std::hypot(ref.position().x, ref.position().y, ref.position().z);
         double eta = bin2pos(bins.first, gridSizes[0], 0.);
         double phi = bin2pos(bins.second, gridSizes[1], 1.);
         double theta = std::atan(std::exp(-eta))*2.;

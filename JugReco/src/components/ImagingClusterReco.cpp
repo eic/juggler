@@ -158,21 +158,19 @@ namespace Jug::Reco {
       double mz   = 0.;
       double edep = 0.;
       for (const auto& hit : hits) {
-        mx += hit.x();
-        my += hit.y();
-        mz += hit.z();
+        mx += hit.position().x;
+        my += hit.position().y;
+        mz += hit.position().z;
         edep += hit.edep();
       }
 
-      layer.x(mx / layer.nhits());
-      layer.y(my / layer.nhits());
-      layer.z(mz / layer.nhits());
+      layer.position({mx / layer.nhits(), my / layer.nhits(), mz / layer.nhits()});
       layer.edep(edep);
 
       double radius = 0.;
       for (const auto& hit : hits) {
-        radius += std::sqrt(pow2(hit.x() - layer.x()) + pow2(hit.y() - layer.y()) +
-                            pow2(hit.z() - layer.z()));
+        radius += std::sqrt(pow2(hit.position().x - layer.position().x) + pow2(hit.position().y - layer.position().y) +
+                            pow2(hit.position().z - layer.position().z));
       }
       layer.radius(radius / layer.nhits());
       return layer;
@@ -190,9 +188,9 @@ namespace Jug::Reco {
       double r    = 9999 * cm;
       for (const auto& hit : hits) {
         meta += hit.eta() * hit.edep();
-        mphi += hit.phi() * hit.edep();
+        mphi += hit.polar().phi * hit.edep();
         edep += hit.edep();
-        r = std::min(hit.r(), r);
+        r = std::min(hit.polar().r, r);
       }
       const double eta   = meta / edep;
       const double phi   = mphi / edep;
@@ -201,20 +199,15 @@ namespace Jug::Reco {
       cluster.edep(edep);
       cluster.energy(edep / m_sampFrac); // simple energy reconstruction
       cluster.eta(eta);
-      cluster.phi(phi);
-      cluster.theta(theta);
-      // project it to the inner surface (the shallowest hit)
-      cluster.r(r);
+      cluster.polar({r, phi, theta});
       // cartesian coordinates
       ROOT::Math::Polar3DVectorD polar{r, theta, (phi > M_PI ? phi - M_PI : phi)};
-      cluster.x(polar.x());
-      cluster.y(polar.y());
-      cluster.z(polar.z());
+      cluster.position({polar.x(), polar.y(),polar.z()});
 
       // shower radius estimate (eta-phi plane)
       double radius = 0.;
       for (auto hit : cluster.hits()) {
-        radius += std::sqrt(pow2(hit.eta() - cluster.eta()) + pow2(hit.phi() - cluster.phi()));
+        radius += std::sqrt(pow2(hit.eta() - cluster.eta()) + pow2(hit.polar().phi - cluster.polar().phi));
       }
       cluster.radius(radius / cluster.nhits());
 
@@ -230,9 +223,9 @@ namespace Jug::Reco {
       double mz    = 0.;
       for (const auto& layer : layers) {
         if ((layer.layerID() <= stop_layer) && (layer.nhits() > 0)) {
-          mx += layer.x();
-          my += layer.y();
-          mz += layer.z();
+          mx += layer.position().x;
+          my += layer.position().y;
+          mz += layer.position().z;
           nrows += 1;
         }
       }
@@ -249,9 +242,9 @@ namespace Jug::Reco {
       int      ir = 0;
       for (const auto& layer : layers) {
         if ((layer.layerID() <= stop_layer) && (layer.nhits() > 0)) {
-          pos(ir, 0) = layer.x() - mx;
-          pos(ir, 1) = layer.y() - my;
-          pos(ir, 2) = layer.z() - mz;
+          pos(ir, 0) = layer.position().x - mx;
+          pos(ir, 1) = layer.position().y - my;
+          pos(ir, 2) = layer.position().z - mz;
           ir += 1;
         }
       }

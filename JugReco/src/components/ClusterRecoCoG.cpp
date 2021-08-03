@@ -194,13 +194,13 @@ namespace Jug::Reco {
         // info() << std::log(hit.energy()/totalE) << endmsg;
         float w = weightFunc(hit.energy(), totalE, m_logWeightBase.value(), 0);
         tw += w;
-        x += hit.x() * w;
-        y += hit.y() * w;
-        z += hit.z() * w;
+        x += hit.position().x * w;
+        y += hit.position().y * w;
+        z += hit.position().z * w;
         /*
         debug() << hit.cellID() << ": (" << hit.local_x() << ", " << hit.local_y() << ", "
                 << hit.local_z() << "), "
-                << "(" << hit.x() << ", " << hit.y() << ", " << hit.z() << "), " << endmsg;
+                << "(" << hit.position().x << ", " << hit.position().y << ", " << hit.position().z << "), " << endmsg;
         */
       }
       if (tw == 0.) {
@@ -210,7 +210,7 @@ namespace Jug::Reco {
       // convert global position to local position, use the cell with max edep as a reference
       const auto volman    = m_geoSvc->detector()->volumeManager();
       const auto alignment = volman.lookupDetElement(centerID).nominal();
-      const auto lpos      = alignment.worldToLocal(dd4hep::Position(res.x(), res.y(), res.z()));
+      const auto lpos      = alignment.worldToLocal(dd4hep::Position(res.position().x, res.position().y, res.position().z));
 
       // TODO: may need convert back to have depthCorrection in global positions
       res.local({lpos.x(), lpos.y(), lpos.z() + m_depthCorrection});

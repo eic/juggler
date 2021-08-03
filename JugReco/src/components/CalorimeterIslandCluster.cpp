@@ -44,24 +44,24 @@ typedef ROOT::Math::XYZPoint Point3D;
 namespace Jug::Reco {
   // helper functions to get distance between hits
   static Point localDistXY(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
-    return Point(h1.local_x() - h2.local_x(), h1.local_y() - h2.local_y());
+    return Point(h1.local().local_x - h2.local().local_x, h1.local().local_y - h2.local().local_y);
   }
   static Point localDistXZ(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
-    return Point(h1.local_x() - h2.local_x(), h1.local_z() - h2.local_z());
+    return Point(h1.local().local_x - h2.local().local_x, h1.local().local_z - h2.local().local_z);
   }
   static Point localDistYZ(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
-    return Point(h1.local_y() - h2.local_y(), h1.local_z() - h2.local_z());
+    return Point(h1.local().local_y - h2.local().local_y, h1.local().local_z - h2.local().local_z);
   }
   static Point dimScaledLocalDistXY(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
-    return Point(2.*(h1.local_x() - h2.local_x())/(h1.dim_x() + h2.dim_x()),
-                 2.*(h1.local_y() - h2.local_y())/(h1.dim_y() + h2.dim_y()));
+    return Point(2.*(h1.local().local_x - h2.local().local_x)/(h1.dimension().dim_x + h2.dimension().dim_x),
+                 2.*(h1.local().local_y - h2.local().local_y)/(h1.dimension().dim_y + h2.dimension().dim_y));
   }
   static Point globalDistRPhi(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
-    Point3D p1(h1.x(), h1.y(), h1.z()), p2(h2.x(), h2.y(), h2.z());
+    Point3D p1(h1.position().x, h1.position().y, h1.position().z), p2(h2.position().x, h2.position().y, h2.position().z);
     return Point(p1.r() - p2.r(), p1.phi() - p2.phi());
   }
   static Point globalDistEtaPhi(eic::ConstCalorimeterHit h1, eic::ConstCalorimeterHit h2) {
-    Point3D p1(h1.x(), h1.y(), h1.z()), p2(h2.x(), h2.y(), h2.z());
+    Point3D p1(h1.position().x, h1.position().y, h1.position().z), p2(h2.position().x, h2.position().y, h2.position().z);
     return Point(p1.eta() - p2.eta(), p1.phi() - p2.phi());
   }
   // name: {method, units}
@@ -187,8 +187,8 @@ namespace Jug::Reco {
       for (size_t i = 0; i < hits.size(); ++i) {
         debug() << fmt::format("hit {:d}: energy = {:.4f} MeV, local = ({:.4f}, {:.4f}) mm, "
                                "global=({:.4f}, {:.4f}, {:.4f}) mm, layer = {:d}, sector = {:d}.",
-                               i, hits[i].energy()*1000., hits[i].local_x(), hits[i].local_y(),
-                               hits[i].x(), hits[i].y(), hits[i].z(),
+                               i, hits[i].energy()*1000., hits[i].local().local_x, hits[i].local().local_y,
+                               hits[i].position().x, hits[i].position().y, hits[i].position().z,
                                hits[i].layerID(), hits[i].sectorID()) << endmsg;
         // already in a group
         if (visits[i]) {
@@ -230,7 +230,7 @@ namespace Jug::Reco {
       // different sector, local coordinates do not work, using global coordinates
       } else {
         // sector may have rotation (barrel), so z is included
-        return dist3d(h1.x() - h2.x(), h1.y() - h2.y(), h1.z() - h2.z()) <= sectorDist;
+        return dist3d(h1.position().x - h2.position().x, h1.position().y - h2.position().y, h1.position().z - h2.position().z) <= sectorDist;
       }
     }
 
@@ -347,7 +347,7 @@ namespace Jug::Reco {
         size_t j     = 0;
         // calculate weights for local maxima
         for (auto cit = maxima.begin(); cit != maxima.end(); ++cit, ++j) {
-          double dist_ref = cit->dim_x();
+          double dist_ref = cit->dimension().dim_x;
           double energy   = cit->energy();
           double dist     = hitsDist(*cit, *it).r();
           weights[j]      = std::exp(-dist / dist_ref) * energy;

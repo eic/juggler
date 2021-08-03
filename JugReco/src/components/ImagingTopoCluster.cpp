@@ -135,8 +135,8 @@ namespace Jug::Reco {
         /*
         debug() << fmt::format("hit {:d}: local position = ({}, {}, {}), global position = ({}, {}, {})",
                 i + 1,
-                hits[i].local_x(), hits[i].local_y(), hits[i].local_z(),
-                hits[i].x(), hits[i].y(), hits[i].z())
+                hits[i].local().local_x, hits[i].local().local_y, hits[i].local_z(),
+                hits[i].position().x, hits[i].position().y, hits[i].position().z)
             << endmsg;
         */
         // already in a group, or not energetic enough to form a cluster
@@ -189,7 +189,7 @@ namespace Jug::Reco {
     {
       // different sectors, simple distance check
       if (h1.sectorID() != h2.sectorID()) {
-        return std::sqrt(pow2(h1.x() - h2.x()) + pow2(h1.y() - h2.y()) + pow2(h1.z() - h2.z())) <=
+        return std::sqrt(pow2(h1.position().x - h2.position().x) + pow2(h1.position().y - h2.position().y) + pow2(h1.position().z - h2.position().z)) <=
                sectorDist;
       }
 
@@ -197,11 +197,11 @@ namespace Jug::Reco {
       int ldiff = std::abs(h1.layerID() - h2.layerID());
       // same layer, check local positions
       if (!ldiff) {
-        return (std::abs(h1.local_x() - h2.local_x()) <= localDistXY[0]) &&
-               (std::abs(h1.local_y() - h2.local_y()) <= localDistXY[1]);
+        return (std::abs(h1.local().local_x - h2.local().local_x) <= localDistXY[0]) &&
+               (std::abs(h1.local().local_y - h2.local().local_y) <= localDistXY[1]);
       } else if (ldiff <= m_neighbourLayersRange) {
         return (std::abs(h1.eta() - h2.eta()) <= layerDistEtaPhi[0]) &&
-               (std::abs(h1.phi() - h2.phi()) <= layerDistEtaPhi[1]);
+               (std::abs(h1.polar().phi - h2.polar().phi) <= layerDistEtaPhi[1]);
       }
 
       // not in adjacent layers

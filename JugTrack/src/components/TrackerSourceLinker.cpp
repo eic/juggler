@@ -82,8 +82,8 @@ namespace Jug::Reco {
       for(const auto& ahit : *hits) {
 
         Acts::SymMatrix2 cov = Acts::SymMatrix2::Zero();
-        cov(0,0) = ahit.covsym_xx()*Acts::UnitConstants::mm;//*ahit.covsym_xx()*Acts::UnitConstants::mm;
-        cov(1,1) = ahit.covsym_yy()*Acts::UnitConstants::mm;//*ahit.covsym_yy()*Acts::UnitConstants::mm;
+        cov(0,0) = ahit.covMatrix().covsym_xx*Acts::UnitConstants::mm;//*ahit.covsym_xx()*Acts::UnitConstants::mm;
+        cov(1,1) = ahit.covMatrix().covsym_yy*Acts::UnitConstants::mm;//*ahit.covsym_yy()*Acts::UnitConstants::mm;
 
         auto       vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID());
         auto       vol_id  = vol_ctx->identifier;
@@ -98,7 +98,7 @@ namespace Jug::Reco {
         // transform global position into local coordinates
         Acts::Vector2 pos(0, 0);
         // geometry context contains nothing here
-        pos = surface->globalToLocal(Acts::GeometryContext(), {ahit.x(), ahit.y(), ahit.z()}, {0, 0, 0}).value();//, pos);
+        pos = surface->globalToLocal(Acts::GeometryContext(), {ahit.position().x, ahit.position().y, ahit.position().z}, {0, 0, 0}).value();//, pos);
 
         Acts::Vector2 loc = Acts::Vector2::Zero();
         loc[Acts::eBoundLoc0]     = pos[0] ;//+ m_cfg.sigmaLoc0 * stdNormal(rng);

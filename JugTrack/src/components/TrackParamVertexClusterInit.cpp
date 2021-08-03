@@ -85,7 +85,7 @@ namespace Jug::Reco {
         auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3{0,0,0});
         for (const auto& t : *vtx_hits) {
 
-          double len = std::hypot(t.x(), t.y(), t.z());
+          double len = std::hypot(t.position().x, t.position().y, t.position().z);
           if( len > max_radius ) {
             continue;
           }
@@ -107,7 +107,7 @@ namespace Jug::Reco {
           //                              Acts::Vector3(t.x() * p_cluster / len, t.y() * p_cluster / len, t.z() * p_cluster / len), p_cluster, 1,
           //                              std::make_optional(cov));
 
-          ROOT::Math::XYZVector momentum(t.x() * p_cluster / len, t.y() * p_cluster / len, t.z() * p_cluster / len);
+          ROOT::Math::XYZVector momentum(t.position().x * p_cluster / len, t.position().y * p_cluster / len, t.position().z * p_cluster / len);
 
           Acts::BoundVector params;
           params(Acts::eBoundLoc0)   = 0.0 * mm;

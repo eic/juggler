@@ -34,7 +34,7 @@ namespace Jug::Reco {
     using RecHits  = eic::CalorimeterHitCollection;
     using Clusters = eic::ClusterCollection;
 
-    DataHandle<RecHits> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+    DataHandle<RecHits>     m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<Clusters>    m_outputClusters{"outputClusters", Gaudi::DataHandle::Writer, this};
     Gaudi::Property<double> m_minModuleEdep{this, "minModuleEdep", 5.0 * MeV};
     Gaudi::Property<double> m_maxDistance{this, "maxDistance", 20.0 * cm};
@@ -56,8 +56,7 @@ namespace Jug::Reco {
       m_geoSvc = service("GeoSvc");
       if (!m_geoSvc) {
         error() << "Unable to locate Geometry Service. "
-                << "Make sure you have GeoSvc and SimSvc in the right order in the configuration."
-                << endmsg;
+                << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
         return StatusCode::FAILURE;
       }
       return StatusCode::SUCCESS;
@@ -79,9 +78,8 @@ namespace Jug::Reco {
       eic::CalorimeterHit ref_hit;
       bool                have_ref = false;
       for (const auto& ch : hits) {
-        const eic::CalorimeterHit h{
-            ch.cellID(), ch.clusterID(), ch.layerID(), ch.sectorID(),  ch.energy(),
-            ch.time(),   ch.position(),  ch.local(),   ch.dimension(), 1};
+        const eic::CalorimeterHit h{ch.cellID(), ch.clusterID(), ch.layerID(), ch.sectorID(),  ch.energy(),
+                                    ch.time(),   ch.position(),  ch.local(),   ch.dimension(), 1};
         if (!have_ref || h.energy() > ref_hit.energy()) {
           ref_hit  = h;
           have_ref = true;
@@ -96,8 +94,8 @@ namespace Jug::Reco {
         std::vector<eic::CalorimeterHit> cluster_hits;
 
         for (const auto& h : the_hits) {
-          if (std::hypot(h.x() - ref_hit.x(), h.y() - ref_hit.y(), h.z() - ref_hit.z()) <
-              max_dist) {
+          if (std::hypot(h.position().x - ref_hit.position().x, h.position().y - ref_hit.position().y,
+                         h.position().z - ref_hit.position().z) < max_dist) {
             cluster_hits.push_back(h);
           } else {
             remaining_hits.push_back(h);
@@ -105,17 +103,17 @@ namespace Jug::Reco {
         }
 
         debug() << " cluster size " << cluster_hits.size() << endmsg;
-        double total_energy = std::accumulate(
-            std::begin(cluster_hits), std::end(cluster_hits), 0.0,
-            [](double t, const eic::CalorimeterHit& h1) { return (t + h1.energy()); });
+        double total_energy =
+            std::accumulate(std::begin(cluster_hits), std::end(cluster_hits), 0.0,
+                            [](double t, const eic::CalorimeterHit& h1) { return (t + h1.energy()); });
         debug() << " total_energy = " << total_energy << endmsg;
 
         eic::Cluster cluster0;
         for (const auto& h : cluster_hits) {
           cluster0.energy(cluster0.energy() + h.energy());
-          cluster0.x(cluster0.x() + h.energy() * h.x() / total_energy);
-          cluster0.y(cluster0.y() + h.energy() * h.y() / total_energy);
-          cluster0.z(cluster0.z() + h.energy() * h.z() / total_energy);
+          cluster0.position({cluster0.position().x + h.energy() * h.position().x / total_energy,
+                             cluster0.position().y + h.energy() * h.position().y / total_energy,
+                             cluster0.position().z + h.energy() * h.position().z / total_energy});
         }
         clusters.push_back(cluster0);
 

@@ -80,8 +80,8 @@ namespace Jug::Reco {
         if( p < 0.1*GeV) {
           continue;
         }
-        double len =  std::hypot( c.x() , c.y() , c.z() );
-        ROOT::Math::XYZVector  momentum(c.x() * p / len, c.y() * p / len, c.z() * p / len);
+        double len =  std::hypot( c.position().x , c.position().y , c.position().z);
+        ROOT::Math::XYZVector  momentum(c.position().x * p / len, c.position().y * p / len, c.position().z * p / len);
 
         // build some track cov matrix
         //Acts::BoundSymMatrix cov        = Acts::BoundSymMatrix::Zero();

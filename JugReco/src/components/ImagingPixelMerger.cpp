@@ -94,10 +94,10 @@ namespace Jug::Reco {
         if ((int)k >= m_nLayers) {
           continue;
         }
-        double r   = std::sqrt(h.x() * h.x() + h.y() * h.y() + h.z() * h.z());
-        double th  = std::acos(h.z() / r);
+        double r   = std::sqrt(h.position().x * h.position().x + h.position().y * h.position().y + h.position().z * h.position().z);
+        double th  = std::acos(h.position().z / r);
         double eta = -std::log(std::tan(th / 2.));
-        double phi = std::atan2(h.y(), h.x());
+        double phi = std::atan2(h.position().y, h.position().x);
         // debug() << th << ", " << eta << ", " << phi << endmsg;
 
         auto& layer = group_hits[k];
@@ -135,7 +135,7 @@ namespace Jug::Reco {
           auto h = mhits.create();
           h.edep(grid.energy);
           h.eta(grid.eta);
-          h.phi(grid.phi);
+          h.polar({0., 0., grid.phi});
           h.layerID(i);
           h.hitID(k);
         }

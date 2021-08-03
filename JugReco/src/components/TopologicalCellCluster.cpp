@@ -190,7 +190,7 @@ namespace Jug::Reco {
       int s1 = id_dec->get(h1.cellID(), sector_idx);
       int s2 = id_dec->get(h2.cellID(), sector_idx);
       if (s1 != s2) {
-        return std::sqrt(pow2(h1.x() - h2.x()) + pow2(h1.y() - h2.y()) + pow2(h1.z() - h2.z())) <=
+        return std::sqrt(pow2(h1.position().x - h2.position().x) + pow2(h1.position().y - h2.position().y) + pow2(h1.position().z - h2.position().z)) <=
                m_adjSectorDist;
       }
 
@@ -201,12 +201,12 @@ namespace Jug::Reco {
       int ldiff = std::abs(l1 - l2);
       // same layer, check local positions
       if (!ldiff) {
-        return (std::abs(h1.local_x() - h2.local_x()) <= u_localRanges[0]) &&
-               (std::abs(h1.local_y() - h2.local_y()) <= u_localRanges[1]);
+        return (std::abs(h1.local().local_x - h2.local().local_x) <= u_localRanges[0]) &&
+               (std::abs(h1.local().local_y - h2.local().local_y) <= u_localRanges[1]);
       } else if (ldiff <= m_adjLayerDiff) {
         double eta1, phi1, r1, eta2, phi2, r2;
-        calc_eta_phi_r(h1.x(), h1.y(), h1.z(), eta1, phi1, r1);
-        calc_eta_phi_r(h2.x(), h2.y(), h2.z(), eta2, phi2, r2);
+        calc_eta_phi_r(h1.position().x, h1.position().y, h1.position().z, eta1, phi1, r1);
+        calc_eta_phi_r(h2.position().x, h2.position().y, h2.position().z, eta2, phi2, r2);
 
         return (std::abs(eta1 - eta2) <= u_adjLayerRanges[0]) &&
                (std::abs(phi1 - phi2) <= u_adjLayerRanges[1]);
