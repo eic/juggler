@@ -168,9 +168,6 @@ namespace Jug::Reco {
 
       for (const auto& group : groups) {
         auto cl = clusters.create();
-        for (const auto& hit : group) {
-          cl.addhits(hit);
-        }
       }
 
       return StatusCode::SUCCESS;

@@ -375,7 +375,6 @@ namespace Jug::Reco {
           hit.type(1);
           hit.clusterID(n_clus + k);
           clustered_hits.push_back(hit);
-          splits[k].addhits(hit);
         }
       }
       clusterID += splits.size();
