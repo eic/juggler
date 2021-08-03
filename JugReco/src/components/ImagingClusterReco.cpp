@@ -206,7 +206,7 @@ namespace Jug::Reco {
 
       // shower radius estimate (eta-phi plane)
       double radius = 0.;
-      for (auto hit : cluster.hits()) {
+      for (auto hit : hits) {
         radius += std::sqrt(pow2(hit.eta() - cluster.eta()) + pow2(hit.polar().phi - cluster.polar().phi));
       }
       cluster.radius(radius / cluster.nhits());
