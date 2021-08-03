@@ -1,3 +1,17 @@
+
+/**
+ * \defgroup base Base
+ * \defgroup digi Digitization
+ * \defgroup reco Reconstruction
+ * \defgroup track Tracking
+ */
+
+
+\defgroup services Services
+This is the services
+
+\defgroup subsytems Detector Subsystems
+Various subsystems
 /** 
  *    \addtogroup services 
  */

@@ -32,7 +32,7 @@ Here is an example for topside
 ../where_ever/../juggler/build/run gaudirun.py options/example_reconstruction.py
 ```
 
-# Outline of tracking
+# Outline of tracking and vertexing
 
 ## The ACTS way of tracking
 
@@ -62,22 +62,11 @@ A Kalman filter needs a starting point and those are the `Initial Track Paramete
 Conceptually the process of determining these parameters begins with track seeding.
 
 
+## Vertexing
+
+WIP
 
 
-
-
-
-\defgroup base Base
-\defgroup digi Digitization
-\defgroup reco Reconstruction
-\defgroup track Tracking
-
-
-\defgroup services Services
-This is the services
-
-\defgroup subsytems Detector Subsystems
-Various subsystems
 
 
 
