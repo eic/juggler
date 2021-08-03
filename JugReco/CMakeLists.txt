@@ -9,6 +9,7 @@ find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 file(GLOB JugRecoPlugins_sources src/components/*.cpp)
 gaudi_add_module(JugRecoPlugins
   SOURCES
+  src/components/TrackingHitsCollector.cpp 
   src/components/TrackerHitReconstruction.cpp 
   src/components/SimpleClustering.cpp 
   src/components/CalorimeterHitReco.cpp 
