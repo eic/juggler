@@ -96,7 +96,7 @@ namespace Jug::Reco {
                                 std::vector<bool>&                   visits) const
     {
       visits[index]   = true;
-      auto   tot_edep = hits[index].energy();
+      auto   tot_energy = hits[index].energy();
       double pos_x    = hits[index].position().x;
       double pos_y    = hits[index].position().y;
       double pos_z    = hits[index].position().z;
@@ -110,14 +110,14 @@ namespace Jug::Reco {
         }
         // Add up energy deposit based on the same z position and above energy threshold
         if ((double)hits[i].position().z == ref_pos_z && hits[i].energy() > m_minModuleEdep / GeV) {
-          tot_edep += hits[i].energy();
+          tot_energy += hits[i].energy();
           visits[i] = true;
         }
       }
       // Save info as a cluster
       // TODO: position x and y determination
       eic::Cluster cl;
-      cl.edep(tot_edep);
+      cl.energy(tot_energy);
       cl.position({pos_x, pos_y, pos_z});
       return cl;
     }

@@ -51,6 +51,9 @@ namespace Jug::Reco {
     // zero suppression values
     Gaudi::Property<double> m_thresholdADC{this, "thresholdFactor", 3.0};
 
+    // Calibration!
+    Gaudi::Property<double> m_sampFrac{this, "samplingFraction", 1.0};
+
     // unitless counterparts of the input parameters
     double                  dyRangeADC;
 
@@ -165,35 +168,34 @@ namespace Jug::Reco {
         }
 
         // convert ADC -> energy
-        float energy = (rh.amplitude() - m_pedMeanADC) / static_cast<float>(m_capADC.value()) * dyRangeADC;
+        float energy = (rh.amplitude() - m_pedMeanADC) / static_cast<float>(m_capADC.value()) * dyRangeADC / m_sampFrac;
 
-        float time = rh.timeStamp(); // ns
-        auto  id   = rh.cellID();
+        float time = rh.time()*1.e-6; // ns @FIXME: this should not be hardcoded
+        auto  cellID   = rh.cellID();
         int   lid  = ((id_dec != nullptr) && m_layerField.value().size())
-                      ? static_cast<int>(id_dec->get(id, layer_idx))
+                      ? static_cast<int>(id_dec->get(cellID, layer_idx))
                       : -1;
         int   sid  = ((id_dec != nullptr) && m_sectorField.value().size())
-                      ? static_cast<int>(id_dec->get(id, sector_idx))
+                      ? static_cast<int>(id_dec->get(cellID, sector_idx))
                       : -1;
         // global positions
-        auto gpos = converter->position(id);
+        auto gpos = converter->position(cellID);
         // local positions
         if (m_localDetElement.value().empty()) {
           auto volman = m_geoSvc->detector()->volumeManager();
-          local       = volman.lookupDetElement(id & local_mask);
+          local       = volman.lookupDetElement(cellID & local_mask);
         }
         auto pos = local.nominal().worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
-        // auto pos = m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().position();
         // cell dimension
         std::vector<double> cdim;
         // get segmentation dimensions
         if (converter->findReadout(local).segmentation().type() != "NoSegmentation") {
-          cdim  = converter->cellDimensions(id);
+          cdim  = converter->cellDimensions(cellID);
         // get volume dimensions (multiply by two to get fullsize)
         } else {
           // cdim = converter->findContext(id)->volumePlacement().volume().solid().dimensions();
           // Using bounding box instead of actual solid so the dimensions are always in dim_x, dim_y, dim_z
-          cdim = converter->findContext(id)->volumePlacement().volume().boundingBox().dimensions();
+          cdim = converter->findContext(cellID)->volumePlacement().volume().boundingBox().dimensions();
           std::transform(cdim.begin(), cdim.end(), cdim.begin(),
                std::bind(std::multiplies<double>(), std::placeholders::_1, 2));
         }
@@ -206,16 +208,17 @@ namespace Jug::Reco {
         //         m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().volIDs().str()
         //         << endmsg;
         hits.push_back({
-            id,
-            -1,
+            rh.cellID(),
+            rh.ID(),
             lid,
-            sid, // cell id, cluster id, layer id, sector id
+            sid,  // cell id, cluster id, layer id, sector id
+            0,    // @TODO: hit type
             energy,
+            0,    // @TODO: energy error
             time, // energy, time
             {gpos.x() / m_lUnit, gpos.y() / m_lUnit, gpos.z() / m_lUnit},
             {pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit},
-            {dim[0], dim[1], dim[2]},
-            0 // @TODO: hit type
+            {dim[0], dim[1], dim[2]}
         });
       }
 

@@ -29,8 +29,10 @@
 #include "JugBase/Utilities/Utils.hpp"
 
 // Event Model related classes
-#include "eicd/ImagingPixel.h"
-#include "eicd/ImagingPixelCollection.h"
+#include "eicd/VectorPolar.h"
+#include "eicd/VectorXYZ.h"
+#include "eicd/CalorimeterHit.h"
+#include "eicd/CalorimeterHitCollection.h"
 
 using namespace Gaudi::Units;
 
@@ -60,9 +62,9 @@ namespace Jug::Reco {
     Gaudi::Property<int>                    m_nLayers{this, "numberOfLayers", 20};
     Gaudi::Property<double>                 m_etaSize{this, "etaSize", 0.001};
     Gaudi::Property<double>                 m_phiSize{this, "phiSize", 0.001};
-    DataHandle<eic::ImagingPixelCollection> m_inputHitCollection{"inputHitCollection",
+    DataHandle<eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection",
                                                                  Gaudi::DataHandle::Reader, this};
-    DataHandle<eic::ImagingPixelCollection> m_outputHitCollection{"outputHitCollection",
+    DataHandle<eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection",
                                                                   Gaudi::DataHandle::Writer, this};
 
     ImagingPixelMerger(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
@@ -90,7 +92,7 @@ namespace Jug::Reco {
       // group the hits by layer
       std::vector<std::unordered_map<std::pair<int, int>, double, pair_hash>> group_hits(m_nLayers);
       for (const auto& h : hits) {
-        auto k = h.layerID();
+        auto k = h.layer();
         if ((int)k >= m_nLayers) {
           continue;
         }
@@ -105,9 +107,9 @@ namespace Jug::Reco {
         auto  it    = layer.find(g);
         // merge energy
         if (it != layer.end()) {
-          it->second += h.edep();
+          it->second += h.energy();
         } else {
-          layer[g] = h.edep();
+          layer[g] = h.energy();
         }
       }
 
@@ -132,12 +134,13 @@ namespace Jug::Reco {
           if (k < grids.size()) {
             grid = grids[k];
           }
+          eic::VectorXYZ pos {eic::VectorPolar(0., 0., grid.phi)};
+          // @TODO: This seems incomplete...
           auto h = mhits.create();
-          h.edep(grid.energy);
-          h.eta(grid.eta);
-          h.polar({0., 0., grid.phi});
-          h.layerID(i);
-          h.hitID(k);
+          h.ID(k);
+          h.layer(i);
+          h.energy(grid.energy);
+          h.position(pos);
         }
       }
 

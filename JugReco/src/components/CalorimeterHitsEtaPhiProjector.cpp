@@ -107,8 +107,8 @@ namespace Jug::Reco {
         const auto ref = hits.front();
         eic::CalorimeterHit hit;
         hit.cellID(ref.cellID());
-        hit.sectorID(ref.sectorID());
-        hit.layerID(ref.layerID());
+        hit.sector(ref.sector());
+        hit.layer(ref.layer());
         // TODO, we can do timing cut to reject noises
         hit.time(ref.time());
         double r = ref.position().mag();

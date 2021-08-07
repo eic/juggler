@@ -106,6 +106,7 @@ namespace Jug::Reco {
       auto& hits = *m_outputHitCollection.createAndPut();
 
       // energy time reconstruction
+      int nhits = 0;
       for (const auto& rh : rawhits) {
         // did not pass the threshold
         if ((rh.amplitude() - m_pedMeanADC) < m_thresholdADC * m_pedSigmaADC) {
@@ -113,7 +114,7 @@ namespace Jug::Reco {
         }
         float energy = (rh.amplitude() - m_pedMeanADC) / (float)m_capADC *
                        m_dyRangeADC; // convert ADC -> energy
-        float time = rh.timeStamp(); // ns
+        float time = rh.time(); // ns
         auto  id   = rh.cellID();
         int   lid  = ((id_dec != nullptr) & m_layerField.value().size())
                       ? static_cast<int>(id_dec->get(id, layer_idx))
@@ -142,15 +143,16 @@ namespace Jug::Reco {
         //        << endmsg;
         hits.push_back(
             eic::CalorimeterHit{id,
-                                -1,
+                                nhits++,
                                 lid,
                                 sid,
+                                0,
                                 energy,
+                                0.,
                                 time,
                                 {gpos.x() / m_lUnit, gpos.y() / m_lUnit, gpos.z() / m_lUnit},
                                 {pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit},
-                                {dim[0], dim[1], dim[2]},
-                                0});
+                                {dim[0], dim[1], dim[2]}});
       }
 
       return StatusCode::SUCCESS;

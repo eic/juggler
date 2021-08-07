@@ -88,6 +88,7 @@ namespace Jug::Digi {
       const auto simhits = m_inputHitCollection.get();
       // Create output collections
       auto rawhits = m_outputHitCollection.createAndPut();
+      int nhits = 0;
       for (const auto& ahit : *simhits) {
         // Note: juggler internal unit of energy is GeV
         double                 eResRel = std::sqrt(std::pow(m_normDist() * eRes[0] / sqrt(ahit.energyDeposit()), 2) +
@@ -95,8 +96,11 @@ namespace Jug::Digi {
                                    std::pow(m_normDist() * eRes[2] / (ahit.energyDeposit()), 2));
         double                 ped     = m_pedMeanADC + m_normDist() * m_pedSigmaADC;
         long long              adc = std::llround(ped + ahit.energyDeposit() * (1. + eResRel) / dyRangeADC * m_capADC);
-        eic::RawCalorimeterHit rawhit((long long)ahit.cellID(), (adc > m_capADC.value() ? m_capADC.value() : adc),
-                                      (double)ahit.truth().time + m_normDist() * tRes);
+        eic::RawCalorimeterHit rawhit(
+            (long long)ahit.cellID(), 
+            (adc > m_capADC.value() ? m_capADC.value() : adc),
+            static_cast<int64_t>(1e6*(double)ahit.truth().time + m_normDist() * tRes), // @FIXME: this shouldn't be hardcoded, but should still be stored as an integer type
+            nhits++);
         rawhits->push_back(rawhit);
       }
       return StatusCode::SUCCESS;

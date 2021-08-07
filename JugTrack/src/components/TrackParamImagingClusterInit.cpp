@@ -14,7 +14,7 @@
 #include "Acts/Definitions/Common.hpp"
 
 #include "eicd/TrackerHitCollection.h"
-#include "eicd/ImagingClusterCollection.h"
+#include "eicd/ClusterCollection.h"
 
 #include "Math/Vector3D.h"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -41,7 +41,7 @@ namespace Jug::Reco {
    */
   class TrackParamImagingClusterInit : public GaudiAlgorithm {
   public:
-    using ImagingClusters =  eic::ImagingClusterCollection;
+    using ImagingClusters =  eic::ClusterCollection;
 
     DataHandle<ImagingClusters>          m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
     DataHandle<TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
@@ -65,7 +65,7 @@ namespace Jug::Reco {
 
     StatusCode execute() override {
       // input collection
-      const eic::ImagingClusterCollection* clusters = m_inputClusters.get();
+      const eic::ClusterCollection* clusters = m_inputClusters.get();
       // Create output collections
       auto init_trk_params = m_outputInitialTrackParameters.createAndPut();
 
@@ -77,10 +77,11 @@ namespace Jug::Reco {
         using Acts::UnitConstants::ns;
 
         double p = c.energy()*GeV;
+        // FIXME hardcoded value
         if( p < 0.1*GeV) {
           continue;
         }
-        double len =  std::hypot( c.position().x , c.position().y , c.position().z );
+        double len =  c.position().mag();
         ROOT::Math::XYZVector  momentum(c.position().x * p / len, c.position().y * p / len, c.position().z * p / len);
 
         // build some track cov matrix

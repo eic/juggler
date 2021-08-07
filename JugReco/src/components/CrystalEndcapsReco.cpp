@@ -70,10 +70,11 @@ namespace Jug::Reco {
       auto& hits = *m_outputHitCollection.createAndPut();
 
       // energy time reconstruction
+      int nhits = 0;
       for (const auto& rh : rawhits) {
         float energy = rh.amplitude() / 1.0e6; // convert keV -> GeV
         if (energy >= (m_minModuleEdep / GeV)) {
-          float time = rh.timeStamp();
+          float time = rh.time();
           auto  id   = rh.cellID();
           // global positions
           auto gpos = m_geoSvc->cellIDPositionConverter()->position(id);
@@ -82,16 +83,9 @@ namespace Jug::Reco {
               m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().position();
           // cell dimension
           auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
-          hits.push_back(eic::CalorimeterHit{id,
-                                             -1,
-                                             -1,
-                                             -1,
-                                             energy,
-                                             time,
-                                             {gpos.x(), gpos.y(), gpos.z()},
-                                             {pos.x(), pos.y(), pos.z()},
-                                             {dim[0], dim[1], 0.0},
-                                             0});
+          hits.push_back(eic::CalorimeterHit{id, nhits++, -1, -1, 0, energy, 0., time, 
+                                            {gpos.x(), gpos.y(), gpos.z()}, 
+                                            {pos.x(), pos.y(), pos.z()}, {dim[0], dim[1], 0.}});
         }
       }
 

@@ -77,6 +77,7 @@ namespace Jug {
         // Create output collections
         auto                              rawhits          = m_outputHitCollection.createAndPut();
         eic::RawCalorimeterHitCollection* rawHitCollection = new eic::RawCalorimeterHitCollection();
+        int nhits = 0;
         for (const auto& ahit : *simhits) {
           double resval = std::pow(m_normDist()*res[0] / sqrt(ahit.energyDeposit()*m_eUnit/GeV), 2)
                         + std::pow(m_normDist()*res[1], 2)
@@ -87,7 +88,8 @@ namespace Jug {
           eic::RawCalorimeterHit rawhit(
               (long long)ahit.cellID(),
               (adc > m_capADC ? m_capADC.value() : adc),
-              (double)ahit.truth().time*m_tUnit/ns + m_normDist()*m_tRes/ns);
+              (double)ahit.truth().time*m_tUnit/ns + m_normDist()*m_tRes/ns,
+              nhits++);
           rawhits->push_back(rawhit);
         }
         return StatusCode::SUCCESS;

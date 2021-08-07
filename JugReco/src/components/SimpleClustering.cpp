@@ -19,6 +19,7 @@
 // Event Model related classes
 #include "eicd/CalorimeterHitCollection.h"
 #include "eicd/ClusterCollection.h"
+#include "eicd/ProtoClusterCollection.h"
 #include "eicd/RawCalorimeterHitCollection.h"
 
 using namespace Gaudi::Units;
@@ -32,12 +33,15 @@ namespace Jug::Reco {
   class SimpleClustering : public GaudiAlgorithm {
   public:
     using RecHits  = eic::CalorimeterHitCollection;
+    using ProtoClusters = eic::ProtoClusterCollection;
     using Clusters = eic::ClusterCollection;
 
-    DataHandle<RecHits>     m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-    DataHandle<Clusters>    m_outputClusters{"outputClusters", Gaudi::DataHandle::Writer, this};
-    Gaudi::Property<double> m_minModuleEdep{this, "minModuleEdep", 5.0 * MeV};
-    Gaudi::Property<double> m_maxDistance{this, "maxDistance", 20.0 * cm};
+    DataHandle<RecHits>       m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+    DataHandle<ProtoClusters> m_outputProtoClusters{"outputProtoCluster", Gaudi::DataHandle::Writer, this};
+    DataHandle<Clusters>      m_outputClusters{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
+
+    Gaudi::Property<double>   m_minModuleEdep{this, "minModuleEdep", 5.0 * MeV};
+    Gaudi::Property<double>   m_maxDistance{this, "maxDistance", 20.0 * cm};
 
     /// Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
@@ -45,7 +49,8 @@ namespace Jug::Reco {
     SimpleClustering(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
-      declareProperty("outputClusters", m_outputClusters, "Output clusters");
+      declareProperty("outputProtoClusterCollection", m_outputClusters, "Output proto clusters");
+      declareProperty("outputClusterCollection", m_outputClusters, "Output clusters");
     }
 
     StatusCode initialize() override
@@ -67,19 +72,19 @@ namespace Jug::Reco {
       // input collections
       const auto& hits = *m_inputHitCollection.get();
       // Create output collections
+      auto& proto = *m_outputProtoClusters.createAndPut();
       auto& clusters = *m_outputClusters.createAndPut();
 
-      std::vector<eic::CalorimeterHit> the_hits;
-      std::vector<eic::CalorimeterHit> remaining_hits;
+      std::vector<eic::ConstCalorimeterHit> the_hits;
+      std::vector<eic::ConstCalorimeterHit> remaining_hits;
 
       double max_dist   = m_maxDistance.value() / mm;
       double min_energy = m_minModuleEdep.value() / GeV;
 
-      eic::CalorimeterHit ref_hit;
+      eic::ConstCalorimeterHit ref_hit;
       bool                have_ref = false;
-      for (const auto& ch : hits) {
-        const eic::CalorimeterHit h{ch.cellID(), ch.clusterID(), ch.layerID(), ch.sectorID(),  ch.energy(),
-                                    ch.time(),   ch.position(),  ch.local(),   ch.dimension(), 1};
+      for (const auto& h : hits) {
+        //const eic::CalorimeterHit h = ch.clone();
         if (!have_ref || h.energy() > ref_hit.energy()) {
           ref_hit  = h;
           have_ref = true;
@@ -91,31 +96,31 @@ namespace Jug::Reco {
 
       while (have_ref && ref_hit.energy() > min_energy) {
 
-        std::vector<eic::CalorimeterHit> cluster_hits;
+        std::vector<eic::ConstCalorimeterHit> cluster_hits;
 
         for (const auto& h : the_hits) {
           if (std::hypot(h.position().x - ref_hit.position().x, h.position().y - ref_hit.position().y,
                          h.position().z - ref_hit.position().z) < max_dist) {
             cluster_hits.push_back(h);
           } else {
-            remaining_hits.push_back(h);
-          }
+            remaining_hits.push_back(h); }
         }
 
         debug() << " cluster size " << cluster_hits.size() << endmsg;
         double total_energy =
             std::accumulate(std::begin(cluster_hits), std::end(cluster_hits), 0.0,
-                            [](double t, const eic::CalorimeterHit& h1) { return (t + h1.energy()); });
+                            [](double t, const eic::ConstCalorimeterHit& h1) { return (t + h1.energy()); });
         debug() << " total_energy = " << total_energy << endmsg;
 
-        eic::Cluster cluster0;
+        eic::Cluster cl;
+        cl.ID(clusters.size());
+        cl.nhits(cluster_hits.size());
         for (const auto& h : cluster_hits) {
-          cluster0.energy(cluster0.energy() + h.energy());
-          cluster0.position({cluster0.position().x + h.energy() * h.position().x / total_energy,
-                             cluster0.position().y + h.energy() * h.position().y / total_energy,
-                             cluster0.position().z + h.energy() * h.position().z / total_energy});
+          cl.energy(cl.energy() + h.energy());
+          cl.position(cl.position().add(h.position().scale(h.energy()/total_energy)));
+          proto.create(h.ID(), cl.ID());
         }
-        clusters.push_back(cluster0);
+        clusters.push_back(cl);
 
         have_ref = false;
         if ((remaining_hits.size() > 5) && (clusters.size() < 10)) {

@@ -22,7 +22,7 @@
 #include "JugBase/IGeoSvc.h"
 
 // Event Model related classes
-#include "eicd/ImagingPixelCollection.h"
+#include "eicd/CalorimeterHitCollection.h"
 #include "eicd/RawCalorimeterHitCollection.h"
 
 using namespace Gaudi::Units;
@@ -51,6 +51,8 @@ namespace Jug::Reco {
     Gaudi::Property<double> m_dyRangeADC{this, "dynamicRangeADC", 100 * MeV};
     Gaudi::Property<double> m_pedSigmaADC{this, "pedestalSigma", 3.2};
     Gaudi::Property<double> m_thresholdADC{this, "thresholdFactor", 3.0};
+    // Calibration!
+    Gaudi::Property<double> m_sampFrac{this, "samplingFraction", 1.0};
 
     // unitless counterparts for the input parameters
     double dyRangeADC;
@@ -58,8 +60,8 @@ namespace Jug::Reco {
     // hits containers
     DataHandle<eic::RawCalorimeterHitCollection> m_inputHitCollection{
         "inputHitCollection", Gaudi::DataHandle::Reader, this};
-    DataHandle<eic::ImagingPixelCollection> m_outputHitCollection{"outputHitCollection",
-                                                                  Gaudi::DataHandle::Writer, this};
+    DataHandle<eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection",
+                                                                    Gaudi::DataHandle::Writer, this};
 
     // Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
@@ -115,13 +117,14 @@ namespace Jug::Reco {
       auto& hits = *m_outputHitCollection.createAndPut();
 
       // energy time reconstruction
+      int nhits = 0;
       for (const auto& rh : rawhits) {
         // did not pass the threshold
         if ((rh.amplitude() - m_pedMeanADC) < m_thresholdADC * m_pedSigmaADC) {
           continue;
         }
-        double edep = (rh.amplitude() - m_pedMeanADC) / (double)m_capADC * dyRangeADC;   // convert ADC -> energy
-        double time = rh.timeStamp(); // ns
+        double energy = (rh.amplitude() - m_pedMeanADC) / (double)m_capADC * dyRangeADC / m_sampFrac;   // convert ADC -> energy
+        double time = rh.time() * 1.e-6; // ns
         auto   id   = rh.cellID();
         int    lid  = (int)id_dec->get(id, layer_idx);
         int    sid  = (int)id_dec->get(id, sector_idx);
@@ -132,24 +135,19 @@ namespace Jug::Reco {
         auto volman    = m_geoSvc->detector()->volumeManager();
         auto alignment = volman.lookupDetElement(id).nominal();
         auto pos       = alignment.worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
-        // polar coordinates
-        double r   = std::sqrt(gpos.x() * gpos.x() + gpos.y() * gpos.y() + gpos.z() * gpos.z());
-        double th  = std::acos(gpos.z() / r);
-        double eta = -std::log(std::tan(th / 2.));
-        double phi = std::atan2(gpos.y(), gpos.x());
 
-        hits.push_back(eic::ImagingPixel{
-            -1,
+        hits.push_back(eic::CalorimeterHit{
+            id,
+            nhits++,
             lid,
             sid,
-            -1, // cluster id, layer id, sector id, hit id
-            edep,
-            time,
-            eta, // edep, time, pseudo-rapidity
+            0,
+            static_cast<float>(energy),
+            0,
+            static_cast<float>(time),
             {pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit},    // local pos
             {gpos.x() / m_lUnit, gpos.y() / m_lUnit, gpos.z() / m_lUnit}, // global pos
-            {r, th, phi}                                                  // polar global pos
-        });
+            {0, 0, 0}}); // @TODO: add dimension
       }
       return StatusCode::SUCCESS;
     }

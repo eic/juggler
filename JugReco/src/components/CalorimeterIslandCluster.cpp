@@ -34,6 +34,7 @@
 // Event Model related classes
 #include "eicd/CalorimeterHitCollection.h"
 #include "eicd/ClusterCollection.h"
+#include "eicd/ProtoClusterCollection.h"
 #include "eicd/VectorXY.h"
 #include "eicd/VectorXYZ.h"
 
@@ -93,7 +94,7 @@ namespace Jug::Reco {
     Gaudi::Property<double>                     m_minClusterCenterEdep{this, "minClusterCenterEdep", 50.0 * MeV};
     DataHandle<eic::CalorimeterHitCollection>   m_inputHitCollection{"inputHitCollection",
                                                                       Gaudi::DataHandle::Reader, this};
-    DataHandle<eic::CalorimeterHitCollection>   m_splitHitCollection{"outputHitCollection",
+    DataHandle<eic::ProtoClusterCollection>     m_outputProtoCollection{"outputProtoClusterCollection",
                                                                       Gaudi::DataHandle::Writer, this};
 
     // neighbour checking distances
@@ -104,7 +105,7 @@ namespace Jug::Reco {
     Gaudi::Property<std::vector<double>>        u_globalDistRPhi{this, "globalDistRPhi", {}};
     Gaudi::Property<std::vector<double>>        u_globalDistEtaPhi{this, "globalDistEtaPhi", {}};
     Gaudi::Property<std::vector<double>>        u_dimScaledLocalDistXY{this, "dimScaledLocalDistXY", {1.8, 1.8}};
-    // neightbor checking function
+    // neighbor checking function
     std::function<eic::VectorXY(eic::ConstCalorimeterHit, eic::ConstCalorimeterHit)> hitsDist;
 
     // unitless counterparts of the input parameters
@@ -115,7 +116,7 @@ namespace Jug::Reco {
         : GaudiAlgorithm(name, svcLoc)
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
-      declareProperty("outputHitCollection", m_splitHitCollection, "");
+      declareProperty("outputProtoClusterCollection", m_outputProtoCollection, "");
     }
 
     StatusCode initialize() override
@@ -175,10 +176,10 @@ namespace Jug::Reco {
       // input collections
       const auto& hits = *m_inputHitCollection.get();
       // Create output collections
-      auto& clustered_hits = *m_splitHitCollection.createAndPut();
+      auto& proto = *m_outputProtoCollection.createAndPut();
 
       // group neighboring hits
-      std::vector<std::vector<eic::CalorimeterHit>> groups;
+      std::vector<std::vector<eic::ConstCalorimeterHit>> groups;
 
       std::vector<bool> visits(hits.size(), false);
       for (size_t i = 0; i < hits.size(); ++i) {
@@ -186,7 +187,7 @@ namespace Jug::Reco {
                                "global=({:.4f}, {:.4f}, {:.4f}) mm, layer = {:d}, sector = {:d}.",
                                i, hits[i].energy()*1000., hits[i].local().x, hits[i].local().y,
                                hits[i].position().x, hits[i].position().y, hits[i].position().z,
-                               hits[i].layerID(), hits[i].sectorID()) << endmsg;
+                               hits[i].layer(), hits[i].sector()) << endmsg;
         // already in a group
         if (visits[i]) {
           continue;
@@ -202,7 +203,7 @@ namespace Jug::Reco {
           continue;
         }
         auto maxima = find_maxima(group, !m_splitCluster.value());
-        split_group(group, maxima, clusterID, clustered_hits);
+        split_group(group, maxima, clusterID, proto);
         debug() << "hits in a group: " << group.size() << ", "
                 << "local maxima: " << maxima.size() << endmsg;
         debug() << "total number of clusters so far: " << clusterID << ", " << endmsg;
@@ -216,7 +217,7 @@ namespace Jug::Reco {
     inline bool is_neighbour(const eic::ConstCalorimeterHit& h1, const eic::ConstCalorimeterHit& h2) const
     {
       // in the same sector
-      if (h1.sectorID() == h2.sectorID()) {
+      if (h1.sector() == h2.sector()) {
         auto dist = hitsDist(h1, h2);
         return (dist.x <= neighbourDist[0]) && (dist.y <= neighbourDist[1]);
       // different sector, local coordinates do not work, using global coordinates
@@ -227,7 +228,7 @@ namespace Jug::Reco {
     }
 
     // grouping function with Depth-First Search
-    void dfs_group(std::vector<eic::CalorimeterHit>& group, int idx,
+    void dfs_group(std::vector<eic::ConstCalorimeterHit>& group, int idx,
                    const eic::CalorimeterHitCollection& hits, std::vector<bool>& visits) const
     {
       // not a qualified hit to particpate clustering, stop here
@@ -236,15 +237,10 @@ namespace Jug::Reco {
         return;
       }
 
-      eic::CalorimeterHit hit{hits[idx].cellID(),    hits[idx].clusterID(),
-                              hits[idx].layerID(),   hits[idx].sectorID(),
-                              hits[idx].energy(),    hits[idx].time(),
-                              hits[idx].position(),  hits[idx].local(),
-                              hits[idx].dimension(), 1};
-      group.push_back(hit);
+      group.push_back(hits[idx]);
       visits[idx] = true;
       for (size_t i = 0; i < hits.size(); ++i) {
-        if (visits[i] || !is_neighbour(hit, hits[i])) {
+        if (visits[i] || !is_neighbour(hits[idx], hits[i])) {
           continue;
         }
         dfs_group(group, i, hits, visits);
@@ -252,7 +248,7 @@ namespace Jug::Reco {
     }
 
     // find local maxima that above a certain threshold
-    std::vector<eic::ConstCalorimeterHit> find_maxima(const std::vector<eic::CalorimeterHit>& group,
+    std::vector<eic::ConstCalorimeterHit> find_maxima(const std::vector<eic::ConstCalorimeterHit>& group,
                                                       bool global = false) const
     {
       std::vector<eic::ConstCalorimeterHit> maxima;
@@ -312,17 +308,16 @@ namespace Jug::Reco {
 
     // split a group of hits according to the local maxima
     // split_hits is used to persistify the data
-    void split_group(std::vector<eic::CalorimeterHit>& group,
+    void split_group(std::vector<eic::ConstCalorimeterHit>& group,
                      const std::vector<eic::ConstCalorimeterHit>& maxima,
-                     size_t& clusterID, eic::CalorimeterHitCollection& clustered_hits) const
+                     size_t& clusterID, eic::ProtoClusterCollection& proto) const
     {
       // special cases
       if (maxima.size() == 0) {
         return;
       } else if (maxima.size() == 1) {
         for (auto& hit : group) {
-          hit.clusterID(clusterID);
-          clustered_hits.push_back(hit);
+          proto.create(hit.ID(), clusterID, 1.);
         }
         clusterID += 1;
         return;
@@ -331,11 +326,9 @@ namespace Jug::Reco {
       // split between maxima
       // TODO, here we can implement iterations with profile, or even ML for better splits
       std::vector<double>       weights(maxima.size());
-      std::vector<eic::Cluster> splits(maxima.size());
       size_t                    n_clus = clusterID + 1;
       size_t                    i      = 0;
       for (auto it = group.begin(); it != group.end(); ++it, ++i) {
-        auto   hedep = it->energy();
         size_t j     = 0;
         // calculate weights for local maxima
         for (auto cit = maxima.begin(); cit != maxima.end(); ++cit, ++j) {
@@ -357,19 +350,15 @@ namespace Jug::Reco {
         vec_normalize(weights);
 
         // split energy between local maxima
-        for (size_t k = 0; k < weights.size(); ++k) {
+        for (size_t k = 0; k < maxima.size(); ++k) {
           double weight = weights[k];
           if (weight <= 1e-6) {
             continue;
           }
-          auto hit = it->clone();
-          hit.energy(hedep * weight);
-          hit.type(1);
-          hit.clusterID(n_clus + k);
-          clustered_hits.push_back(hit);
+          proto.create(it->ID(), n_clus + k, weight);
         }
       }
-      clusterID += splits.size();
+      clusterID += maxima.size();
       return;
     }
   };

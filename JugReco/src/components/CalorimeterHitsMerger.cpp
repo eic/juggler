@@ -132,6 +132,7 @@ namespace Jug::Reco {
       auto poscon = m_geoSvc->cellIDPositionConverter();
       auto volman = m_geoSvc->detector()->volumeManager();
 
+      int nresults = 0;
       for (auto &[id, hits] : merge_map) {
         // reference fields id
         int64_t ref_id = id | ref_mask;
@@ -151,16 +152,17 @@ namespace Jug::Reco {
         }
         const auto &href = hits.front();
         outputs.push_back(eic::CalorimeterHit{
-                            ref_id,
-                            href.clusterID(),
-                            href.layerID(),
-                            href.sectorID(),
-                            energy,
-                            href.time(),
-                            {gpos.x() / dd4hep::mm, gpos.y() / dd4hep::mm, gpos.z() / dd4hep::mm},
-                            {pos.x() / dd4hep::mm, pos.y() / dd4hep::mm, pos.z() / dd4hep::mm},
-                            href.dimension(),
-                            href.type()});
+                          ref_id,
+                          nresults++,
+                          href.layer(),
+                          href.sector(),
+                          href.type(),
+                          energy,
+                          0, //@TODO: energy uncertainty
+                          href.time(),
+                          {gpos.x() / dd4hep::mm, gpos.y() / dd4hep::mm, gpos.z() / dd4hep::mm},
+                          {pos.x() / dd4hep::mm, pos.y() / dd4hep::mm, pos.z() / dd4hep::mm},
+                          href.dimension()});
       }
 
       debug() << "Size before = " << inputs.size() << ", after = " << outputs.size() << endmsg;

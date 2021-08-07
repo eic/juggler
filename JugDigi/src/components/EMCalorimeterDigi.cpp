@@ -57,13 +57,14 @@ namespace Jug {
         // Create output collections
         auto                              rawhits          = m_outputHitCollection.createAndPut();
         eic::RawCalorimeterHitCollection* rawHitCollection = new eic::RawCalorimeterHitCollection();
+        int nhits = 0;
         for (const auto& ahit : *simhits) {
           // std::cout << ahit << "\n";
           double sqrtE = std::sqrt(ahit.energyDeposit()) ;
           double aterm = m_gaussDist()*sqrtE;
           eic::RawCalorimeterHit rawhit((long long)ahit.cellID(),
                                         std::llround((ahit.energyDeposit() + aterm) * 1e6),
-                                        ahit.truth().time * 1e6);
+                                        ahit.truth().time * 1e6, nhits++);
           rawhits->push_back(rawhit);
         }
         return StatusCode::SUCCESS;

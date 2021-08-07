@@ -71,6 +71,7 @@ namespace Jug {
         // Create output collections
         auto                              rawhits          = m_outputHitCollection.createAndPut();
         eic::RawCalorimeterHitCollection* rawHitCollection = new eic::RawCalorimeterHitCollection();
+        int nhits = 0;
         for (const auto& ahit : *simhits) {
           // std::cout << ahit << "\n";
           double  sqrtE = std::sqrt(ahit.energyDeposit()) ;
@@ -78,7 +79,7 @@ namespace Jug {
           double bterm = ahit.energyDeposit()*m_gaussDist_b();
           // here 1000 is arbitrary scale factor
           eic::RawCalorimeterHit rawhit((long long)ahit.cellID(),
-                                        std::llround(ahit.energyDeposit() +aterm + bterm * 1000), 0);
+                                        std::llround(ahit.energyDeposit() +aterm + bterm * 1000), 0, nhits++);
           rawhits->push_back(rawhit);
         }
         return StatusCode::SUCCESS;

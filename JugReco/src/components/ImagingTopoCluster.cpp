@@ -27,8 +27,8 @@
 #include "JugBase/IGeoSvc.h"
 
 // Event Model related classes
-#include "eicd/ImagingClusterCollection.h"
-#include "eicd/ImagingPixelCollection.h"
+#include "eicd/ProtoClusterCollection.h"
+#include "eicd/CalorimeterHitCollection.h"
 
 using namespace Gaudi::Units;
 
@@ -64,11 +64,11 @@ namespace Jug::Reco {
     // minimum number of hits (to save this cluster)
     Gaudi::Property<int> m_minClusterNhits{this, "minClusterNhits", 10};
     // input hits collection
-    DataHandle<eic::ImagingPixelCollection> m_inputHitCollection{"inputHitCollection",
-                                                                 Gaudi::DataHandle::Reader, this};
+    DataHandle<eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection",
+                                                                   Gaudi::DataHandle::Reader, this};
     // output clustered hits
-    DataHandle<eic::ImagingPixelCollection> m_outputHitCollection{"outputHitCollection",
-                                                                  Gaudi::DataHandle::Writer, this};
+    DataHandle<eic::ProtoClusterCollection> m_outputProtoClusterCollection{"outputProtoClusterCollection",
+                                                                           Gaudi::DataHandle::Writer, this};
 
     // unitless counterparts of the input parameters
     double localDistXY[2], layerDistEtaPhi[2], sectorDist;
@@ -77,7 +77,7 @@ namespace Jug::Reco {
     ImagingTopoCluster(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
-      declareProperty("outputHitCollection", m_outputHitCollection, "");
+      declareProperty("outputProtoClusterCollection", m_outputProtoClusterCollection, "");
     }
 
     StatusCode initialize() override
@@ -126,11 +126,11 @@ namespace Jug::Reco {
       // input collections
       const auto& hits = *m_inputHitCollection.get();
       // Create output collections
-      auto& clustered_hits = *m_outputHitCollection.createAndPut();
+      auto& proto = *m_outputProtoClusterCollection.createAndPut();
 
       // group neighboring hits
       std::vector<bool>                           visits(hits.size(), false);
-      std::vector<std::vector<eic::ImagingPixel>> groups;
+      std::vector<std::vector<eic::ConstCalorimeterHit>> groups;
       for (size_t i = 0; i < hits.size(); ++i) {
         /*
         debug() << fmt::format("hit {:d}: local position = ({}, {}, {}), global position = ({}, {}, {})",
@@ -140,7 +140,7 @@ namespace Jug::Reco {
             << endmsg;
         */
         // already in a group, or not energetic enough to form a cluster
-        if (visits[i] || hits[i].edep() < minClusterCenterEdep) {
+        if (visits[i] || hits[i].energy() < minClusterCenterEdep) {
           continue;
         }
         groups.emplace_back();
@@ -160,16 +160,15 @@ namespace Jug::Reco {
         if (static_cast<int>(group.size()) < m_minClusterNhits.value()) {
           continue;
         }
-        double edep = 0.;
+        double energy = 0.;
         for (const auto& hit : group) {
-          edep += hit.edep();
+          energy += hit.energy();
         }
-        if (edep < minClusterEdep) {
+        if (energy < minClusterEdep) {
           continue;
         }
-        for (auto hit : group) {
-          hit.clusterID(clusterID);
-          clustered_hits.push_back(hit);
+        for (const auto& hit : group) {
+          proto.create(hit.ID(), clusterID, 1.);
         }
         clusterID += 1;
       }
@@ -185,23 +184,23 @@ namespace Jug::Reco {
     }
 
     // helper function to group hits
-    bool is_neighbor(const eic::ConstImagingPixel& h1, const eic::ConstImagingPixel& h2) const
+    bool is_neighbor(const eic::ConstCalorimeterHit& h1, const eic::ConstCalorimeterHit& h2) const
     {
       // different sectors, simple distance check
-      if (h1.sectorID() != h2.sectorID()) {
+      if (h1.sector() != h2.sector()) {
         return std::sqrt(pow2(h1.position().x - h2.position().x) + pow2(h1.position().y - h2.position().y) + pow2(h1.position().z - h2.position().z)) <=
                sectorDist;
       }
 
       // layer check
-      int ldiff = std::abs(h1.layerID() - h2.layerID());
+      int ldiff = std::abs(h1.layer() - h2.layer());
       // same layer, check local positions
       if (!ldiff) {
         return (std::abs(h1.local().x - h2.local().x) <= localDistXY[0]) &&
                (std::abs(h1.local().y - h2.local().y) <= localDistXY[1]);
       } else if (ldiff <= m_neighbourLayersRange) {
-        return (std::abs(h1.eta() - h2.eta()) <= layerDistEtaPhi[0]) &&
-               (std::abs(h1.polar().phi - h2.polar().phi) <= layerDistEtaPhi[1]);
+        return (std::abs(h1.position().eta() - h2.position().eta()) <= layerDistEtaPhi[0]) &&
+               (std::abs(h1.position().phi() - h2.position().phi()) <= layerDistEtaPhi[1]);
       }
 
       // not in adjacent layers
@@ -209,24 +208,20 @@ namespace Jug::Reco {
     }
 
     // grouping function with Depth-First Search
-    void dfs_group(std::vector<eic::ImagingPixel>& group, int idx,
-                   const eic::ImagingPixelCollection& hits, std::vector<bool>& visits) const
+    void dfs_group(std::vector<eic::ConstCalorimeterHit>& group, int idx,
+                   const eic::CalorimeterHitCollection& hits, std::vector<bool>& visits) const
     {
       // not a qualified hit to participate in clustering, stop here
-      if (hits[idx].edep() < minClusterHitEdep) {
+      if (hits[idx].energy() < minClusterHitEdep) {
         visits[idx] = true;
         return;
       }
 
-      eic::ImagingPixel hit{hits[idx].clusterID(), hits[idx].layerID(), hits[idx].sectorID(),
-                            hits[idx].hitID(),     hits[idx].edep(),    hits[idx].time(),
-                            hits[idx].eta(),       hits[idx].local(),   hits[idx].position(),
-                            hits[idx].polar()};
-      group.push_back(hit);
+      group.push_back(hits[idx]);
       visits[idx] = true;
       for (size_t i = 0; i < hits.size(); ++i) {
         // visited, or not a neighbor
-        if (visits[i] || !is_neighbor(hit, hits[i])) {
+        if (visits[i] || !is_neighbor(hits[idx], hits[i])) {
           continue;
         }
         dfs_group(group, i, hits, visits);

@@ -110,9 +110,10 @@ namespace Jug {
       // Create output collections
       auto rawhits = m_outputHitCollection.createAndPut();
       eic::RawCalorimeterHitCollection* rawHitCollection = new eic::RawCalorimeterHitCollection();
+      int nhits = 0;
       for(const auto& ahit : *simhits) {
         //std::cout << ahit << "\n";
-        eic::RawCalorimeterHit rawhit((long long)ahit.cellID(), std::llround(ahit.energyDeposit() * 100), 0);
+        eic::RawCalorimeterHit rawhit((long long)ahit.cellID(), std::llround(ahit.energyDeposit() * 100), 0, nhits++);
         rawhits->push_back(rawhit);
       }
       return StatusCode::SUCCESS;

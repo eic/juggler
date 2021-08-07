@@ -8,6 +8,9 @@
  *  References: https://arxiv.org/pdf/1603.02934.pdf
  *
  */
+
+// @FIXME: Deprecated?
+
 #include "fmt/format.h"
 #include <algorithm>
 
@@ -64,8 +67,8 @@ namespace Jug::Reco {
     // maximum global distance to be considered as neighbors in different sectors
     Gaudi::Property<double> m_adjSectorDist{this, "adjSectorDist", 1.0 * cm};
     // minimum cluster center energy (to be considered as a seed for cluster)
-    // @TODO One can not simply find a center by edep with extremely fine granularity.
-    // Projecting to (eta, phi) with crude pixel size may help determine the center edep, which can
+    // @TODO One can not simply find a center by energy with extremely fine granularity.
+    // Projecting to (eta, phi) with crude pixel size may help determine the center energy, which can
     // happen in the following reconstruction step
     Gaudi::Property<double> m_minClusterCenterEdep{this, "minClusterCenterEdep", 50 * keV};
     // input hits collection
@@ -154,7 +157,7 @@ namespace Jug::Reco {
 
       // group neighboring hits
       std::vector<bool>                             visits(hits.size(), false);
-      std::vector<std::vector<eic::CalorimeterHit>> groups;
+      std::vector<std::vector<eic::ConstCalorimeterHit>> groups;
       for (size_t i = 0; i < hits.size(); ++i) {
         // already in a group, or not energetic enough to form a cluster
         if (visits[i] || hits[i].energy() < m_minClusterCenterEdep) {
@@ -222,19 +225,14 @@ namespace Jug::Reco {
     }
 
     // grouping function with Depth-First Search
-    void dfs_group(std::vector<eic::CalorimeterHit>& group, int idx,
+    void dfs_group(std::vector<eic::ConstCalorimeterHit>& group, int idx,
                    const eic::CalorimeterHitCollection& hits, std::vector<bool>& visits) const
     {
-      const eic::CalorimeterHit hit{hits[idx].cellID(),    hits[idx].clusterID(),
-                                    hits[idx].layerID(),   hits[idx].sectorID(),
-                                    hits[idx].energy(),    hits[idx].time(),
-                                    hits[idx].position(),  hits[idx].local(),
-                                    hits[idx].dimension(), 1};
-      group.push_back(hit);
+      group.push_back(hits[idx]);
       visits[idx] = true;
       for (size_t i = 0; i < hits.size(); ++i) {
         // visited, or not a neighbor
-        if (visits[i] || !is_neighbor(hit, hits[i])) {
+        if (visits[i] || !is_neighbor(hits[idx], hits[i])) {
           continue;
         }
         dfs_group(group, i, hits, visits);
