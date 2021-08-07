@@ -35,6 +35,7 @@ namespace Jug::Reco {
   /** Source source Linker.
    *
    * \ingroup track
+   * \ingroup tracking
    */
   class TrackerSourceLinker : public GaudiAlgorithm {
   public:
@@ -84,26 +85,36 @@ namespace Jug::Reco {
         Acts::SymMatrix2 cov = Acts::SymMatrix2::Zero();
         cov(0,0) = ahit.covMatrix().xx*Acts::UnitConstants::mm;//*ahit.xx()*Acts::UnitConstants::mm;
         cov(1,1) = ahit.covMatrix().yy*Acts::UnitConstants::mm;//*ahit.yy()*Acts::UnitConstants::mm;
+        debug() << "cov matrix:\n" << cov << endmsg;
 
-        auto       vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID());
-        auto       vol_id  = vol_ctx->identifier;
+        auto vol_ctx   = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID());
+        auto vol_id    = vol_ctx->identifier;
+        auto volman    = m_geoSvc->detector()->volumeManager();
+        auto alignment = volman.lookupDetElement(vol_id).nominal();
+        auto local_position =
+            alignment.worldToLocal({ahit.position().x / 10, ahit.position().y / 10, ahit.position().z / 10});
+        // note the factor of 10 above goes from mm to cm
+
         const auto is      = m_geoSvc->surfaceMap().find(vol_id);
         if (is == m_geoSvc->surfaceMap().end()) {
-          debug() << " vol_id (" <<  vol_id << ")  not found in m_surfaces." <<endmsg;
+          error() << " vol_id (" <<  vol_id << ")  not found in m_surfaces." <<endmsg;
           continue;
         }
         const Acts::Surface* surface = is->second;
         auto surf_center = surface->center(Acts::GeometryContext());
-        debug() << " surface center : " << surface->center(Acts::GeometryContext()).transpose() << endmsg;
+
         // transform global position into local coordinates
-        Acts::Vector2 pos(0, 0);
         // geometry context contains nothing here
-        pos = surface->globalToLocal(Acts::GeometryContext(), {ahit.position().x, ahit.position().y, ahit.position().z}, {0, 0, 0}).value();//, pos);
+        Acts::Vector2 pos = surface->globalToLocal(Acts::GeometryContext(), {ahit.position().x, ahit.position().y, ahit.position().z}, {0, 0, 0}).value();//, pos);
+
+        debug() << "dd4hep loc pos   : " <<  local_position.x() << " "<< local_position.y() << " " << local_position.z()  << endmsg;
+        debug() << "   surface center:" << surface->center(Acts::GeometryContext()).transpose() << endmsg;
+        debug() << "acts local center:" << pos.transpose() << endmsg;
 
         Acts::Vector2 loc = Acts::Vector2::Zero();
         loc[Acts::eBoundLoc0]     = pos[0] ;//+ m_cfg.sigmaLoc0 * stdNormal(rng);
         loc[Acts::eBoundLoc1]     = pos[1] ;//+ m_cfg.sigmaLoc1 * stdNormal(rng);
-        debug() << "loc : (" << loc[Acts::eBoundLoc0] << ", " << loc[Acts::eBoundLoc1] << ")" << endmsg;
+        debug() << "     acts loc pos: (" << loc[Acts::eBoundLoc0] << ", " << loc[Acts::eBoundLoc1] << ")" << endmsg;
 
         //local position
         //auto loc = {ahit.x(), ahit.y(), ahit.z()} - vol_ctx->volumePlacement().position()

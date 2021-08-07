@@ -47,16 +47,6 @@ namespace Jug::Reco {
         const eic::TrackerHitCollection* vtxEndcapHits = m_vertexEndcapHits .get();
         auto outputHits = m_outputHitCollection.createAndPut();
 
-        if(trkBarrelHits) {
-          for (const auto& ahit : *trkBarrelHits) {
-            outputHits->push_back(ahit.clone());
-          }
-        }
-        if(trkEndcapHits) {
-          for (const auto& ahit : *trkEndcapHits) {
-            outputHits->push_back(ahit.clone());
-          }
-        }
         if(vtxBarrelHits) {
           for (const auto& ahit : *vtxBarrelHits) {
             outputHits->push_back(ahit.clone());
@@ -64,6 +54,16 @@ namespace Jug::Reco {
         }
         if(vtxEndcapHits) {
           for (const auto& ahit : *vtxEndcapHits) {
+            outputHits->push_back(ahit.clone());
+          }
+        }
+        if(trkBarrelHits) {
+          for (const auto& ahit : *trkBarrelHits) {
+            outputHits->push_back(ahit.clone());
+          }
+        }
+        if(trkEndcapHits) {
+          for (const auto& ahit : *trkEndcapHits) {
             outputHits->push_back(ahit.clone());
           }
         }
