@@ -137,16 +137,16 @@ namespace Jug::Reco {
         auto pos       = alignment.worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
 
         hits.push_back(eic::CalorimeterHit{
-            id,
-            nhits++,
-            lid,
-            sid,
-            0,
-            static_cast<float>(energy),
-            0,
-            static_cast<float>(time),
-            {pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit},    // local pos
+            id,           // cellID
+            nhits++,      // ID
+            lid,          // layer
+            sid,          // sector
+            0,            // type
+            static_cast<float>(energy), // energy
+            0,                          // energyError
+            static_cast<float>(time),   // time
             {gpos.x() / m_lUnit, gpos.y() / m_lUnit, gpos.z() / m_lUnit}, // global pos
+            {pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit},    // local pos
             {0, 0, 0}}); // @TODO: add dimension
       }
       return StatusCode::SUCCESS;

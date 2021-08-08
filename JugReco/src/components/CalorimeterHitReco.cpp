@@ -208,16 +208,16 @@ namespace Jug::Reco {
         //         m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().volIDs().str()
         //         << endmsg;
         hits.push_back({
-            rh.cellID(),
-            rh.ID(),
-            lid,
-            sid,  // cell id, cluster id, layer id, sector id
-            0,    // @TODO: hit type
-            energy,
-            0,    // @TODO: energy error
-            time, // energy, time
-            {gpos.x() / m_lUnit, gpos.y() / m_lUnit, gpos.z() / m_lUnit},
-            {pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit},
+            rh.cellID(),  // cellID
+            rh.ID(),      // ID
+            lid,          // layer
+            sid,          // sector
+            0,            // @TODO: hit type
+            energy,       // energy
+            0,            // @TODO: energy error
+            time,         // time
+            {gpos.x() / m_lUnit, gpos.y() / m_lUnit, gpos.z() / m_lUnit}, // global pos
+            {pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit},    // local pos
             {dim[0], dim[1], dim[2]}
         });
       }
