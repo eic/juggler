@@ -47,6 +47,7 @@ namespace Jug {
         const dd4pod::Geant4ParticleCollection* parts = m_inputHitCollection.get();
         // output collection
         auto out_parts = m_outputHitCollection.createAndPut();
+        int ID = 0;
         for (const auto& p : *parts) {
           if (p.genStatus() != 1) {
             continue;
@@ -62,7 +63,19 @@ namespace Jug {
           const double py       = p.psy() * momentum / pgen;
           const double pz       = p.psz() * momentum / pgen;
 
-          eic::ReconstructedParticle rec_part{p.pdgID(), energy, {px, py, pz}, (double)p.charge(), p.mass()};
+          eic::ReconstructedParticle rec_part{
+            ID++,                     // Unique index
+            {px, py, pz},             // 3-momentum [GeV]
+            {0, 0, 0},                // @TODO: Vertex [mm]
+            0.,                       // @TODO: time [ns]
+            p.pdgID(),                // PDG type
+            static_cast<int16_t>(0),  // @TODO: Status
+            p.charge(),               // Charge
+            momentum,                 // 3-momentum magnitude [GeV]
+            energy,                   // energy [GeV]
+            p.mass(),                 // mass [GeV]
+            1.};                      // particle weight
+
           out_parts->push_back(rec_part);
         }
         return StatusCode::SUCCESS;

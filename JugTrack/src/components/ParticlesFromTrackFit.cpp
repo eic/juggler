@@ -19,7 +19,7 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 
 // Event Model related classes
-#include "eicd/ParticleCollection.h"
+#include "eicd/BasicParticleCollection.h"
 #include "eicd/TrackerHitCollection.h"
 #include "eicd/TrackParametersCollection.h"
 #include "JugTrack/IndexSourceLink.hpp"
@@ -27,6 +27,10 @@
 #include "JugTrack/Trajectories.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
+
+#include "eicd/VectorPolar.h"
+
+#include <cmath>
 
 namespace Jug::Reco {
 
@@ -39,7 +43,7 @@ namespace Jug::Reco {
    public:
     //DataHandle<eic::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<TrajectoriesContainer>     m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
-    DataHandle<eic::ParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer, this};
+    DataHandle<eic::BasicParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer, this};
     DataHandle<eic::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters", Gaudi::DataHandle::Writer, this};
 
    public:
@@ -148,18 +152,25 @@ namespace Jug::Reco {
               return;
             }
 
-            eic::Particle p({params[Acts::eBoundPhi], 
-                             params[Acts::eBoundTheta],
-                             1.0 / std::abs(params[Acts::eBoundQOverP])},
-                            {0.0, 0.0, 0.0, params[Acts::eBoundTime]},
-                            0.000511,
-                            (long long)11 * params[Acts::eBoundQOverP] /
-                                std::abs(params[Acts::eBoundQOverP]),
-                            0);
-            // debug() << p << endmsg;
+            eic::BasicParticle p{
+                -1,
+                eic::VectorPolar(   // 3-momentum vector
+                  {1.0/std::abs(params[Acts::eBoundQOverP]),    
+                   params[Acts::eBoundPhi], params[Acts::eBoundTheta]}),
+                {0., 0., 0.},       // vectex 3-vector
+                0.,                 // time
+                0,                  // PDG particle code
+                0,                  // status
+                static_cast<int16_t>(std::copysign(1., params[Acts::eBoundQOverP]))}; // charge
             rec_parts->push_back(p);
           });
       }
+
+      // set our IDs
+      for (int i = 0; i < rec_parts->size(); ++i) {
+        (*rec_parts)[i].ID(i);
+      }
+      
       return StatusCode::SUCCESS;
     }
 
