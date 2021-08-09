@@ -1,8 +1,6 @@
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
-#include "Acts/MagneticField/SharedBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -12,8 +10,6 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
-//#include "ActsExamples/Plugins/BField/ScalableBField.hpp"
 #include "TrackFittingAlgorithm.h"
 
 namespace {

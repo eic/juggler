@@ -16,9 +16,7 @@ gaudi_add_library(JugBase
   src/Utilities/Helpers.cpp
   src/Utilities/Paths.cpp
   src/Utilities/Options.cpp
-  src/Plugins/BFieldOptions.cpp
   src/Plugins/DD4hepBField.cpp
-  src/Plugins/BFieldUtils.cpp
   LINK
   Gaudi::GaudiKernel Gaudi::GaudiAlgLib
   podio::podioRootIO
@@ -37,16 +35,12 @@ target_compile_options(JugBase PRIVATE -Wno-suggest-override)
 file(GLOB JugBasePlugins_sources src/components/*.cpp)
 gaudi_add_module(JugBasePlugins
   SOURCES
-  src/components/ConstPileUp.cpp
   src/components/EICDataSvc.cpp
   src/components/GeoSvc.cpp
   src/components/InputCopier.cpp
   src/components/MC2DummyParticle.cpp
-  src/components/PileupOverlayAlg.cpp
   src/components/PodioInput.cpp
   src/components/PodioOutput.cpp
-  src/components/PoissonPileUp.cpp
-  src/components/RangePileUp.cpp
   src/components/type.cpp
   src/components/ReadTestConsumer.cxx
   LINK

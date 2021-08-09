@@ -34,6 +34,10 @@ namespace Jug::Reco {
 
   /** Source source Linker.
    *
+   * The source linker creates "source links" which map the hit to the tracking surface.
+   * It also creates "measurements" which take the hit information and creates a corresponding
+   * "measurement" which contains the covariance matrix and other geometry related hit information.
+   *
    * \ingroup track
    * \ingroup tracking
    */
@@ -68,13 +72,14 @@ namespace Jug::Reco {
     }
 
     StatusCode execute() override {
+      constexpr double mm_acts = Acts::UnitConstants::mm;
+      constexpr double mm_conv = mm_acts / dd4hep::mm; // = 1/10
+
       // input collection
       const eic::TrackerHitCollection* hits = m_inputHitCollection.get();
       // Create output collections
       auto sourceLinks = m_outputSourceLinks.createAndPut();
       auto measurements = m_outputMeasurements.createAndPut();
-      // IndexMultimap<ActsFatras::Barcode> hitParticlesMap;
-      // IndexMultimap<Index> hitSimHitsMap;
       sourceLinks->reserve(hits->size());
       measurements->reserve(hits->size());
 
@@ -83,8 +88,8 @@ namespace Jug::Reco {
       for(const auto& ahit : *hits) {
 
         Acts::SymMatrix2 cov = Acts::SymMatrix2::Zero();
-        cov(0,0) = ahit.covMatrix().xx*Acts::UnitConstants::mm;//*ahit.xx()*Acts::UnitConstants::mm;
-        cov(1,1) = ahit.covMatrix().yy*Acts::UnitConstants::mm;//*ahit.yy()*Acts::UnitConstants::mm;
+        cov(0,0) = ahit.covMatrix().xx*mm_acts*mm_acts; // note mm = 1 (Acts)
+        cov(1,1) = ahit.covMatrix().yy*mm_acts*mm_acts;
         debug() << "cov matrix:\n" << cov << endmsg;
 
         auto vol_ctx   = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID());
@@ -92,8 +97,7 @@ namespace Jug::Reco {
         auto volman    = m_geoSvc->detector()->volumeManager();
         auto alignment = volman.lookupDetElement(vol_id).nominal();
         auto local_position =
-            alignment.worldToLocal({ahit.position().x / 10, ahit.position().y / 10, ahit.position().z / 10});
-        // note the factor of 10 above goes from mm to cm
+            (alignment.worldToLocal({ahit.position().x , ahit.position().y , ahit.position().z }))*mm_conv;
 
         const auto is      = m_geoSvc->surfaceMap().find(vol_id);
         if (is == m_geoSvc->surfaceMap().end()) {
@@ -105,24 +109,19 @@ namespace Jug::Reco {
 
         // transform global position into local coordinates
         // geometry context contains nothing here
-        Acts::Vector2 pos = surface->globalToLocal(Acts::GeometryContext(), {ahit.position().x, ahit.position().y, ahit.position().z}, {0, 0, 0}).value();//, pos);
+        Acts::Vector2 pos = surface
+                                ->globalToLocal(Acts::GeometryContext(),
+                                                {ahit.position().x, ahit.position().y, ahit.position().z}, {0, 0, 0})
+                                .value();
 
-        debug() << "dd4hep loc pos   : " <<  local_position.x() << " "<< local_position.y() << " " << local_position.z()  << endmsg;
-        debug() << "   surface center:" << surface->center(Acts::GeometryContext()).transpose() << endmsg;
-        debug() << "acts local center:" << pos.transpose() << endmsg;
+        Acts::Vector2 loc     = Acts::Vector2::Zero();
+        loc[Acts::eBoundLoc0] = pos[0];
+        loc[Acts::eBoundLoc1] = pos[1];
 
-        Acts::Vector2 loc = Acts::Vector2::Zero();
-        loc[Acts::eBoundLoc0]     = pos[0] ;//+ m_cfg.sigmaLoc0 * stdNormal(rng);
-        loc[Acts::eBoundLoc1]     = pos[1] ;//+ m_cfg.sigmaLoc1 * stdNormal(rng);
-        debug() << "     acts loc pos: (" << loc[Acts::eBoundLoc0] << ", " << loc[Acts::eBoundLoc1] << ")" << endmsg;
-
-        //local position
-        //auto loc = {ahit.x(), ahit.y(), ahit.z()} - vol_ctx->volumePlacement().position()
-        //debug() << " hit          : \n" <<  ahit << endmsg;
-        //debug() << " cell ID : " << ahit.cellID() << endmsg;
-        //debug() << " position : (" <<  ahit.position(0) << ", " <<  ahit.position(1) << ", "<<  ahit.position(2) << ") " << endmsg;
-        //debug() << " vol_id       : " <<  vol_id << endmsg;
-        //debug() << " placment pos : " << vol_ctx->volumePlacement().position() << endmsg;
+        debug() << "  dd4hep loc pos  : " <<  local_position.x() << " "<< local_position.y() << " " << local_position.z()  << endmsg;
+        debug() << "   surface center :" << surface->center(Acts::GeometryContext()).transpose() << endmsg;
+        debug() << "acts local center :" << pos.transpose() << endmsg;
+        debug() << "     acts loc pos : " << loc[Acts::eBoundLoc0] << ", " << loc[Acts::eBoundLoc1] <<  endmsg;
 
         // the measurement container is unordered and the index under which the
         // measurement will be stored is known before adding it.

@@ -16,9 +16,6 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
-#include "Acts/MagneticField/SharedBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -69,10 +66,9 @@ namespace Jug::Reco {
               << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
       return StatusCode::FAILURE;
     }
-    //m_BField   = std::shared_ptr<const Jug::BField::DD4hepBField>(m_geoSvc->getFieldProvider());
     m_BField   = std::dynamic_pointer_cast<const Jug::BField::DD4hepBField>(m_geoSvc->getFieldProvider());
-    //std::make_shared<Acts::ConstantBField>(Acts::Vector3{0.0, 0.0, m_geoSvc->centralMagneticField()});
     m_fieldctx = Jug::BField::BFieldVariant(m_BField);
+
     // chi2 and #sourclinks per surface cutoffs
     //m_sourcelinkSelectorCfg = {
     //    {Acts::GeometryIdentifier(), {15, 10}},
@@ -103,20 +99,10 @@ namespace Jug::Reco {
     // Construct a perigee surface as the target surface
     auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3{0., 0., 0.});
 
-    //Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder> kfOptions(
-    //    ctx.geoContext, ctx.magFieldContext, ctx.calibContext, MeasurementCalibrator(measurements),
-    //    Acts::VoidOutlierFinder(), Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(),
-    //    &(*pSurface));
-
-    // kfOptions.multipleScattering = m_cfg.multipleScattering;
-    // kfOptions.energyLoss         = m_cfg.energyLoss;
-    // Acts::KalmanFitterOptions<Acts::VoidOutlierFinder> kfOptions(
-    //    m_geoctx, m_fieldctx, m_calibctx, Acts::VoidOutlierFinder(),
-    //    Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(), &(*pSurface));
-    //    // Set the KalmanFitter options
-
     Acts::PropagatorPlainOptions pOptions;
     pOptions.maxSteps = 10000;
+    // kfOptions.multipleScattering = m_cfg.multipleScattering;
+    // kfOptions.energyLoss         = m_cfg.energyLoss;
 
     Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder> kfOptions(
         m_geoctx, m_fieldctx, m_calibctx, MeasurementCalibrator(*measurements),

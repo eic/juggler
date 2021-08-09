@@ -19,9 +19,6 @@
 
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
-#include "Acts/MagneticField/SharedBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -82,7 +79,7 @@ namespace Jug::Reco {
               << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
       return StatusCode::FAILURE;
     }
-    //m_BField   = m_geoSvc->getFieldProvider();//std::make_shared<Acts::ConstantBField>(Acts::Vector3{0.0, 0.0, m_geoSvc->centralMagneticField()});
+
     m_BField   = std::dynamic_pointer_cast<const Jug::BField::DD4hepBField>(m_geoSvc->getFieldProvider());
     m_fieldctx = Jug::BField::BFieldVariant(m_BField);
 
@@ -91,8 +88,6 @@ namespace Jug::Reco {
       auto b =  m_BField->getField({0.0,0.0,double(z)})/(Acts::UnitConstants::T);
       debug() << "B(z=" << z << " mm) = " << b.transpose()  << " T"   << endmsg;
     }
-
-
 
     // chi2 and #sourclinks per surface cutoffs
     m_sourcelinkSelectorCfg = {
@@ -123,10 +118,10 @@ namespace Jug::Reco {
 
     ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("TrackFindingAlgorithm Logger", m_actsLoggingLevel));
 
-    // Perform the track finding for each starting parameter
-    // @TODO: use seeds from track seeding algorithm as starting parameter
-    // for (std::size_t iseed = 0; iseed < init_trk_params->size(); ++iseed) {
-    //  const auto& initialParams = (*init_trk_params)[iseed];
+    /// Perform the track finding for each starting parameter
+    /// @TODO: use seeds from track seeding algorithm as starting parameter
+    /// for (std::size_t iseed = 0; iseed < init_trk_params->size(); ++iseed) {
+    ///  const auto& initialParams = (*init_trk_params)[iseed];
 
     Acts::PropagatorPlainOptions pOptions;
     pOptions.maxSteps = 10000;
