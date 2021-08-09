@@ -1,11 +1,3 @@
-//
-//  GeoSvc.cxx
-//
-//
-//  Created by Julia Hrdinka on 30/03/15.
-//
-//
-
 #include "GeoSvc.h"
 #include "GaudiKernel/Service.h"
 //#include "GeoConstruction.h"
