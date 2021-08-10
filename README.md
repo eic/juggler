@@ -5,7 +5,7 @@
 Concurrent event processor for NP experiments, based on the Gaudi framework.
 
 Dependencies:
-  - v3.0 requires Gaudi v35+, ACTS v8.1+, DD4hep 1.17+ and eicd v0.5.0
+  - v3.0 requires Gaudi v35+, ACTS v8.1+, DD4hep 1.17+, NPdet v0.7.0 eicd v0.5.0
   - v2.0 requires Gaudi v35+, ACTS v8.1+, DD4hep 1.17+ and eicd v0.2.0
   - v1.8 requires Gaudi v33-34, ACTS 8.1+, DD4hep 1.16.1+ and eicd v0.2.0
   - v1.5 requires Gaudi v33-34, ACTS 8.1 and DD4hep 1.16.1
