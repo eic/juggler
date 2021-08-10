@@ -118,9 +118,14 @@ public:
         }
 
         // build hit
+        int ID = 0;
         for (auto &it : hit_groups) {
             for (auto &data : it.second) {
-                eic::RawPMTHit hit(it.first, (unsigned) data.signal, (unsigned) data.time/(m_timeStep/ns));
+                eic::RawPMTHit hit{
+                  it.first,
+                  ID++,
+                  static_cast<uint32_t>(data.signal), 
+                  static_cast<uint32_t>(data.time/(m_timeStep/ns))};
                 raw.push_back(hit);
             }
         }

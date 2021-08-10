@@ -80,19 +80,28 @@ namespace Jug::Reco {
       // Create output collections
       auto& hits = *m_outputHitCollection.createAndPut();
 
-      // reconstrut number of photo-electrons and time
+      // reconstruct number of photo-electrons and time
       for (const auto& rh : rawhits) {
         float npe = (rh.amplitude() - m_pedMean) / m_speMean;
         if (npe >= m_minNpe) {
-          float time = rh.timeStamp() * (m_timeStep / ns);
+          float time = rh.time() * (m_timeStep / ns);
           auto  id   = rh.cellID();
           // global positions
           auto gpos = m_geoSvc->cellIDPositionConverter()->position(id);
           // local positions
           auto pos =
               m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().position();
+          // cell dimension
+          auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
           hits.push_back(eic::PMTHit{
-              id, npe, time, {gpos.x(), gpos.y(), gpos.z()}, {pos.x(), pos.y(), pos.z()}});
+              rh.cellID(),
+              rh.ID(),
+              npe,
+              time,
+              m_timeStep / ns,
+              {gpos.x(), gpos.y(), gpos.z()},
+              {pos.x(), pos.y(), pos.z()},
+              {dim[0]/mm, dim[1]/mm, dim[2]/mm}});
         }
       }
 

@@ -26,7 +26,7 @@
 // Event Model related classes
 #include "FuzzyKClusters.h"
 #include "eicd/PMTHitCollection.h"
-#include "eicd/RIChClusterCollection.h"
+#include "eicd/RingImageCollection.h"
 
 using namespace Gaudi::Units;
 using namespace Eigen;
@@ -40,7 +40,7 @@ namespace Jug::Reco {
   class PhotoRingClusters : public GaudiAlgorithm {
   public:
     DataHandle<eic::PMTHitCollection>      m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-    DataHandle<eic::RIChClusterCollection> m_outputClusterCollection{"outputClusterCollection",
+    DataHandle<eic::RingImageCollection> m_outputClusterCollection{"outputClusterCollection",
                                                                      Gaudi::DataHandle::Writer, this};
     // @TODO
     // A more realistic way is to have tracker info as the input to determine how much clusters should be found
@@ -95,10 +95,17 @@ namespace Jug::Reco {
       auto res = alg.Fit(data, m_nRings, m_q, m_eps, m_nIters);
 
       // local position
+      // @TODO: Many fields in RingImage not filled, need to assess
+      //        if those are in fact needed
       for (int i = 0; i < res.rows(); ++i) {
         auto cl = clusters.create();
+        cl.ID(i);
         cl.position({res(i, 0), res(i, 1), 0});
+        // @TODO: positionError() not set
+        // @TODO: theta() not set
+        // @TODO: thetaError() not set
         cl.radius(res(i, 2));
+        // @TODO: radiusError not set
       }
 
       return StatusCode::SUCCESS;
