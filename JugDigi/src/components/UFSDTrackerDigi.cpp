@@ -58,6 +58,7 @@ namespace Jug::Digi {
       auto rawhits = m_outputHitCollection.createAndPut();
       // eic::RawTrackerHitCollection* rawHitCollection = new eic::RawTrackerHitCollection();
       std::map<long long, int> cell_hit_map;
+      int ID = 0;
       for (const auto& ahit : *simhits) {
         debug() << "--------------------" << ahit.cellID() << endmsg;
         debug() << "Hit in cellID = " << ahit.cellID() << endmsg;
@@ -67,7 +68,8 @@ namespace Jug::Digi {
         // std::cout << ahit << "\n";
         if (cell_hit_map.count(ahit.cellID()) == 0) {
           cell_hit_map[ahit.cellID()] = rawhits->size();
-          eic::RawTrackerHit rawhit((long long)ahit.cellID(),
+          eic::RawTrackerHit rawhit((int64_t)ahit.cellID(),
+                                    ID++,
                                     ahit.truth().time * 1e6 + m_gaussDist() * 1e3, // ns->fs
                                     std::llround(ahit.energyDeposit() * 1e6));
           rawhits->push_back(rawhit);

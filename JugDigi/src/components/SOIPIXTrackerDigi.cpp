@@ -51,11 +51,13 @@ namespace Jug {
       // Create output collections
       auto rawhits = m_outputHitCollection.createAndPut();
       std::map<long long, int> cell_hit_map;
+      int ID = 0;
       for (const auto& ahit : *simhits) {
         // std::cout << ahit << "\n";
         if (cell_hit_map.count(ahit.cellID()) == 0) {
           cell_hit_map[ahit.cellID()] = rawhits->size();
           eic::RawTrackerHit rawhit((long long)ahit.cellID(),
+                                    ID++,
                                     ahit.truth().time * 1e6 + m_gaussDist() * 1e6, // ns->fs
                                     std::llround(ahit.energyDeposit() * 1e6));
           rawhits->push_back(rawhit);

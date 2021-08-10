@@ -92,6 +92,7 @@ namespace Jug::Reco {
 
           // Get the fitted track parameter
           bool m_hasFittedParams = false;
+          int ID = 0;
           if (traj.hasTrackParameters(trackTip)) {
             m_hasFittedParams      = true;
             const auto& boundParam = traj.trackParameters(trackTip);
@@ -112,27 +113,19 @@ namespace Jug::Reco {
 
             debug() << " chi2 = " << trajState.chi2Sum << endmsg;
 
-            eic::TrackParameters pars({parameter[Acts::eBoundLoc0], parameter[Acts::eBoundLoc1],
-                                       parameter[Acts::eBoundPhi], parameter[Acts::eBoundTheta],
-                                       parameter[Acts::eBoundQOverP], parameter[Acts::eBoundTime],
-                                       sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
-                                       sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)),
-                                       sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)),
-                                       sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)),
-                                       sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)),
-                                       sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime))});
+            eic::TrackParameters pars{
+              ID++,
+              {parameter[Acts::eBoundLoc0], parameter[Acts::eBoundLoc1]},
+              {sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
+               sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1))},
+              {parameter[Acts::eBoundPhi], parameter[Acts::eBoundTheta]},
+              {sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)),
+               sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta))},
+               parameter[Acts::eBoundQOverP], 
+               sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)),
+               parameter[Acts::eBoundTime],
+               sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime))};
             track_pars->push_back(pars);
-
-            // m_ePHI_fit = parameter[Acts::eBoundPhi];
-            // m_eTHETA_fit = parameter[Acts::eBoundTheta];
-            // m_eQOP_fit = parameter[Acts::eBoundQOverP];
-            // m_eT_fit = parameter[Acts::eBoundTime];
-            // m_err_eLOC0_fit = sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0));
-            // m_err_eLOC1_fit = sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1));
-            // m_err_ePHI_fit = sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi));
-            // m_err_eTHETA_fit = sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta));
-            // m_err_eQOP_fit = sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP));
-            // m_err_eT_fit = sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime));
           }
 
           auto tsize = trackTips.size();
