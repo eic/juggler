@@ -56,25 +56,29 @@ namespace Jug {
           // for now just use total momentum smearing as this is the largest effect,
           // ideally we should also smear the angles but this should be good enough
           // for now.
-          const double pgen     = std::hypot(p.psx(), p.psy(), p.psz());
-          const double momentum = pgen * m_gaussDist();
-          const double energy   = std::hypot(momentum, p.mass());
-          const double px       = p.psx() * momentum / pgen;
-          const double py       = p.psy() * momentum / pgen;
-          const double pz       = p.psz() * momentum / pgen;
+          const double pgen     = p.ps().mag();
+          const float momentum = pgen * m_gaussDist();
+          const float energy   = p.energy();
+          const float px       = p.ps().x * momentum / pgen;
+          const float py       = p.ps().y * momentum / pgen;
+          const float pz       = p.ps().z * momentum / pgen;
+          // @TODO: vertex smearing
+          const float vx       = p.vs().x;
+          const float vy       = p.vs().y;
+          const float vz       = p.vs().z;
 
           eic::ReconstructedParticle rec_part{
-            ID++,                     // Unique index
-            {px, py, pz},             // 3-momentum [GeV]
-            {0, 0, 0},                // @TODO: Vertex [mm]
-            0.,                       // @TODO: time [ns]
-            p.pdgID(),                // PDG type
-            static_cast<int16_t>(0),  // @TODO: Status
-            p.charge(),               // Charge
-            momentum,                 // 3-momentum magnitude [GeV]
-            energy,                   // energy [GeV]
-            p.mass(),                 // mass [GeV]
-            1.};                      // particle weight
+            ID++,                             // Unique index
+            {px, py, pz},                     // 3-momentum [GeV]
+            {vx, vy, vz},                     // Vertex [mm]
+            p.time(),                         // time [ns]
+            p.pdgID(),                        // PDG type
+            static_cast<int16_t>(p.status()), // Status
+            static_cast<int16_t>(p.charge()), // Charge
+            momentum,                         // 3-momentum magnitude [GeV]
+            energy,                           // energy [GeV]
+            p.mass(),                         // mass [GeV]
+            1.};                              // particle weight
 
           out_parts->push_back(rec_part);
         }

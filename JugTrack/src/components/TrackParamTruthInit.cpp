@@ -79,16 +79,10 @@ namespace Jug::Reco {
         using Acts::UnitConstants::um;
         using Acts::UnitConstants::ns;
 
-        double p = std::hypot( part.psx() * GeV, part.psy() * GeV, part.psz() * GeV);
-        ROOT::Math::XYZVector  momentum(part.psx() * GeV, part.psy() * GeV, part.psz() * GeV);
+        const double p = part.ps().mag() * GeV;
 
-        /// \todo create or find better particle data interface.
         // get the particle charge
-        double charge = ((part.pdgID() > 0) ? 1 : -1);
-        // electron is negative but positive pdg code
-        if( std::abs(part.pdgID()) == 11 ) {
-          charge *= -1;
-        }
+        const double charge = part.charge();
 
         // build some track cov matrix
         Acts::BoundSymMatrix cov                    = Acts::BoundSymMatrix::Zero();
@@ -102,14 +96,14 @@ namespace Jug::Reco {
         Acts::BoundVector  params;
         params(Acts::eBoundLoc0)   = 0.0 * mm ;  // cylinder radius
         params(Acts::eBoundLoc1)   = 0.0 * mm ; // cylinder length
-        params(Acts::eBoundPhi)    = momentum.Phi();
-        params(Acts::eBoundTheta)  = momentum.Theta();
+        params(Acts::eBoundPhi)    = part.ps().phi();
+        params(Acts::eBoundTheta)  = part.ps().theta();
         params(Acts::eBoundQOverP) = charge / p;
         params(Acts::eBoundTime)   = part.time() * ns;
 
         //// Construct a perigee surface as the target surface
         auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
-            Acts::Vector3{part.vsx() * mm, part.vsy() * mm, part.vsz() * mm});
+            Acts::Vector3{part.vs().x * mm, part.vs().y * mm, part.vs().z * mm});
 
         //params(Acts::eBoundQOverP) = charge/p;
         init_trk_params->push_back({pSurface, params, charge,cov});
