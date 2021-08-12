@@ -155,7 +155,7 @@ StatusCode GeoSvc::initialize() {
   m_trackingGeo = std::move(Acts::convertDD4hepDetector(m_dd4hepGeo->world(), Acts::Logging::VERBOSE, Acts::equidistant,
                                                         Acts::equidistant, Acts::equidistant));
 
-  info() << " Done constructing m_trackingGeo " << endmsg;
+  debug() << " Done constructing m_trackingGeo " << endmsg;
   if (m_trackingGeo) {
     draw_surfaces(m_trackingGeo, "tracking_geometry.obj");
     debug() << "visiting all the surfaces  " << endmsg;
