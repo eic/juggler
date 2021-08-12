@@ -21,6 +21,7 @@ namespace Jug::Reco {
       DataHandle<eic::TrackerHitCollection> m_trackerEndcapHits{"trackerEndcapHits", Gaudi::DataHandle::Reader, this};
       DataHandle<eic::TrackerHitCollection> m_vertexBarrelHits {"vertexBarrelHits" , Gaudi::DataHandle::Reader, this};
       DataHandle<eic::TrackerHitCollection> m_vertexEndcapHits {"vertexEndcapHits" , Gaudi::DataHandle::Reader, this};
+      DataHandle<eic::TrackerHitCollection> m_gemEndcapHits {"gemEndcapHits" , Gaudi::DataHandle::Reader, this};
       DataHandle<eic::TrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
 
     public:
@@ -31,6 +32,7 @@ namespace Jug::Reco {
         declareProperty("trackerEndcapHits", m_trackerEndcapHits, "");
         declareProperty("vertexBarrelHits" , m_vertexBarrelHits , "");
         declareProperty("vertexEndcapHits" , m_vertexEndcapHits , "");
+        declareProperty("gemEndcapHits" , m_gemEndcapHits , "");
         declareProperty("outputHitCollection", m_outputHitCollection, "");
       }
 
@@ -45,26 +47,15 @@ namespace Jug::Reco {
         const eic::TrackerHitCollection* trkEndcapHits = m_trackerEndcapHits.get();
         const eic::TrackerHitCollection* vtxBarrelHits = m_vertexBarrelHits .get();
         const eic::TrackerHitCollection* vtxEndcapHits = m_vertexEndcapHits .get();
+        const eic::TrackerHitCollection* gemEndcapHits = m_gemEndcapHits .get();
         auto outputHits = m_outputHitCollection.createAndPut();
 
-        if(vtxBarrelHits) {
-          for (const auto& ahit : *vtxBarrelHits) {
-            outputHits->push_back(ahit.clone());
-          }
-        }
-        if(vtxEndcapHits) {
-          for (const auto& ahit : *vtxEndcapHits) {
-            outputHits->push_back(ahit.clone());
-          }
-        }
-        if(trkBarrelHits) {
-          for (const auto& ahit : *trkBarrelHits) {
-            outputHits->push_back(ahit.clone());
-          }
-        }
-        if(trkEndcapHits) {
-          for (const auto& ahit : *trkEndcapHits) {
-            outputHits->push_back(ahit.clone());
+        for (const auto* hits : {trkBarrelHits, trkEndcapHits, vtxBarrelHits, vtxEndcapHits, gemEndcapHits}) {
+          if (hits) {
+            for (const auto& ahit : *hits) {
+              auto new_hit = ahit.clone();
+              outputHits->push_back(ahit.clone());
+            }
           }
         }
 
