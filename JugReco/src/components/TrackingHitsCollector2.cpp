@@ -13,14 +13,14 @@ namespace Jug::Reco {
 
     /** Collect the tracking hits into a single collection.
      *
-     * \param inputHits [in] vector of collection names
+     * \param inputTrackingHits [in] vector of collection names
      * \param trackingHits [out] hits combined into one collection.
      *
      * \ingroup reco
      */
     class TrackingHitsCollector2 : public GaudiAlgorithm {
     public:
-      Gaudi::Property<std::vector<std::string>> m_inputHits{this, "inputHits", {}};
+      Gaudi::Property<std::vector<std::string>> m_inputTrackingHits{this, "inputTrackingHits", {}};
       DataHandle<eic::TrackerHitCollection> m_trackingHits{"trackingHits", Gaudi::DataHandle::Writer, this};
 
       std::vector<std::unique_ptr<DataHandle<eic::TrackerHitCollection>>> m_hitCollections;
@@ -29,14 +29,14 @@ namespace Jug::Reco {
       TrackingHitsCollector2(const std::string& name, ISvcLocator* svcLoc)
           : GaudiAlgorithm(name, svcLoc)
       {
-        declareProperty("inputHits" , m_inputHits , "vector of collection names");
+        declareProperty("inputTrackingHits" , m_inputTrackingHits , "vector of collection names");
         declareProperty("trackingHits", m_trackingHits, "output hits combined into single collection");
       }
 
       StatusCode initialize() override {
         if (GaudiAlgorithm::initialize().isFailure())
           return StatusCode::FAILURE;
-        for (const auto colname : m_inputHits.value()) {
+        for (const auto colname : m_inputTrackingHits.value()) {
           m_hitCollections.push_back(std::make_unique<DataHandle<eic::TrackerHitCollection>>(colname, Gaudi::DataHandle::Reader, this));
         }
         return StatusCode::SUCCESS;
