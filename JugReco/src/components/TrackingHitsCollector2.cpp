@@ -20,10 +20,10 @@ namespace Jug::Reco {
      */
     class TrackingHitsCollector2 : public GaudiAlgorithm {
     public:
-      Gaudi::Property<std::vector<std::string>> m_inputTrackingHits{this, "inputTrackingHits", {}};
+      Gaudi::Property<std::vector<std::string>> m_inputTrackingHits{this, "inputTrackingHits", {},"Tracker hits to be aggregated"};
       DataHandle<eic::TrackerHitCollection> m_trackingHits{"trackingHits", Gaudi::DataHandle::Writer, this};
 
-      std::vector<std::unique_ptr<DataHandle<eic::TrackerHitCollection>>> m_hitCollections;
+      std::vector<DataHandle<eic::TrackerHitCollection>*> m_hitCollections;
 
     public:
       TrackingHitsCollector2(const std::string& name, ISvcLocator* svcLoc)
@@ -32,12 +32,18 @@ namespace Jug::Reco {
         declareProperty("inputTrackingHits" , m_inputTrackingHits , "vector of collection names");
         declareProperty("trackingHits", m_trackingHits, "output hits combined into single collection");
       }
+      ~TrackingHitsCollector2() {
+        for (auto col : m_hitCollections) {
+          if (col) { delete col; }
+        }
+      }
 
       StatusCode initialize() override {
         if (GaudiAlgorithm::initialize().isFailure())
           return StatusCode::FAILURE;
-        for (const auto colname : m_inputTrackingHits.value()) {
-          m_hitCollections.push_back(std::make_unique<DataHandle<eic::TrackerHitCollection>>(colname, Gaudi::DataHandle::Reader, this));
+        for (auto colname : m_inputTrackingHits) {
+          debug() << "initializing collection: " << colname  << endmsg;
+          m_hitCollections.push_back(new DataHandle<eic::TrackerHitCollection>{colname, Gaudi::DataHandle::Reader, this});
         }
         return StatusCode::SUCCESS;
       }
@@ -45,9 +51,10 @@ namespace Jug::Reco {
       StatusCode execute() override
       {
         auto outputHits = m_trackingHits.createAndPut();
-
+        debug() << "execute collector"   << endmsg;
         for(const auto& hits: m_hitCollections) {
           const eic::TrackerHitCollection* hitCol = hits->get();
+          debug() << "col n hits: " << hitCol->size()  << endmsg;
           for (const auto& ahit : *hitCol) {
             outputHits->push_back(ahit.clone());
           }
