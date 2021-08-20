@@ -15,7 +15,7 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugBase/Utilities/UniqueID.hpp"
+#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 //#include "GaudiExamples/MyTrack.h"
@@ -31,11 +31,7 @@ namespace Jug {
      *
      * \ingroup reco
      */
-    class TrackerHitReconstruction : public GaudiAlgorithm {
-    private:
-      // Unique identifier for this hit type, based on the algorithm name
-      using HitClassificationType = decltype(eic::TrackerHitData().type);
-      const HitClassificationType m_type;
+    class TrackerHitReconstruction : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
     public:
       Gaudi::Property<double>                  m_timeResolution{this, "timeResolution", 10};
       Rndm::Numbers                            m_gaussDist;
@@ -50,7 +46,7 @@ namespace Jug {
       //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
       TrackerHitReconstruction(const std::string& name, ISvcLocator* svcLoc)
           : GaudiAlgorithm(name, svcLoc)
-          , m_type{uniqueID<HitClassificationType>(name)}
+          , AlgorithmIDMixin(name, info())
       {
         declareProperty("inputHitCollection", m_inputHitCollection, "");
         declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -99,7 +95,7 @@ namespace Jug {
                               ahit.ID(),
                               {pos.x() / mm, pos.y() / mm, pos.z() / mm, (float)ahit.time()/1000}, // mm, ns
                               {(dim[0]/mm)*(dim[0]/mm), (dim[1]/mm)*(dim[1]/mm), 0.0, 0.0},        // 
-                              m_type,
+                              algorithmID(),
                               (float)ahit.charge() / 1.0e6, // GeV
                               0.0f};
           rec_hits->push_back(hit);

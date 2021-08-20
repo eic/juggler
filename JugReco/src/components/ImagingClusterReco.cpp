@@ -22,7 +22,7 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugBase/Utilities/UniqueID.hpp"
+#include "JugBase/UniqueID.h"
 #include "JugBase/Utilities/Utils.hpp"
 
 // Event Model related classes
@@ -46,11 +46,7 @@ namespace Jug::Reco {
  *
  *  \ingroup reco
  */
-class ImagingClusterReco : public GaudiAlgorithm {
-  private:
-    // Unique identifier for this cluster type, based on the algorithm name
-    using ClusterClassificationType = decltype(eic::ClusterData().type);
-    const ClusterClassificationType m_type;
+class ImagingClusterReco : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
 public:
   Gaudi::Property<double> m_sampFrac{this, "samplingFraction", 1.0};
   Gaudi::Property<int> m_trackStopLayer{this, "trackStopLayer", 9};
@@ -67,7 +63,7 @@ public:
 
   ImagingClusterReco(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
-      , m_type{uniqueID<ClusterClassificationType>(name)} {
+      , AlgorithmIDMixin(name, info()) {
     declareProperty("inputProtoClusterCollection", m_inputProtoClusterCollection, "");
     declareProperty("inputHitCollection", m_inputHitCollection, "");
     declareProperty("outputLayerCollection", m_outputLayerCollection, "");
@@ -168,7 +164,7 @@ private:
   eic::ClusterLayer reconstruct_layer(const std::vector<std::pair<eic::ConstProtoCluster, eic::ConstCalorimeterHit>>& hit_info,
                                       const int cid, const int lid) const {
     // use full members initialization here so it could catch changes in ecid
-    eic::ClusterLayer layer{-1, cid, lid, static_cast<int>(hit_info.size()), m_type, 0., 0., 0., 0., {}};
+    eic::ClusterLayer layer{-1, cid, lid, static_cast<uint32_t>(hit_info.size()), algorithmID(), 0., 0., 0., 0., {}};
 
     // mean position and total energy
     eic::VectorXYZ pos;
@@ -195,7 +191,7 @@ private:
                       const int cid) const {
     eic::Cluster cluster;
     cluster.ID(cid);
-    cluster.type(m_type);
+    cluster.source(algorithmID());
     // eta, phi center, weighted by energy
     double meta = 0.;
     double mphi = 0.;

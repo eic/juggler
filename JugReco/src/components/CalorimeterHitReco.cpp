@@ -21,7 +21,7 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugBase/Utilities/UniqueID.hpp"
+#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "eicd/CalorimeterHitCollection.h"
@@ -37,11 +37,7 @@ namespace Jug::Reco {
    * Reconstruct digitized outputs, paired with Jug::Digi::CalorimeterHitDigi
    * \ingroup reco
    */
-  class CalorimeterHitReco : public GaudiAlgorithm {
-  private:
-    // Unique identifier for this hit type, based on the algorithm name
-    using HitClassificationType = decltype(eic::CalorimeterHitData().type);
-    const HitClassificationType m_type;
+  class CalorimeterHitReco : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
   public:
 
     // length unit from dd4hep, should be fixed
@@ -85,7 +81,7 @@ namespace Jug::Reco {
 
     CalorimeterHitReco(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
-      , m_type{uniqueID<HitClassificationType>(name)}
+      , AlgorithmIDMixin(name, info())
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -215,14 +211,14 @@ namespace Jug::Reco {
         //         m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().volIDs().str()
         //         << endmsg;
         hits.push_back({
-            rh.cellID(),  // cellID
-            rh.ID(),      // ID
-            lid,          // layer
-            sid,          // sector
-            m_type,       // hit type (a hash of the algorithm name)
-            energy,       // energy
-            0,            // @TODO: energy error
-            time,         // time
+            rh.cellID(),    // cellID
+            rh.ID(),        // ID
+            lid,            // layer
+            sid,            // sector
+            algorithmID(),  // hit source (a hash of the algorithm name)
+            energy,         // energy
+            0,              // @TODO: energy error
+            time,           // time
             {gpos.x() / m_lUnit, gpos.y() / m_lUnit, gpos.z() / m_lUnit}, // global pos
             {pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit},    // local pos
             {dim[0], dim[1], dim[2]}

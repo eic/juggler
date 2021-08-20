@@ -14,6 +14,7 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
+#include "JugBase/UniqueID.h"
 
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -39,7 +40,7 @@ namespace Jug::Reco {
    * \ingroup track
    * \ingroup tracking
    */
-   class ParticlesFromTrackFit : public GaudiAlgorithm {
+   class ParticlesFromTrackFit : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
    public:
     //DataHandle<eic::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<TrajectoriesContainer>     m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
@@ -49,7 +50,8 @@ namespace Jug::Reco {
    public:
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     ParticlesFromTrackFit(const std::string& name, ISvcLocator* svcLoc)
-        : GaudiAlgorithm(name, svcLoc) {
+        : GaudiAlgorithm(name, svcLoc)
+        , AlgorithmIDMixin(name, info()) {
           declareProperty("inputTrajectories", m_inputTrajectories,"");
           declareProperty("outputParticles", m_outputParticles, "");
           declareProperty("outputTrackParameters", m_outputTrackParameters, "ACTS Track Parameters");
@@ -154,8 +156,9 @@ namespace Jug::Reco {
                 0.,                 // time
                 0,                  // PDG particle code
                 0,                  // status
-                static_cast<int16_t>(std::copysign(1., params[Acts::eBoundQOverP])),
-                0
+                static_cast<int16_t>(std::copysign(1., params[Acts::eBoundQOverP])), // charge
+                algorithmID(),      // source
+                1.                  // weight
             }; // charge
             rec_parts->push_back(p);
           });

@@ -7,7 +7,7 @@
 #include <cmath>
 
 #include "JugBase/DataHandle.h"
-#include "JugBase/Utilities/UniqueID.hpp"
+#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "dd4pod/Geant4ParticleCollection.h"
@@ -16,11 +16,7 @@
 namespace Jug {
   namespace Base {
 
-    class MC2DummyParticle : public GaudiAlgorithm {
-  private:
-    // Unique identifier for this hit type, based on the algorithm name
-    using PartClassificationType = decltype(eic::ReconstructedParticleData().type);
-    const PartClassificationType m_type;
+    class MC2DummyParticle : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
     public:
       DataHandle<dd4pod::Geant4ParticleCollection> m_inputHitCollection{"mcparticles", Gaudi::DataHandle::Reader, this};
       DataHandle<eic::ReconstructedParticleCollection> m_outputHitCollection{"DummyReconstructedParticles",
@@ -30,7 +26,7 @@ namespace Jug {
 
       MC2DummyParticle(const std::string& name, ISvcLocator* svcLoc) 
         : GaudiAlgorithm(name, svcLoc)
-        , m_type{uniqueID<PartClassificationType>(name)}
+        , AlgorithmIDMixin(name, info())
       {
         declareProperty("inputCollection", m_inputHitCollection, "mcparticles");
         declareProperty("outputCollection", m_outputHitCollection, "DummyReconstructedParticles");
@@ -81,11 +77,11 @@ namespace Jug {
             p.pdgID(),                        // PDG type
             static_cast<int16_t>(p.status()), // Status
             static_cast<int16_t>(p.charge()), // Charge
-            m_type,                           // Algorithm type
+            algorithmID(),                    // Algorithm type
+            1.,                               // particle weight
             momentum,                         // 3-momentum magnitude [GeV]
             energy,                           // energy [GeV]
-            static_cast<float>(p.mass()),     // mass [GeV]
-            1.};                              // particle weight
+            static_cast<float>(p.mass())};    // mass [GeV]
 
           out_parts->push_back(rec_part);
         }

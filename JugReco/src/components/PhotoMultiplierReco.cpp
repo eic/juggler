@@ -23,7 +23,7 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugBase/Utilities/UniqueID.hpp"
+#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "eicd/PMTHitCollection.h"
@@ -40,11 +40,7 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class PhotoMultiplierReco : public GaudiAlgorithm {
-  private:
-    // Unique identifier for this hit type, based on the algorithm name
-    using HitClassificationType = decltype(eic::PMTHitData().type);
-    const HitClassificationType m_type;
+  class PhotoMultiplierReco : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
   public:
     DataHandle<eic::RawPMTHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::PMTHitCollection>    m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
@@ -58,7 +54,7 @@ namespace Jug::Reco {
     // ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     PhotoMultiplierReco(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
-      , m_type{uniqueID<HitClassificationType>(name)}
+      , AlgorithmIDMixin(name, info())
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -102,7 +98,7 @@ namespace Jug::Reco {
           hits.push_back(eic::PMTHit{
               rh.cellID(),
               rh.ID(),
-              m_type,
+              algorithmID(),
               npe,
               time,
               m_timeStep / ns,
