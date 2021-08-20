@@ -24,10 +24,10 @@
 #include "DDRec/Surface.h"
 #include "DDRec/SurfaceManager.h"
 
-// FCCSW
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/Utilities/Utils.hpp"
+#include "JugBase/Utilities/UniqueID.hpp"
 
 // Event Model related classes
 #include "eicd/CalorimeterHitCollection.h"
@@ -58,6 +58,10 @@ namespace Jug::Reco {
    * \ingroup reco
    */
   class CalorimeterHitsEtaPhiProjector : public GaudiAlgorithm {
+  private:
+    // Unique identifier for this hit type, based on the algorithm name
+    using HitClassificationType = decltype(eic::CalorimeterHitData().type);
+    const HitClassificationType m_type;
   public:
     Gaudi::Property<std::vector<double>>        u_gridSizes{this, "gridSizes", {0.001, 0.001*rad}};
     DataHandle<eic::CalorimeterHitCollection>   m_inputHitCollection{
@@ -67,7 +71,9 @@ namespace Jug::Reco {
 
     double gridSizes[2];
 
-    CalorimeterHitsEtaPhiProjector(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
+    CalorimeterHitsEtaPhiProjector(const std::string& name, ISvcLocator* svcLoc) 
+      : GaudiAlgorithm(name, svcLoc)
+      , m_type{uniqueID<HitClassificationType>(name)}
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -123,6 +129,7 @@ namespace Jug::Reco {
         for (const auto &h : hits) {
             hit.energy(hit.energy() + h.energy());
         }
+        hit.type(m_type);
         mhits.push_back(hit);
       }
 

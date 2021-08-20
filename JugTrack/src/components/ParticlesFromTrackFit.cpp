@@ -154,7 +154,9 @@ namespace Jug::Reco {
                 0.,                 // time
                 0,                  // PDG particle code
                 0,                  // status
-                static_cast<int16_t>(std::copysign(1., params[Acts::eBoundQOverP]))}; // charge
+                static_cast<int16_t>(std::copysign(1., params[Acts::eBoundQOverP])),
+                0
+            }; // charge
             rec_parts->push_back(p);
           });
       }

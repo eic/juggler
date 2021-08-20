@@ -23,10 +23,10 @@
 #include "DDRec/Surface.h"
 #include "DDRec/SurfaceManager.h"
 
-// FCCSW
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/Utilities/Utils.hpp"
+#include "JugBase/Utilities/UniqueID.hpp"
 
 // Event Model related classes
 #include "eicd/VectorPolar.h"
@@ -57,6 +57,10 @@ namespace Jug::Reco {
    * \ingroup reco
    */
   class ImagingPixelMerger : public GaudiAlgorithm {
+  private:
+    // Unique identifier for this hit type, based on the algorithm name
+    using HitClassificationType = decltype(eic::CalorimeterHitData().type);
+    const HitClassificationType m_type;
   public:
     Gaudi::Property<int>                    m_nHits{this, "numberOfHits", 20};
     Gaudi::Property<int>                    m_nLayers{this, "numberOfLayers", 20};
@@ -67,7 +71,9 @@ namespace Jug::Reco {
     DataHandle<eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection",
                                                                   Gaudi::DataHandle::Writer, this};
 
-    ImagingPixelMerger(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
+    ImagingPixelMerger(const std::string& name, ISvcLocator* svcLoc) 
+      : GaudiAlgorithm(name, svcLoc)
+      , m_type{uniqueID<HitClassificationType>(name)}
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -139,6 +145,7 @@ namespace Jug::Reco {
           auto h = mhits.create();
           h.ID(k);
           h.layer(i);
+          h.type(m_type);
           h.energy(grid.energy);
           h.position(pos);
         }

@@ -25,9 +25,9 @@
 #include "fmt/format.h"
 #include "fmt/ranges.h"
 
-// FCCSW
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
+#include "JugBase/Utilities/UniqueID.hpp"
 
 // Event Model related classes
 #include "eicd/CalorimeterHitCollection.h"
@@ -44,6 +44,10 @@ namespace Jug::Reco {
    *  \ingroup reco
    */
   class CalorimeterHitsMerger : public GaudiAlgorithm {
+  private:
+    // Unique identifier for this hit type, based on the algorithm name
+    using HitClassificationType = decltype(eic::CalorimeterHitData().type);
+    const HitClassificationType m_type;
   public:
     Gaudi::Property<std::string> m_geoSvcName{this, "geoServiceName", "GeoSvc"};
     Gaudi::Property<std::string> m_readout{this, "readoutClass", ""};
@@ -60,7 +64,8 @@ namespace Jug::Reco {
     uint64_t         id_mask, ref_mask;
 
     CalorimeterHitsMerger(const std::string& name, ISvcLocator* svcLoc)
-        : GaudiAlgorithm(name, svcLoc)
+      : GaudiAlgorithm(name, svcLoc)
+      , m_type{uniqueID<HitClassificationType>(name)}
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -156,7 +161,7 @@ namespace Jug::Reco {
                           nresults++,
                           href.layer(),
                           href.sector(),
-                          href.type(),
+                          m_type,
                           energy,
                           0, //@TODO: energy uncertainty
                           href.time(),

@@ -25,9 +25,9 @@
 #include "DDRec/Surface.h"
 #include "DDRec/SurfaceManager.h"
 
-// FCCSW
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
+#include "JugBase/Utilities/UniqueID.hpp"
 
 // Event Model related classes
 #include "eicd/CalorimeterHitCollection.h"
@@ -64,6 +64,10 @@ namespace Jug::Reco {
    * \ingroup reco
    */
   class ClusterRecoCoG : public GaudiAlgorithm {
+  private:
+    // Unique identifier for this cluster type, based on the algorithm name
+    using ClusterClassificationType = decltype(eic::ClusterData().type);
+    const ClusterClassificationType m_type;
   public:
     Gaudi::Property<double>                   m_sampFrac{this, "samplingFraction", 1.0};
     Gaudi::Property<double>                   m_logWeightBase{this, "logWeightBase", 3.6};
@@ -83,7 +87,9 @@ namespace Jug::Reco {
     double                                             m_depthCorr;
     std::function<double(double, double, double, int)> weightFunc;
 
-    ClusterRecoCoG(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
+    ClusterRecoCoG(const std::string& name, ISvcLocator* svcLoc) 
+      : GaudiAlgorithm(name, svcLoc)
+      , m_type{uniqueID<ClusterClassificationType>(name)}
     {
       declareProperty("inputHitCollection", m_inputHits, "");
       declareProperty("inputProtoClusterCollection", m_inputProto, "");
@@ -179,6 +185,7 @@ namespace Jug::Reco {
                              const int idx) const
     {
       eic::Cluster cl;
+      cl.type(m_type);
       cl.ID(idx);
       cl.nhits(hit_info.size());
 

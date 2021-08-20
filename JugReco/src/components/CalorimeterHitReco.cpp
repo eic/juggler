@@ -19,9 +19,9 @@
 #include "DDRec/Surface.h"
 #include "DDRec/SurfaceManager.h"
 
-// FCCSW
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
+#include "JugBase/Utilities/UniqueID.hpp"
 
 // Event Model related classes
 #include "eicd/CalorimeterHitCollection.h"
@@ -38,7 +38,12 @@ namespace Jug::Reco {
    * \ingroup reco
    */
   class CalorimeterHitReco : public GaudiAlgorithm {
+  private:
+    // Unique identifier for this hit type, based on the algorithm name
+    using HitClassificationType = decltype(eic::CalorimeterHitData().type);
+    const HitClassificationType m_type;
   public:
+
     // length unit from dd4hep, should be fixed
     Gaudi::Property<double> m_lUnit{this, "lengthUnit", dd4hep::mm};
 
@@ -78,7 +83,9 @@ namespace Jug::Reco {
     dd4hep::DetElement                        local;
     size_t                                    local_mask = ~0;
 
-    CalorimeterHitReco(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
+    CalorimeterHitReco(const std::string& name, ISvcLocator* svcLoc) 
+      : GaudiAlgorithm(name, svcLoc)
+      , m_type{uniqueID<HitClassificationType>(name)}
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -212,7 +219,7 @@ namespace Jug::Reco {
             rh.ID(),      // ID
             lid,          // layer
             sid,          // sector
-            0,            // @TODO: hit type
+            m_type,       // hit type (a hash of the algorithm name)
             energy,       // energy
             0,            // @TODO: energy error
             time,         // time

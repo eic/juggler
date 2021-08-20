@@ -17,9 +17,9 @@
 #include "DDRec/Surface.h"
 #include "DDRec/SurfaceManager.h"
 
-// FCCSW
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
+#include "JugBase/Utilities/UniqueID.hpp"
 
 // Event Model related classes
 #include "eicd/CalorimeterHitCollection.h"
@@ -37,6 +37,10 @@ namespace Jug::Reco {
    * \ingroup reco
    */
   class ImagingPixelReco : public GaudiAlgorithm {
+  private:
+    // Unique identifier for this hit type, based on the algorithm name
+    using HitClassificationType = decltype(eic::CalorimeterHitData().type);
+    const HitClassificationType m_type;
   public:
     // geometry service
     Gaudi::Property<std::string> m_geoSvcName{this, "geoServiceName", "GeoSvc"};
@@ -69,7 +73,9 @@ namespace Jug::Reco {
     dd4hep::BitFieldCoder* id_dec;
     size_t                 sector_idx, layer_idx;
 
-    ImagingPixelReco(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
+    ImagingPixelReco(const std::string& name, ISvcLocator* svcLoc) 
+      : GaudiAlgorithm(name, svcLoc)
+      , m_type{uniqueID<HitClassificationType>(name)}
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -141,7 +147,7 @@ namespace Jug::Reco {
             nhits++,      // ID
             lid,          // layer
             sid,          // sector
-            0,            // type
+            m_type,       // type
             static_cast<float>(energy), // energy
             0,                          // energyError
             static_cast<float>(time),   // time

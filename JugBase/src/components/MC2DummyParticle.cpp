@@ -6,8 +6,8 @@
 #include <algorithm>
 #include <cmath>
 
-// FCCSW
 #include "JugBase/DataHandle.h"
+#include "JugBase/Utilities/UniqueID.hpp"
 
 // Event Model related classes
 #include "dd4pod/Geant4ParticleCollection.h"
@@ -17,6 +17,10 @@ namespace Jug {
   namespace Base {
 
     class MC2DummyParticle : public GaudiAlgorithm {
+  private:
+    // Unique identifier for this hit type, based on the algorithm name
+    using PartClassificationType = decltype(eic::ReconstructedParticleData().type);
+    const PartClassificationType m_type;
     public:
       DataHandle<dd4pod::Geant4ParticleCollection> m_inputHitCollection{"mcparticles", Gaudi::DataHandle::Reader, this};
       DataHandle<eic::ReconstructedParticleCollection> m_outputHitCollection{"DummyReconstructedParticles",
@@ -24,7 +28,9 @@ namespace Jug {
       Rndm::Numbers                                    m_gaussDist;
       Gaudi::Property<double>                          m_smearing{this, "smearing", 0.01 /* 1 percent*/};
 
-      MC2DummyParticle(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
+      MC2DummyParticle(const std::string& name, ISvcLocator* svcLoc) 
+        : GaudiAlgorithm(name, svcLoc)
+        , m_type{uniqueID<PartClassificationType>(name)}
       {
         declareProperty("inputCollection", m_inputHitCollection, "mcparticles");
         declareProperty("outputCollection", m_outputHitCollection, "DummyReconstructedParticles");
@@ -71,13 +77,14 @@ namespace Jug {
             ID++,                             // Unique index
             {px, py, pz},                     // 3-momentum [GeV]
             {vx, vy, vz},                     // Vertex [mm]
-            p.time(),                         // time [ns]
+            static_cast<float>(p.time()),     // time [ns]
             p.pdgID(),                        // PDG type
             static_cast<int16_t>(p.status()), // Status
             static_cast<int16_t>(p.charge()), // Charge
+            m_type,                           // Algorithm type
             momentum,                         // 3-momentum magnitude [GeV]
             energy,                           // energy [GeV]
-            p.mass(),                         // mass [GeV]
+            static_cast<float>(p.mass()),     // mass [GeV]
             1.};                              // particle weight
 
           out_parts->push_back(rec_part);

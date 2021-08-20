@@ -12,9 +12,9 @@
 #include "DDRec/Surface.h"
 #include "DDRec/SurfaceManager.h"
 
-// FCCSW
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
+#include "JugBase/Utilities/UniqueID.hpp"
 
 // Event Model related classes
 #include "eicd/CalorimeterHitCollection.h"
@@ -31,6 +31,10 @@ namespace Jug::Reco {
    * \ingroup reco
    */
   class SimpleClustering : public GaudiAlgorithm {
+  private:
+    // Unique identifier for this cluster type, based on the algorithm name
+    using ClusterClassificationType = decltype(eic::ClusterData().type);
+    const ClusterClassificationType m_type;
   public:
     using RecHits  = eic::CalorimeterHitCollection;
     using ProtoClusters = eic::ProtoClusterCollection;
@@ -46,7 +50,9 @@ namespace Jug::Reco {
     /// Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
 
-    SimpleClustering(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
+    SimpleClustering(const std::string& name, ISvcLocator* svcLoc) 
+      : GaudiAlgorithm(name, svcLoc)
+      , m_type{uniqueID<ClusterClassificationType>(name)}
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputProtoClusterCollection", m_outputClusters, "Output proto clusters");
@@ -114,6 +120,7 @@ namespace Jug::Reco {
 
         eic::Cluster cl;
         cl.ID(clusters.size());
+        cl.type(m_type);
         cl.nhits(cluster_hits.size());
         for (const auto& h : cluster_hits) {
           cl.energy(cl.energy() + h.energy());
