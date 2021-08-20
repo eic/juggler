@@ -149,7 +149,7 @@ namespace Jug::Reco {
                 -1,
                 eic::VectorPolar(   // 3-momentum vector
                   {1.0/std::abs(params[Acts::eBoundQOverP]),    
-                   params[Acts::eBoundPhi], params[Acts::eBoundTheta]}),
+                   params[Acts::eBoundTheta], params[Acts::eBoundPhi]}),
                 {0., 0., 0.},       // vectex 3-vector
                 0.,                 // time
                 0,                  // PDG particle code
