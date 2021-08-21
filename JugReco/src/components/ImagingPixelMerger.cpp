@@ -56,7 +56,7 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class ImagingPixelMerger : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
+  class ImagingPixelMerger : public GaudiAlgorithm, AlgorithmIDMixin<> {
   public:
     Gaudi::Property<int>                    m_nHits{this, "numberOfHits", 20};
     Gaudi::Property<int>                    m_nLayers{this, "numberOfLayers", 20};
@@ -69,7 +69,7 @@ namespace Jug::Reco {
 
     ImagingPixelMerger(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin(name, info())
+      , AlgorithmIDMixin<>(name, info())
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");

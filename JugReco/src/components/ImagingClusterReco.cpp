@@ -46,7 +46,7 @@ namespace Jug::Reco {
  *
  *  \ingroup reco
  */
-class ImagingClusterReco : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
+class ImagingClusterReco : public GaudiAlgorithm, AlgorithmIDMixin<> {
 public:
   Gaudi::Property<double> m_sampFrac{this, "samplingFraction", 1.0};
   Gaudi::Property<int> m_trackStopLayer{this, "trackStopLayer", 9};
@@ -63,7 +63,7 @@ public:
 
   ImagingClusterReco(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin(name, info()) {
+      , AlgorithmIDMixin<>(name, info()) {
     declareProperty("inputProtoClusterCollection", m_inputProtoClusterCollection, "");
     declareProperty("inputHitCollection", m_inputHitCollection, "");
     declareProperty("outputLayerCollection", m_outputLayerCollection, "");

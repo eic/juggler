@@ -20,6 +20,7 @@ gaudi_add_module(JugRecoPlugins
   src/components/CrystalEndcapsReco.cpp 
   src/components/EcalTungstenSamplingReco.cpp
   src/components/EcalTungstenSamplingCluster.cpp
+  src/components/EnergyPositionClusterMerger.cpp
   src/components/ClusterRecoCoG.cpp 
   src/components/PhotoMultiplierReco.cpp 
   src/components/PhotoRingClusters.cpp 

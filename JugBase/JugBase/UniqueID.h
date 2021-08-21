@@ -6,6 +6,7 @@
 //
 // Both in function and mixin form (latter is useful for algorithms)
 
+#include <cstdint>
 #include <functional>
 #include <limits>
 #include <string>
@@ -20,7 +21,7 @@ template <class Integer> Integer uniqueID(const std::string& s) {
   return static_cast<Integer>(fullID & max);
 }
 
-template <class Integer> class AlgorithmIDMixin {
+template <class Integer = int32_t> class AlgorithmIDMixin {
 public:
   AlgorithmIDMixin(const std::string& name, MsgStream& out) : m_id{uniqueID<Integer>(name)} {
     out << "Unique ID associated with '" << name << "': " << m_id << "\n";

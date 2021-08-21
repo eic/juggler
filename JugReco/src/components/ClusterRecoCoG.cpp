@@ -63,7 +63,7 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class ClusterRecoCoG : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
+  class ClusterRecoCoG : public GaudiAlgorithm, AlgorithmIDMixin<> {
   public:
     Gaudi::Property<double>                   m_sampFrac{this, "samplingFraction", 1.0};
     Gaudi::Property<double>                   m_logWeightBase{this, "logWeightBase", 3.6};
@@ -85,7 +85,7 @@ namespace Jug::Reco {
 
     ClusterRecoCoG(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin(name, info())
+      , AlgorithmIDMixin<>(name, info())
     {
       declareProperty("inputHitCollection", m_inputHits, "");
       declareProperty("inputProtoClusterCollection", m_inputProto, "");

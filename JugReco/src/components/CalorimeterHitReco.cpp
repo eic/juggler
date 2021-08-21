@@ -37,7 +37,7 @@ namespace Jug::Reco {
    * Reconstruct digitized outputs, paired with Jug::Digi::CalorimeterHitDigi
    * \ingroup reco
    */
-  class CalorimeterHitReco : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
+  class CalorimeterHitReco : public GaudiAlgorithm, AlgorithmIDMixin<> {
   public:
 
     // length unit from dd4hep, should be fixed
@@ -81,7 +81,7 @@ namespace Jug::Reco {
 
     CalorimeterHitReco(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin(name, info())
+      , AlgorithmIDMixin<>(name, info())
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");

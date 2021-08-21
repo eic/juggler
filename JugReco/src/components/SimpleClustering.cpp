@@ -30,7 +30,7 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class SimpleClustering : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
+  class SimpleClustering : public GaudiAlgorithm, AlgorithmIDMixin<> {
   public:
     using RecHits  = eic::CalorimeterHitCollection;
     using ProtoClusters = eic::ProtoClusterCollection;
@@ -48,7 +48,7 @@ namespace Jug::Reco {
 
     SimpleClustering(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin(name, info()) {
+      , AlgorithmIDMixin<>(name, info()) {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputProtoClusterCollection", m_outputClusters, "Output proto clusters");
       declareProperty("outputClusterCollection", m_outputClusters, "Output clusters");

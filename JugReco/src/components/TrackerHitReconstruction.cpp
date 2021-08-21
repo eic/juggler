@@ -31,7 +31,7 @@ namespace Jug {
      *
      * \ingroup reco
      */
-    class TrackerHitReconstruction : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
+    class TrackerHitReconstruction : public GaudiAlgorithm, AlgorithmIDMixin<> {
     public:
       Gaudi::Property<double>                  m_timeResolution{this, "timeResolution", 10};
       Rndm::Numbers                            m_gaussDist;
@@ -46,7 +46,7 @@ namespace Jug {
       //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
       TrackerHitReconstruction(const std::string& name, ISvcLocator* svcLoc)
           : GaudiAlgorithm(name, svcLoc)
-          , AlgorithmIDMixin(name, info())
+          , AlgorithmIDMixin<>(name, info())
       {
         declareProperty("inputHitCollection", m_inputHitCollection, "");
         declareProperty("outputHitCollection", m_outputHitCollection, "");

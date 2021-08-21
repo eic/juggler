@@ -57,7 +57,7 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class CalorimeterHitsEtaPhiProjector : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
+  class CalorimeterHitsEtaPhiProjector : public GaudiAlgorithm, AlgorithmIDMixin<> {
   public:
     Gaudi::Property<std::vector<double>>        u_gridSizes{this, "gridSizes", {0.001, 0.001*rad}};
     DataHandle<eic::CalorimeterHitCollection>   m_inputHitCollection{
@@ -69,7 +69,7 @@ namespace Jug::Reco {
 
     CalorimeterHitsEtaPhiProjector(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin(name, info())
+      , AlgorithmIDMixin<>(name, info())
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");

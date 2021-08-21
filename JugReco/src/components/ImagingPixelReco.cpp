@@ -36,7 +36,7 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class ImagingPixelReco : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
+  class ImagingPixelReco : public GaudiAlgorithm, AlgorithmIDMixin<> {
   public:
     // geometry service
     Gaudi::Property<std::string> m_geoSvcName{this, "geoServiceName", "GeoSvc"};
@@ -71,7 +71,7 @@ namespace Jug::Reco {
 
     ImagingPixelReco(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin(name, info())
+      , AlgorithmIDMixin<>(name, info())
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");

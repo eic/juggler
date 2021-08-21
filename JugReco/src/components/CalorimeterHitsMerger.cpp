@@ -43,7 +43,7 @@ namespace Jug::Reco {
    *
    *  \ingroup reco
    */
-  class CalorimeterHitsMerger : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
+  class CalorimeterHitsMerger : public GaudiAlgorithm, AlgorithmIDMixin<> {
   public:
     Gaudi::Property<std::string> m_geoSvcName{this, "geoServiceName", "GeoSvc"};
     Gaudi::Property<std::string> m_readout{this, "readoutClass", ""};
@@ -61,7 +61,7 @@ namespace Jug::Reco {
 
     CalorimeterHitsMerger(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin(name, info())
+      , AlgorithmIDMixin<>(name, info())
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
