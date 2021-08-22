@@ -30,8 +30,8 @@ public:
                                                                               Gaudi::DataHandle::Writer, this};
   ParticlesWithTruthPID(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
-    declareProperty("inputMC", m_inputTruthCollection, "mcparticles");
-    declareProperty("inputTracks", m_inputTrackCollection, "outputTrackParameters");
+    declareProperty("inputMCParticles", m_inputTruthCollection, "mcparticles");
+    declareProperty("inputTrackParameters", m_inputTrackCollection, "outputTrackParameters");
     declareProperty("outputParticles", m_outputParticleCollection, "ReconstructedParticles");
   }
   StatusCode initialize() override {
