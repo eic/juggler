@@ -18,7 +18,7 @@
 #include "eicd/TrackParametersCollection.h"
 #include "eicd/VectorPolar.h"
 
-namespace Jug::Rec {
+namespace Jug::Reco {
 
 class ParticlesWithTruthPID : public GaudiAlgorithm, AlgorithmIDMixin<> {
 public:
