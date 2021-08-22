@@ -159,8 +159,10 @@ namespace Jug::Reco {
       for (const auto& [idx, hit_info] : cluster_map) {
         auto cl = reconstruct(hit_info, idx);
 
-        debug() << cl.nhits() << " hits: " << cl.energy() / GeV << " GeV, (" << cl.position().x / mm
-                << ", " << cl.position().y / mm << ", " << cl.position().z / mm << ")" << endmsg;
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << cl.nhits() << " hits: " << cl.energy() / GeV << " GeV, (" << cl.position().x / mm << ", "
+                  << cl.position().y / mm << ", " << cl.position().z / mm << ")" << endmsg;
+        }
         clusters.push_back(cl);
         info.push_back({cl.ID(), cl.position(), cl.position().eta()});
       }
@@ -186,7 +188,9 @@ namespace Jug::Reco {
       cl.nhits(hit_info.size());
 
       // no hits
-      debug() << "hit size = " << hit_info.size() << endmsg;
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << "hit size = " << hit_info.size() << endmsg;
+      }
       if (hit_info.empty()) {
         return cl;
       }
@@ -196,7 +200,9 @@ namespace Jug::Reco {
       float maxE     = 0.;
       auto time = hit_info[0].second.time();
       for (const auto& [proto, hit] : hit_info) {
-        debug() << "hit energy = " << hit.energy() << " hit weight: " << proto.weight() << endmsg;
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << "hit energy = " << hit.energy() << " hit weight: " << proto.weight() << endmsg;
+        }
         auto energy = hit.energy() * proto.weight();
         totalE += energy;
         if (energy > maxE) {

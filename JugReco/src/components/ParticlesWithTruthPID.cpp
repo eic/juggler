@@ -1,10 +1,13 @@
+#include <algorithm>
+#include <cmath>
+
+#include <fmt/format.h>
+
 #include "Gaudi/Algorithm.h"
 #include "GaudiAlg/GaudiTool.h"
 #include "GaudiAlg/Producer.h"
 #include "GaudiAlg/Transformer.h"
 #include "GaudiKernel/RndmGenerators.h"
-#include <algorithm>
-#include <cmath>
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/UniqueID.h"
@@ -17,13 +20,15 @@
 
 namespace Jug::Rec {
 
-class ParticleWithTruthPID : public GaudiAlgorithm, AlgorithmIDMixin<> {
+class ParticlesWithTruthPID : public GaudiAlgorithm, AlgorithmIDMixin<> {
 public:
-  DataHandle<dd4pod::Geant4ParticleCollection> m_inputTruthCollection{"inputMC", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::TrackParametersCollection> m_inputTrackCollection{"inputTracks", Gaudi::DataHandle::Reader, this};
+  DataHandle<dd4pod::Geant4ParticleCollection> m_inputTruthCollection{"inputMCParticles", Gaudi::DataHandle::Reader,
+                                                                      this};
+  DataHandle<eic::TrackParametersCollection> m_inputTrackCollection{"inputTrackParameters", Gaudi::DataHandle::Reader,
+                                                                    this};
   DataHandle<eic::ReconstructedParticleCollection> m_outputParticleCollection{"outputParticles",
                                                                               Gaudi::DataHandle::Writer, this};
-  ParticleWithTruthPID(const std::string& name, ISvcLocator* svcLoc)
+  ParticlesWithTruthPID(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
     declareProperty("inputMC", m_inputTruthCollection, "mcparticles");
     declareProperty("inputTracks", m_inputTrackCollection, "outputTrackParameters");
@@ -50,7 +55,7 @@ public:
       // check if we find a good match
       int best_match    = -1;
       double best_delta = std::numeric_limits<double>::max();
-      for (int it = 0; it < tracks.size(); ++it) {
+      for (size_t it = 0; it < tracks.size(); ++it) {
         if (consumed[it]) {
           continue;
         }
@@ -75,10 +80,17 @@ public:
                                             static_cast<int16_t>(std::copysign(1., trk.qOverP())), // charge
                                             algorithmID(),                                         // Algorithm type
                                             1.,                                                    // particle weight
-                                            mom.mag(),                       // 3-momentum magnitude [GeV]
-                                            std::hypot(mom.mag(), p.mass()), // energy [GeV]
-                                            static_cast<float>(p.mass())};   // mass [GeV]
+                                            mom.mag(), // 3-momentum magnitude [GeV]
+                                            static_cast<float>(std::hypot(mom.mag(), p.mass())), // energy [GeV]
+                                            static_cast<float>(p.mass())};                       // mass [GeV]
         part.push_back(rec_part);
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << fmt::format("Matched track {} with MC particle {}\n", trk.ID(), p.ID()) << endmsg;
+          debug() << fmt::format("  - Track: (mom: {}, theta: {}, phi: {})", mom.mag(), mom.theta, mom.phi) << endmsg;
+          debug() << fmt::format("  - MC particle: (mom: {}, theta: {}, phi: {}, type: {}", p.ps().mag(),
+                                 p.ps().theta(), p.ps().phi(), p.pdgID())
+                  << endmsg;
+        }
       }
     }
 
@@ -86,7 +98,7 @@ public:
   }
 };
 
-DECLARE_COMPONENT(ParticleWithTruthPID)
+DECLARE_COMPONENT(ParticlesWithTruthPID)
 
 } // namespace Jug::Rec
 

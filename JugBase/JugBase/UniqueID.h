@@ -24,7 +24,7 @@ template <class Integer> Integer uniqueID(const std::string& s) {
 template <class Integer = int32_t> class AlgorithmIDMixin {
 public:
   AlgorithmIDMixin(const std::string& name, MsgStream& out) : m_id{uniqueID<Integer>(name)} {
-    out << "Unique ID associated with '" << name << "': " << m_id << "\n";
+    out << "Unique ID associated with '" << name << "': " << m_id << endmsg;
   }
   AlgorithmIDMixin()                        = delete;
   AlgorithmIDMixin(const AlgorithmIDMixin&) = delete;

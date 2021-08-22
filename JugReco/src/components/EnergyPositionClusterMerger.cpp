@@ -1,4 +1,7 @@
 #include <limits>
+#include <numbers>
+
+#include <fmt/format.h>
 // Gaudi
 #include "Gaudi/Property.h"
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -81,10 +84,15 @@ public:
         }
         const auto& ec = e_clus[ie];
         // 1. stop if not within tolerance
+        //    (make sure to handle rollover of phi properly)
+        double dphi = pc.position().phi() - ec.position().phi();
+        if (std::abs(dphi) > M_PI) {
+          dphi = std::abs(dphi) - M_PI;
+        }
         if ((m_energyRelTolerance > 0 &&
              (ec.energy() <= 0 || fabs((pc.energy() - ec.energy()) / ec.energy()) > m_energyRelTolerance)) ||
             (m_zTolerance > 0 && fabs(pc.position().z - ec.position().z) > m_zTolerance) ||
-            (m_phiTolerance > 0 && fabs(pc.position().phi() - ec.position().phi()) > m_phiTolerance)) {
+            (m_phiTolerance > 0 && dphi > m_phiTolerance)) {
           continue;
         }
         // --> if we get here, we have a match within tolerance. Now treat the case
@@ -118,6 +126,18 @@ public:
         rel.parent()[1] = {ec.source(), ec.ID()};
         // label our energy cluster as consumed
         consumed[best_match] = true;
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << fmt::format("Matched position cluster {} with energy cluster {}\n", pc.ID(), ec.ID()) << endmsg;
+          debug() << fmt::format("  - Position cluster: (E: {}, phi: {}, z: {})", pc.energy(), pc.position().phi(),
+                                 pc.position().z)
+                  << endmsg;
+          debug() << fmt::format("  - Energy cluster: (E: {}, phi: {}, z: {})", ec.energy(), ec.position().phi(),
+                                 ec.position().z)
+                  << endmsg;
+          debug() << fmt::format("  ---> Merged cluster: (E: {}, phi: {}, z: {})", new_clus.energy(),
+                                 new_clus.position().phi(), new_clus.position().z)
+                  << endmsg;
+        }
       }
     }
     // That's all!

@@ -132,13 +132,12 @@ namespace Jug::Reco {
       std::vector<bool>                           visits(hits.size(), false);
       std::vector<std::vector<eic::ConstCalorimeterHit>> groups;
       for (size_t i = 0; i < hits.size(); ++i) {
-        /*
-        debug() << fmt::format("hit {:d}: local position = ({}, {}, {}), global position = ({}, {}, {})",
-                i + 1,
-                hits[i].local().x, hits[i].local().y, hits[i].z(),
-                hits[i].position().x, hits[i].position().y, hits[i].position().z)
-            << endmsg;
-        */
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << fmt::format("hit {:d}: local position = ({}, {}, {}), global position = ({}, {}, {})", i + 1,
+                                 hits[i].local().x, hits[i].local().y, hits[i].position().z, hits[i].position().x,
+                                 hits[i].position().y, hits[i].position().z)
+                  << endmsg;
+        }
         // already in a group, or not energetic enough to form a cluster
         if (visits[i] || hits[i].energy() < minClusterCenterEdep) {
           continue;
@@ -147,12 +146,12 @@ namespace Jug::Reco {
         // create a new group, and group all the neighboring hits
         dfs_group(groups.back(), i, hits, visits);
       }
-      debug() << "found " << groups.size() << " potential clusters (groups of hits)" << endmsg;
-      /*
-      for (size_t i = 0; i < groups.size(); ++i) {
-        debug() << fmt::format("group {}: {} hits", i, groups[i].size()) << endmsg;
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << "found " << groups.size() << " potential clusters (groups of hits)" << endmsg;
+        for (size_t i = 0; i < groups.size(); ++i) {
+          debug() << fmt::format("group {}: {} hits", i, groups[i].size()) << endmsg;
+        }
       }
-      */
 
       // form clusters
       size_t clusterID = 0;

@@ -182,11 +182,14 @@ namespace Jug::Reco {
 
       std::vector<bool> visits(hits.size(), false);
       for (size_t i = 0; i < hits.size(); ++i) {
-        debug() << fmt::format("hit {:d}: energy = {:.4f} MeV, local = ({:.4f}, {:.4f}) mm, "
-                               "global=({:.4f}, {:.4f}, {:.4f}) mm, layer = {:d}, sector = {:d}.",
-                               i, hits[i].energy()*1000., hits[i].local().x, hits[i].local().y,
-                               hits[i].position().x, hits[i].position().y, hits[i].position().z,
-                               hits[i].layer(), hits[i].sector()) << endmsg;
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << fmt::format("hit {:d}: energy = {:.4f} MeV, local = ({:.4f}, {:.4f}) mm, "
+                                 "global=({:.4f}, {:.4f}, {:.4f}) mm, layer = {:d}, sector = {:d}.",
+                                 i, hits[i].energy() * 1000., hits[i].local().x, hits[i].local().y,
+                                 hits[i].position().x, hits[i].position().y, hits[i].position().z, hits[i].layer(),
+                                 hits[i].sector())
+                  << endmsg;
+        }
         // already in a group
         if (visits[i]) {
           continue;
@@ -203,9 +206,11 @@ namespace Jug::Reco {
         }
         auto maxima = find_maxima(group, !m_splitCluster.value());
         split_group(group, maxima, clusterID, proto);
-        debug() << "hits in a group: " << group.size() << ", "
-                << "local maxima: " << maxima.size() << endmsg;
-        debug() << "total number of clusters so far: " << clusterID << ", " << endmsg;
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << "hits in a group: " << group.size() << ", "
+                  << "local maxima: " << maxima.size() << endmsg;
+          debug() << "total number of clusters so far: " << clusterID << ", " << endmsg;
+        }
       }
 
       return StatusCode::SUCCESS;

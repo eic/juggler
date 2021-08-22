@@ -166,7 +166,9 @@ namespace Jug::Reco {
                           href.dimension()});
       }
 
-      debug() << "Size before = " << inputs.size() << ", after = " << outputs.size() << endmsg;
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << "Size before = " << inputs.size() << ", after = " << outputs.size() << endmsg;
+      }
 
       return StatusCode::SUCCESS;
     }

@@ -93,7 +93,9 @@ namespace Jug::Reco {
         the_hits.push_back(h);
       }
 
-      debug() << " max_dist = " << max_dist << endmsg;
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << " max_dist = " << max_dist << endmsg;
+      }
 
       while (have_ref && ref_hit.energy() > min_energy) {
 
@@ -107,11 +109,14 @@ namespace Jug::Reco {
             remaining_hits.push_back(h); }
         }
 
-        debug() << " cluster size " << cluster_hits.size() << endmsg;
         double total_energy =
             std::accumulate(std::begin(cluster_hits), std::end(cluster_hits), 0.0,
                             [](double t, const eic::ConstCalorimeterHit& h1) { return (t + h1.energy()); });
-        debug() << " total_energy = " << total_energy << endmsg;
+
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << " total_energy = " << total_energy << endmsg;
+          debug() << " cluster size " << cluster_hits.size() << endmsg;
+        }
 
         eic::Cluster cl;
         cl.ID(clusters.size());
@@ -137,7 +142,9 @@ namespace Jug::Reco {
           remaining_hits.clear();
         }
       }
-      debug() << " clusters found: " << clusters.size() << endmsg;
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << " clusters found: " << clusters.size() << endmsg;
+      }
 
       return StatusCode::SUCCESS;
     }

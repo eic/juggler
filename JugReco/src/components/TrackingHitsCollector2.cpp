@@ -51,10 +51,14 @@ namespace Jug::Reco {
       StatusCode execute() override
       {
         auto outputHits = m_trackingHits.createAndPut();
-        debug() << "execute collector"   << endmsg;
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << "execute collector" << endmsg;
+        }
         for(const auto& hits: m_hitCollections) {
           const eic::TrackerHitCollection* hitCol = hits->get();
-          debug() << "col n hits: " << hitCol->size()  << endmsg;
+          if (msgLevel(MSG::DEBUG)) {
+            debug() << "col n hits: " << hitCol->size() << endmsg;
+          }
           for (const auto& ahit : *hitCol) {
             outputHits->push_back(ahit.clone());
           }

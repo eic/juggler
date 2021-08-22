@@ -125,11 +125,14 @@ public:
 
     // debug output
     int idx = 0;
-    for (const auto& cl : clusters) {
-      debug() << fmt::format("Cluster {:d}: Edep = {:.3f} MeV, Dir = ({:.3f}, {:.3f}) deg", cl.ID(), cl.energy() * 1000.,
-                             info[idx].direction().theta / M_PI * 180., info[idx].direction().phi / M_PI * 180.)
-              << endmsg;
-      idx += 1;
+    if (msgLevel(MSG::DEBUG)) {
+      for (const auto& cl : clusters) {
+        debug() << fmt::format("Cluster {:d}: Edep = {:.3f} MeV, Dir = ({:.3f}, {:.3f}) deg", cl.ID(),
+                               cl.energy() * 1000., info[idx].direction().theta / M_PI * 180.,
+                               info[idx].direction().phi / M_PI * 180.)
+                << endmsg;
+        idx += 1;
+      }
     }
 
     return StatusCode::SUCCESS;
