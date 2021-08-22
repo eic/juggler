@@ -32,7 +32,7 @@ public:
   // theta from 0.2mrad -> 5mrad
   Gaudi::Property<double> m_thetaMinRP{this, "thetaMinRP", 0.2e-3};
   Gaudi::Property<double> m_thetaMaxRP{this, "thetaMaxRP", 5e-3};
-  Gaudi::Property<double> m_pMinRP{this, "thetaMaxRP", 60};
+  Gaudi::Property<double> m_pMinRP{this, "pMinRP", 60};
   // B0
   Gaudi::Property<double> m_thetaMinB0{this, "thetaMinB0", 6.0e-3};
   Gaudi::Property<double> m_thetaMaxB0{this, "thetaMaxB0", 20.0e-3};
@@ -44,8 +44,8 @@ public:
   Gaudi::Property<double> m_thetaMaxFullOMD{this, "thetaMaxFullOMD", 2e-3};
   Gaudi::Property<double> m_thetaMinPartialOMD{this, "thetaMinPartialOMD", 2.0e-3};
   Gaudi::Property<double> m_thetaMaxPartialOMD{this, "thetaMaxPartialOMD", 5.0e-3};
-  Gaudi::Property<double> m_pMinOMD{this, "thetaMaxRP", 25.};
-  Gaudi::Property<double> m_pMaxOMD{this, "thetaMaxRP", 60.};
+  Gaudi::Property<double> m_pMinOMD{this, "pMinOMD", 25.};
+  Gaudi::Property<double> m_pMaxOMD{this, "pMaxOMD", 60.};
 
   Rndm::Numbers m_gaussDist;
 
@@ -185,7 +185,7 @@ private:
       if (part.pdgID() != 2212) {
         continue;
       }
-      if (part.ps().theta() < m_thetaMinRP || part.ps().theta() > m_thetaMaxRP) {
+      if (part.ps().theta() < m_thetaMinRP || part.ps().theta() > m_thetaMaxRP || part.ps().mag() < m_pMinRP) {
         continue;
       }
       rc.push_back(smearMomentum(part));
@@ -211,6 +211,11 @@ private:
       if (part.pdgID() != 2212) {
         continue;
       }
+      // momentum cut
+      if (part.ps().mag() < m_pMinOMD || part.ps().mag() > m_pMaxOMD) {
+        continue;
+      }
+      // angle cut
       const double phi          = (part.ps().phi() < M_PI) ? part.ps().phi() : part.ps().phi() - 2 * M_PI;
       const bool in_small_angle = (part.ps().theta() > m_thetaMinFullOMD && part.ps().theta() < m_thetaMaxFullOMD);
       const bool in_large_angle =

@@ -23,6 +23,7 @@ gaudi_add_module(JugRecoPlugins
   src/components/EcalTungstenSamplingCluster.cpp
   src/components/EnergyPositionClusterMerger.cpp
   src/components/ClusterRecoCoG.cpp 
+  src/components/ParticleCollector.cpp
   src/components/ParticlesWithTruthPID.cpp
   src/components/PhotoMultiplierReco.cpp 
   src/components/PhotoRingClusters.cpp 
