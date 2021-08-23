@@ -80,6 +80,7 @@ public:
       h_phi.SetBinContent(max_bin, 0.0); // zero bin and continue
     }
     (*n_proto_tracks) = max_bins.size();
+    debug() << " Found " << (*n_proto_tracks) << " proto tracks." << endmsg;
     // 4. Group hits peaked in phi
     //
     // 5. profit
