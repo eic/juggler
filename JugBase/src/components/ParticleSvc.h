@@ -1,9 +1,11 @@
 #ifndef PARTICLESVC_H
 #define PARTICLESVC_H
 
+#include <map>
+
+#include "GaudiKernel/Service.h"
 
 #include "JugBase/IParticleSvc.h"
-#include "GaudiKernel/Service.h"
 
 /** Simple particle service.
  *
@@ -19,7 +21,7 @@ public:
   ParticleMap m_particleMap;
 
 public:
-  ParticleSvc(const std::string& name, ISvcLocator* svc) ;
+  ParticleSvc(const std::string& name, ISvcLocator* svc);
 
   virtual ~ParticleSvc();
 
@@ -27,10 +29,10 @@ public:
   virtual StatusCode finalize() final { return StatusCode::SUCCESS; }
 
   virtual ParticleMap particleMap() const { return m_particleMap; }
-  virtual Particle    particle(int pdg) const
-  {
+  virtual Particle particle(int pdg) const {
     if (m_particleMap.count(pdg) == 0) {
       // error
+      return m_particleMap.at(0);
     }
     return m_particleMap.at(pdg);
   }

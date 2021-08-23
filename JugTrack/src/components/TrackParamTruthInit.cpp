@@ -9,6 +9,7 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
+#include "JugBase/IParticleSvc.h"
 #include "JugTrack/Track.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Definitions/Common.hpp"
@@ -45,6 +46,8 @@ namespace Jug::Reco {
     DataHandle<TrackParametersContainer>         m_outputInitialTrackParameters{"outputInitialTrackParameters",
                                                                         Gaudi::DataHandle::Writer, this};
 
+    SmartIF<IParticleSvc> m_pidSvc;
+
   public:
     TrackParamTruthInit(const std::string& name, ISvcLocator* svcLoc)
         : GaudiAlgorithm(name, svcLoc) {
@@ -53,11 +56,20 @@ namespace Jug::Reco {
     }
 
     StatusCode initialize() override {
-      if (GaudiAlgorithm::initialize().isFailure())
+      if (GaudiAlgorithm::initialize().isFailure()) {
         return StatusCode::FAILURE;
+      }
       IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
-      if(!randSvc)
+      if (!randSvc) {
         return StatusCode::FAILURE;
+      }
+      m_pidSvc = service("ParticleSvc");
+      if (!m_pidSvc) {
+        error() << "Unable to locate Particle Service. "
+                << "Make sure you have ParticleSvc in the configuration."
+                << endmsg;
+        return StatusCode::FAILURE;
+      }
       return StatusCode::SUCCESS;
     }
 
@@ -82,7 +94,9 @@ namespace Jug::Reco {
         const double p = part.ps().mag() * GeV;
 
         // get the particle charge
-        const double charge = part.charge();
+        // note that we cannot trust the mcparticles charge, as DD4hep
+        // sets this value to zero! let's lookup by PDGID instead
+        const double charge = m_pidSvc->particle(part.pdgID()).charge;
 
         // build some track cov matrix
         Acts::BoundSymMatrix cov                    = Acts::BoundSymMatrix::Zero();
