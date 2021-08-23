@@ -101,7 +101,7 @@ juggler:default:
                    --build-arg EICD_VERSION=${EICD_VERSION}
                    --build-arg DETECTOR_VERSION=${DETECTOR_VERSION}
                    --build-arg IP6_VERSION=${IP6_VERSION}
-                   --build-arg JUG_VERSION=juggler-${INTERNAL_TAG}-$(git rev-parse HEAD)
+                   --build-arg JUG_VERSION=juggler-${INTERNAL_TAG}-$(date +%Y-%m-%d_%H-%M-%S)-$(git rev-parse HEAD)
                    eic_container/containers/jug
     - |
       if [ "$CI_COMMIT_BRANCH" == "master" ]; then
