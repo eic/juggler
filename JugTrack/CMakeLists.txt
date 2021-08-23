@@ -11,6 +11,8 @@ find_library(genfit2 genfit2 /usr/local/lib REQUIRED)
 file(GLOB JugTrackPlugins_sources src/components/*.cpp)
 gaudi_add_module(JugTrackPlugins
   SOURCES
+  src/components/ConformalXYPeakProtoTracks.cpp
+  src/components/FinderAlgoTemplate.cpp 
   src/components/GenFitTrackFitter.cpp 
   src/components/SingleTrackSourceLinker.cpp 
   src/components/TrackerSourceLinker.cpp 
