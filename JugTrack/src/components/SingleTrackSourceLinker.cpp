@@ -87,7 +87,9 @@ namespace Jug::Reco {
       ProtoTrack track;
       track.reserve((*hits).size());
 
-      debug() << (*hits).size() << " hits " << endmsg;
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << (*hits).size() << " hits " << endmsg;
+      }
       int ihit = 0;
       for (const auto& ahit : *hits) {
 
@@ -97,7 +99,9 @@ namespace Jug::Reco {
         auto       vol_id  = vol_ctx->identifier;
         const auto is      = m_geoSvc->surfaceMap().find(vol_id);
         if (is == m_geoSvc->surfaceMap().end()) {
-          debug() << " vol_id (" << vol_id << ")  not found in m_surfaces!!!!" << endmsg;
+          if (msgLevel(MSG::DEBUG)) {
+            debug() << " vol_id (" << vol_id << ")  not found in m_surfaces!!!!" << endmsg;
+          }
           continue;
         }
         const Acts::Surface* surface = is->second;
@@ -115,15 +119,17 @@ namespace Jug::Reco {
                                             {ahit.position().x, ahit.position().y, ahit.position().z}, {0, 0, 0})
                             .value();
 
-        debug() << "===== Debugging hit =====" << endmsg;
-        debug() << "DD4hep global pos (" << ahit.position().x << "," << ahit.position().y << "," << ahit.position().z
-                << ")" << endmsg;
-        debug() << "DD4hep local  pos (" << local_pos.x() << "," << local_pos.y() << "," << local_pos.z() << ")"
-                << endmsg;
-        debug() << "ACTS local position : (" << acts_pos[0] << "," << acts_pos[1] << ")" << endmsg;
-        debug() << "ACTS surface center : " << surface->center(Acts::GeometryContext()).transpose() << endmsg;
-        debug() << "DD4hep DetElement center : "
-                << detelem.nominal().localToWorld(detelem.placement().position()) / dd4hep::mm << endmsg;
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << "===== Debugging hit =====" << endmsg;
+          debug() << "DD4hep global pos (" << ahit.position().x << "," << ahit.position().y << "," << ahit.position().z
+                  << ")" << endmsg;
+          debug() << "DD4hep local  pos (" << local_pos.x() << "," << local_pos.y() << "," << local_pos.z() << ")"
+                  << endmsg;
+          debug() << "ACTS local position : (" << acts_pos[0] << "," << acts_pos[1] << ")" << endmsg;
+          debug() << "ACTS surface center : " << surface->center(Acts::GeometryContext()).transpose() << endmsg;
+          debug() << "DD4hep DetElement center : "
+                  << detelem.nominal().localToWorld(detelem.placement().position()) / dd4hep::mm << endmsg;
+        }
         // construct the vector of measured parameters (2d position in this case)
         Acts::Vector2 pos(acts_pos.x(), acts_pos.y());
 

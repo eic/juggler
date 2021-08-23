@@ -102,7 +102,9 @@ namespace Jug::Reco {
 
         auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3{0,0,0});
 
-        debug() << "Invoke track finding seeded by truth particle with p = " << p/GeV  << " GeV" << endmsg;
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << "Invoke track finding seeded by truth particle with p = " << p / GeV << " GeV" << endmsg;
+        }
 
         // add both charges to the track candidate...
         init_trk_params->push_back({pSurface, params,  1});

@@ -123,7 +123,11 @@ namespace Jug::Reco {
         init_trk_params->push_back({pSurface, params, charge,cov});
         // std::make_optional(std::move(cov))
 
-        debug() << "Invoke track finding seeded by truth particle with p = " << p/GeV  << " GeV" << endmsg;
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << "Invoke track finding seeded by truth particle with p = " << p / GeV << " GeV" << endmsg;
+          debug() << "                                              charge = " << charge << endmsg;
+          debug() << "                                                 q/p = " << charge / p << endmsg;
+        }
         //Acts::BoundMatrix cov           = Acts::BoundMatrix::Zero();
         //cov(Acts::eLOC_0, Acts::eLOC_0) = ahit.covMatrix(0)*ahit.covMatrix(0);
         //cov(Acts::eLOC_1, Acts::eLOC_1) = ahit.covMatrix(1)*ahit.covMatrix(1);

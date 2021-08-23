@@ -112,7 +112,9 @@ namespace Jug::Reco {
       //sourceLinks->reserve(hits->size());
       //measurements->reserve(hits->size());
 
-      debug() << "   m_trackerHitCollections  size :  " << m_trackerHitCollections.size() << endmsg;
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << "   m_trackerHitCollections  size :  " << m_trackerHitCollections.size() << endmsg;
+      }
 
       int ihit = 0;
       for(const auto col : m_trackerHitCollections) {
@@ -120,7 +122,9 @@ namespace Jug::Reco {
         const eic::TrackerHitCollection* hits = col->get();
         // const eic::TrackerHitCollection* hits = get<eic::TrackerHitCollection>("/Event/"+ col);
 
-        debug() << (*hits).size() << " hits " << endmsg;
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << (*hits).size() << " hits " << endmsg;
+        }
         for (const auto& ahit : *hits) {
 
           allHits->push_back(ahit.clone());
@@ -133,11 +137,15 @@ namespace Jug::Reco {
           auto       vol_id  = vol_ctx->identifier;
           const auto is      = m_surfaces.find(vol_id);
           if (is == m_surfaces.end()) {
-            debug() << " vol_id (" << vol_id << ")  not found in m_surfaces." << endmsg;
+            if (msgLevel(MSG::DEBUG)) {
+              debug() << " vol_id (" << vol_id << ")  not found in m_surfaces." << endmsg;
+            }
             continue;
           }
           const Acts::Surface* surface = is->second;
-          debug() << " surface center : " << surface->center(Acts::GeometryContext()) << endmsg;
+          if (msgLevel(MSG::DEBUG)) {
+            debug() << " surface center : " << surface->center(Acts::GeometryContext()) << endmsg;
+          }
 //=======
 //
 //          //allHits->push_back(ahit.clone());

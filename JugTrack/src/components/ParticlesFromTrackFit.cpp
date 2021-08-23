@@ -70,7 +70,9 @@ namespace Jug::Reco {
       auto rec_parts = m_outputParticles.createAndPut();
       auto track_pars = m_outputTrackParameters.createAndPut();
 
-      debug() << std::size(*trajectories) << " trajectories " << endmsg;
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << std::size(*trajectories) << " trajectories " << endmsg;
+      }
 
       // Loop over the trajectories
         for (size_t itraj = 0; itraj < trajectories->size(); ++itraj) {
@@ -81,7 +83,9 @@ namespace Jug::Reco {
           const auto& mj        = traj.multiTrajectory();
           const auto& trackTips = traj.tips();
           if (trackTips.empty()) {
-            debug() << "Empty multiTrajectory." << endmsg;
+            if (msgLevel(MSG::DEBUG)) {
+              debug() << "Empty multiTrajectory." << endmsg;
+            }
             continue;
           }
 
@@ -100,20 +104,20 @@ namespace Jug::Reco {
             const auto& boundParam = traj.trackParameters(trackTip);
             const auto& parameter  = boundParam.parameters();
             const auto& covariance = *boundParam.covariance();
-            debug() << "loc 0 = " << parameter[Acts::eBoundLoc0] << endmsg;
-            debug() << "loc 1 = " << parameter[Acts::eBoundLoc1] << endmsg;
-            debug() << "phi   = " << parameter[Acts::eBoundPhi] << endmsg;
-            debug() << "theta = " << parameter[Acts::eBoundTheta] << endmsg;
-            debug() << "q/p   = " << parameter[Acts::eBoundQOverP] << endmsg;
-            debug() << "p     = " << 1.0 / parameter[Acts::eBoundQOverP] << endmsg;
+            if (msgLevel(MSG::DEBUG)) {
+              debug() << "loc 0 = " << parameter[Acts::eBoundLoc0] << endmsg;
+              debug() << "loc 1 = " << parameter[Acts::eBoundLoc1] << endmsg;
+              debug() << "phi   = " << parameter[Acts::eBoundPhi] << endmsg;
+              debug() << "theta = " << parameter[Acts::eBoundTheta] << endmsg;
+              debug() << "q/p   = " << parameter[Acts::eBoundQOverP] << endmsg;
+              debug() << "p     = " << 1.0 / parameter[Acts::eBoundQOverP] << endmsg;
 
-            debug() << "err phi = " << sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)) << endmsg;
-            debug() << "err th  = " << sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta))
-                    << endmsg;
-            debug() << "err q/p = " << sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP))
-                    << endmsg;
+              debug() << "err phi = " << sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)) << endmsg;
+              debug() << "err th  = " << sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)) << endmsg;
+              debug() << "err q/p = " << sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)) << endmsg;
 
-            debug() << " chi2 = " << trajState.chi2Sum << endmsg;
+              debug() << " chi2 = " << trajState.chi2Sum << endmsg;
+            }
 
             eic::TrackParameters pars{
               ID++,
@@ -131,7 +135,9 @@ namespace Jug::Reco {
           }
 
           auto tsize = trackTips.size();
-          debug() << "# fitted parameters : " << tsize << endmsg;
+          if (msgLevel(MSG::DEBUG)) {
+            debug() << "# fitted parameters : " << tsize << endmsg;
+          }
           if (tsize == 0)
             continue;
 
@@ -141,9 +147,13 @@ namespace Jug::Reco {
             auto params = trackstate.predicted(); //<< endmsg;
 
             double p0 = (1.0 / params[Acts::eBoundQOverP]) / Acts::UnitConstants::GeV;
-            debug() << "track predicted p = " << p0 << " GeV" << endmsg;
+            if (msgLevel(MSG::DEBUG)) {
+              debug() << "track predicted p = " << p0 << " GeV" << endmsg;
+            }
             if (std::abs(p0) > 500) {
-              debug() << "skipping" << endmsg;
+              if (msgLevel(MSG::DEBUG)) {
+                debug() << "skipping" << endmsg;
+              }
               return;
             }
 

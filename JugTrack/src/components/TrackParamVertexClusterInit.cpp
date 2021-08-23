@@ -78,7 +78,9 @@ namespace Jug::Reco {
 
         double p_cluster = c.energy()*GeV;
         if( p_cluster/GeV < 0.1) {
-          debug() << " skipping cluster with energy " << p_cluster/GeV << " GeV" << endmsg;
+          if (msgLevel(MSG::DEBUG)) {
+            debug() << " skipping cluster with energy " << p_cluster / GeV << " GeV" << endmsg;
+          }
           continue;
         }
 

@@ -95,7 +95,9 @@ namespace Jug::Reco {
     // this should be returning a const&
     auto detPlaneMap = m_geoSvc->getDetPlaneMap();
 
-    debug() << "Single track mom : " << single_track_param.absoluteMomentum() << endmsg;
+    if (msgLevel(MSG::DEBUG)) {
+      debug() << "Single track mom : " << single_track_param.absoluteMomentum() << endmsg;
+    }
     if (hits->size() < 2) {
       return StatusCode::SUCCESS;
     }
@@ -116,7 +118,9 @@ namespace Jug::Reco {
     // create track
     genfit::Track fitTrack(rep, pos, mom);
 
-    debug() << (*hits).size() << " hits " << endmsg;
+    if (msgLevel(MSG::DEBUG)) {
+      debug() << (*hits).size() << " hits " << endmsg;
+    }
     int ihit = 0;
     for (const auto& ahit : *hits) {
 

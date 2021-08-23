@@ -97,7 +97,9 @@ namespace Jug::Reco {
           auto       vol_id  = vol_ctx->identifier;
           const auto is      = m_geoSvc->surfaceMap().find(vol_id);
           if (is == m_geoSvc->surfaceMap().end()) {
-            debug() << " vol_id (" << vol_id << ")  not found in m_surfaces." << endmsg;
+            if (msgLevel(MSG::DEBUG)) {
+              debug() << " vol_id (" << vol_id << ")  not found in m_surfaces." << endmsg;
+            }
             continue;
           }
           const Acts::Surface* surface = is->second;
@@ -124,9 +126,11 @@ namespace Jug::Reco {
           ihit++;
         }
       }
-      debug() << fmt::format("{:d} hits linked from collections [{}]",
-                             ihit, fmt::join(u_inputHitCollections.value(), ", "))
-              << endmsg;
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << fmt::format("{:d} hits linked from collections [{}]", ihit,
+                               fmt::join(u_inputHitCollections.value(), ", "))
+                << endmsg;
+      }
       return StatusCode::SUCCESS;
     }
 

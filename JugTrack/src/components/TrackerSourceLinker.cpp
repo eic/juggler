@@ -83,14 +83,18 @@ namespace Jug::Reco {
       sourceLinks->reserve(hits->size());
       measurements->reserve(hits->size());
 
-      debug() << (*hits).size() << " hits " << endmsg;
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << (*hits).size() << " hits " << endmsg;
+      }
       int ihit = 0;
       for(const auto& ahit : *hits) {
 
         Acts::SymMatrix2 cov = Acts::SymMatrix2::Zero();
         cov(0,0) = ahit.covMatrix().xx*mm_acts*mm_acts; // note mm = 1 (Acts)
         cov(1,1) = ahit.covMatrix().yy*mm_acts*mm_acts;
-        debug() << "cov matrix:\n" << cov << endmsg;
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << "cov matrix:\n" << cov << endmsg;
+        }
 
         auto vol_ctx   = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID());
         auto vol_id    = vol_ctx->identifier;
@@ -118,10 +122,13 @@ namespace Jug::Reco {
         loc[Acts::eBoundLoc0] = pos[0];
         loc[Acts::eBoundLoc1] = pos[1];
 
-        debug() << "  dd4hep loc pos  : " <<  local_position.x() << " "<< local_position.y() << " " << local_position.z()  << endmsg;
-        debug() << "   surface center :" << surface->center(Acts::GeometryContext()).transpose() << endmsg;
-        debug() << "acts local center :" << pos.transpose() << endmsg;
-        debug() << "     acts loc pos : " << loc[Acts::eBoundLoc0] << ", " << loc[Acts::eBoundLoc1] <<  endmsg;
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << "  dd4hep loc pos  : " << local_position.x() << " " << local_position.y() << " "
+                  << local_position.z() << endmsg;
+          debug() << "   surface center :" << surface->center(Acts::GeometryContext()).transpose() << endmsg;
+          debug() << "acts local center :" << pos.transpose() << endmsg;
+          debug() << "     acts loc pos : " << loc[Acts::eBoundLoc0] << ", " << loc[Acts::eBoundLoc1] << endmsg;
+        }
 
         // the measurement container is unordered and the index under which the
         // measurement will be stored is known before adding it.

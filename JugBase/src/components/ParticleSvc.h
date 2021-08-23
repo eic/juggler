@@ -18,7 +18,7 @@ public:
   using Particle    = Jug::Base::ParticleData;
   using ParticleMap = std::map<int, Particle>;
 
-  ParticleMap m_particleMap;
+  const ParticleMap m_particleMap;
 
 public:
   ParticleSvc(const std::string& name, ISvcLocator* svc);

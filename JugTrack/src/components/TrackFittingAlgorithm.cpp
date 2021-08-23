@@ -112,8 +112,10 @@ namespace Jug::Reco {
     std::vector<IndexSourceLink>      trackSourceLinks;
     std::vector<const Acts::Surface*> surfSequence;
 
-    debug() << "initialParams size:  " << initialParameters->size() << endmsg;
-    debug() << "measurements size:  " << measurements->size() << endmsg;
+    if (msgLevel(MSG::DEBUG)) {
+      debug() << "initialParams size:  " << initialParameters->size() << endmsg;
+      debug() << "measurements size:  " << measurements->size() << endmsg;
+    }
 
     // Perform the track finding for each starting parameter
     // @TODO: use seeds from track seeding algorithm as starting parameter
@@ -124,14 +126,18 @@ namespace Jug::Reco {
       const auto& protoTrack    = (*protoTracks)[itrack];
       const auto& initialParams = (*initialParameters)[itrack];
 
-      debug() << "protoTrack size:  " << protoTrack.size() << endmsg;
-      debug() << "sourceLinks size:  " << sourceLinks->size() << endmsg;
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << "protoTrack size:  " << protoTrack.size() << endmsg;
+        debug() << "sourceLinks size:  " << sourceLinks->size() << endmsg;
+      }
 
       trackSourceLinks.clear();
       trackSourceLinks.reserve(protoTrack.size());
 
       for (auto hitIndex : protoTrack) {
-        debug() << " hit  index = " << hitIndex << endmsg;
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << " hit  index = " << hitIndex << endmsg;
+        }
         auto sourceLink = sourceLinks->nth(hitIndex);
         auto geoId      = sourceLink->geometryId();
         if (sourceLink == sourceLinks->end()) {
@@ -143,9 +149,13 @@ namespace Jug::Reco {
         //surfSequence.push_back(m_cfg.trackingGeometry->findSurface(geoId));
       }
 
-      debug() << "Invoke track fitting ...  " << itrack << endmsg;
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << "Invoke track fitting ...  " << itrack << endmsg;
+      }
       auto result = fitTrack(trackSourceLinks, initialParams, kfOptions);
-      debug() << "fitting done." << endmsg;
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << "fitting done." << endmsg;
+      }
       // if (result.ok()) {
       //  // Get the track finding output object
       //  const auto& trackFindingOutput = result.value();

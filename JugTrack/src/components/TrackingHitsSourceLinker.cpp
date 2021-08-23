@@ -102,7 +102,9 @@ namespace Jug::Reco {
       for (const auto& handle : m_inputHandles) {
         // input collection
         const eic::TrackerHitCollection* hits = handle->get();
-        debug() << (*hits).size() << " hits " << endmsg;
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << (*hits).size() << " hits " << endmsg;
+        }
 
         for (const auto& ahit : *hits) {
 
@@ -115,17 +117,23 @@ namespace Jug::Reco {
 
           auto vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID());
           auto vol_id  = vol_ctx->identifier;
-          debug() << " vol_id       : " << vol_id << endmsg;
-          debug() << " placment pos : " << vol_ctx->volumePlacement().position() << endmsg;
+          if (msgLevel(MSG::DEBUG)) {
+            debug() << " vol_id       : " << vol_id << endmsg;
+            debug() << " placment pos : " << vol_ctx->volumePlacement().position() << endmsg;
+          }
 
           const auto is = m_surfaces.find(vol_id);
           if (is == m_surfaces.end()) {
-            debug() << " vol_id (" << vol_id << ")  not found in m_surfaces." << endmsg;
+            if (msgLevel(MSG::DEBUG)) {
+              debug() << " vol_id (" << vol_id << ")  not found in m_surfaces." << endmsg;
+            }
             continue;
           }
           const Acts::Surface* surface = is->second;
 
-          debug() << " surface center : " << surface->center(Acts::GeometryContext()) << endmsg;
+          if (msgLevel(MSG::DEBUG)) {
+            debug() << " surface center : " << surface->center(Acts::GeometryContext()) << endmsg;
+          }
           // transform global position into local coordinates
           Acts::Vector2D pos(0, 0);
           // geometry context contains nothing here
@@ -135,7 +143,9 @@ namespace Jug::Reco {
           Acts::BoundVector loc = Acts::BoundVector::Zero();
           loc[Acts::eBoundLoc0] = pos[0];
           loc[Acts::eBoundLoc0] = pos[1];
-          debug() << "loc : (" << loc[0] << ", " << loc[1] << ")" << endmsg;
+          if (msgLevel(MSG::DEBUG)) {
+            debug() << "loc : (" << loc[0] << ", " << loc[1] << ")" << endmsg;
+          }
 
           // create source link at the end of the container
           auto it = source_links->emplace_hint(source_links->end(), *surface, 2, loc, cov);
