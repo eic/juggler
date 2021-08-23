@@ -47,6 +47,9 @@ public:
   Gaudi::Property<double> m_pMinOMD{this, "pMinOMD", 25.};
   Gaudi::Property<double> m_pMaxOMD{this, "pMaxOMD", 60.};
 
+  // Crossing angle, set to -25mrad
+  Gaudi::Property<double> m_crossingAngle{this, "crossingAngle", -0.025};
+
   Rndm::Numbers m_gaussDist;
 
   DummyFarForwardParticles(const std::string& name, ISvcLocator* svcLoc)
@@ -102,25 +105,26 @@ private:
         continue;
       }
       // only detect neutrons and photons
+      const auto mom_ion = rotateLabToIonDirection(part.ps());
       if (part.pdgID() != 2112 && part.pdgID() != 22) {
         continue;
       }
       // only 0-->4.5 mrad
-      if (part.ps().theta() > 4.5 / 1000.) {
+      if (mom_ion.theta() > 4.5 / 1000.) {
         continue;
       }
       const double E    = std::hypot(part.ps().mag(), part.mass());
       const double dE   = sqrt((0.05 * E) * (0.05 * E) + 0.5 * 0.5 * E) * m_gaussDist();
       const double Es   = E + dE;
-      const double th   = part.ps().theta();
+      const double th   = mom_ion.theta();
       const double dth  = (3e-3 / sqrt(E)) * m_gaussDist();
       const double ths  = th + dth;
-      const double phi  = part.ps().phi();
+      const double phi  = mom_ion.phi();
       const double dphi = 0;
       const double phis = phi + dphi;
-
       const double moms = sqrt(Es * Es - part.mass() * part.mass());
-      const eic::VectorPolar mom3s{moms, ths, phis};
+      const eic::VectorPolar mom3s_ion{moms, ths, phis};
+      const auto mom3s = rotateIonToLabDirection(mom3s_ion);
       eic::ReconstructedParticle rec_part{part.ID(),
                                           mom3s,
                                           {part.vs().x, part.vs().y, part.vs().z},
@@ -158,7 +162,8 @@ private:
         continue;
       }
       // only 6-->20 mrad
-      if (part.ps().theta() < m_thetaMinB0 || part.ps().theta() > m_thetaMaxB0) {
+      const auto mom_ion = rotateLabToIonDirection(part.ps());
+      if (mom_ion.theta() < m_thetaMinB0 || mom_ion.theta() > m_thetaMaxB0) {
         continue;
       }
       rc.push_back(smearMomentum(part));
@@ -185,7 +190,8 @@ private:
       if (part.pdgID() != 2212) {
         continue;
       }
-      if (part.ps().theta() < m_thetaMinRP || part.ps().theta() > m_thetaMaxRP || part.ps().mag() < m_pMinRP) {
+      const auto mom_ion = rotateLabToIonDirection(part.ps());
+      if (mom_ion.theta() < m_thetaMinRP || mom_ion.theta() > m_thetaMaxRP || mom_ion.mag() < m_pMinRP) {
         continue;
       }
       rc.push_back(smearMomentum(part));
@@ -211,15 +217,14 @@ private:
       if (part.pdgID() != 2212) {
         continue;
       }
-      // momentum cut
-      if (part.ps().mag() < m_pMinOMD || part.ps().mag() > m_pMaxOMD) {
+      const auto mom_ion = rotateLabToIonDirection(part.ps());
+      if (mom_ion.mag() < m_pMinOMD || mom_ion.mag() > m_pMaxOMD) {
         continue;
       }
       // angle cut
-      const double phi          = (part.ps().phi() < M_PI) ? part.ps().phi() : part.ps().phi() - 2 * M_PI;
-      const bool in_small_angle = (part.ps().theta() > m_thetaMinFullOMD && part.ps().theta() < m_thetaMaxFullOMD);
-      const bool in_large_angle =
-          (part.ps().theta() > m_thetaMinPartialOMD && part.ps().theta() < m_thetaMaxPartialOMD);
+      const double phi          = (mom_ion.phi() < M_PI) ? mom_ion.phi() : mom_ion.phi() - 2 * M_PI;
+      const bool in_small_angle = (mom_ion.theta() > m_thetaMinFullOMD && mom_ion.theta() < m_thetaMaxFullOMD);
+      const bool in_large_angle = (mom_ion.theta() > m_thetaMinPartialOMD && mom_ion.theta() < m_thetaMaxPartialOMD);
       if (!in_small_angle || (std::abs(phi) > 1 && !in_large_angle)) {
         continue;
       }
@@ -239,18 +244,21 @@ private:
   // all momentum smearing in EIC-smear for the far-forward region uses
   // the same 2 relations for P and Pt smearing (B0, RP, OMD)
   eic::ReconstructedParticle smearMomentum(const dd4pod::ConstGeant4Particle& part) {
-    const double p  = part.ps().mag();
-    const double dp = (0.005 * p) * m_gaussDist();
-    const double ps = p + dp;
+    const auto mom_ion = rotateLabToIonDirection(part.ps());
+    const double p     = mom_ion.mag();
+    const double dp    = (0.005 * p) * m_gaussDist();
+    const double ps    = p + dp;
 
-    const double pt  = std::hypot(part.ps().x, part.ps().y);
+    const double pt  = std::hypot(mom_ion.x, mom_ion.y);
     const double dpt = (0.03 * pt) * m_gaussDist();
     // just apply relative smearing on px and py
-    const double pxs = part.ps().x + (1 + dpt / pt);
-    const double pys = part.ps().y + (1 + dpt / pt);
+    const double pxs = mom_ion.x + (1 + dpt / pt);
+    const double pys = mom_ion.y + (1 + dpt / pt);
     // now get pz
-    const double pzs      = sqrt(ps * ps - pxs * pxs - pys * pys);
-    eic::VectorXYZ psmear = {pxs, pys, pzs};
+    const double pzs = sqrt(ps * ps - pxs * pxs - pys * pys);
+    // And build our 3-vector
+    const eic::VectorXYZ psmear_ion = {pxs, pys, pzs};
+    const auto psmear               = rotateIonToLabDirection(psmear_ion);
     return {part.ID(),
             psmear,
             {part.vs().x, part.vs().y, part.vs().z},
@@ -263,6 +271,25 @@ private:
             static_cast<float>(ps),
             static_cast<float>(std::hypot(psmear.mag(), part.mass())),
             static_cast<float>(part.mass())};
+  }
+
+  // Rotate 25mrad about the y-axis
+  eic::VectorXYZ rotateLabToIonDirection(const eic::VectorXYZ& vec) const {
+    const double sth = sin(-m_crossingAngle);
+    const double cth = cos(-m_crossingAngle);
+    return {cth * vec.x + sth * vec.z, vec.y, -sth * vec.x + cth * vec.z};
+  }
+  eic::VectorXYZ rotateLabToIonDirection(const dd4pod::VectorXYZ& vec) const {
+    return rotateLabToIonDirection(eic::VectorXYZ{vec.x, vec.y, vec.z});
+  }
+
+  eic::VectorXYZ rotateIonToLabDirection(const eic::VectorXYZ& vec) const {
+    const double sth = sin(m_crossingAngle);
+    const double cth = cos(m_crossingAngle);
+    return {cth * vec.x + sth * vec.z, vec.y, -sth * vec.x + cth * vec.z};
+  }
+  eic::VectorXYZ rotateIonToLabDirection(const dd4pod::VectorXYZ& vec) const {
+    return rotateIonToLabDirection(eic::VectorXYZ{vec.x, vec.y, vec.z});
   }
 
 }; // namespace Jug::Reco
