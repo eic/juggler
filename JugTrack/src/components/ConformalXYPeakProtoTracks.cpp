@@ -84,8 +84,19 @@ public:
       debug() << " Found " << (*n_proto_tracks) << " proto tracks." << endmsg;
     }
     // 4. Group hits peaked in phi
-    //
-    // 5. profit
+    for(auto b : max_bins) {
+      Jug::ProtoTrack proto_track; // this is just a std::vector<int>
+      for(int ihit = 0 ; ihit< hits->size() ; ihit++) {
+        double phi = conformal_hits[ihit].phi();
+        double bin_phi = h_phi.GetXaxis()->GetBinCenter(b);
+        double bin_width = h_phi.GetXaxis()->GetBinWidth(b); /// \todo make bin width an algo parameter
+        if (std::abs(phi - bin_phi) < bin_width/2.0) {
+          proto_track.push_back(ihit);
+        }
+      }
+      proto_tracks->push_back(proto_track);
+    }
+    // 5. profit!
 
     return StatusCode::SUCCESS;
   }
