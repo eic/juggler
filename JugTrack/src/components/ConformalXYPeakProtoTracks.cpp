@@ -31,6 +31,8 @@ public:
   DataHandle<Jug::ProtoTrackContainer> m_outputProtoTracks{"outputProtoTracks", Gaudi::DataHandle::Writer, this};
   DataHandle<int> m_nProtoTracks{"nProtoTracks", Gaudi::DataHandle::Writer, this};
 
+  Gaudi::Property<int> m_nPhiBins{this, "nPhiBins", 100};
+
   using ConformalHit = ROOT::Math::XYVector;
 
 public:
@@ -57,7 +59,7 @@ public:
 
     ConformalHit ref_hit(0.0,0.0); // future versions will improve on this.
 
-    TH1F h_phi("h_phi",";phi",100,-M_PI,M_PI);
+    TH1F h_phi("h_phi",";phi",m_nPhiBins.value(),-M_PI,M_PI);
 
     // 1. conformal XY transform hits
     // 2. fill histogram with phi
