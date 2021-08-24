@@ -32,8 +32,7 @@ namespace Jug::Reco {
 
   /** Genfit based tracking algorithm.
    *
-   * \ingroup track
-   * \ingroup tracker
+   * \ingroup tracking
    */
   class GenFitTrackFitter : public GaudiAlgorithm {
   public:

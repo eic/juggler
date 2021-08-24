@@ -37,7 +37,6 @@ namespace Jug::Reco {
 
   /** Extrac the particles form fit trajectories.
    *
-   * \ingroup track
    * \ingroup tracking
    */
    class ParticlesFromTrackFit : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {

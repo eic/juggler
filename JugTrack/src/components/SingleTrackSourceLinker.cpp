@@ -36,7 +36,6 @@ namespace Jug::Reco {
    *
    * This algorithm assumes only single track events.
    *
-   * \ingroup track
    * \ingroup tracking
    */
   class SingleTrackSourceLinker : public GaudiAlgorithm {

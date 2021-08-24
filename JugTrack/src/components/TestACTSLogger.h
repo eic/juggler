@@ -10,7 +10,7 @@
 
 /** Logging for ACTS.
  *
- * \ingroup track
+ * \ingroup tracking
  */
 class TestACTSLogger : public GaudiAlgorithm {
 public:

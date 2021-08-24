@@ -15,7 +15,6 @@ gaudi_add_library(JugBase
   src/KeepDropSwitch.cpp
   src/Utilities/Helpers.cpp
   src/Utilities/Paths.cpp
-  src/Utilities/Options.cpp
   src/Plugins/DD4hepBField.cpp
   LINK
   Gaudi::GaudiKernel Gaudi::GaudiAlgLib

@@ -25,7 +25,7 @@ namespace {
 
   /** Fitter implmentation .
    *
-   * \ingroup track
+   * \ingroup tracking
    */
   template <typename track_fitter_t>
   struct TrackFitterFunctionImpl {

@@ -23,7 +23,7 @@ namespace Jug::Reco {
  *
  *  Conformal mapping which turns circles to lines.
  *
- *  \ingroup track
+ *  \ingroup tracking
  */
 class ConformalXYPeakProtoTracks : public GaudiAlgorithm {
 public:

@@ -37,7 +37,7 @@ namespace Jug::Reco {
    *
    *  TrackParmetersContainer
    *
-   *  \ingroup track
+   *  \ingroup tracking
    */
   class TrackParamClusterInit : public GaudiAlgorithm {
   public:

@@ -19,7 +19,7 @@ namespace Jug::Reco {
 
 /** Template finder.
  *
- *  \ingroup track
+ *  \ingroup tracking
  */
 class FinderAlgoTemplate : public GaudiAlgorithm {
 public:

@@ -38,7 +38,6 @@ namespace Jug::Reco {
    * It also creates "measurements" which take the hit information and creates a corresponding
    * "measurement" which contains the covariance matrix and other geometry related hit information.
    *
-   * \ingroup track
    * \ingroup tracking
    */
   class TrackerSourceLinker : public GaudiAlgorithm {

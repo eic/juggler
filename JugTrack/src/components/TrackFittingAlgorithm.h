@@ -1,31 +1,20 @@
 #ifndef JUGGLER_JUGRECO_TrackFittingAlgorithm_HH
-#define JUGGLER_JUGRECO_TrackFittingAlgorithm_HH
-
-#include "JugTrack/GeometryContainers.hpp"
-
-// Gaudi
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiKernel/ToolHandle.h"
-//#include "GaudiAlg/Transformer.h"
-//#include "GaudiAlg/GaudiTool.h"
-//#include "GaudiKernel/RndmGenerators.h"
-#include "Gaudi/Property.h"
-
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
-
-//#include "Acts/Geometry/TrackingGeometry.hpp"
-//#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
-//#include "Acts/Definitions/Common.hpp"
-//#include "Acts/Utilities/Helpers.hpp"
-//#include "Acts/Utilities/Logger.hpp"
+#define JUGGLER_JUGRECO_TrackFittingAlgorithm_HH 1
 
 #include <functional>
 #include <stdexcept>
 #include <vector>
+#include <random>
+#include <stdexcept>
 
+#include "GaudiAlg/GaudiAlgorithm.h"
+#include "GaudiKernel/ToolHandle.h"
+#include "Gaudi/Property.h"
+
+#include "JugBase/DataHandle.h"
+#include "JugBase/IGeoSvc.h"
 #include "JugBase/BField/DD4hepBField.h"
-
+#include "JugTrack/GeometryContainers.hpp"
 #include "JugTrack/IndexSourceLink.hpp"
 #include "JugTrack/Track.hpp"
 #include "JugTrack/Measurement.hpp"
@@ -33,8 +22,6 @@
 #include "JugTrack/ProtoTrack.hpp"
 
 #include "eicd/TrackerHitCollection.h"
-
-//#include "Acts/Surfaces/PerigeeSurface.hpp"
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -45,21 +32,12 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Definitions/Common.hpp"
 
-//#include "Acts/Fitter/GainMatrixSmoother.hpp"
-//#include "Acts/Fitter/GainMatrixUpdater.hpp"
-//#include "Acts/Propagator/EigenStepper.hpp"
-//#include "Acts/Propagator/Navigator.hpp"
-//#include "Acts/Propagator/Propagator.hpp"
-//#include "Acts/Definitions/Units.hpp"
-
-#include <random>
-#include <stdexcept>
 
 namespace Jug::Reco {
 
   /** Fitting algorithm implmentation .
    *
-   * \ingroup track
+   * \ingroup tracking
    */
   class TrackFittingAlgorithm : public GaudiAlgorithm {
   public:

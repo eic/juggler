@@ -1,54 +1,53 @@
 
 /**
  * \defgroup base Base
- * \defgroup digi Digitization
- * \defgroup reco Reconstruction
- * \defgroup track Tracking
+ * \brief Base support library.
  */
 
+/**
+ * \defgroup algorithms Algorithms
+ * \brief Algorithm categories.
+ */
 
-\defgroup services Services
-This is the services
-
-\defgroup subsytems Detector Subsystems
-Various subsystems
 /** 
- *    \addtogroup services 
+ * \defgroup services Services
+ * \brief Juggler global services
+ *
+ * \addtogroup services 
  */
 //@{
 
 /**
- * \defgroup geosvc Geometry Services
+ * \defgroup geosvc Geometry Service
+ * \brief Global geometry service
+ * 
  * \defgroup datasvc Data Services
- * \defgroup magsvc Magnetic Field Services
+ * \brief Data services for using eicd/podio 
+ *
  */
 
 //@}
 
 
-
 /**
- *    \addtogroup subsytems 
+ * \addtogroup algorithms 
  */
 //@{
 /**
- * \defgroup rich         RICH detectors 
- * \defgroup trackers     Trackers
- * \defgroup ecal         Electromagnetic Calorimeters
- * \defgroup hcal         Hadronic Calorimeters
- * \defgroup magnets      Magnets
- */
-//@}
-
-
-/**
- *    \addtogroup algorithms 
- */
-//@{
-/**
+ * \defgroup digi         Digitization
+ * \brief Digitization turns simulation into realistic hits
+ * 
+ * \defgroup reco         Reconstruction
+ * \brief Reconstruction takes digized hits into hits more information from geometry/calibration/alignment
+ * 
  * \defgroup tracking     Tracking
+ * \brief Tracking algorithms to find and fit tracker data
+ *  
  * \defgroup clustering   Clustering
+ * \brief Generic and detector-specific clustering algorithms
+ * 
  * \defgroup pid          Particle Identification
+ * \brief Determine the particle ID for final reconstruction
  */
 //@}
 

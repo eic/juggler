@@ -1,4 +1,3 @@
-//
 #include "TrackFindingAlgorithm.h"
 
 // Gaudi

@@ -11,7 +11,7 @@
 
 /** CKF track finding/fitting.
  *
- * \ingroup track
+ * \ingroup tracking
  */
 class TestCKFTracks : public GaudiAlgorithm {
 public:

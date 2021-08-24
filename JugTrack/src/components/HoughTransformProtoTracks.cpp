@@ -19,7 +19,7 @@ namespace Jug::Reco {
 
 /** Hough transform proto track finder.
  *
- *  \ingroup track
+ *  \ingroup tracking
  */
 class HoughTransformProtoTracks : public GaudiAlgorithm {
 public:

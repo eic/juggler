@@ -17,8 +17,9 @@ Overview
 
  - [Juggler Base](@ref base)
  - [Digitization Algorithms](@ref digi)
- - [Reconstruction Algorithms](@ref reco)
- - [Tracking Algorithms](@ref track) 
+ - [Hit Reconstruction Algorithms](@ref reco)
+ - [Tracking Algorithms](@ref tracking) 
+ - [PID Algorithms](@ref pid) 
 
 ### Internal Units
 
