@@ -15,6 +15,12 @@
 
 #include <type_traits>
 
+namespace Jug {
+using VecULong    = std::vector<unsigned long>;
+using VecVecULong = std::vector<std::vector<unsigned long>>;
+}
+
+
 /** Specialisation of the Gaudi DataHandle
  * for use with podio collections.
  *

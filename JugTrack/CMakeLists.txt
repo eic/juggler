@@ -8,6 +8,7 @@ find_package(ROOT COMPONENTS RIO Tree Core REQUIRED)
 find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 find_library(genfit2 genfit2 /usr/local/lib REQUIRED)
 
+
 file(GLOB JugTrackPlugins_sources src/components/*.cpp)
 gaudi_add_module(JugTrackPlugins
   SOURCES
@@ -39,6 +40,8 @@ gaudi_add_module(JugTrackPlugins
   ${genfit2}
 )
 
+
+
 target_include_directories(JugTrackPlugins PUBLIC
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/JugBase>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
@@ -46,6 +49,7 @@ target_include_directories(JugTrackPlugins PUBLIC
   )
 
 target_compile_options(JugTrackPlugins PRIVATE -Wno-suggest-override)
+
 
 #gaudi_add_test(loggerTest
 #               WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
