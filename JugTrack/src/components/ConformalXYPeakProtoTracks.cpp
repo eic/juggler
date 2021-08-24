@@ -53,7 +53,7 @@ public:
     const eic::TrackerHitCollection* hits = m_inputTrackerHits.get();
     // Create output collections
     auto proto_tracks = m_outputProtoTracks.createAndPut();
-    auto n_proto_tracks = m_nProtoTracks.createAndPut();
+    int n_proto_tracks = 0;
 
     std::vector<ConformalHit> conformal_hits;
 
@@ -81,14 +81,14 @@ public:
       max_bins.push_back(max_bin);
       h_phi.SetBinContent(max_bin, 0.0); // zero bin and continue
     }
-    (*n_proto_tracks) = max_bins.size();
+    n_proto_tracks = max_bins.size();
     if (msgLevel(MSG::DEBUG)) {
-      debug() << " Found " << (*n_proto_tracks) << " proto tracks." << endmsg;
+      debug() << " Found " << n_proto_tracks << " proto tracks." << endmsg;
     }
     // 4. Group hits peaked in phi
     for(auto b : max_bins) {
       Jug::ProtoTrack proto_track; // this is just a std::vector<int>
-      for(int ihit = 0 ; ihit< hits->size() ; ihit++) {
+      for(size_t ihit = 0 ; ihit< hits->size() ; ihit++) {
         double phi = conformal_hits[ihit].phi();
         double bin_phi = h_phi.GetXaxis()->GetBinCenter(b);
         double bin_width = h_phi.GetXaxis()->GetBinWidth(b); /// \todo make bin width an algo parameter
@@ -98,6 +98,7 @@ public:
       }
       proto_tracks->push_back(proto_track);
     }
+    m_nProtoTracks.put(new int{n_proto_tracks});
     // 5. profit!
 
     return StatusCode::SUCCESS;
