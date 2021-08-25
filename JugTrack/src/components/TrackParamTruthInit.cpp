@@ -97,6 +97,9 @@ namespace Jug::Reco {
         // note that we cannot trust the mcparticles charge, as DD4hep
         // sets this value to zero! let's lookup by PDGID instead
         const double charge = m_pidSvc->particle(part.pdgID()).charge;
+        if (abs(charge) < std::numeric_limits<double>::epsilon()) {
+          continue;
+        }
 
         // build some track cov matrix
         Acts::BoundSymMatrix cov                    = Acts::BoundSymMatrix::Zero();
