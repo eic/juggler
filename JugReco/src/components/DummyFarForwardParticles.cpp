@@ -57,8 +57,8 @@ public:
 
   DummyFarForwardParticles(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
-    declareProperty("inputCollection", m_inputParticles, "mcparticles");
-    declareProperty("outputCollection", m_outputParticles, "ReconstructedParticles");
+    declareProperty("inputMCParticles", m_inputParticles, "mcparticles");
+    declareProperty("outputParticles", m_outputParticles, "ReconstructedParticles");
   }
   StatusCode initialize() override {
     if (GaudiAlgorithm::initialize().isFailure())
