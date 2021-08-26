@@ -31,11 +31,11 @@ public:
   // Beam energy, only used to determine the RP/OMD momentum ranges
   Gaudi::Property<double> m_ionBeamEnergy{this, "ionBeamEnergy", 100.};
   // RP default to 10-on-100 setting
-  // P > 60% of beam energy (60% x 100GeV = 60GeV)
+  // Pz > 60% of beam energy (60% x 100GeV = 60GeV)
   // theta from 0.2mrad -> 5mrad
   Gaudi::Property<double> m_thetaMinRP{this, "thetaMinRP", 0.2e-3};
   Gaudi::Property<double> m_thetaMaxRP{this, "thetaMaxRP", 5e-3};
-  Gaudi::Property<double> m_pMinRelRP{this, "pMinRP", 0.60};
+  Gaudi::Property<double> m_pMinRigidityRP{this, "pMinRigidityRP", 0.60};
   // B0
   Gaudi::Property<double> m_thetaMinB0{this, "thetaMinB0", 6.0e-3};
   Gaudi::Property<double> m_thetaMaxB0{this, "thetaMaxB0", 20.0e-3};
@@ -47,8 +47,8 @@ public:
   Gaudi::Property<double> m_thetaMaxFullOMD{this, "thetaMaxFullOMD", 2e-3};
   Gaudi::Property<double> m_thetaMinPartialOMD{this, "thetaMinPartialOMD", 2.0e-3};
   Gaudi::Property<double> m_thetaMaxPartialOMD{this, "thetaMaxPartialOMD", 5.0e-3};
-  Gaudi::Property<double> m_pMinRelOMD{this, "pMinOMD", 0.25};
-  Gaudi::Property<double> m_pMaxRelOMD{this, "pMaxOMD", 0.60};
+  Gaudi::Property<double> m_pMinRigidityOMD{this, "pMinRigidityOMD", 0.25};
+  Gaudi::Property<double> m_pMaxRigidityOMD{this, "pMaxRigidityOMD", 0.60};
 
   // Crossing angle, set to -25mrad
   Gaudi::Property<double> m_crossingAngle{this, "crossingAngle", -0.025};
@@ -194,7 +194,7 @@ private:
         continue;
       }
       const auto mom_ion = rotateLabToIonDirection(part.ps());
-      if (mom_ion.theta() < m_thetaMinRP || mom_ion.theta() > m_thetaMaxRP || mom_ion.mag() < m_pMinRelRP * m_ionBeamEnergy) {
+      if (mom_ion.theta() < m_thetaMinRP || mom_ion.theta() > m_thetaMaxRP || mom_ion.z < m_pMinRigidityRP * m_ionBeamEnergy) {
         continue;
       }
       rc.push_back(smearMomentum(part));
@@ -221,7 +221,7 @@ private:
         continue;
       }
       const auto mom_ion = rotateLabToIonDirection(part.ps());
-      if (mom_ion.mag() < m_pMinRelOMD * m_ionBeamEnergy || mom_ion.mag() > m_pMaxRelOMD * m_ionBeamEnergy) {
+      if (mom_ion.z < m_pMinRigidityOMD * m_ionBeamEnergy || mom_ion.z > m_pMaxRigidityOMD * m_ionBeamEnergy) {
         continue;
       }
       // angle cut
