@@ -130,8 +130,8 @@ namespace Jug::Reco {
           allHits->push_back(ahit.clone());
 
           Acts::SymMatrix2 cov = Acts::SymMatrix2::Zero();
-          cov(0, 0) = ahit.covMatrix().xx * Acts::UnitConstants::mm * ahit.covMatrix().xx * Acts::UnitConstants::mm;
-          cov(1, 1) = ahit.covMatrix().yy * Acts::UnitConstants::mm * ahit.covMatrix().yy * Acts::UnitConstants::mm;
+          cov(0, 0) = ahit.covMatrix().xx * Acts::UnitConstants::mm ;
+          cov(1, 1) = ahit.covMatrix().yy * Acts::UnitConstants::mm ;
 
           auto       vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.cellID());
           auto       vol_id  = vol_ctx->identifier;
