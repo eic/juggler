@@ -18,7 +18,7 @@ namespace Jug::Reco {
  *
  * \ingroup reco
  */
-class ParticleCollector2 : public GaudiAlgorithm {
+class ParticleCollector : public GaudiAlgorithm {
 public:
   Gaudi::Property<std::vector<std::string>> m_inputParticles{this, "inputParticles", {}, "Particles to be aggregated"};
   DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
@@ -27,11 +27,11 @@ public:
   std::vector<DataHandle<eic::ReconstructedParticleCollection>*> m_particleCollections;
 
 public:
-  ParticleCollector2(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+  ParticleCollector(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
     // declareProperty("inputParticles", m_inputParticles, "vector of collection names");
     declareProperty("outputParticles", m_outputParticles, "output particles combined into single collection");
   }
-  ~ParticleCollector2() {
+  ~ParticleCollector() {
     for (auto col : m_particleCollections) {
       if (col) {
         delete col;
@@ -56,8 +56,8 @@ public:
     if (msgLevel(MSG::DEBUG)) {
       debug() << "execute collector" << endmsg;
     }
-    for (const auto& hits : m_particleCollections) {
-      const auto& parts = *(hits->get());
+    for (const auto& list : m_particleCollections) {
+      const auto& parts = *(list->get());
       if (msgLevel(MSG::DEBUG)) {
         debug() << "col n particles: " << parts.size() << endmsg;
       }
@@ -69,6 +69,6 @@ public:
     return StatusCode::SUCCESS;
   }
 };
-DECLARE_COMPONENT(ParticleCollector2)
+DECLARE_COMPONENT(ParticleCollector)
 
 } // namespace Jug::Reco
