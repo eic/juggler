@@ -28,6 +28,14 @@ public:
                                                                     this};
   DataHandle<eic::ReconstructedParticleCollection> m_outputParticleCollection{"outputParticles",
                                                                               Gaudi::DataHandle::Writer, this};
+
+  // Matching momentum tolerance requires 10% by default;
+  Gaudi::Property<double> m_pRelativeTolerance{this, "pRelativeTolerance", {0.1}};
+  // Matching phi tolerance of 10 mrad
+  Gaudi::Property<double> m_phiTolerance{this, "phiTolerance", {0.030}};
+  // Matchin eta tolerance of 0.1
+  Gaudi::Property<double> m_etaTolerance{this, "etaTolerance", {0.2}};
+
   ParticlesWithTruthPID(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
     declareProperty("inputMCParticles", m_inputTruthCollection, "mcparticles");
@@ -46,49 +54,76 @@ public:
     const auto& tracks = *(m_inputTrackCollection.get());
     auto& part         = *(m_outputParticleCollection.createAndPut());
 
-    std::vector<bool> consumed(tracks.size(), false);
+    const double sinPhiOver2Tolerance = sin(0.5 * m_phiTolerance);
+    std::vector<bool> consumed(mc.size(), false);
     int ID = 0;
-    for (const auto& p : mc) {
-      if (p.genStatus() != 1) {
-        continue;
-      }
-      // check if we find a good match
+    for (const auto& trk : tracks) {
+      const eic::VectorXYZ mom =
+          eic::VectorPolar(1.0 / std::abs(trk.qOverP()), trk.direction().theta, trk.direction().phi);
+      const auto charge_rec = std::copysign(1., trk.qOverP());
+      // utility variables for matching
       int best_match    = -1;
       double best_delta = std::numeric_limits<double>::max();
-      for (size_t it = 0; it < tracks.size(); ++it) {
-        if (consumed[it]) {
+      for (size_t ip = 0; ip < mc.size(); ++ip) {
+        const auto& mcpart = mc[ip];
+        if (consumed[ip] || mcpart.genStatus() != 1 || mcpart.charge() == 0 || mcpart.charge() * charge_rec < 0) {
           continue;
         }
-        const auto& trk = tracks[it];
-        eic::VectorPolar mom{1.0 / std::abs(trk.qOverP()), trk.direction().theta, trk.direction().phi};
-        double delta = std::hypot(p.ps().x - mom.x(), p.ps().y - mom.y(), p.ps().z - mom.z());
-        if (delta < best_delta) {
-          best_match = it;
-          best_delta = delta;
+        const double dp_rel = std::abs((mom.mag() - mcpart.ps().mag()) / mcpart.ps().mag());
+        // check the tolerance for sin(dphi/2) to avoid the hemisphere problem and allow
+        // for phi rollovers
+        const double dsphi  = std::abs(sin(0.5 * (mom.phi() - mcpart.ps().phi())));
+        const double deta   = std::abs((mom.eta() - mcpart.ps().eta()));
+
+        if (dp_rel < m_pRelativeTolerance && deta < m_etaTolerance && dsphi < sinPhiOver2Tolerance) {
+          const double delta =
+              std::hypot(dp_rel / m_pRelativeTolerance, deta / m_etaTolerance, dsphi / sinPhiOver2Tolerance);
+          if (delta < best_delta) {
+            best_match = ip;
+            best_delta = delta;
+          }
         }
       }
-      if (best_match > 0) {
+      int32_t best_pid = 0;
+      eic::VectorXYZ vertex;
+      float time = 0;
+      float mass = 0;
+      if (best_match >= 0) {
         consumed[best_match] = true;
-        const auto& trk      = tracks[best_match];
-        eic::VectorPolar mom{1.0 / std::abs(trk.qOverP()), trk.direction().theta, trk.direction().phi};
-        eic::ReconstructedParticle rec_part{ID++,                                                  // index
-                                            {mom.x(), mom.y(), mom.z()},                           // momentum
-                                            {0., 0., 0.},                                          // vertex
-                                            0.,                                                    // time
-                                            p.pdgID(),                                             // PID
-                                            static_cast<int16_t>(0),                               // Status
-                                            static_cast<int16_t>(std::copysign(1., trk.qOverP())), // charge
-                                            algorithmID(),                                         // Algorithm type
-                                            1.,                                                    // particle weight
-                                            mom.mag(), // 3-momentum magnitude [GeV]
-                                            static_cast<float>(std::hypot(mom.mag(), p.mass())), // energy [GeV]
-                                            static_cast<float>(p.mass())};                       // mass [GeV]
-        part.push_back(rec_part);
-        if (msgLevel(MSG::DEBUG)) {
-          debug() << fmt::format("Matched track {} with MC particle {}\n", trk.ID(), p.ID()) << endmsg;
-          debug() << fmt::format("  - Track: (mom: {}, theta: {}, phi: {})", mom.mag(), mom.theta, mom.phi) << endmsg;
-          debug() << fmt::format("  - MC particle: (mom: {}, theta: {}, phi: {}, type: {}", p.ps().mag(),
-                                 p.ps().theta(), p.ps().phi(), p.pdgID())
+        const auto& mcpart   = mc[best_match];
+        best_pid             = mcpart.pdgID();
+        vertex               = {mcpart.vs().x, mcpart.vs().y, mcpart.vs().z};
+        time                 = mcpart.time();
+        mass                 = mcpart.mass();
+      }
+      eic::ReconstructedParticle rec_part{ID++,
+                                          mom,
+                                          vertex,
+                                          time,
+                                          best_pid,
+                                          static_cast<int16_t>(best_match >= 0 ? 0 : -1) /* status */,
+                                          static_cast<int16_t>(charge_rec),
+                                          algorithmID(),
+                                          1. /* weight */,
+                                          mom.mag(),
+                                          std::hypot(mom.mag(), mass),
+                                          mass};
+      part.push_back(rec_part);
+      if (msgLevel(MSG::DEBUG)) {
+        if (best_match > 0) {
+          const auto& mcpart = mc[best_match];
+          debug() << fmt::format("Matched track {} with MC particle {}\n", trk.ID(), best_match) << endmsg;
+          debug() << fmt::format("  - Track: (mom: {}, theta: {}, phi: {}, charge: {})", mom.mag(), mom.theta(),
+                                 mom.phi(), charge_rec)
+                  << endmsg;
+          debug() << fmt::format("  - MC particle: (mom: {}, theta: {}, phi: {}, charge: {}, type: {}",
+                                 mcpart.ps().mag(), mcpart.ps().theta(), mcpart.ps().phi(), mcpart.charge(),
+                                 mcpart.pdgID())
+                  << endmsg;
+        } else {
+          debug() << fmt::format("Did not find a good match for track {} \n", trk.ID()) << endmsg;
+          debug() << fmt::format("  - Track: (mom: {}, theta: {}, phi: {}, charge: {})", mom.mag(), mom.theta(),
+                                 mom.phi(), charge_rec)
                   << endmsg;
         }
       }
@@ -100,5 +135,5 @@ public:
 
 DECLARE_COMPONENT(ParticlesWithTruthPID)
 
-} // namespace Jug::Rec
+} // namespace Jug::Reco
 
