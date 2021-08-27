@@ -72,8 +72,8 @@ public:
         const double dp_rel = std::abs((mom.mag() - mcpart.ps().mag()) / mcpart.ps().mag());
         // check the tolerance for sin(dphi/2) to avoid the hemisphere problem and allow
         // for phi rollovers
-        const double dsphi  = std::abs(sin(0.5 * (mom.phi() - mcpart.ps().phi())));
-        const double deta   = std::abs((mom.eta() - mcpart.ps().eta()));
+        const double dsphi = std::abs(sin(0.5 * (mom.phi() - mcpart.ps().phi())));
+        const double deta  = std::abs((mom.eta() - mcpart.ps().eta()));
 
         if (dp_rel < m_pRelativeTolerance && deta < m_etaTolerance && dsphi < sinPhiOver2Tolerance) {
           const double delta =
@@ -105,6 +105,7 @@ public:
                                           static_cast<int16_t>(charge_rec),
                                           algorithmID(),
                                           1. /* weight */,
+                                          {mom.theta(), mom.phi()},
                                           mom.mag(),
                                           std::hypot(mom.mag(), mass),
                                           mass};

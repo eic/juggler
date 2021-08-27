@@ -137,6 +137,7 @@ private:
                                           static_cast<int16_t>(part.charge()),
                                           algorithmID(),
                                           1.,
+                                          {mom3s.theta(), mom3s.phi()},
                                           static_cast<float>(moms),
                                           static_cast<float>(Es),
                                           static_cast<float>(part.mass())};
@@ -194,7 +195,8 @@ private:
         continue;
       }
       const auto mom_ion = rotateLabToIonDirection(part.ps());
-      if (mom_ion.theta() < m_thetaMinRP || mom_ion.theta() > m_thetaMaxRP || mom_ion.z < m_pMinRigidityRP * m_ionBeamEnergy) {
+      if (mom_ion.theta() < m_thetaMinRP || mom_ion.theta() > m_thetaMaxRP ||
+          mom_ion.z < m_pMinRigidityRP * m_ionBeamEnergy) {
         continue;
       }
       rc.push_back(smearMomentum(part));
@@ -271,6 +273,7 @@ private:
             static_cast<int16_t>(part.charge()),
             algorithmID(),
             1.,
+            {psmear.theta(), psmear.phi()},
             static_cast<float>(ps),
             static_cast<float>(std::hypot(psmear.mag(), part.mass())),
             static_cast<float>(part.mass())};

@@ -69,9 +69,11 @@ namespace Jug {
           const float vy       = p.vs().y;
           const float vz       = p.vs().z;
 
+          eic::VectorXYZ psmear{px, py, pz};
+
           eic::ReconstructedParticle rec_part{
             ID++,                             // Unique index
-            {px, py, pz},                     // 3-momentum [GeV]
+            psmear,                           // 3-momentum [GeV]
             {vx, vy, vz},                     // Vertex [mm]
             static_cast<float>(p.time()),     // time [ns]
             p.pdgID(),                        // PDG type
@@ -79,6 +81,7 @@ namespace Jug {
             static_cast<int16_t>(p.charge()), // Charge
             algorithmID(),                    // Algorithm type
             1.,                               // particle weight
+            {psmear.theta(), psmear.phi()},   // direction
             momentum,                         // 3-momentum magnitude [GeV]
             energy,                           // energy [GeV]
             static_cast<float>(p.mass())};    // mass [GeV]
