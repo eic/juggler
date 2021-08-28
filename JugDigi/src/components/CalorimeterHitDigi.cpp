@@ -36,7 +36,7 @@ namespace Jug::Digi {
   public:
     // additional smearing resolutions
     Gaudi::Property<std::vector<double>> u_eRes{this, "energyResolutions", {}}; // a/sqrt(E/GeV) + b + c/(E/GeV)
-    Gaudi::Property<double>              m_tRes{this, "timineResolution", 0.0 * ns};
+    Gaudi::Property<double>              m_tRes{this, "timeResolution", 0.0 * ns};
 
     // digitization settings
     Gaudi::Property<int>    m_capADC{this, "capacityADC", 8096};

@@ -29,7 +29,7 @@ namespace Jug {
     public:
       Gaudi::Property<double>                      m_eRes{this, "energyResolution", 0.11}; // a%/sqrt(E/GeV)
       Gaudi::Property<std::vector<double>>         u_eRes{this, "energyResolutions", {}}; // a%/sqrt(E/GeV) + b% + c%/E
-      Gaudi::Property<double>                      m_tRes{this, "timineResolution", 0.1*ns};
+      Gaudi::Property<double>                      m_tRes{this, "timeResolution", 0.1*ns};
       Gaudi::Property<double>                      m_eUnit{this, "inputEnergyUnit", GeV};
       Gaudi::Property<double>                      m_tUnit{this, "inputTimeUnit", ns};
       Gaudi::Property<int>                         m_capADC{this, "capacityADC", 8096};
