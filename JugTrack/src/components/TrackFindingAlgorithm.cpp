@@ -90,7 +90,7 @@ namespace Jug::Reco {
 
     // chi2 and #sourclinks per surface cutoffs
     m_sourcelinkSelectorCfg = {
-        {Acts::GeometryIdentifier(), {15, 10}},
+        {Acts::GeometryIdentifier(), {m_chi2CutOff, m_numMeasurementsCutOff}},
     };
     m_trackFinderFunc = TrackFindingAlgorithm::makeTrackFinderFunction(m_geoSvc->trackingGeometry(), m_BField);
     auto im = _msgMap.find(msgLevel());

@@ -54,6 +54,10 @@ public:
   DataHandle<TrackParametersContainer> m_inputInitialTrackParameters{"inputInitialTrackParameters",
                                                                      Gaudi::DataHandle::Reader, this};
   DataHandle<TrajectoriesContainer> m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
+
+  Gaudi::Property<double> m_chi2CutOff{this, "chi2CutOff", 15.};
+  Gaudi::Property<size_t> m_numMeasurementsCutOff{this, "numMeasurementsCutOff", 10};
+
   TrackFinderFunction m_trackFinderFunc;
   SmartIF<IGeoSvc> m_geoSvc;
 
