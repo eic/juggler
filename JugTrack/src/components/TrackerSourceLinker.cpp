@@ -44,7 +44,7 @@ namespace Jug::Reco {
   public:
     DataHandle<eic::TrackerHitCollection>    m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<IndexSourceLinkContainer>     m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};
-    DataHandle<MeasurementContainer>          m_outputMeasurements{"outputMeasurements", Gaudi::DataHandle::Writer, this};
+    DataHandle<MeasurementContainer>         m_outputMeasurements{"outputMeasurements", Gaudi::DataHandle::Writer, this};
     /// Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
 
@@ -72,7 +72,7 @@ namespace Jug::Reco {
 
     StatusCode execute() override {
       constexpr double mm_acts = Acts::UnitConstants::mm;
-      constexpr double mm_conv = mm_acts / dd4hep::mm; // = 1/10
+      constexpr double mm_conv = mm_acts / dd4hep::mm; // = 1/0.1
 
       // input collection
       const eic::TrackerHitCollection* hits = m_inputHitCollection.get();
@@ -100,7 +100,7 @@ namespace Jug::Reco {
         auto volman    = m_geoSvc->detector()->volumeManager();
         auto alignment = volman.lookupDetElement(vol_id).nominal();
         auto local_position =
-            (alignment.worldToLocal({ahit.position().x , ahit.position().y , ahit.position().z }))*mm_conv;
+            (alignment.worldToLocal({ahit.position().x/mm_conv , ahit.position().y/mm_conv , ahit.position().z/mm_conv }))*mm_conv;
 
         const auto is      = m_geoSvc->surfaceMap().find(vol_id);
         if (is == m_geoSvc->surfaceMap().end()) {
@@ -122,11 +122,11 @@ namespace Jug::Reco {
         loc[Acts::eBoundLoc1] = pos[1];
 
         if (msgLevel(MSG::DEBUG)) {
-          debug() << "  dd4hep loc pos  : " << local_position.x() << " " << local_position.y() << " "
-                  << local_position.z() << endmsg;
-          debug() << "   surface center :" << surface->center(Acts::GeometryContext()).transpose() << endmsg;
-          debug() << "acts local center :" << pos.transpose() << endmsg;
-          debug() << "     acts loc pos : " << loc[Acts::eBoundLoc0] << ", " << loc[Acts::eBoundLoc1] << endmsg;
+          debug() << " hit position     : " << ahit.position().x << " " << ahit.position().y << " " << ahit.position().z << endmsg;
+          debug() << " dd4hep loc pos   : " << local_position.x() << " " << local_position.y() << " " << local_position.z() << endmsg;
+          debug() << " surface center   :" << surface->center(Acts::GeometryContext()).transpose() << endmsg;
+          debug() << " acts local center:" << pos.transpose() << endmsg;
+          debug() << " acts loc pos     : " << loc[Acts::eBoundLoc0] << ", " << loc[Acts::eBoundLoc1] << endmsg;
         }
 
         // the measurement container is unordered and the index under which the

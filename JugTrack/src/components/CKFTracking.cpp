@@ -1,4 +1,4 @@
-#include "TrackFindingAlgorithm.h"
+#include "CKFTracking.h"
 
 // Gaudi
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -59,7 +59,7 @@ namespace Jug::Reco {
 
   using namespace Acts::UnitLiterals;
 
-  TrackFindingAlgorithm::TrackFindingAlgorithm(const std::string& name, ISvcLocator* svcLoc)
+  CKFTracking::CKFTracking(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc)
   {
     declareProperty("inputSourceLinks", m_inputSourceLinks, "");
@@ -68,7 +68,7 @@ namespace Jug::Reco {
     declareProperty("outputTrajectories", m_outputTrajectories, "");
   }
 
-  StatusCode TrackFindingAlgorithm::initialize()
+  StatusCode CKFTracking::initialize()
   {
     if (GaudiAlgorithm::initialize().isFailure())
       return StatusCode::FAILURE;
@@ -92,7 +92,7 @@ namespace Jug::Reco {
     m_sourcelinkSelectorCfg = {
         {Acts::GeometryIdentifier(), {m_chi2CutOff, m_numMeasurementsCutOff}},
     };
-    m_trackFinderFunc = TrackFindingAlgorithm::makeTrackFinderFunction(m_geoSvc->trackingGeometry(), m_BField);
+    m_trackFinderFunc = CKFTracking::makeCKFTrackingFunction(m_geoSvc->trackingGeometry(), m_BField);
     auto im = _msgMap.find(msgLevel());
     if (im != _msgMap.end()) {
         m_actsLoggingLevel = im->second;
@@ -100,7 +100,7 @@ namespace Jug::Reco {
     return StatusCode::SUCCESS;
   }
 
-  StatusCode TrackFindingAlgorithm::execute()
+  StatusCode CKFTracking::execute()
   {
     // Read input data
     const IndexSourceLinkContainer* src_links       = m_inputSourceLinks.get();
@@ -115,13 +115,13 @@ namespace Jug::Reco {
     //// Construct a perigee surface as the target surface
     auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3{0., 0., 0.});
 
-    ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("TrackFindingAlgorithm Logger", m_actsLoggingLevel));
+    ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("CKFTracking Logger", m_actsLoggingLevel));
 
     Acts::PropagatorPlainOptions pOptions;
     pOptions.maxSteps = 10000;
 
     // Set the CombinatorialKalmanFilter options
-    TrackFindingAlgorithm::TrackFinderOptions options(
+    CKFTracking::TrackFinderOptions options(
         m_geoctx, m_fieldctx, m_calibctx, MeasurementCalibrator(*measurements),
         Acts::MeasurementSelector(m_sourcelinkSelectorCfg), Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
 
@@ -148,6 +148,6 @@ namespace Jug::Reco {
     return StatusCode::SUCCESS;
   }
 
-  DECLARE_COMPONENT(TrackFindingAlgorithm)
+  DECLARE_COMPONENT(CKFTracking)
 } // namespace Jug::Reco
 

@@ -19,8 +19,6 @@ namespace Jug {
  * The source link stores the measuremts, surface, and the associated simulated
  * truth hit.
  *
- * @todo Allow multiple truth hits e.g. for merged hits.
- *
  */
 class SourceLink {
 

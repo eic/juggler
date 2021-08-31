@@ -19,6 +19,8 @@ gaudi_add_module(JugTrackPlugins
   src/components/TrackerSourceLinker.cpp 
   src/components/Tracker2SourceLinker.cpp 
   src/components/TrackerSourcesLinker.cpp 
+  src/components/CKFTracking.cpp 
+  src/components/CKFTrackingFunction.cpp 
   src/components/TrackFindingAlgorithm.cpp 
   src/components/TrackFindingAlgorithmFunction.cpp 
   src/components/TrackFittingAlgorithm.cpp 
