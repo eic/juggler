@@ -1,3 +1,5 @@
+// DEPRECATED
+
 #include <algorithm>
 
 #include "Gaudi/Property.h"
@@ -90,11 +92,10 @@ namespace Jug::Reco {
           // cell dimension
           auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
           hits.push_back(eic::CalorimeterHit{
+              {nhits, 0}, // NO SOURCE SET
               id,
-              nhits++,
               -1,
               -1,
-              0,
               static_cast<float>(energy / m_samplingFraction), // Why are we applying the sampling fraction already here?
               0,
               time,

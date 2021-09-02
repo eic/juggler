@@ -133,7 +133,6 @@ namespace Jug::Reco {
       auto poscon = m_geoSvc->cellIDPositionConverter();
       auto volman = m_geoSvc->detector()->volumeManager();
 
-      int nresults = 0;
       for (auto &[id, hits] : merge_map) {
         // reference fields id
         int64_t ref_id = id | ref_mask;
@@ -153,11 +152,10 @@ namespace Jug::Reco {
         }
         const auto &href = hits.front();
         outputs.push_back(eic::CalorimeterHit{
+                          {hits.front().ID(), algorithmID()},
                           ref_id,
-                          nresults++,
                           href.layer(),
                           href.sector(),
-                          algorithmID(),
                           energy,
                           0, //@TODO: energy uncertainty
                           href.time(),

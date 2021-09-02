@@ -139,11 +139,10 @@ namespace Jug::Reco {
         auto pos       = alignment.worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
 
         hits.push_back(eic::CalorimeterHit{
+            {nhits++, algorithmID()},    // ID
             id,           // cellID
-            nhits++,      // ID
             lid,          // layer
             sid,          // sector
-            algorithmID(),// hit source algorithm
             static_cast<float>(energy), // energy
             0,                          // energyError
             static_cast<float>(time),   // time

@@ -8,8 +8,8 @@
 #include "Gaudi/Property.h"
 #include "GaudiKernel/RndmGenerators.h"
 
-// FCCSW
 #include "JugBase/DataHandle.h"
+#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "dd4pod/CalorimeterHitCollection.h"
@@ -25,7 +25,7 @@ namespace Jug {
      *
      * \ingroup digi
      */
-    class EcalTungstenSamplingDigi : public GaudiAlgorithm {
+    class EcalTungstenSamplingDigi : public GaudiAlgorithm, AlgorithmIDMixin<> {
     public:
       Gaudi::Property<double>                      m_eRes{this, "energyResolution", 0.11}; // a%/sqrt(E/GeV)
       Gaudi::Property<std::vector<double>>         u_eRes{this, "energyResolutions", {}}; // a%/sqrt(E/GeV) + b% + c%/E
@@ -44,7 +44,9 @@ namespace Jug {
       double res[3] = {0., 0., 0.};
 
       //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
-      EcalTungstenSamplingDigi(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
+      EcalTungstenSamplingDigi(const std::string& name, ISvcLocator* svcLoc) 
+        : GaudiAlgorithm(name, svcLoc)
+        , AlgorithmIDMixin(name, info())
       {
         declareProperty("inputHitCollection", m_inputHitCollection, "");
         declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -86,10 +88,10 @@ namespace Jug {
           double ped = m_pedMeanADC + m_normDist()*m_pedSigmaADC;
           long long adc = std::llround(ped + ahit.energyDeposit()*(1. + resval) * m_eUnit/m_dyRangeADC*m_capADC);
           eic::RawCalorimeterHit rawhit(
+              {nhits++, algorithmID()},
               (long long)ahit.cellID(),
               (adc > m_capADC ? m_capADC.value() : adc),
-              (double)ahit.truth().time*m_tUnit/ns + m_normDist()*m_tRes/ns,
-              nhits++);
+              (double)ahit.truth().time*m_tUnit/ns + m_normDist()*m_tRes/ns);
           rawhits->push_back(rawhit);
         }
         return StatusCode::SUCCESS;

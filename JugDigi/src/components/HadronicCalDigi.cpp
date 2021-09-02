@@ -7,8 +7,8 @@
 #include "GaudiKernel/RndmGenerators.h"
 #include "Gaudi/Property.h"
 
-// FCCSW
 #include "JugBase/DataHandle.h"
+#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "eicd/RawCalorimeterHitCollection.h"
@@ -30,7 +30,7 @@ namespace Jug {
      *
      * \ingroup digi
      */
-    class HadronicCalDigi : public GaudiAlgorithm {
+    class HadronicCalDigi : public GaudiAlgorithm, AlgorithmIDMixin<> {
     public:
       Gaudi::Property<double>                      m_energyResolution_a{this, "energyResolution_a", 0.5 /*50 percent*/};
       Gaudi::Property<double>                      m_energyResolution_b{this, "energyResolution_b", 0.05 /* 5 percent*/};
@@ -42,7 +42,8 @@ namespace Jug {
                                                                          Gaudi::DataHandle::Writer, this};
 
     public:
-      HadronicCalDigi(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+      HadronicCalDigi(const std::string& name, ISvcLocator* svcLoc)
+          : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
         declareProperty("inputHitCollection", m_inputHitCollection, "");
         declareProperty("outputHitCollection", m_outputHitCollection, "");
       }
@@ -78,8 +79,9 @@ namespace Jug {
           double aterm = m_gaussDist_a()*sqrtE;
           double bterm = ahit.energyDeposit()*m_gaussDist_b();
           // here 1000 is arbitrary scale factor
-          eic::RawCalorimeterHit rawhit((long long)ahit.cellID(),
-                                        std::llround(ahit.energyDeposit() +aterm + bterm * 1000), 0, nhits++);
+          eic::RawCalorimeterHit rawhit({nhits++, algorithmID()}, 
+                                        (long long)ahit.cellID(),
+                                        std::llround(ahit.energyDeposit() +aterm + bterm * 1000), 0);
           rawhits->push_back(rawhit);
         }
         return StatusCode::SUCCESS;

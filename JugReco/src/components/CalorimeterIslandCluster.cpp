@@ -29,6 +29,7 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
+#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "eicd/CalorimeterHitCollection.h"
@@ -86,7 +87,7 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class CalorimeterIslandCluster : public GaudiAlgorithm {
+  class CalorimeterIslandCluster : public GaudiAlgorithm, AlgorithmIDMixin<> {
   public:
     Gaudi::Property<bool>                       m_splitCluster{this, "splitCluster", true};
     Gaudi::Property<double>                     m_minClusterHitEdep{this, "minClusterHitEdep", 0.};
@@ -113,6 +114,7 @@ namespace Jug::Reco {
 
     CalorimeterIslandCluster(const std::string& name, ISvcLocator* svcLoc)
         : GaudiAlgorithm(name, svcLoc)
+        , AlgorithmIDMixin(name, info())
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputProtoClusterCollection", m_outputProtoCollection, "");
@@ -321,7 +323,9 @@ namespace Jug::Reco {
         return;
       } else if (maxima.size() == 1) {
         for (auto& hit : group) {
-          proto.create(hit.ID(), clusterID, 1.);
+          eic::ProtoCluster pcl{
+              hit.ID(), {static_cast<int32_t>(clusterID), algorithmID()}, 1.};
+          proto.push_back(pcl);
         }
         clusterID += 1;
         return;
@@ -359,7 +363,9 @@ namespace Jug::Reco {
           if (weight <= 1e-6) {
             continue;
           }
-          proto.create(it->ID(), n_clus + k, weight);
+          eic::ProtoCluster pcl{
+              it->ID(), {static_cast<int32_t>(n_clus + k), algorithmID()}, weight};
+          proto.push_back(pcl);
         }
       }
       clusterID += maxima.size();

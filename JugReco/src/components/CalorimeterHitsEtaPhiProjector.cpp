@@ -108,6 +108,7 @@ namespace Jug::Reco {
       for (const auto &[bins, hits] : merged_hits) {
         const auto ref = hits.front();
         eic::CalorimeterHit hit;
+        hit.ID({ref.ID(), algorithmID()});
         hit.cellID(ref.cellID());
         hit.sector(ref.sector());
         hit.layer(ref.layer());
@@ -125,7 +126,6 @@ namespace Jug::Reco {
         for (const auto &h : hits) {
             hit.energy(hit.energy() + h.energy());
         }
-        hit.source(algorithmID());
         mhits.push_back(hit);
       }
 

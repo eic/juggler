@@ -6,8 +6,8 @@
 #include "GaudiKernel/RndmGenerators.h"
 #include "Gaudi/Property.h"
 
-// FCCSW
 #include "JugBase/DataHandle.h"
+#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 //#include "GaudiExamples/MyTrack.h"
@@ -23,7 +23,7 @@ namespace Jug::Digi {
    *
    * \ingroup digi
    */
-  class UFSDTrackerDigi : public GaudiAlgorithm {
+  class UFSDTrackerDigi : public GaudiAlgorithm, AlgorithmIDMixin<> {
   public:
     Gaudi::Property<double>                  m_timeResolution{this, "timeResolution", 10}; // todo : add units
     Rndm::Numbers                            m_gaussDist;
@@ -34,7 +34,9 @@ namespace Jug::Digi {
 
   public:
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
-    UFSDTrackerDigi(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
+    UFSDTrackerDigi(const std::string& name, ISvcLocator* svcLoc) 
+      : GaudiAlgorithm(name, svcLoc)
+      , AlgorithmIDMixin(name, info())
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -68,8 +70,8 @@ namespace Jug::Digi {
         // std::cout << ahit << "\n";
         if (cell_hit_map.count(ahit.cellID()) == 0) {
           cell_hit_map[ahit.cellID()] = rawhits->size();
-          eic::RawTrackerHit rawhit((int64_t)ahit.cellID(),
-                                    ID++,
+          eic::RawTrackerHit rawhit({ID++, algorithmID()},
+                                    (int64_t)ahit.cellID(),
                                     ahit.truth().time * 1e6 + m_gaussDist() * 1e3, // ns->fs
                                     std::llround(ahit.energyDeposit() * 1e6));
           rawhits->push_back(rawhit);

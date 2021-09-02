@@ -140,7 +140,7 @@ namespace Jug::Reco {
       std::map<int, std::vector<std::pair<eic::ConstProtoCluster, 
                                           eic::ConstCalorimeterHit>>> cluster_map;
       for (const auto& pc : proto) {
-        const size_t clusterID = pc.clusterID();
+        const size_t clusterID = pc.clusterID().value;
         if (!cluster_map.count(clusterID)) {
           cluster_map[clusterID] = {};
         }
@@ -183,8 +183,7 @@ namespace Jug::Reco {
                              const int idx) const
     {
       eic::Cluster cl;
-      cl.source(algorithmID());
-      cl.ID(idx);
+      cl.ID({idx, algorithmID()});
       cl.nhits(hit_info.size());
 
       // no hits

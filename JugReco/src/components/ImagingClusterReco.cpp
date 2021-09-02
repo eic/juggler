@@ -92,7 +92,7 @@ public:
     std::map<int, std::vector<std::pair<eic::ConstProtoCluster, 
                                         eic::ConstCalorimeterHit>>> cluster_map;
     for (const auto& pc : proto) {
-      const size_t clusterID = pc.clusterID();
+      const size_t clusterID = pc.clusterID().value;
       if (!cluster_map.count(clusterID)) {
         cluster_map[clusterID] = {};
       }
@@ -105,6 +105,8 @@ public:
       cluster_map[clusterID].push_back({pc, hits[idx]});
     }
 
+    const int32_t nclus = static_cast<int32_t>(cluster_map.size());
+
     for (const auto& [cid, hit_info] : cluster_map) {
       // get cluster and associated layers
       auto cl        = reconstruct_cluster(hit_info, cid);
@@ -115,7 +117,9 @@ public:
 
       // store layer and clusters on the datastore
       for (auto& layer : cl_layers) {
-        layer.ID(layers.size()); // unique ID for this clusterlayer
+        // unique ID for this clusterlayer, starting at the last
+        // cluster ID value to guarantee uniqueness
+        layer.ID({nclus + static_cast<int32_t>(layers.size()), algorithmID()});
         layers.push_back(layer);
         // cl.addlayers(layer); // deprectated
       }
@@ -127,7 +131,7 @@ public:
     int idx = 0;
     if (msgLevel(MSG::DEBUG)) {
       for (const auto& cl : clusters) {
-        debug() << fmt::format("Cluster {:d}: Edep = {:.3f} MeV, Dir = ({:.3f}, {:.3f}) deg", cl.ID(),
+        debug() << fmt::format("Cluster {:d}: Edep = {:.3f} MeV, Dir = ({:.3f}, {:.3f}) deg", cl.ID().value,
                                cl.energy() * 1000., info[idx].direction().theta / M_PI * 180.,
                                info[idx].direction().phi / M_PI * 180.)
                 << endmsg;
@@ -167,7 +171,7 @@ private:
   eic::ClusterLayer reconstruct_layer(const std::vector<std::pair<eic::ConstProtoCluster, eic::ConstCalorimeterHit>>& hit_info,
                                       const int cid, const int lid) const {
     // use full members initialization here so it could catch changes in ecid
-    eic::ClusterLayer layer{-1, cid, lid, static_cast<uint32_t>(hit_info.size()), algorithmID(), 0., 0., 0., 0., {}};
+    eic::ClusterLayer layer{{}, {cid, algorithmID()}, lid, static_cast<uint32_t>(hit_info.size()), 0., 0., 0., 0., {}};
 
     // mean position and total energy
     eic::VectorXYZ pos;
@@ -193,8 +197,7 @@ private:
   reconstruct_cluster(const std::vector<std::pair<eic::ConstProtoCluster, eic::ConstCalorimeterHit>>& hit_info,
                       const int cid) const {
     eic::Cluster cluster;
-    cluster.ID(cid);
-    cluster.source(algorithmID());
+    cluster.ID({cid, algorithmID()});
     // eta, phi center, weighted by energy
     double meta = 0.;
     double mphi = 0.;

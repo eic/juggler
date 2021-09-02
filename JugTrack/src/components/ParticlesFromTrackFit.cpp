@@ -119,7 +119,7 @@ namespace Jug::Reco {
             }
 
             eic::TrackParameters pars{
-              ID++,
+              {ID++, algorithmID()},
               {parameter[Acts::eBoundLoc0], parameter[Acts::eBoundLoc1]},
               {sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
                sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1))},
@@ -157,7 +157,7 @@ namespace Jug::Reco {
             }
 
             eic::BasicParticle p{
-                -1,
+                {-1, 0},
                 eic::VectorPolar(   // 3-momentum vector
                   {1.0/std::abs(params[Acts::eBoundQOverP]),    
                    params[Acts::eBoundTheta], params[Acts::eBoundPhi]}),
@@ -166,7 +166,6 @@ namespace Jug::Reco {
                 0,                  // PDG particle code
                 0,                  // status
                 static_cast<int16_t>(std::copysign(1., params[Acts::eBoundQOverP])), // charge
-                algorithmID(),      // source
                 1.                  // weight
             }; // charge
             rec_parts->push_back(p);
@@ -175,7 +174,7 @@ namespace Jug::Reco {
 
       // set our IDs
       for (int i = 0; i < rec_parts->size(); ++i) {
-        (*rec_parts)[i].ID(i);
+        (*rec_parts)[i].ID({i, algorithmID()});
       }
       
       return StatusCode::SUCCESS;

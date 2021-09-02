@@ -109,8 +109,7 @@ public:
       if (best_match >= 0) {
         const auto& ec = e_clus[best_match];
         auto new_clus  = merged.create();
-        new_clus.ID(idx++);
-        new_clus.source(algorithmID());
+        new_clus.ID({idx++, algorithmID()});
         new_clus.energy(ec.energy());
         new_clus.energyError(ec.energyError());
         new_clus.time(pc.time());
@@ -122,12 +121,12 @@ public:
         auto rel = relations.create();
         rel.clusterID(new_clus.ID());
         rel.size(2);
-        rel.parent()[0] = {pc.source(), pc.ID()};
-        rel.parent()[1] = {ec.source(), ec.ID()};
+        rel.parent()[0] = pc.ID();
+        rel.parent()[1] = ec.ID();
         // label our energy cluster as consumed
         consumed[best_match] = true;
         if (msgLevel(MSG::DEBUG)) {
-          debug() << fmt::format("Matched position cluster {} with energy cluster {}\n", pc.ID(), ec.ID()) << endmsg;
+          debug() << fmt::format("Matched position cluster {} with energy cluster {}\n", pc.ID().value, ec.ID().value) << endmsg;
           debug() << fmt::format("  - Position cluster: (E: {}, phi: {}, z: {})", pc.energy(), pc.position().phi(),
                                  pc.position().z)
                   << endmsg;

@@ -14,6 +14,7 @@
 // Event Model related classes
 #include "dd4pod/Geant4ParticleCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
+#include "eicd/ReconstructedParticleRelationsCollection.h"
 #include "eicd/VectorPolar.h"
 
 namespace Jug::Reco {
@@ -21,8 +22,11 @@ namespace Jug::Reco {
 class DummyFarForwardParticles : public GaudiAlgorithm, AlgorithmIDMixin<> {
 public:
   DataHandle<dd4pod::Geant4ParticleCollection> m_inputParticles{"inputMCParticles", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
+  DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"DummyFarForwardParticles", Gaudi::DataHandle::Writer,
                                                                      this};
+  DataHandle<eic::ReconstructedParticleRelationsCollection> m_outputRelations{"DummyFarForwardRelations", Gaudi::DataHandle::Writer,
+                                                                     this};
+
   Gaudi::Property<bool> m_enableZDC{this, "enableZDC", true};
   Gaudi::Property<bool> m_enableB0{this, "enableB0", true};
   Gaudi::Property<bool> m_enableRP{this, "enableRP", true};
@@ -55,10 +59,18 @@ public:
 
   Rndm::Numbers m_gaussDist;
 
+  // Monte Carlo particle source identifier
+  const int32_t m_kMonteCarloSource{uniqueID<int32_t>("mcparticles")};
+
+  private:
+  using RecData = std::pair<eic::ReconstructedParticle, eic::ReconstructedParticleRelations>;
+
+  public:
   DummyFarForwardParticles(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
     declareProperty("inputMCParticles", m_inputParticles, "mcparticles");
     declareProperty("outputParticles", m_outputParticles, "ReconstructedParticles");
+    declareProperty("outputRelations", m_outputRelations, "ReconstructedParticleRelations");
   }
   StatusCode initialize() override {
     if (GaudiAlgorithm::initialize().isFailure())
@@ -76,8 +88,9 @@ public:
   StatusCode execute() override {
     const auto& mc = *(m_inputParticles.get());
     auto& rc       = *(m_outputParticles.createAndPut());
+    auto& rel      = *(m_outputRelations.createAndPut());
 
-    std::vector<std::vector<eic::ReconstructedParticle>> rc_parts;
+    std::vector<std::vector<RecData>> rc_parts;
     if (m_enableZDC) {
       rc_parts.push_back(zdc(mc));
     }
@@ -92,7 +105,8 @@ public:
     }
     for (const auto& det : rc_parts) {
       for (const auto& part : det) {
-        rc.push_back(part);
+        rc.push_back(part.first);
+        rel.push_back(part.second);
       }
     }
     return StatusCode::SUCCESS;
@@ -101,8 +115,8 @@ public:
 private:
   // ZDC smearing as in eic_smear
   // https://github.com/eic/eicsmeardetectors/blob/9a1831dd97bf517b80a06043b9ee4bfb96b483d8/SmearMatrixDetector_0_1_FF.cxx#L224
-  std::vector<eic::ReconstructedParticle> zdc(const dd4pod::Geant4ParticleCollection& mc) {
-    std::vector<eic::ReconstructedParticle> rc;
+  std::vector<RecData> zdc(const dd4pod::Geant4ParticleCollection& mc) {
+    std::vector<RecData> rc;
     for (const auto& part : mc) {
       if (part.genStatus() != 1) {
         continue;
@@ -128,20 +142,23 @@ private:
       const double moms = sqrt(Es * Es - part.mass() * part.mass());
       const eic::VectorPolar mom3s_ion{moms, ths, phis};
       const auto mom3s = rotateIonToLabDirection(mom3s_ion);
-      eic::ReconstructedParticle rec_part{part.ID(),
+      eic::ReconstructedParticle rec_part{{part.ID(), algorithmID()},
                                           mom3s,
                                           {part.vs().x, part.vs().y, part.vs().z},
                                           static_cast<float>(part.time()),
                                           part.pdgID(),
                                           0,
                                           static_cast<int16_t>(part.charge()),
-                                          algorithmID(),
                                           1.,
                                           {mom3s.theta(), mom3s.phi()},
                                           static_cast<float>(moms),
                                           static_cast<float>(Es),
                                           static_cast<float>(part.mass())};
-      rc.push_back(rec_part);
+      eic::ReconstructedParticleRelations rel;
+      rel.recID(rec_part.ID());
+      rel.mcID({part.ID(), m_kMonteCarloSource});
+      rc.push_back({rec_part, rel});
+
       if (msgLevel(MSG::DEBUG)) {
         debug()
             << fmt::format(
@@ -154,8 +171,8 @@ private:
   }
   // Fast B0 as in
   // https://github.com/eic/eicsmeardetectors/blob/9a1831dd97bf517b80a06043b9ee4bfb96b483d8/SmearMatrixDetector_0_1_FF.cxx#L254
-  std::vector<eic::ReconstructedParticle> b0(const dd4pod::Geant4ParticleCollection& mc) {
-    std::vector<eic::ReconstructedParticle> rc;
+  std::vector<RecData> b0(const dd4pod::Geant4ParticleCollection& mc) {
+    std::vector<RecData> rc;
     for (const auto& part : mc) {
       if (part.genStatus() != 1) {
         continue;
@@ -172,7 +189,7 @@ private:
       }
       rc.push_back(smearMomentum(part));
       if (msgLevel(MSG::DEBUG)) {
-        auto& rec_part = rc.back();
+        auto& rec_part = rc.back().first;
         debug() << fmt::format("Found B0 particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
                                part.pdgID(), part.ps().mag(), rec_part.momentum(), std::hypot(part.ps().x, part.ps().y),
@@ -184,8 +201,8 @@ private:
     return rc;
   }
 
-  std::vector<eic::ReconstructedParticle> rp(const dd4pod::Geant4ParticleCollection& mc) {
-    std::vector<eic::ReconstructedParticle> rc;
+  std::vector<RecData> rp(const dd4pod::Geant4ParticleCollection& mc) {
+    std::vector<RecData> rc;
     for (const auto& part : mc) {
       if (part.genStatus() != 1) {
         continue;
@@ -201,7 +218,7 @@ private:
       }
       rc.push_back(smearMomentum(part));
       if (msgLevel(MSG::DEBUG)) {
-        auto& rec_part = rc.back();
+        auto& rec_part = rc.back().first;
         debug() << fmt::format("Found RP particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
                                part.pdgID(), part.ps().mag(), rec_part.momentum(), std::hypot(part.ps().x, part.ps().y),
@@ -212,8 +229,8 @@ private:
     return rc;
   }
 
-  std::vector<eic::ReconstructedParticle> omd(const dd4pod::Geant4ParticleCollection& mc) {
-    std::vector<eic::ReconstructedParticle> rc;
+  std::vector<RecData> omd(const dd4pod::Geant4ParticleCollection& mc) {
+    std::vector<RecData> rc;
     for (const auto& part : mc) {
       if (part.genStatus() != 1) {
         continue;
@@ -235,7 +252,7 @@ private:
       }
       rc.push_back(smearMomentum(part));
       if (msgLevel(MSG::DEBUG)) {
-        auto& rec_part = rc.back();
+        auto& rec_part = rc.back().first;
         debug() << fmt::format("Found OMD particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
                                part.pdgID(), part.ps().mag(), rec_part.momentum(), std::hypot(part.ps().x, part.ps().y),
@@ -248,7 +265,7 @@ private:
 
   // all momentum smearing in EIC-smear for the far-forward region uses
   // the same 2 relations for P and Pt smearing (B0, RP, OMD)
-  eic::ReconstructedParticle smearMomentum(const dd4pod::ConstGeant4Particle& part) {
+  RecData smearMomentum(const dd4pod::ConstGeant4Particle& part) {
     const auto mom_ion = rotateLabToIonDirection(part.ps());
     const double p     = mom_ion.mag();
     const double dp    = (0.005 * p) * m_gaussDist();
@@ -264,19 +281,23 @@ private:
     // And build our 3-vector
     const eic::VectorXYZ psmear_ion = {pxs, pys, pzs};
     const auto psmear               = rotateIonToLabDirection(psmear_ion);
-    return {part.ID(),
-            psmear,
-            {part.vs().x, part.vs().y, part.vs().z},
-            static_cast<float>(part.time()),
-            part.pdgID(),
-            0,
-            static_cast<int16_t>(part.charge()),
-            algorithmID(),
-            1.,
-            {psmear.theta(), psmear.phi()},
-            static_cast<float>(ps),
-            static_cast<float>(std::hypot(psmear.mag(), part.mass())),
-            static_cast<float>(part.mass())};
+    eic::ReconstructedParticle rec{
+        {part.ID(), algorithmID()},
+        psmear,
+        {part.vs().x, part.vs().y, part.vs().z},
+        static_cast<float>(part.time()),
+        part.pdgID(),
+        0,
+        static_cast<int16_t>(part.charge()),
+        1.,
+        {psmear.theta(), psmear.phi()},
+        static_cast<float>(ps),
+        static_cast<float>(std::hypot(psmear.mag(), part.mass())),
+        static_cast<float>(part.mass())};
+    eic::ReconstructedParticleRelations rel;
+    rel.recID(rec.ID());
+    rel.mcID({part.ID(), m_kMonteCarloSource});
+    return {rec, rel};
   }
 
   // Rotate 25mrad about the y-axis

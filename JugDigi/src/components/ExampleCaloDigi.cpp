@@ -5,8 +5,8 @@
 #include "GaudiAlg/Producer.h"
 #include "GaudiAlg/GaudiTool.h"
 
-// FCCSW
 #include "JugBase/DataHandle.h"
+#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 //#include "GaudiExamples/MyTrack.h"
@@ -17,85 +17,11 @@
 namespace Jug {
   namespace Digi {
 
-  //using BaseClass_t = Gaudi::Functional::Traits::BaseClass_t<Gaudi::Algorithm>;
-
-  ///** Do not use this as an example!!!
-  // * This is for testing purposes only.
-  // */
-  //struct ExampleCaloDigiFunc final
-  //    : Gaudi::Functional::Producer<std::vector<eic::RawCalorimeterHitData>(const dd4pod::CalorimeterHitCollection&),
-  //                                  BaseClass_t> {
-
-  //  ExampleCaloDigiFunc(const std::string& name, ISvcLocator* pSvc)
-  //      : Transformer(name, pSvc, KeyValue("InputData", {"FAEC_ShHits"})},
-  //                 KeyValue("OutputData", {"ForwardPreshowerHits"})) {
-  //    declareProperty("InputData", m_inputHitCollection, "FAEC_ShHits");
-  //  }
-  //  StatusCode initialize() override {
-  //    if (Gaudi::Functional::Transformer<std::vector<eic::RawCalorimeterHitData>(const dd4pod::CalorimeterHitCollection&),
-  //                                    BaseClass_t>::initialize()
-  //            .isFailure())
-  //      return StatusCode::FAILURE;
-  //    // f_counter = m_starting_value.value();
-  //    return StatusCode::SUCCESS;
-  //  }
-
-  //  std::vector<eic::RawCalorimeterHitData> operator()(const dd4pod::CalorimeterHitCollection& in_hits) const override {
-  //    //const dd4pod::CalorimeterHitCollection* in_hits =
-  //    //    m_inputHitCollection.get();
-  //    std::vector<eic::RawCalorimeterHitData> out_hits;
-  //    for (auto i = in_hits.begin(), end = in_hits.end(); i != end; ++i) {
-  //      out_hits.push_back(eic::RawCalorimeterHitData{
-  //          (long long)i->cellID(), (long long)i->cellID(),
-  //          (long long)i->energyDeposit() * 100, 0});
-  //    }
-  //    return out_hits;
-  //  }
-  //};
-  //DECLARE_COMPONENT(ExampleCaloDigiFunc)
-
-  ///** Do not use this as an example!!!
-  // * This is for testing purposes only.
-  // */
-  //struct ExampleCaloDigiFunc2 final
-  //    : Gaudi::Functional::Producer<std::vector<eic::RawCalorimeterHitData>(),
-  //                                  BaseClass_t> {
-
-  //  ExampleCaloDigiFunc2(const std::string& name, ISvcLocator* pSvc)
-  //      : Producer(name, pSvc, //,//KeyValue("InputData", {"FAEC_ShHits"})},
-  //                 KeyValue("OutputData", {"ForwardPreshowerHits"})) {
-  //    declareProperty("InputData", m_inputHitCollection, "FAEC_ShHits");
-  //  }
-  //  StatusCode initialize() override {
-  //    if (Gaudi::Functional::Producer<std::vector<eic::RawCalorimeterHitData>(),
-  //                                    BaseClass_t>::initialize()
-  //            .isFailure())
-  //      return StatusCode::FAILURE;
-  //    // f_counter = m_starting_value.value();
-  //    return StatusCode::SUCCESS;
-  //  }
-
-  //  std::vector<eic::RawCalorimeterHitData> operator()() const override {
-  //    const dd4pod::CalorimeterHitCollection* in_hits =
-  //        m_inputHitCollection.get();
-  //    std::vector<eic::RawCalorimeterHitData> out_hits;
-  //    for (auto i = in_hits->begin(), end = in_hits->end(); i != end; ++i) {
-  //      out_hits.push_back(eic::RawCalorimeterHitData{
-  //          (long long)i->cellID(), (long long)i->cellID(),
-  //          (long long)i->energyDeposit() * 100, 0});
-  //    }
-  //    return out_hits;
-  //  }
-  //  mutable DataHandle<dd4pod::CalorimeterHitCollection> m_inputHitCollection{
-  //      "inputHitCollection", Gaudi::DataHandle::Reader, this};
-  //};
-  //DECLARE_COMPONENT(ExampleCaloDigiFunc2)
-  
-   class ExampleCaloDigi : public GaudiAlgorithm {
+   class ExampleCaloDigi : public GaudiAlgorithm, AlgorithmIDMixin<> {
    public:
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     ExampleCaloDigi(const std::string& name, ISvcLocator* svcLoc)
-        : GaudiAlgorithm(name, svcLoc) {
+        : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
           declareProperty("inputHitCollection", m_inputHitCollection,"");
           declareProperty("outputHitCollection", m_outputHitCollection, "");
         }
@@ -113,7 +39,7 @@ namespace Jug {
       int nhits = 0;
       for(const auto& ahit : *simhits) {
         //std::cout << ahit << "\n";
-        eic::RawCalorimeterHit rawhit((long long)ahit.cellID(), std::llround(ahit.energyDeposit() * 100), 0, nhits++);
+        eic::RawCalorimeterHit rawhit({nhits++, algorithmID()}, (long long)ahit.cellID(), std::llround(ahit.energyDeposit() * 100), 0);
         rawhits->push_back(rawhit);
       }
       return StatusCode::SUCCESS;

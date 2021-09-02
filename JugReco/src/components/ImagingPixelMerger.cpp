@@ -139,9 +139,8 @@ namespace Jug::Reco {
           eic::VectorXYZ pos {eic::VectorPolar(0., 0., grid.phi)};
           // @TODO: This seems incomplete...
           auto h = mhits.create();
-          h.ID(k);
+          h.ID({k, algorithmID()});
           h.layer(i);
-          h.source(algorithmID());
           h.energy(grid.energy);
           h.position(pos);
         }

@@ -211,11 +211,10 @@ namespace Jug::Reco {
         //         m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().volIDs().str()
         //         << endmsg;
         hits.push_back({
+            {rh.ID(), algorithmID()}, // ID
             rh.cellID(),    // cellID
-            rh.ID(),        // ID
             lid,            // layer
             sid,            // sector
-            algorithmID(),  // hit source (a hash of the algorithm name)
             energy,         // energy
             0,              // @TODO: energy error
             time,           // time

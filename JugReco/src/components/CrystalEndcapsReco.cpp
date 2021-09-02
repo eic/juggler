@@ -83,9 +83,16 @@ namespace Jug::Reco {
               m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().position();
           // cell dimension
           auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
-          hits.push_back(eic::CalorimeterHit{id, nhits++, -1, -1, 0, energy, 0., time, 
-                                            {gpos.x(), gpos.y(), gpos.z()}, 
-                                            {pos.x(), pos.y(), pos.z()}, {dim[0], dim[1], 0.}});
+          hits.push_back(eic::CalorimeterHit{{nhits++, 0},
+                                             id,
+                                             -1,
+                                             -1,
+                                             energy,
+                                             0.,
+                                             time,
+                                             {gpos.x(), gpos.y(), gpos.z()},
+                                             {pos.x(), pos.y(), pos.z()},
+                                             {dim[0], dim[1], 0.}});
         }
       }
 

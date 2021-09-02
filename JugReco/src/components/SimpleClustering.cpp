@@ -119,8 +119,7 @@ namespace Jug::Reco {
         }
 
         eic::Cluster cl;
-        cl.ID(clusters.size());
-        cl.source(algorithmID());
+        cl.ID({clusters.size(), algorithmID()});
         cl.nhits(cluster_hits.size());
         for (const auto& h : cluster_hits) {
           cl.energy(cl.energy() + h.energy());

@@ -96,9 +96,8 @@ namespace Jug::Reco {
           // cell dimension
           auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
           hits.push_back(eic::PMTHit{
+              {rh.ID(), algorithmID()},
               rh.cellID(),
-              rh.ID(),
-              algorithmID(),
               npe,
               time,
               m_timeStep / ns,

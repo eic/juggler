@@ -22,9 +22,9 @@
 #include "DDRec/Surface.h"
 #include "DDRec/SurfaceManager.h"
 
-// FCCSW
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
+#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "eicd/ProtoClusterCollection.h"
@@ -44,7 +44,7 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class ImagingTopoCluster : public GaudiAlgorithm {
+  class ImagingTopoCluster : public GaudiAlgorithm, AlgorithmIDMixin<> {
   public:
     // maximum difference in layer numbers that can be considered as neighbours
     Gaudi::Property<int> m_neighbourLayersRange{this, "neighbourLayersRange", 1};
@@ -74,7 +74,9 @@ namespace Jug::Reco {
     double localDistXY[2], layerDistEtaPhi[2], sectorDist;
     double minClusterHitEdep, minClusterCenterEdep, minClusterEdep, minClusterNhits;
 
-    ImagingTopoCluster(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
+    ImagingTopoCluster(const std::string& name, ISvcLocator* svcLoc) 
+      : GaudiAlgorithm(name, svcLoc)
+      , AlgorithmIDMixin(name, info())
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputProtoClusterCollection", m_outputProtoClusterCollection, "");
@@ -154,7 +156,7 @@ namespace Jug::Reco {
       }
 
       // form clusters
-      size_t clusterID = 0;
+      int32_t clusterID = 0;
       for (const auto& group : groups) {
         if (static_cast<int>(group.size()) < m_minClusterNhits.value()) {
           continue;
@@ -167,7 +169,8 @@ namespace Jug::Reco {
           continue;
         }
         for (const auto& hit : group) {
-          proto.create(hit.ID(), clusterID, 1.);
+          eic::ProtoCluster pcl {hit.ID(), {clusterID, algorithmID()}, 1.};
+          proto.push_back(pcl);
         }
         clusterID += 1;
       }

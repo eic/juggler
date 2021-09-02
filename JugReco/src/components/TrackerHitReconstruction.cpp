@@ -91,11 +91,10 @@ namespace Jug {
           // std::array<double,3> posarr; pos.GetCoordinates(posarr);
           // std::array<double,3> dimarr; dim.GetCoordinates(posarr);
           // eic::TrackerHit hit;
-          eic::TrackerHit hit{(long long)ahit.cellID(),
-                              ahit.ID(),
+          eic::TrackerHit hit{{ahit.ID().value, algorithmID()},
+                              ahit.cellID(),
                               {pos.x() / mm, pos.y() / mm, pos.z() / mm, (float)ahit.time()/1000}, // mm, ns
                               {(dim[0]/mm)*(dim[0]/mm), (dim[1]/mm)*(dim[1]/mm), 0.0, 0.0},        // 
-                              algorithmID(),
                               (float)ahit.charge() / 1.0e6, // GeV
                               0.0f};
           rec_hits->push_back(hit);

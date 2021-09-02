@@ -142,11 +142,10 @@ namespace Jug::Reco {
         //        m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().volIDs().str()
         //        << endmsg;
         hits.push_back(
-            eic::CalorimeterHit{id,
-                                nhits++,
+            eic::CalorimeterHit{{nhits++, 0},
+                                id,
                                 lid,
                                 sid,
-                                0,
                                 energy,
                                 0.,
                                 time,

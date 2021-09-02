@@ -7,8 +7,8 @@
 #include "Gaudi/Property.h"
 #include "GaudiKernel/PhysicalConstants.h"
 
-// FCCSW
 #include "JugBase/DataHandle.h"
+#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "eicd/RawCalorimeterHitCollection.h"
@@ -22,7 +22,7 @@ namespace Jug {
      *
      * \ingroup digi
      */
-   class CrystalEndcapsDigi : public GaudiAlgorithm {
+   class CrystalEndcapsDigi : public GaudiAlgorithm, AlgorithmIDMixin<> {
    public:
 
     Gaudi::Property<double>      m_energyResolution{this, "energyResolution", 0.02};  // 2%sqrt(E)
@@ -32,7 +32,8 @@ namespace Jug {
 
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     CrystalEndcapsDigi(const std::string& name, ISvcLocator* svcLoc)
-        : GaudiAlgorithm(name, svcLoc) {
+        : GaudiAlgorithm(name, svcLoc) 
+        , AlgorithmIDMixin(name, info()) {
       declareProperty("inputHitCollection", m_inputHitCollection,"");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
     }
@@ -61,9 +62,10 @@ namespace Jug {
       for (const auto& ahit : *simhits) {
         double res = m_gaussDist()/sqrt(ahit.energyDeposit());
         eic::RawCalorimeterHit rawhit(
+          {nhits++, algorithmID()},
           (long long) ahit.cellID(),
           std::llround(ahit.energyDeposit() * (1. + res)*1.0e6), // convert to keV integer
-          (double) ahit.truth().time, nhits++);
+          (double) ahit.truth().time);
         rawhits->push_back(rawhit);
       }
       return StatusCode::SUCCESS;

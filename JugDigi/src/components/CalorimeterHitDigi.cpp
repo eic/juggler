@@ -15,13 +15,14 @@
 #include "Gaudi/Property.h"
 #include "GaudiKernel/RndmGenerators.h"
 
-// FCCSW
 #include "JugBase/DataHandle.h"
+#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "dd4pod/CalorimeterHitCollection.h"
 #include "eicd/RawCalorimeterHitCollection.h"
 #include "eicd/RawCalorimeterHitData.h"
+
 
 using namespace Gaudi::Units;
 
@@ -32,7 +33,7 @@ namespace Jug::Digi {
    * \ingroup digi
    * \ingroup calorimetry
    */
-  class CalorimeterHitDigi : public GaudiAlgorithm {
+  class CalorimeterHitDigi : public GaudiAlgorithm, AlgorithmIDMixin<> {
   public:
     // additional smearing resolutions
     Gaudi::Property<std::vector<double>> u_eRes{this, "energyResolutions", {}}; // a/sqrt(E/GeV) + b + c/(E/GeV)
@@ -53,7 +54,9 @@ namespace Jug::Digi {
     double dyRangeADC, tRes, eRes[3] = {0., 0., 0.};
 
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
-    CalorimeterHitDigi(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
+    CalorimeterHitDigi(const std::string& name, ISvcLocator* svcLoc) 
+      : GaudiAlgorithm(name, svcLoc)
+      , AlgorithmIDMixin{name, info()}
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -97,10 +100,11 @@ namespace Jug::Digi {
         double                 ped     = m_pedMeanADC + m_normDist() * m_pedSigmaADC;
         long long              adc = std::llround(ped + ahit.energyDeposit() * (1. + eResRel) / dyRangeADC * m_capADC);
         eic::RawCalorimeterHit rawhit(
+            {nhits++, algorithmID()},
             (long long)ahit.cellID(), 
             (adc > m_capADC.value() ? m_capADC.value() : adc),
-            static_cast<int64_t>(1e6*(double)ahit.truth().time + m_normDist() * tRes), // @FIXME: this shouldn't be hardcoded, but should still be stored as an integer type
-            nhits++);
+            static_cast<int64_t>(1e6*(double)ahit.truth().time + m_normDist() * tRes) // @FIXME: this shouldn't be hardcoded, but should still be stored as an integer type
+            );
         rawhits->push_back(rawhit);
       }
       return StatusCode::SUCCESS;

@@ -12,17 +12,21 @@
 // Event Model related classes
 #include "dd4pod/Geant4ParticleCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
+#include "eicd/ReconstructedParticleRelationsCollection.h"
 
-namespace Jug {
-  namespace Base {
+namespace Jug::Base {
 
     class MC2DummyParticle : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
     public:
       DataHandle<dd4pod::Geant4ParticleCollection> m_inputHitCollection{"mcparticles", Gaudi::DataHandle::Reader, this};
       DataHandle<eic::ReconstructedParticleCollection> m_outputHitCollection{"DummyReconstructedParticles",
                                                                              Gaudi::DataHandle::Writer, this};
+      DataHandle<eic::ReconstructedParticleRelationsCollection> 
+        m_outputRelCollection{"DummyReconstructedParticleRelations", Gaudi::DataHandle::Writer, this};
       Rndm::Numbers                                    m_gaussDist;
       Gaudi::Property<double>                          m_smearing{this, "smearing", 0.01 /* 1 percent*/};
+
+      const int32_t kMonteCarloSource{uniqueID<int32_t>("mcparticles")};
 
       MC2DummyParticle(const std::string& name, ISvcLocator* svcLoc) 
         : GaudiAlgorithm(name, svcLoc)
@@ -30,6 +34,7 @@ namespace Jug {
       {
         declareProperty("inputCollection", m_inputHitCollection, "mcparticles");
         declareProperty("outputCollection", m_outputHitCollection, "DummyReconstructedParticles");
+        declareProperty("outputRelations", m_outputRelCollection, "DummyReconstructedParticles");
       }
       StatusCode initialize() override
       {
@@ -49,6 +54,7 @@ namespace Jug {
         const dd4pod::Geant4ParticleCollection* parts = m_inputHitCollection.get();
         // output collection
         auto out_parts = m_outputHitCollection.createAndPut();
+        auto relations = m_outputRelCollection.createAndPut();
         int ID = 0;
         for (const auto& p : *parts) {
           if (p.genStatus() != 1) {
@@ -72,14 +78,13 @@ namespace Jug {
           eic::VectorXYZ psmear{px, py, pz};
 
           eic::ReconstructedParticle rec_part{
-            ID++,                             // Unique index
+            {ID++, algorithmID()},            // Unique index
             psmear,                           // 3-momentum [GeV]
             {vx, vy, vz},                     // Vertex [mm]
             static_cast<float>(p.time()),     // time [ns]
             p.pdgID(),                        // PDG type
             static_cast<int16_t>(p.status()), // Status
             static_cast<int16_t>(p.charge()), // Charge
-            algorithmID(),                    // Algorithm type
             1.,                               // particle weight
             {psmear.theta(), psmear.phi()},   // direction
             momentum,                         // 3-momentum magnitude [GeV]
@@ -87,6 +92,10 @@ namespace Jug {
             static_cast<float>(p.mass())};    // mass [GeV]
 
           out_parts->push_back(rec_part);
+
+          eic::ReconstructedParticleRelations rel;
+          rel.mcID({p.ID(), kMonteCarloSource});
+          relations->push_back(rel);
         }
         return StatusCode::SUCCESS;
       }
@@ -94,6 +103,5 @@ namespace Jug {
 
     DECLARE_COMPONENT(MC2DummyParticle)
 
-  } // namespace Base
-} // namespace Jug
+} // namespace Jug::Base
 

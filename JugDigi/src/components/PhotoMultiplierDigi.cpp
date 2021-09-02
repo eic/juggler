@@ -18,6 +18,7 @@
 #include "GaudiKernel/PhysicalConstants.h"
 
 #include "JugBase/DataHandle.h"
+#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "eicd/RawPMTHitCollection.h"
@@ -32,7 +33,7 @@ namespace Jug::Digi {
  *
  * \ingroup digi
  */
-class PhotoMultiplierDigi : public GaudiAlgorithm
+class PhotoMultiplierDigi : public GaudiAlgorithm, AlgorithmIDMixin<>
 {
 public:
     DataHandle<dd4pod::PhotoMultiplierHitCollection>
@@ -52,6 +53,7 @@ public:
     // constructor
     PhotoMultiplierDigi(const std::string& name, ISvcLocator* svcLoc)
         : GaudiAlgorithm(name, svcLoc)
+        , AlgorithmIDMixin(name, info())
     {
         declareProperty("inputHitCollection", m_inputHitCollection,"");
         declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -122,8 +124,8 @@ public:
         for (auto &it : hit_groups) {
             for (auto &data : it.second) {
                 eic::RawPMTHit hit{
+                  {ID++, algorithmID()},
                   it.first,
-                  ID++,
                   static_cast<uint32_t>(data.signal), 
                   static_cast<uint32_t>(data.time/(m_timeStep/ns))};
                 raw.push_back(hit);

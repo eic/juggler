@@ -15,6 +15,7 @@
 // Event Model related classes
 #include "dd4pod/Geant4ParticleCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
+#include "eicd/ReconstructedParticleRelationsCollection.h"
 #include "eicd/TrackParametersCollection.h"
 #include "eicd/VectorPolar.h"
 
@@ -26,8 +27,10 @@ public:
                                                                       this};
   DataHandle<eic::TrackParametersCollection> m_inputTrackCollection{"inputTrackParameters", Gaudi::DataHandle::Reader,
                                                                     this};
-  DataHandle<eic::ReconstructedParticleCollection> m_outputParticleCollection{"outputParticles",
-                                                                              Gaudi::DataHandle::Writer, this};
+  DataHandle<eic::ReconstructedParticleCollection> m_outputParticleCollection{
+      "ReconstructedParticles", Gaudi::DataHandle::Writer, this};
+  DataHandle<eic::ReconstructedParticleRelationsCollection> m_outputRelationsCollection{
+      "ReconstructedParticleRelations", Gaudi::DataHandle::Writer, this};
 
   // Matching momentum tolerance requires 10% by default;
   Gaudi::Property<double> m_pRelativeTolerance{this, "pRelativeTolerance", {0.1}};
@@ -36,11 +39,14 @@ public:
   // Matchin eta tolerance of 0.1
   Gaudi::Property<double> m_etaTolerance{this, "etaTolerance", {0.2}};
 
+  const int32_t m_kMonteCarloSource{uniqueID<int32_t>("mcparticles")};
+
   ParticlesWithTruthPID(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
     declareProperty("inputMCParticles", m_inputTruthCollection, "mcparticles");
     declareProperty("inputTrackParameters", m_inputTrackCollection, "outputTrackParameters");
     declareProperty("outputParticles", m_outputParticleCollection, "ReconstructedParticles");
+    declareProperty("outputRelations", m_outputParticleCollection, "ReconstructedParticleRelations");
   }
   StatusCode initialize() override {
     if (GaudiAlgorithm::initialize().isFailure())
@@ -53,6 +59,7 @@ public:
     const auto& mc     = *(m_inputTruthCollection.get());
     const auto& tracks = *(m_inputTrackCollection.get());
     auto& part         = *(m_outputParticleCollection.createAndPut());
+    auto& rel          = *(m_outputRelationsCollection.createAndPut());
 
     const double sinPhiOver2Tolerance = sin(0.5 * m_phiTolerance);
     std::vector<bool> consumed(mc.size(), false);
@@ -88,6 +95,7 @@ public:
       eic::VectorXYZ vertex;
       float time = 0;
       float mass = 0;
+      eic::Index mcID;
       if (best_match >= 0) {
         consumed[best_match] = true;
         const auto& mcpart   = mc[best_match];
@@ -95,25 +103,29 @@ public:
         vertex               = {mcpart.vs().x, mcpart.vs().y, mcpart.vs().z};
         time                 = mcpart.time();
         mass                 = mcpart.mass();
+        mcID                 = {mcpart.ID(), m_kMonteCarloSource};
       }
-      eic::ReconstructedParticle rec_part{ID++,
+      eic::ReconstructedParticle rec_part{{ID++, algorithmID()},
                                           mom,
                                           vertex,
                                           time,
                                           best_pid,
                                           static_cast<int16_t>(best_match >= 0 ? 0 : -1) /* status */,
                                           static_cast<int16_t>(charge_rec),
-                                          algorithmID(),
                                           1. /* weight */,
                                           {mom.theta(), mom.phi()},
                                           mom.mag(),
                                           std::hypot(mom.mag(), mass),
                                           mass};
+      eic::ReconstructedParticleRelations rel_part;
+      rel_part.recID(rec_part.ID());
+      rel_part.mcID(mcID);
       part.push_back(rec_part);
+      rel.push_back(rel_part);
       if (msgLevel(MSG::DEBUG)) {
         if (best_match > 0) {
           const auto& mcpart = mc[best_match];
-          debug() << fmt::format("Matched track {} with MC particle {}\n", trk.ID(), best_match) << endmsg;
+          debug() << fmt::format("Matched track {} with MC particle {}\n", trk.ID().value, best_match) << endmsg;
           debug() << fmt::format("  - Track: (mom: {}, theta: {}, phi: {}, charge: {})", mom.mag(), mom.theta(),
                                  mom.phi(), charge_rec)
                   << endmsg;
@@ -122,7 +134,7 @@ public:
                                  mcpart.pdgID())
                   << endmsg;
         } else {
-          debug() << fmt::format("Did not find a good match for track {} \n", trk.ID()) << endmsg;
+          debug() << fmt::format("Did not find a good match for track {} \n", trk.ID().value) << endmsg;
           debug() << fmt::format("  - Track: (mom: {}, theta: {}, phi: {}, charge: {})", mom.mag(), mom.theta(),
                                  mom.phi(), charge_rec)
                   << endmsg;

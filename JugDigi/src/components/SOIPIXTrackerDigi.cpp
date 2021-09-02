@@ -6,8 +6,8 @@
 #include "GaudiKernel/RndmGenerators.h"
 #include "Gaudi/Property.h"
 
-// FCCSW
 #include "JugBase/DataHandle.h"
+#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 //#include "GaudiExamples/MyTrack.h"
@@ -21,7 +21,7 @@ namespace Jug {
      *
      * \ingroup digi
      */
-   class SOIPIXTrackerDigi : public GaudiAlgorithm {
+   class SOIPIXTrackerDigi : public GaudiAlgorithm, AlgorithmIDMixin<> {
    public:
     Gaudi::Property<double>                  m_timeResolution{this, "timeResolution", 1e3};  // ns -- todo add units
     Rndm::Numbers                            m_gaussDist;
@@ -30,11 +30,11 @@ namespace Jug {
 
    public:
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
-    SOIPIXTrackerDigi(const std::string& name, ISvcLocator* svcLoc)
-        : GaudiAlgorithm(name, svcLoc) {
-          declareProperty("inputHitCollection", m_inputHitCollection,"");
-          declareProperty("outputHitCollection", m_outputHitCollection, "");
-        }
+     SOIPIXTrackerDigi(const std::string& name, ISvcLocator* svcLoc)
+         : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
+       declareProperty("inputHitCollection", m_inputHitCollection, "");
+       declareProperty("outputHitCollection", m_outputHitCollection, "");
+     }
     StatusCode initialize() override {
       if (GaudiAlgorithm::initialize().isFailure())
         return StatusCode::FAILURE;
@@ -56,9 +56,9 @@ namespace Jug {
         // std::cout << ahit << "\n";
         if (cell_hit_map.count(ahit.cellID()) == 0) {
           cell_hit_map[ahit.cellID()] = rawhits->size();
-          eic::RawTrackerHit rawhit((long long)ahit.cellID(),
-                                    ID++,
-                                    ahit.truth().time * 1e6 + m_gaussDist() * 1e6, // ns->fs
+          eic::RawTrackerHit rawhit({ID++, algorithmID()}, (long long)ahit.cellID(),
+                                    ahit.truth().time * 1e6 +
+                                        m_gaussDist() * 1e6, // ns->fs
                                     std::llround(ahit.energyDeposit() * 1e6));
           rawhits->push_back(rawhit);
         } else {
