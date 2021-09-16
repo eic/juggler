@@ -118,7 +118,8 @@ private:
   std::vector<RecData> zdc(const dd4pod::Geant4ParticleCollection& mc) {
     std::vector<RecData> rc;
     for (const auto& part : mc) {
-      if (part.genStatus() != 1) {
+      if (part.genStatus() > 1) {
+        debug() << "ignoring particle with genStatus = " << part.genStatus() << endmsg;
         continue;
       }
       // only detect neutrons and photons

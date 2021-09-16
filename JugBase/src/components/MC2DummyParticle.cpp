@@ -57,7 +57,8 @@ namespace Jug::Base {
         auto relations = m_outputRelCollection.createAndPut();
         int ID = 0;
         for (const auto& p : *parts) {
-          if (p.genStatus() != 1) {
+          if (p.genStatus() > 1) {
+            debug() << "ignoring particle with genStatus = " << p.genStatus() << endmsg;
             continue;
           }
 
