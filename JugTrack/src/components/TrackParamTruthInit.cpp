@@ -83,7 +83,9 @@ namespace Jug::Reco {
 
         // genStatus = 1 means thrown G4Primary 
         if (part.genStatus() > 1 ) {
-          debug() << "ignoring particle with genStatus = " << part.genStatus() << endmsg;
+          if (msgLevel(MSG::DEBUG)) {
+            debug() << "ignoring particle with genStatus = " << part.genStatus() << endmsg;
+          }
           continue;
         }
         using Acts::UnitConstants::GeV;

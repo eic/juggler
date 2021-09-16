@@ -119,7 +119,9 @@ private:
     std::vector<RecData> rc;
     for (const auto& part : mc) {
       if (part.genStatus() > 1) {
-        debug() << "ignoring particle with genStatus = " << part.genStatus() << endmsg;
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << "ignoring particle with genStatus = " << part.genStatus() << endmsg;
+        }
         continue;
       }
       // only detect neutrons and photons
@@ -175,7 +177,10 @@ private:
   std::vector<RecData> b0(const dd4pod::Geant4ParticleCollection& mc) {
     std::vector<RecData> rc;
     for (const auto& part : mc) {
-      if (part.genStatus() != 1) {
+      if (part.genStatus() > 1) {
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << "ignoring particle with genStatus = " << part.genStatus() << endmsg;
+        }
         continue;
       }
       // only detect charged hadrons and photons
@@ -205,7 +210,10 @@ private:
   std::vector<RecData> rp(const dd4pod::Geant4ParticleCollection& mc) {
     std::vector<RecData> rc;
     for (const auto& part : mc) {
-      if (part.genStatus() != 1) {
+      if (part.genStatus() > 1) {
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << "ignoring particle with genStatus = " << part.genStatus() << endmsg;
+        }
         continue;
       }
       // only detect protons
@@ -233,7 +241,10 @@ private:
   std::vector<RecData> omd(const dd4pod::Geant4ParticleCollection& mc) {
     std::vector<RecData> rc;
     for (const auto& part : mc) {
-      if (part.genStatus() != 1) {
+      if (part.genStatus() > 1) {
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << "ignoring particle with genStatus = " << part.genStatus() << endmsg;
+        }
         continue;
       }
       // only detect protons

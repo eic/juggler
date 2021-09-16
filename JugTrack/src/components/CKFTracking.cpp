@@ -139,9 +139,9 @@ namespace Jug::Reco {
                                    std::move(trackFindingOutput.trackTips),
                                    std::move(trackFindingOutput.fittedParameters));
       } else {
-        debug() << "Track finding failed for truth seed " << iseed << endmsg;
-        ACTS_WARNING("Track finding failed for truth seed " << iseed << " with error" << result.error());
-        // trajectories->push_back(SimMultiTrajectory());
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << "Track finding failed for truth seed " << iseed << "with error: " << result.error() << endmsg;
+        }
       }
     }
 

@@ -70,6 +70,7 @@ namespace Jug::Reco {
 
   StatusCode TrackFindingAlgorithm::initialize()
   {
+    warning() << "Deprecated algorithm, use CKFTracking instead" << endmsg;
     if (GaudiAlgorithm::initialize().isFailure())
       return StatusCode::FAILURE;
     m_geoSvc = service("GeoSvc");
@@ -139,7 +140,9 @@ namespace Jug::Reco {
                                    std::move(trackFindingOutput.trackTips),
                                    std::move(trackFindingOutput.fittedParameters));
       } else {
-        debug() << "Track finding failed for truth seed " << iseed << endmsg;
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << "Track finding failed for truth seed " << iseed << endmsg;
+        }
         ACTS_WARNING("Track finding failed for truth seed " << iseed << " with error" << result.error());
         // trajectories->push_back(SimMultiTrajectory());
       }

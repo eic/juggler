@@ -74,7 +74,9 @@ public:
       for (size_t ip = 0; ip < mc.size(); ++ip) {
         const auto& mcpart = mc[ip];
         if (consumed[ip] || mcpart.genStatus() > 1 || mcpart.charge() == 0 || mcpart.charge() * charge_rec < 0) {
-          debug() << "ignoring non-primary/neutral/opposite charge particle" << endmsg;
+          if (msgLevel(MSG::DEBUG)) {
+            debug() << "ignoring non-primary/neutral/opposite charge particle" << endmsg;
+          }
           continue;
         }
         const double dp_rel = std::abs((mom.mag() - mcpart.ps().mag()) / mcpart.ps().mag());

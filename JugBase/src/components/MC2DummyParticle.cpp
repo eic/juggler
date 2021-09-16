@@ -58,7 +58,9 @@ namespace Jug::Base {
         int ID = 0;
         for (const auto& p : *parts) {
           if (p.genStatus() > 1) {
-            debug() << "ignoring particle with genStatus = " << p.genStatus() << endmsg;
+            if (msgLevel(MSG::DEBUG)) {
+              debug() << "ignoring particle with genStatus = " << p.genStatus() << endmsg;
+            }
             continue;
           }
 
