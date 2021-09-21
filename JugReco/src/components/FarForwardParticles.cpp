@@ -28,10 +28,13 @@ DataHandle<eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHit
         Gaudi::Property<double> local_x_slope_offset{this, "localXSlopeOffset", -0.00622147};
         Gaudi::Property<double> local_y_slope_offset{this, "localYSlopeOffset", -0.0451035};
         Gaudi::Property<double> crossingAngle{this, "crossingAngle", -0.025};
-        Gaudi::Property<double> NOM_MOMENTUM{this, "beamMomentum", 275.0};
-        Gaudi::Property<double> base{this, "detSeparationZ", 2000.0};
+        Gaudi::Property<double> nomMomentum{this, "beamMomentum", 275.0};
         
-        
+        const double aXRP[2][2] = {{2.102403743, 29.11067626}, {0.186640381, 0.192604619}};
+        const double aYRP[2][2] = {{0.0000159900, 3.94082098}, {0.0000079946, -0.1402995}};
+
+        double aXRPinv[2][2];
+        double aYRPinv[2][2];
         
     public:
         FarForwardParticles(const std::string& name, ISvcLocator* svcLoc)
@@ -44,6 +47,27 @@ DataHandle<eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHit
             if (GaudiAlgorithm::initialize().isFailure())
                 return StatusCode::FAILURE;
             
+
+            double det = aXRP[0][0]*aXRP[1][1] - aXRP[0][1]*aXRP[1][0];
+          
+            if(det == 0){
+                error() << "Reco matrix determinant = 0!"
+                << "Matrix cannot be inverted! Double-check matrix!"
+                << endmsg;
+                return StatusCode::FAILURE;
+            }
+
+            aXRPinv[0][0] =  aXRP[1][1]/det;
+            aXRPinv[0][1] = -aXRP[0][1]/det;
+            aXRPinv[1][0] = -aXRP[1][0]/det;
+            aXRPinv[1][1] =  aXRP[0][0]/det;
+        
+            det = aYRP[0][0]*aYRP[1][1] - aYRP[0][1]*aYRP[1][0];
+            aYRPinv[0][0] =  aYRP[1][1]/det;
+            aYRPinv[0][1] = -aYRP[0][1]/det;
+            aYRPinv[1][0] = -aYRP[1][0]/det;
+            aYRPinv[1][1] =  aYRP[0][0]/det;
+
             return StatusCode::SUCCESS;
         }
         
@@ -62,30 +86,10 @@ DataHandle<eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHit
                 
                 //---- begin Roman Pot Reconstruction code ----
             
-                double aXRP[2][2] = {{2.102403743, 29.11067626}, {0.186640381, 0.192604619}};
-                double aYRP[2][2] = {{0.0000159900, 3.94082098}, {0.0000079946, -0.1402995}};
-                
                 int eventReset = 0; //counter for IDing at least one hit per layer
                 double hitx[100];
                 double hity[100];
                 double hitz[100];
-            
-                double aXRPinv[2][2];
-                double aYRPinv[2][2];
-            
-            
-                double det = aXRP[0][0]*aXRP[1][1] - aXRP[0][1]*aXRP[1][0];
-            
-                aXRPinv[0][0] =  aXRP[1][1]/det;
-                aXRPinv[0][1] = -aXRP[0][1]/det;
-                aXRPinv[1][0] = -aXRP[1][0]/det;
-                aXRPinv[1][1] =  aXRP[0][0]/det;
-            
-                det = aYRP[0][0]*aYRP[1][1] - aYRP[0][1]*aYRP[1][0];
-                aYRPinv[0][0] =  aYRP[1][1]/det;
-                aYRPinv[0][1] = -aYRP[0][1]/det;
-                aYRPinv[1][0] = -aYRP[1][0]/det;
-                aYRPinv[1][1] =  aYRP[0][0]/det;
             
                 for (const auto& h : *rawhits) {
                     
@@ -119,11 +123,17 @@ DataHandle<eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHit
                     XL[0] = hitx[0]; YL[0] = hity[0];
                     XL[1] = hitx[2]; YL[1] = hity[2];
                     
-                    double Xrp[2], Xip[2]; Xrp[0] = XL[1]; Xrp[1] = (1000*(XL[1] - XL[0])/(hitz[3] - hitz[0])) - local_x_slope_offset; //- _SX0RP_;
-                    double Yrp[2], Yip[2]; Yrp[0] = YL[1]; Yrp[1] = (1000*(YL[1] - YL[0])/(hitz[3] - hitz[0])) - local_y_slope_offset; //- _SY0RP_;
-                    
-                    Xip[0] = Xip[1] = 0.0;
-                    Yip[0] = Yip[1] = 0.0;
+                    double base = hitz[2] - hitz[0];
+
+                    if(base == 0) {
+                        error() << "Detector separation = 0!"
+                        << "Cannot calculate slope!"
+                        << endmsg;
+                        return StatusCode::FAILURE;
+                    }
+
+                    double Xrp[2], Xip[2] = {0.0, 0.0}; Xrp[0] = XL[1]; Xrp[1] = (1000*(XL[1] - XL[0])/(base)) - local_x_slope_offset; //- _SX0RP_;
+                    double Yrp[2], Yip[2] = {0.0 ,0.0}; Yrp[0] = YL[1]; Yrp[1] = (1000*(YL[1] - YL[0])/(base)) - local_y_slope_offset; //- _SY0RP_;
                     
                     //use the hit information and calculated slope at the RP + the transfer matrix inverse to calculate the Polar Angle and deltaP at the IP
                     
@@ -138,9 +148,9 @@ DataHandle<eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHit
                     double rsx = Xip[1]/1000., rsy = Yip[1]/1000.;
                     
                     //calculate momentum magnitude from measured deltaP – using thin lens optics.
-                    double p = NOM_MOMENTUM*(1 + 0.01*Xip[0]);
+                    double p = nomMomentum*(1 + 0.01*Xip[0]);
                     double norm = std::sqrt(1.0 + rsx*rsx + rsy*rsy);
-                    
+                                        
                     double prec[3];
                     prec[0] = p*rsx/norm;
                     prec[1] = p*rsy/norm;
