@@ -126,10 +126,11 @@ namespace Jug::Reco {
               {parameter[Acts::eBoundTheta], parameter[Acts::eBoundPhi]},
               {sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)),
                sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi))},
-               parameter[Acts::eBoundQOverP], 
-               sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)),
-               parameter[Acts::eBoundTime],
-               sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime))};
+              parameter[Acts::eBoundQOverP], 
+              sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)),
+              parameter[Acts::eBoundTime],
+              sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)),
+              static_cast<float>(std::copysign(1., parameter[Acts::eBoundQOverP]))}; // charge
             track_pars->push_back(pars);
           }
 
