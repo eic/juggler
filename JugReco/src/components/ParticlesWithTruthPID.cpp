@@ -46,7 +46,7 @@ public:
     declareProperty("inputMCParticles", m_inputTruthCollection, "mcparticles");
     declareProperty("inputTrackParameters", m_inputTrackCollection, "outputTrackParameters");
     declareProperty("outputParticles", m_outputParticleCollection, "ReconstructedParticles");
-    declareProperty("outputRelations", m_outputParticleCollection, "ReconstructedParticleRelations");
+    declareProperty("outputRelations", m_outputRelationsCollection, "ReconstructedParticleRelations");
   }
   StatusCode initialize() override {
     if (GaudiAlgorithm::initialize().isFailure())
