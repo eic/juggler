@@ -317,13 +317,20 @@ namespace Jug::Reco {
                      eic::ProtoClusterCollection& proto) const {
       // special cases
       if (maxima.size() == 0) {
+        if (msgLevel(MSG::VERBOSE)) {
+          verbose() << "No maxima found, not building any clusters" << endmsg;
+        }
         return;
       } else if (maxima.size() == 1) {
         eic::ProtoCluster pcl{{static_cast<int32_t>(clusterID), algorithmID()}};
         for (auto& [idx, hit] : group) {
           pcl.addhits({hit.ID(), idx, 1.});
         }
+        proto.push_back(pcl);
         clusterID += 1;
+        if (msgLevel(MSG::VERBOSE)) {
+          verbose() << "A single maximum found, added one ProtoCluster" << endmsg;
+        }
         return;
       }
 
@@ -371,6 +378,9 @@ namespace Jug::Reco {
       }
       for (auto& pcl : pcls) {
         proto.push_back(pcl);
+      }
+      if (msgLevel(MSG::VERBOSE)) {
+        verbose() << "Multiple (" << maxima.size() << ") maxima found, added a ProtoClusters for each maximum" << endmsg;
       }
       clusterID += maxima.size();
       return;
