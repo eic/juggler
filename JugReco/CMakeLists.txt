@@ -34,6 +34,8 @@ gaudi_add_module(JugRecoPlugins
   src/components/TopologicalCellCluster.cpp 
   src/components/ImagingPixelReco.cpp 
   src/components/ImagingPixelMerger.cpp 
+  src/components/ImagingPixelDataCombiner.cpp 
+  src/components/ImagingPixelDataSorter.cpp 
   src/components/ImagingTopoCluster.cpp 
   src/components/ImagingClusterReco.cpp 
   LINK
