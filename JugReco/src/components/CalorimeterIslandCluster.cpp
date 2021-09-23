@@ -180,7 +180,7 @@ namespace Jug::Reco {
       auto& proto = *m_outputProtoCollection.createAndPut();
 
       // group neighboring hits
-      std::vector<std::vector<eic::ConstCalorimeterHit>> groups;
+      std::vector<std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>>> groups;
 
       std::vector<bool> visits(hits.size(), false);
       for (size_t i = 0; i < hits.size(); ++i) {
@@ -234,16 +234,15 @@ namespace Jug::Reco {
     }
 
     // grouping function with Depth-First Search
-    void dfs_group(std::vector<eic::ConstCalorimeterHit>& group, int idx,
-                   const eic::CalorimeterHitCollection& hits, std::vector<bool>& visits) const
-    {
+    void dfs_group(std::vector <std::pair<uint32_t, eic::ConstCalorimeterHit>> & group, int idx,
+                   const eic::CalorimeterHitCollection& hits, std::vector<bool>& visits) const {
       // not a qualified hit to particpate clustering, stop here
       if (hits[idx].energy() < minClusterHitEdep) {
         visits[idx] = true;
         return;
       }
 
-      group.push_back(hits[idx]);
+      group.push_back({idx, hits[idx]});
       visits[idx] = true;
       for (size_t i = 0; i < hits.size(); ++i) {
         if (visits[i] || !is_neighbour(hits[idx], hits[i])) {
@@ -254,9 +253,8 @@ namespace Jug::Reco {
     }
 
     // find local maxima that above a certain threshold
-    std::vector<eic::ConstCalorimeterHit> find_maxima(const std::vector<eic::ConstCalorimeterHit>& group,
-                                                      bool global = false) const
-    {
+    std::vector<eic::ConstCalorimeterHit>
+    find_maxima(const std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>>& group, bool global = false) const {
       std::vector<eic::ConstCalorimeterHit> maxima;
       if (group.empty()) {
         return maxima;
@@ -265,26 +263,27 @@ namespace Jug::Reco {
       if (global) {
         int mpos = 0;
         for (size_t i = 0; i < group.size(); ++i) {
-          if (group[mpos].energy() < group[i].energy()) {
+          if (group[mpos].second.energy() < group[i].second.energy()) {
             mpos = i;
           }
         }
-        if (group[mpos].energy() >= minClusterCenterEdep) {
-            maxima.push_back(group[mpos]);
+        if (group[mpos].second.energy() >= minClusterCenterEdep) {
+            maxima.push_back(group[mpos].second);
         }
         return maxima;
       }
 
-      for (auto& hit : group) {
+      for (auto& [idx, hit] : group) {
         // not a qualified center
         if (hit.energy() < minClusterCenterEdep) {
           continue;
         }
 
         bool maximum = true;
-        for (auto& hit2 : group) {
-          if (hit == hit2)
+        for (auto& [idx2, hit2] : group) {
+          if (hit == hit2) {
             continue;
+          }
 
           if (is_neighbour(hit, hit2) && hit2.energy() > hit.energy()) {
             maximum = false;
@@ -313,19 +312,16 @@ namespace Jug::Reco {
     }
 
     // split a group of hits according to the local maxima
-    // split_hits is used to persistify the data
-    void split_group(std::vector<eic::ConstCalorimeterHit>& group,
-                     const std::vector<eic::ConstCalorimeterHit>& maxima,
-                     size_t& clusterID, eic::ProtoClusterCollection& proto) const
-    {
+    void split_group(std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>>& group,
+                     const std::vector<eic::ConstCalorimeterHit>& maxima, size_t& clusterID,
+                     eic::ProtoClusterCollection& proto) const {
       // special cases
       if (maxima.size() == 0) {
         return;
       } else if (maxima.size() == 1) {
-        for (auto& hit : group) {
-          eic::ProtoCluster pcl{
-              hit.ID(), {static_cast<int32_t>(clusterID), algorithmID()}, 1.};
-          proto.push_back(pcl);
+        eic::ProtoCluster pcl{{static_cast<int32_t>(clusterID), algorithmID()}};
+        for (auto& [idx, hit] : group) {
+          pcl.addhits({hit.ID(), idx, 1.});
         }
         clusterID += 1;
         return;
@@ -333,17 +329,23 @@ namespace Jug::Reco {
 
       // split between maxima
       // TODO, here we can implement iterations with profile, or even ML for better splits
-      std::vector<double>       weights(maxima.size());
-      size_t                    n_clus = clusterID + 1;
-      size_t                    i      = 0;
-      for (auto it = group.begin(); it != group.end(); ++it, ++i) {
+      std::vector<double> weights(maxima.size(), 1.);
+      std::vector<eic::ProtoCluster> pcls;
+      const size_t n_clus = clusterID + 1;
+      for (size_t k = 0; k < maxima.size(); ++k) {
+        pcls.push_back({{static_cast<int32_t>(n_clus + k), algorithmID()}});
+      }
+
+      size_t i      = 0;
+      for (const auto& [idx, hit] : group) {
         size_t j     = 0;
         // calculate weights for local maxima
-        for (auto cit = maxima.begin(); cit != maxima.end(); ++cit, ++j) {
-          double dist_ref = cit->dimension().x;
-          double energy   = cit->energy();
-          double dist     = hitsDist(*cit, *it).mag();
+        for (const auto& chit : maxima) {
+          double dist_ref = chit.dimension().x;
+          double energy   = chit.energy();
+          double dist     = hitsDist(chit, hit).mag();
           weights[j]      = std::exp(-dist / dist_ref) * energy;
+          j += 1;
         }
 
         // normalize weights
@@ -363,10 +365,12 @@ namespace Jug::Reco {
           if (weight <= 1e-6) {
             continue;
           }
-          eic::ProtoCluster pcl{
-              it->ID(), {static_cast<int32_t>(n_clus + k), algorithmID()}, weight};
-          proto.push_back(pcl);
+          pcls[k].addhits({hit.ID(), idx, weight});
         }
+        i += 1;
+      }
+      for (auto& pcl : pcls) {
+        proto.push_back(pcl);
       }
       clusterID += maxima.size();
       return;

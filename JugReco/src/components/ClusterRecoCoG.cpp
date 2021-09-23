@@ -30,10 +30,10 @@
 #include "JugBase/UniqueID.h"
 
 // Event Model related classes
+#include "dd4pod/CalorimeterHitCollection.h"
 #include "eicd/CalorimeterHitCollection.h"
 #include "eicd/ProtoClusterCollection.h"
 #include "eicd/ClusterCollection.h"
-#include "eicd/Cluster2DInfoCollection.h"
 #include "eicd/VectorPolar.h"
 
 using namespace Gaudi::Units;
@@ -70,14 +70,21 @@ namespace Jug::Reco {
     Gaudi::Property<double>                   m_depthCorrection{this, "depthCorrection", 0.0};
     Gaudi::Property<std::string>              m_energyWeight{this, "energyWeight", "log"};
     Gaudi::Property<std::string>              m_moduleDimZName{this, "moduleDimZName", ""};
+
+    Gaudi::Property<std::string>              m_mcHits{this, "mcHits", ""};
+
     DataHandle<eic::CalorimeterHitCollection> m_inputHits{"inputHitCollection",
                                                           Gaudi::DataHandle::Reader, this};
     DataHandle<eic::ProtoClusterCollection>   m_inputProto{"inputProtoClusterCollection",
                                                            Gaudi::DataHandle::Reader, this};
     DataHandle<eic::ClusterCollection>        m_outputClusters{"outputClusterCollection",
                                                                Gaudi::DataHandle::Writer, this};
-    DataHandle<eic::Cluster2DInfoCollection>  m_outputInfo{"outputInfoCollection",
-                                                                  Gaudi::DataHandle::Writer, this};
+
+    // Monte Carlo particle source identifier
+    const int32_t m_kMonteCarloSource{uniqueID<int32_t>("mcparticles")};
+    // Optional handle to MC hits
+    std::unique_ptr<DataHandle<dd4pod::CalorimeterHitCollection>> m_inputMC;
+
     // Pointer to the geometry service
     SmartIF<IGeoSvc>                                   m_geoSvc;
     double                                             m_depthCorr;
@@ -90,7 +97,6 @@ namespace Jug::Reco {
       declareProperty("inputHitCollection", m_inputHits, "");
       declareProperty("inputProtoClusterCollection", m_inputProto, "");
       declareProperty("outputClusterCollection", m_outputClusters, "");
-      declareProperty("outputInfoCollection", m_outputInfo, "");
     }
 
     StatusCode initialize() override
@@ -98,6 +104,13 @@ namespace Jug::Reco {
       if (GaudiAlgorithm::initialize().isFailure()) {
         return StatusCode::FAILURE;
       }
+      // Initialize the MC input hit collection if requested
+      if (m_mcHits != "") {
+        m_inputMC =
+            std::make_unique<DataHandle<dd4pod::CalorimeterHitCollection>>(m_mcHits, Gaudi::DataHandle::Reader, this);
+      }
+      //
+      //
       m_geoSvc = service("GeoSvc");
       if (!m_geoSvc) {
         error() << "Unable to locate Geometry Service. "
@@ -131,40 +144,23 @@ namespace Jug::Reco {
     StatusCode execute() override
     {
       // input collections
-      const auto& hits     = *m_inputHits.get();
-      const auto& proto    = *m_inputProto.get();
-      auto&       clusters = *m_outputClusters.createAndPut();
-      auto&       info     = *m_outputInfo.createAndPut();
-
-      // Create a map of clusterID --> associated hits by looping over our clustered hits
-      std::map<int, std::vector<std::pair<eic::ConstProtoCluster, 
-                                          eic::ConstCalorimeterHit>>> cluster_map;
-      for (const auto& pc : proto) {
-        const size_t clusterID = pc.clusterID().value;
-        if (!cluster_map.count(clusterID)) {
-          cluster_map[clusterID] = {};
-        }
-        size_t idx;
-        for (idx = 0; idx < hits.size(); ++idx) {
-          if (hits[idx].ID() == pc.hitID()) {
-            break;
-          }
-        }
-        if (idx >= hits.size()) {
-          continue;
-        }
-        cluster_map[clusterID].push_back({pc, hits[idx]});
+      const auto& hits   = *m_inputHits.get();
+      const auto& proto  = *m_inputProto.get();
+      auto& clusters     = *m_outputClusters.createAndPut();
+      // Optional MC data
+      const dd4pod::CalorimeterHitCollection* mcHits = nullptr;
+      if (m_inputMC) {
+        mcHits = m_inputMC->get();
       }
 
-      for (const auto& [idx, hit_info] : cluster_map) {
-        auto cl = reconstruct(hit_info, idx);
+      for (const auto& pcl : proto) {
+        auto cl = reconstruct(pcl, hits, mcHits);
 
         if (msgLevel(MSG::DEBUG)) {
           debug() << cl.nhits() << " hits: " << cl.energy() / GeV << " GeV, (" << cl.position().x / mm << ", "
                   << cl.position().y / mm << ", " << cl.position().z / mm << ")" << endmsg;
         }
         clusters.push_back(cl);
-        info.push_back({cl.ID(), cl.position(), cl.position().eta()});
       }
 
       return StatusCode::SUCCESS;
@@ -178,31 +174,30 @@ namespace Jug::Reco {
       return eic::VectorPolar{r, std::acos(cart.z / r), std::atan2(cart.y, cart.x)};
     }
 
-    eic::Cluster reconstruct(const std::vector<std::pair<eic::ConstProtoCluster,
-                                                         eic::ConstCalorimeterHit>>& hit_info, 
-                             const int idx) const
-    {
+    eic::Cluster reconstruct(const eic::ConstProtoCluster& pcl, const eic::CalorimeterHitCollection& hits,
+                             const dd4pod::CalorimeterHitCollection* mcHits) const {
       eic::Cluster cl;
-      cl.ID({idx, algorithmID()});
-      cl.nhits(hit_info.size());
+      cl.ID({pcl.ID(), algorithmID()});
+      cl.nhits(pcl.hits_size());
 
       // no hits
       if (msgLevel(MSG::DEBUG)) {
-        debug() << "hit size = " << hit_info.size() << endmsg;
+        debug() << "hit size = " << pcl.hits_size() << endmsg;
       }
-      if (hit_info.empty()) {
+      if (pcl.hits_size() == 0) {
         return cl;
       }
 
       // calculate total energy, find the cell with the maximum energy deposit
       float totalE   = 0.;
       float maxE     = 0.;
-      auto time = hit_info[0].second.time();
-      for (const auto& [proto, hit] : hit_info) {
+      auto time = hits[pcl.hits(0).ID.value].time();
+      for (const auto& clhit : pcl.hits()) {
+        const auto& hit = hits[clhit.index];
         if (msgLevel(MSG::DEBUG)) {
-          debug() << "hit energy = " << hit.energy() << " hit weight: " << proto.weight() << endmsg;
+          debug() << "hit energy = " << hit.energy() << " hit weight: " << clhit.weight << endmsg;
         }
-        auto energy = hit.energy() * proto.weight();
+        auto energy = hit.energy() * clhit.weight;
         totalE += energy;
         if (energy > maxE) {
           maxE     = energy;
@@ -216,8 +211,9 @@ namespace Jug::Reco {
       // center of gravity with logarithmic weighting
       float tw = 0.;
       eic::VectorXYZ v;
-      for (const auto& [proto, hit] : hit_info) {
-        float w = weightFunc(hit.energy()*proto.weight(), totalE, m_logWeightBase.value(), 0);
+      for (const auto& clhit : pcl.hits()) {
+        const auto& hit = hits[clhit.index];
+        float w = weightFunc(hit.energy()*clhit.weight, totalE, m_logWeightBase.value(), 0);
         tw += w;
         v = v.add(hit.position().scale(w));
       }
@@ -227,11 +223,40 @@ namespace Jug::Reco {
       cl.position(v.scale(1/tw));
       cl.positionError({}); // @TODO: Covariance matrix
 
+      // Additional convenience variables
+      cl.polar(cl.position());
+      cl.eta(cl.position().eta());
+
+      // best estimate on the cluster direction is the cluster position
+      // for simple 2D CoG clustering
+      cl.direction({cl.polar().theta, cl.polar().phi});
+
+      // Calculate radius
+      // @TODO: add skewness
+      if (cl.nhits() > 1) {
+        double radius = 0;
+        for (const auto& clhit : pcl.hits()) {
+          const auto& hit  = hits[clhit.index];
+          const auto delta = cl.position().subtract(hit.position());
+          radius += delta.dot(delta);
+        }
+        radius = sqrt((1. / (cl.nhits() - 1.)) * radius);
+        cl.radius(radius);
+        // skewness not yet calculated
+        cl.skewness(0);
+      }
+
+      // Optionally store the MC truth associated with the first hit in this cluster
+      if (mcHits) {
+        const auto& mc_hit    = (*mcHits)[pcl.hits(0).ID.value];
+        cl.mcID({mc_hit.truth().trackID, m_kMonteCarloSource});
+      }
+
       return cl;
     }
   };
 
   DECLARE_COMPONENT(ClusterRecoCoG)
 
-} // namespace Jug::Reco
+  } // namespace Jug::Reco
 

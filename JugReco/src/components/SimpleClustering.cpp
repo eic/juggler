@@ -17,6 +17,7 @@
 #include "JugBase/UniqueID.h"
 
 // Event Model related classes
+#include "dd4pod/CalorimeterHitCollection.h"
 #include "eicd/CalorimeterHitCollection.h"
 #include "eicd/ClusterCollection.h"
 #include "eicd/ProtoClusterCollection.h"
@@ -40,11 +41,18 @@ namespace Jug::Reco {
     DataHandle<ProtoClusters> m_outputProtoClusters{"outputProtoCluster", Gaudi::DataHandle::Writer, this};
     DataHandle<Clusters>      m_outputClusters{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
 
+    Gaudi::Property<std::string> m_mcHits{this, "mcHits", ""};
+
     Gaudi::Property<double>   m_minModuleEdep{this, "minModuleEdep", 5.0 * MeV};
     Gaudi::Property<double>   m_maxDistance{this, "maxDistance", 20.0 * cm};
 
     /// Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
+
+    // Monte Carlo particle source identifier
+    const int32_t m_kMonteCarloSource{uniqueID<int32_t>("mcparticles")};
+    // Optional handle to MC hits
+    std::unique_ptr<DataHandle<dd4pod::CalorimeterHitCollection>> m_inputMC;
 
     SimpleClustering(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
@@ -58,6 +66,11 @@ namespace Jug::Reco {
     {
       if (GaudiAlgorithm::initialize().isFailure()) {
         return StatusCode::FAILURE;
+      }
+      // Initialize the MC input hit collection if requested
+      if (m_mcHits != "") {
+        m_inputMC =
+            std::make_unique<DataHandle<dd4pod::CalorimeterHitCollection>>(m_mcHits, Gaudi::DataHandle::Reader, this);
       }
       m_geoSvc = service("GeoSvc");
       if (!m_geoSvc) {
@@ -75,22 +88,31 @@ namespace Jug::Reco {
       // Create output collections
       auto& proto = *m_outputProtoClusters.createAndPut();
       auto& clusters = *m_outputClusters.createAndPut();
+      // Optional MC data
+      const dd4pod::CalorimeterHitCollection* mcHits = nullptr;
+      if (m_inputMC) {
+        mcHits = m_inputMC->get();
+      }
 
-      std::vector<eic::ConstCalorimeterHit> the_hits;
-      std::vector<eic::ConstCalorimeterHit> remaining_hits;
+      std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>> the_hits;
+      std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>> remaining_hits;
 
       double max_dist   = m_maxDistance.value() / mm;
       double min_energy = m_minModuleEdep.value() / GeV;
 
       eic::ConstCalorimeterHit ref_hit;
-      bool                have_ref = false;
-      for (const auto& h : hits) {
-        //const eic::CalorimeterHit h = ch.clone();
-        if (!have_ref || h.energy() > ref_hit.energy()) {
-          ref_hit  = h;
-          have_ref = true;
+      bool have_ref = false;
+      // Collect all our hits, and get the highest energy hit
+      {
+        uint32_t idx  = 0;
+        for (const auto& h : hits) {
+          if (!have_ref || h.energy() > ref_hit.energy()) {
+            ref_hit  = h;
+            have_ref = true;
+          }
+          the_hits.push_back({idx, h});
+          idx += 1;
         }
-        the_hits.push_back(h);
       }
 
       if (msgLevel(MSG::DEBUG)) {
@@ -99,38 +121,42 @@ namespace Jug::Reco {
 
       while (have_ref && ref_hit.energy() > min_energy) {
 
-        std::vector<eic::ConstCalorimeterHit> cluster_hits;
+        std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>> cluster_hits;
 
-        for (const auto& h : the_hits) {
-          if (std::hypot(h.position().x - ref_hit.position().x, h.position().y - ref_hit.position().y,
-                         h.position().z - ref_hit.position().z) < max_dist) {
-            cluster_hits.push_back(h);
+        for (const auto& [idx, h] : the_hits) {
+          if (h.position().subtract(ref_hit.position()).mag() < max_dist) {
+            cluster_hits.push_back({idx, h});
           } else {
-            remaining_hits.push_back(h); }
+            remaining_hits.push_back({idx, h});
+          }
         }
 
-        double total_energy =
-            std::accumulate(std::begin(cluster_hits), std::end(cluster_hits), 0.0,
-                            [](double t, const eic::ConstCalorimeterHit& h1) { return (t + h1.energy()); });
+        double total_energy = std::accumulate(
+            std::begin(cluster_hits), std::end(cluster_hits), 0.0,
+            [](double t, const std::pair<uint32_t, eic::ConstCalorimeterHit>& h1) { return (t + h1.second.energy()); });
 
         if (msgLevel(MSG::DEBUG)) {
           debug() << " total_energy = " << total_energy << endmsg;
           debug() << " cluster size " << cluster_hits.size() << endmsg;
         }
-
-        eic::Cluster cl;
-        cl.ID({clusters.size(), algorithmID()});
+        auto cl = clusters.create();
+        cl.ID({static_cast<decltype(cl.ID().value)>(clusters.size()), algorithmID()});
         cl.nhits(cluster_hits.size());
-        for (const auto& h : cluster_hits) {
+        auto pcl = proto.create(cl.ID());
+        for (const auto& [idx, h] : cluster_hits) {
           cl.energy(cl.energy() + h.energy());
           cl.position(cl.position().add(h.position().scale(h.energy()/total_energy)));
-          proto.create(h.ID(), cl.ID());
+          pcl.addhits({h.ID(), idx, 1.});
         }
-        clusters.push_back(cl);
+        // Optionally store the MC truth associated with the first hit in this cluster
+        if (mcHits) {
+          const auto& mc_hit = (*mcHits)[ref_hit.ID().value];
+          cl.mcID({mc_hit.truth().trackID, m_kMonteCarloSource});
+        }
 
         have_ref = false;
         if ((remaining_hits.size() > 5) && (clusters.size() < 10)) {
-          for (const auto& h : remaining_hits) {
+          for (const auto& [idx, h] : remaining_hits) {
             if (!have_ref || h.energy() > ref_hit.energy()) {
               ref_hit  = h;
               have_ref = true;

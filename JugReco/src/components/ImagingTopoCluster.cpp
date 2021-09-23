@@ -132,7 +132,7 @@ namespace Jug::Reco {
 
       // group neighboring hits
       std::vector<bool>                           visits(hits.size(), false);
-      std::vector<std::vector<eic::ConstCalorimeterHit>> groups;
+      std::vector<std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>>> groups;
       for (size_t i = 0; i < hits.size(); ++i) {
         if (msgLevel(MSG::DEBUG)) {
           debug() << fmt::format("hit {:d}: local position = ({}, {}, {}), global position = ({}, {}, {})", i + 1,
@@ -162,15 +162,16 @@ namespace Jug::Reco {
           continue;
         }
         double energy = 0.;
-        for (const auto& hit : group) {
+        for (const auto& [idx, hit] : group) {
           energy += hit.energy();
         }
         if (energy < minClusterEdep) {
           continue;
         }
-        for (const auto& hit : group) {
-          eic::ProtoCluster pcl {hit.ID(), {clusterID, algorithmID()}, 1.};
-          proto.push_back(pcl);
+        auto pcl = proto.create();
+        pcl.ID({clusterID, algorithmID()});
+        for (const auto& [idx, hit] : group) {
+          pcl.addhits({hit.ID(), idx, 1.});
         }
         clusterID += 1;
       }
@@ -210,7 +211,7 @@ namespace Jug::Reco {
     }
 
     // grouping function with Depth-First Search
-    void dfs_group(std::vector<eic::ConstCalorimeterHit>& group, int idx,
+    void dfs_group(std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>>& group, int idx,
                    const eic::CalorimeterHitCollection& hits, std::vector<bool>& visits) const
     {
       // not a qualified hit to participate in clustering, stop here
@@ -219,7 +220,7 @@ namespace Jug::Reco {
         return;
       }
 
-      group.push_back(hits[idx]);
+      group.push_back({idx, hits[idx]});
       visits[idx] = true;
       for (size_t i = 0; i < hits.size(); ++i) {
         // visited, or not a neighbor
