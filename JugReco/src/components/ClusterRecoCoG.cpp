@@ -191,7 +191,7 @@ namespace Jug::Reco {
       // calculate total energy, find the cell with the maximum energy deposit
       float totalE   = 0.;
       float maxE     = 0.;
-      auto time = hits[pcl.hits(0).ID.value].time();
+      auto time = hits[pcl.hits(0).index].time();
       for (const auto& clhit : pcl.hits()) {
         const auto& hit = hits[clhit.index];
         if (msgLevel(MSG::DEBUG)) {
