@@ -22,19 +22,19 @@ DataHandle<eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHit
         DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer, this};
         
         //----- Define constants here ------
-        
-        Gaudi::Property<double> local_x_offset_station_1{this, "localXOffsetSta1", -833.3878326};
-        Gaudi::Property<double> local_x_offset_station_2{this, "localXOffsetSta2", -924.342804};
-        Gaudi::Property<double> local_x_slope_offset{this, "localXSlopeOffset", -0.00622147};
-        Gaudi::Property<double> local_y_slope_offset{this, "localYSlopeOffset", -0.0451035};
-        Gaudi::Property<double> crossingAngle{this, "crossingAngle", -0.025};
-        Gaudi::Property<double> nomMomentum{this, "beamMomentum", 275.0};
-        
-        const double aXRP[2][2] = {{2.102403743, 29.11067626}, {0.186640381, 0.192604619}};
-        const double aYRP[2][2] = {{0.0000159900, 3.94082098}, {0.0000079946, -0.1402995}};
 
-        double aXRPinv[2][2] = {0.0, 0.0};
-        double aYRPinv[2][2] = {0.0, 0.0};
+        Gaudi::Property<double> local_x_offset_station_1{this, "localXOffsetSta1", -762.5006104};
+        Gaudi::Property<double> local_x_offset_station_2{this, "localXOffsetSta2", -881.9621277};
+        Gaudi::Property<double> local_x_slope_offset{this, "localXSlopeOffset", -59.73075865};
+        Gaudi::Property<double> local_y_slope_offset{this, "localYSlopeOffset", 0.0012755};
+        Gaudi::Property<double> crossingAngle{this, "crossingAngle", -0.025};
+        Gaudi::Property<double> nomMomentum{this, "beamMomentum", 137.5};  //This number is set to 50% maximum beam momentum
+        
+        const double aXOMD[2][2] = {{1.6229248, 12.9519653}, {-2.86056525, 0.1830292}};
+        const double aYOMD[2][2] = {{0.0000185, -28.599739}, {0.00000925, -2.8795791}};
+
+        double aXOMDinv[2][2] = {0.0, 0.0};
+        double aYOMDinv[2][2] = {0.0, 0.0};
         
     public:
         FarForwardParticles(const std::string& name, ISvcLocator* svcLoc)
@@ -48,7 +48,7 @@ DataHandle<eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHit
                 return StatusCode::FAILURE;
             
 
-            double det = aXRP[0][0]*aXRP[1][1] - aXRP[0][1]*aXRP[1][0];
+            double det = aXOMD[0][0]*aXOMD[1][1] - aXOMD[0][1]*aXOMD[1][0];
           
             if(det == 0){
                 error() << "Reco matrix determinant = 0!"
@@ -57,16 +57,16 @@ DataHandle<eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHit
                 return StatusCode::FAILURE;
             }
 
-            aXRPinv[0][0] =  aXRP[1][1]/det;
-            aXRPinv[0][1] = -aXRP[0][1]/det;
-            aXRPinv[1][0] = -aXRP[1][0]/det;
-            aXRPinv[1][1] =  aXRP[0][0]/det;
+            aXOMDinv[0][0] =  aXOMD[1][1]/det;
+            aXOMDinv[0][1] = -aXOMD[0][1]/det;
+            aXOMDinv[1][0] = -aXOMD[1][0]/det;
+            aXOMDinv[1][1] =  aXOMD[0][0]/det;
         
-            det = aYRP[0][0]*aYRP[1][1] - aYRP[0][1]*aYRP[1][0];
-            aYRPinv[0][0] =  aYRP[1][1]/det;
-            aYRPinv[0][1] = -aYRP[0][1]/det;
-            aYRPinv[1][0] = -aYRP[1][0]/det;
-            aYRPinv[1][1] =  aYRP[0][0]/det;
+            det = aYOMD[0][0]*aYOMD[1][1] - aYOMD[0][1]*aYOMD[1][0];
+            aYOMDinv[0][0] =  aYOMD[1][1]/det;
+            aYOMDinv[0][1] = -aYOMD[0][1]/det;
+            aYOMDinv[1][0] = -aYOMD[1][0]/det;
+            aYOMDinv[1][1] =  aYOMD[0][0]/det;
 
             return StatusCode::SUCCESS;
         }
@@ -90,6 +90,7 @@ DataHandle<eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHit
                 std::vector <double>hitx;
                 std::vector <double>hity;
                 std::vector <double>hitz;
+                
             
                 for (const auto& h : *rawhits) {
                     
@@ -130,15 +131,17 @@ DataHandle<eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHit
                         return StatusCode::FAILURE;
                     }
 
-                    double Xrp[2], Xip[2] = {0.0, 0.0}; Xrp[0] = XL[1]; Xrp[1] = (1000*(XL[1] - XL[0])/(base)) - local_x_slope_offset; //- _SX0RP_;
-                    double Yrp[2], Yip[2] = {0.0 ,0.0}; Yrp[0] = YL[1]; Yrp[1] = (1000*(YL[1] - YL[0])/(base)) - local_y_slope_offset; //- _SY0RP_;
+                    double Xomd[2] = {XL[1], (1000*(XL[1] - XL[0])/(base)) - local_x_slope_offset}; 
+                    double Xip[2] = {0.0, 0.0}; 
+                    double Yomd[2] = {YL[1],(1000*(YL[1] - YL[0])/(base)) - local_y_slope_offset}; 
+                    double Yip[2] = {0.0 ,0.0};
                     
                     //use the hit information and calculated slope at the RP + the transfer matrix inverse to calculate the Polar Angle and deltaP at the IP
                     
                     for(unsigned i0=0; i0<2; i0++){
                         for(unsigned i1=0; i1<2; i1++){
-                            Xip[i0] += aXRPinv[i0][i1]*Xrp[i1];
-                            Yip[i0] += aYRPinv[i0][i1]*Yrp[i1];
+                            Xip[i0] += aXOMDinv[i0][i1]*Xomd[i1];
+                            Yip[i0] += aYOMDinv[i0][i1]*Yomd[i1];
                         }
                     }
                     
@@ -193,8 +196,6 @@ DataHandle<eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHit
         
     };
     
-    DECLARE_COMPONENT(FarForwardParticles)
+    DECLARE_COMPONENT(FarForwardParticlesOMD)
     
 } // namespace Jug::Reco
-
-
