@@ -14,11 +14,10 @@ gaudi_add_module(JugTrackPlugins
   SOURCES
   src/components/ConformalXYPeakProtoTracks.cpp
   src/components/FinderAlgoTemplate.cpp 
+  src/components/ProtoTrackMatching.cpp 
   src/components/GenFitTrackFitter.cpp 
   src/components/SingleTrackSourceLinker.cpp 
   src/components/TrackerSourceLinker.cpp 
-  src/components/Tracker2SourceLinker.cpp 
-  src/components/TrackerSourcesLinker.cpp 
   src/components/CKFTracking.cpp 
   src/components/CKFTrackingFunction.cpp 
   src/components/TrackFindingAlgorithm.cpp 
@@ -31,6 +30,7 @@ gaudi_add_module(JugTrackPlugins
   src/components/TrackParamVertexClusterInit.cpp 
   src/components/TrackParamImagingClusterInit.cpp 
   src/components/ParticlesFromTrackFit.cpp 
+  src/components/TruthTrackSeeding.cpp 
   LINK
   Gaudi::GaudiAlgLib Gaudi::GaudiKernel
   JugBase

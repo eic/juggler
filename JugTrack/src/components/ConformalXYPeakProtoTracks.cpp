@@ -96,7 +96,9 @@ public:
           proto_track.push_back(ihit);
         }
       }
-      proto_tracks->push_back(proto_track);
+      if(proto_track.size()>3) {
+        proto_tracks->push_back(proto_track);
+      }
     }
     m_nProtoTracks.put(new int{n_proto_tracks});
     // 5. profit!

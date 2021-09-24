@@ -9,6 +9,7 @@ namespace dd4hep {
   class DetElement;
   namespace rec {
     class CellIDPositionConverter;
+    class Surface;
   }
 } // namespace dd4hep
 
@@ -52,6 +53,7 @@ public:
   // Note this hsould return a const& but is just copied for the moment to get around genfit's api
   /// Genfit DetPlane map
   virtual std::map<int64_t, std::shared_ptr<genfit::DetPlane>> getDetPlaneMap() const = 0;
+  virtual std::map< int64_t, dd4hep::rec::Surface* > getDD4hepSurfaceMap() const =0;
 
   //virtual std::map< int64_t, dd4hep::rec::Surface* > getDetPlaneMap() const = 0 ;
 

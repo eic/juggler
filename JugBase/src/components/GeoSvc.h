@@ -129,6 +129,8 @@ public:
 
   // Note this hsould return a const& but is just copied for the moment to get around genfit's api
   virtual std::map<int64_t, std::shared_ptr<genfit::DetPlane>> getDetPlaneMap() const { return m_detPlaneMap; }
+
+  virtual std::map< int64_t, dd4hep::rec::Surface* > getDD4hepSurfaceMap() const { return m_surfaceMap ;}
 };
 
 inline std::shared_ptr<const Acts::TrackingGeometry> GeoSvc::trackingGeometry() const
