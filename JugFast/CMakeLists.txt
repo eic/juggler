@@ -1,23 +1,17 @@
 ################################################################################
-# Package: JugDigi
+# Package: JugFast
 ################################################################################
 
 find_package(EICD REQUIRED)
-#set(PODIO $ENV{PODIO})
-#set(CMAKE_MODULE_PATH CMAKE_MODULE_PATH PODIO)
-#find_package(podio 0.11.01 REQUIRED)
-#include_directories(${podio_INCLUDE_DIR})
 
 find_package(ROOT COMPONENTS RIO Tree Core REQUIRED)
 find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 
-file(GLOB JugDigiPlugins_sources src/components/*.cpp)
-gaudi_add_module(JugDigiPlugins
+gaudi_add_module(JugFastPlugins
   SOURCES
-  src/components/CalorimeterHitDigi.cpp 
-  src/components/PhotoMultiplierDigi.cpp 
-  src/components/UFSDTrackerDigi.cpp 
-  src/components/SiliconTrackerDigi.cpp 
+  src/components/MC2SmearedParticle.cpp 
+  src/components/ParticlesWithTruthPID.cpp 
+  src/components/SmearedFarForwardParticles.cpp 
   LINK
   Gaudi::GaudiAlgLib Gaudi::GaudiKernel
   JugBase
@@ -26,8 +20,8 @@ gaudi_add_module(JugDigiPlugins
   EICD::eicd
 )
 
-target_include_directories(JugDigiPlugins PUBLIC
+target_include_directories(JugFastPlugins PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
-target_compile_options(JugDigiPlugins PRIVATE -Wno-suggest-override)
+target_compile_options(JugFastPlugins PRIVATE -Wno-suggest-override)

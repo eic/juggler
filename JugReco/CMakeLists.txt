@@ -10,7 +10,6 @@ file(GLOB JugRecoPlugins_sources src/components/*.cpp)
 gaudi_add_module(JugRecoPlugins
   SOURCES
   src/components/FarForwardParticles.cpp
-  src/components/DummyFarForwardParticles.cpp
   src/components/TrackingHitsCollector.cpp 
   src/components/TrackingHitsCollector2.cpp 
   src/components/TrackerHitReconstruction.cpp 
@@ -19,19 +18,9 @@ gaudi_add_module(JugRecoPlugins
   src/components/CalorimeterHitsEtaPhiProjector.cpp 
   src/components/CalorimeterHitsMerger.cpp 
   src/components/CalorimeterIslandCluster.cpp 
-  src/components/CrystalEndcapsReco.cpp 
-  src/components/EcalTungstenSamplingReco.cpp
-  src/components/EcalTungstenSamplingCluster.cpp
   src/components/EnergyPositionClusterMerger.cpp
   src/components/ClusterRecoCoG.cpp 
   src/components/ParticleCollector.cpp
-  src/components/ParticlesWithTruthPID.cpp
-  src/components/PhotoMultiplierReco.cpp 
-  src/components/PhotoRingClusters.cpp 
-  src/components/FuzzyKClusters.cpp 
-  src/components/EMCalReconstruction.cpp 
-  src/components/HCalReconstruction.cpp
-  src/components/TopologicalCellCluster.cpp 
   src/components/ImagingPixelReco.cpp 
   src/components/ImagingPixelMerger.cpp 
   src/components/ImagingPixelDataCombiner.cpp 

@@ -17,14 +17,14 @@
 #include "eicd/ReconstructedParticleRelationsCollection.h"
 #include "eicd/VectorPolar.h"
 
-namespace Jug::Reco {
+namespace Jug::Fast {
 
-class DummyFarForwardParticles : public GaudiAlgorithm, AlgorithmIDMixin<> {
+class SmearedFarForwardParticles : public GaudiAlgorithm, AlgorithmIDMixin<> {
 public:
   DataHandle<dd4pod::Geant4ParticleCollection> m_inputParticles{"inputMCParticles", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"DummyFarForwardParticles", Gaudi::DataHandle::Writer,
+  DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"SmearedFarForwardParticles", Gaudi::DataHandle::Writer,
                                                                      this};
-  DataHandle<eic::ReconstructedParticleRelationsCollection> m_outputRelations{"DummyFarForwardRelations", Gaudi::DataHandle::Writer,
+  DataHandle<eic::ReconstructedParticleRelationsCollection> m_outputRelations{"SmearedFarForwardRelations", Gaudi::DataHandle::Writer,
                                                                      this};
 
   Gaudi::Property<bool> m_enableZDC{this, "enableZDC", true};
@@ -66,7 +66,7 @@ public:
   using RecData = std::pair<eic::ReconstructedParticle, eic::ReconstructedParticleRelations>;
 
   public:
-  DummyFarForwardParticles(const std::string& name, ISvcLocator* svcLoc)
+  SmearedFarForwardParticles(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
     declareProperty("inputMCParticles", m_inputParticles, "mcparticles");
     declareProperty("outputParticles", m_outputParticles, "ReconstructedParticles");
@@ -331,9 +331,9 @@ private:
     return rotateIonToLabDirection(eic::VectorXYZ{vec.x, vec.y, vec.z});
   }
 
-}; // namespace Jug::Reco
+}; 
 
-DECLARE_COMPONENT(DummyFarForwardParticles)
+DECLARE_COMPONENT(SmearedFarForwardParticles)
 
-} // namespace Jug::Reco
+} // namespace Jug::Fast
 

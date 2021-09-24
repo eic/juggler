@@ -19,7 +19,7 @@
 #include "eicd/TrackParametersCollection.h"
 #include "eicd/VectorPolar.h"
 
-namespace Jug::Reco {
+namespace Jug::Fast {
 
 class ParticlesWithTruthPID : public GaudiAlgorithm, AlgorithmIDMixin<> {
 public:
@@ -151,5 +151,5 @@ public:
 
 DECLARE_COMPONENT(ParticlesWithTruthPID)
 
-} // namespace Jug::Reco
+} // namespace Jug::Fast
 

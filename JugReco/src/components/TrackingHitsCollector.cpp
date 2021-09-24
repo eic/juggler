@@ -38,6 +38,7 @@ namespace Jug::Reco {
 
       StatusCode initialize() override
       {
+        warning() << "DEPRECATED, use TrackingHitsCollector2 instead" << endmsg;
         return StatusCode::SUCCESS;
       }
 
