@@ -10,6 +10,7 @@ file(GLOB JugRecoPlugins_sources src/components/*.cpp)
 gaudi_add_module(JugRecoPlugins
   SOURCES
   src/components/FarForwardParticles.cpp
+  src/components/FarForwardParticlesOMD.cpp
   src/components/TrackingHitsCollector.cpp 
   src/components/TrackingHitsCollector2.cpp 
   src/components/TrackerHitReconstruction.cpp 
