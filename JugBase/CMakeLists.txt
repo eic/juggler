@@ -53,7 +53,6 @@ gaudi_add_module(JugBasePlugins
   src/components/ReadTestConsumer.cxx
   LINK
   Gaudi::GaudiKernel Gaudi::GaudiAlgLib
-  GaudiKernel GaudiAlgLib
   ROOT::Core ROOT::RIO ROOT::Tree
   JugBase
   NPDet::DD4podIO
