@@ -97,12 +97,14 @@ namespace Jug::Reco {
     const ProtoTrackContainer*       protoTracks       = m_inputProtoTracks.get();
 
     //TrajectoryContainer trajectories;
-    auto trajectories    = m_outputTrajectories.createAndPut();
-    auto trackParameters = m_foundTracks.createAndPut();
+    // commented out unused variables
+    /*auto trajectories    =*/ m_outputTrajectories.createAndPut();
+    /*auto trackParameters =*/ m_foundTracks.createAndPut();
 
     int n_tracks = initialParameters->size();
     int n_proto_tracks = protoTracks->size();
-    int ID             = 0;
+    // Unused variable
+    //int ID             = 0;
 
     // Assuming init track parameters have been match with proto tracks by index
     if(n_proto_tracks !=  n_tracks) {
@@ -161,10 +163,13 @@ namespace Jug::Reco {
       }
 
       // trackrep
+      // @FIXME: raw new should be avoided, either place on the stack or use
+      // std::unique_ptr<>
       genfit::AbsTrackRep* electron_rep = new genfit::RKTrackRep(11);
-      genfit::AbsTrackRep* positron_rep = new genfit::RKTrackRep(-11);
-      genfit::AbsTrackRep* piplus_rep = new genfit::RKTrackRep(211);
-      genfit::AbsTrackRep* piminus_rep = new genfit::RKTrackRep(-211);
+      // unusud
+      //genfit::AbsTrackRep* positron_rep = new genfit::RKTrackRep(-11);
+      //genfit::AbsTrackRep* piplus_rep = new genfit::RKTrackRep(211);
+      //genfit::AbsTrackRep* piminus_rep = new genfit::RKTrackRep(-211);
 
       // smeared start state
       genfit::MeasuredStateOnPlane stateSmeared(electron_rep);
@@ -260,7 +265,8 @@ namespace Jug::Reco {
       bool isFitted    = fitTrack.getFitStatus()->isFitted();
       float chi2        = fitTrack.getFitStatus()->getChi2();
       float ndf         = fitTrack.getFitStatus()->getNdf();
-      float charge      = fitTrack.getFitStatus()->getCharge();
+      // unused
+      //float charge      = fitTrack.getFitStatus()->getCharge();
 
 
       TVector3 vertexPos, vertexMom;

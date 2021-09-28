@@ -59,7 +59,7 @@ private:
   std::map< int64_t, std::shared_ptr<genfit::DetPlane> > m_detPlaneMap ;
 
   /// ACTS Tracking  Geometry
-  std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeo;
+  std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeo{nullptr};
 
   /// ACTS surface lookup container for hit surfaces that generate smeared hits
   VolumeSurfaceMap m_surfaces;

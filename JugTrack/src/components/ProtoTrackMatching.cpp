@@ -44,7 +44,10 @@ public:
 
   StatusCode execute() override {
     // input collection
-    const eic::TrackerHitCollection* hits              = m_inputTrackerHits.get();
+    
+    // hits is unused, commented out for now to avoid compiler warning
+    //const eic::TrackerHitCollection* hits              = m_inputTrackerHits.get();
+    
     const ProtoTrackContainer*       proto_tracks      = m_inputProtoTracks.get();
     const TrackParametersContainer*  initialParameters = m_initialTrackParameters.get();
 
@@ -70,8 +73,10 @@ public:
     }
     // do better matching
     for (int itrack = 0; itrack < n_tracks; itrack++) {
-      const auto& track_param = (*initialParameters)[itrack];
-      int iproto_best = 0;
+      // track_param and iproto_best currently unused, but will be in the future
+      // commented out to remove compiler warning
+      //const auto& track_param = (*initialParameters)[itrack];
+      //int iproto_best = 0;
 
       /// \todo FIXME
       /// find the best matching proto track:

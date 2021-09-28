@@ -171,7 +171,7 @@ private:
         if ((dist < 2) || (comp(*beg, val) > 0) || (comp(*std::prev(end), val) < 0)) {
             return end;
         }
-        auto first = beg, last = end, mid = std::next(beg, dist/2);
+        auto mid = std::next(beg, dist / 2);
 
         while (mid != end) {
             if (comp(*mid, val) == 0) {
@@ -184,7 +184,7 @@ private:
             mid = std::next(beg, std::distance(beg, end)/2);
         }
 
-        if (mid == last || comp(*mid, val) > 0) {
+        if (mid == end || comp(*mid, val) > 0) {
             return std::prev(mid);
         }
         return mid;

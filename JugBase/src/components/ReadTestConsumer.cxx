@@ -14,7 +14,9 @@ public:
 
   ~ReadTestConsumer(){};
 
-  StatusCode initialize() { return GaudiAlgorithm::initialize(); }
+  StatusCode initialize() {
+    warning() << "This is a deprecated test algorithm" << endmsg;
+    return GaudiAlgorithm::initialize(); }
 
   StatusCode execute() {
     // Read the input
@@ -24,7 +26,7 @@ public:
     debug() << mcparticles << endmsg;
     debug() << "MCParticle size: " << mcparticles->size() << endmsg;
     // counter for debug messages below
-    int cntr = 0;
+    //int cntr = 0;
     // Loop over all input particles
     //for (const auto& mcpart : *mcparticles) {
     //  if (10 > cntr++) {

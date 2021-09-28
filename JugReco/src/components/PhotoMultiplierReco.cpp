@@ -86,7 +86,7 @@ namespace Jug::Reco {
       for (const auto& rh : rawhits) {
         float npe = (rh.amplitude() - m_pedMean) / m_speMean;
         if (npe >= m_minNpe) {
-          float time = rh.time() * (m_timeStep / ns);
+          float time = rh.time() * (static_cast<float>(m_timeStep) / ns);
           auto  id   = rh.cellID();
           // global positions
           auto gpos = m_geoSvc->cellIDPositionConverter()->position(id);
@@ -100,7 +100,7 @@ namespace Jug::Reco {
               rh.cellID(),
               npe,
               time,
-              m_timeStep / ns,
+              static_cast<float>(m_timeStep / ns),
               {gpos.x(), gpos.y(), gpos.z()},
               {pos.x(), pos.y(), pos.z()},
               {dim[0]/mm, dim[1]/mm, dim[2]/mm}});

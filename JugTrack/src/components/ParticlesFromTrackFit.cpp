@@ -96,10 +96,11 @@ namespace Jug::Reco {
           //int  m_nStates       = trajState.nStates;
 
           // Get the fitted track parameter
-          bool m_hasFittedParams = false;
+          //
+          bool hasFittedParams = false;
           int ID = 0;
           if (traj.hasTrackParameters(trackTip)) {
-            m_hasFittedParams      = true;
+            hasFittedParams      = true;
             const auto& boundParam = traj.trackParameters(trackTip);
             const auto& parameter  = boundParam.parameters();
             const auto& covariance = *boundParam.covariance();
@@ -118,19 +119,20 @@ namespace Jug::Reco {
               debug() << " chi2 = " << trajState.chi2Sum << endmsg;
             }
 
+            const float boundQoverP = parameter[Acts::eBoundQOverP];
             eic::TrackParameters pars{
               {ID++, algorithmID()},
               {parameter[Acts::eBoundLoc0], parameter[Acts::eBoundLoc1]},
-              {sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
-               sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1))},
+              {sqrt(static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0))),
+               sqrt(static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)))},
               {parameter[Acts::eBoundTheta], parameter[Acts::eBoundPhi]},
-              {sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)),
-               sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi))},
-              parameter[Acts::eBoundQOverP], 
-              sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)),
-              parameter[Acts::eBoundTime],
-              sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)),
-              static_cast<float>(std::copysign(1., parameter[Acts::eBoundQOverP]))}; // charge
+              {sqrt(static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundTheta))),
+               sqrt(static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundPhi)))},
+              boundQoverP,
+              sqrt(static_cast<float>(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP))),
+              static_cast<float>(parameter[Acts::eBoundTime]),
+              sqrt(static_cast<float>(covariance(Acts::eBoundTime, Acts::eBoundTime))),
+              static_cast<float>(std::copysign(1., boundQoverP))}; // charge
             track_pars->push_back(pars);
           }
 
@@ -174,8 +176,8 @@ namespace Jug::Reco {
       }
 
       // set our IDs
-      for (int i = 0; i < rec_parts->size(); ++i) {
-        (*rec_parts)[i].ID({i, algorithmID()});
+      for (size_t i = 0; i < rec_parts->size(); ++i) {
+        (*rec_parts)[i].ID({static_cast<int32_t>(i), algorithmID()});
       }
       
       return StatusCode::SUCCESS;

@@ -67,10 +67,6 @@ DECLARE_COMPONENT(GeoSvc)
 
 GeoSvc::GeoSvc(const std::string& name, ISvcLocator* svc)
     : base_class(name, svc)
-    //, m_incidentSvc("IncidentSvc", "GeoSvc")
-    , m_trackingGeo(nullptr)
-    , m_dd4hepGeo(nullptr)
-    //, m_geant4geo(0)
     , m_log(msgSvc(), name) {}
 
 GeoSvc::~GeoSvc() {
@@ -106,29 +102,6 @@ StatusCode GeoSvc::initialize() {
   // if (m_failureFlag) {
   //  return StatusCode::FAILURE;
   //}
-  Acts::Logging::Level geoMsgLevel;
-  switch (msgLevel()) {
-  case (MSG::DEBUG):
-    geoMsgLevel = Acts::Logging::DEBUG;
-    break;
-  case (MSG::VERBOSE):
-    geoMsgLevel = Acts::Logging::VERBOSE;
-    break;
-  case (MSG::INFO):
-    geoMsgLevel = Acts::Logging::INFO;
-    break;
-  case (MSG::WARNING):
-    geoMsgLevel = Acts::Logging::WARNING;
-    break;
-  case (MSG::FATAL):
-    geoMsgLevel = Acts::Logging::FATAL;
-    break;
-  case (MSG::ERROR):
-    geoMsgLevel = Acts::Logging::ERROR;
-    break;
-  default:
-    geoMsgLevel = Acts::Logging::VERBOSE;
-  }
 
   // Genfit
   genfit::FieldManager::getInstance()->init(new genfit::ConstField(

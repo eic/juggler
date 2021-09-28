@@ -93,9 +93,9 @@ namespace Jug {
           // eic::TrackerHit hit;
           eic::TrackerHit hit{{ahit.ID().value, algorithmID()},
                               ahit.cellID(),
-                              {pos.x() / mm, pos.y() / mm, pos.z() / mm, (float)ahit.time()/1000}, // mm, ns
-                              {(dim[0]/mm)*(dim[0]/mm), (dim[1]/mm)*(dim[1]/mm), 0.0, 0.0},        // 
-                              (float)ahit.charge() / 1.0e6, // GeV
+                              {pos.x() / mm, pos.y() / mm, pos.z() / mm, (float)ahit.time() / 1000},    // mm, ns
+                              {(dim[0] / mm) * (dim[0] / mm), (dim[1] / mm) * (dim[1] / mm), 0.0, 0.0}, //
+                              static_cast<float>(ahit.charge() / 1.0e6),                                // GeV
                               0.0f};
           rec_hits->push_back(hit);
         }

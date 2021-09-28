@@ -108,7 +108,8 @@ namespace Jug::Reco {
           continue;
         }
         const Acts::Surface* surface = is->second;
-        auto surf_center = surface->center(Acts::GeometryContext());
+        // variable surf_center not used anywhere;
+        //auto surf_center = surface->center(Acts::GeometryContext());
 
         // transform global position into local coordinates
         // geometry context contains nothing here
@@ -131,7 +132,9 @@ namespace Jug::Reco {
 
         // the measurement container is unordered and the index under which the
         // measurement will be stored is known before adding it.
-        Index hitIdx = measurements->size();
+        //
+        // variable hitIdx not used anywhere
+        //Index hitIdx = measurements->size();
         IndexSourceLink sourceLink(surface->geometryId(), ihit);
         auto meas = Acts::makeMeasurement(sourceLink, loc, cov, Acts::eBoundLoc0, Acts::eBoundLoc1);
 
