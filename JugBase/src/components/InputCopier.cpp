@@ -1,3 +1,5 @@
+// Deprecated algorithm, as we can now properly store input collections in our output
+
 #include <algorithm>
 #include "GaudiAlg/Transformer.h"
 #include "GaudiAlg/Producer.h"
@@ -26,7 +28,6 @@ namespace Jug {
     template<typename T_IN, typename T_OUT>
     class InputCopier : public GaudiAlgorithm {
     public:
-      //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
       InputCopier(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
       {
         declareProperty("inputCollection", m_inputHitCollection, "mcparticles");
@@ -34,8 +35,10 @@ namespace Jug {
       }
       StatusCode initialize() override
       {
-        if (GaudiAlgorithm::initialize().isFailure())
+        if (GaudiAlgorithm::initialize().isFailure()) {
           return StatusCode::FAILURE;
+        }
+        warning() << "DEPRECATED ALGORITH, no need to use this anymore, we can do a proper straight passthrough from input to output." << endmsg;
         return StatusCode::SUCCESS;
       }
       StatusCode execute() override
