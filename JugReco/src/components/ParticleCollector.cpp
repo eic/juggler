@@ -28,7 +28,6 @@ public:
 
 public:
   ParticleCollector(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
-    // declareProperty("inputParticles", m_inputParticles, "vector of collection names");
     declareProperty("outputParticles", m_outputParticles, "output particles combined into single collection");
   }
   ~ParticleCollector() {

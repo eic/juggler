@@ -29,7 +29,6 @@ namespace Jug::Reco {
       TrackingHitsCollector2(const std::string& name, ISvcLocator* svcLoc)
           : GaudiAlgorithm(name, svcLoc)
       {
-        declareProperty("inputTrackingHits" , m_inputTrackingHits , "vector of collection names");
         declareProperty("trackingHits", m_trackingHits, "output hits combined into single collection");
       }
       ~TrackingHitsCollector2() {
