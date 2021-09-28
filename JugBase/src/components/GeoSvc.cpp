@@ -9,6 +9,7 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 
 // genfit
@@ -159,8 +160,10 @@ StatusCode GeoSvc::initialize() {
   }
 
   m_magneticField = std::make_shared<const Jug::BField::DD4hepBField>(m_dd4hepGeo);
+  Acts::MagneticFieldContext m_fieldctx{Jug::BField::BFieldVariant(m_magneticField)};
+  auto bCache = m_magneticField->makeCache(m_fieldctx);
   for (int z : {0, 1000, 2000, 4000}) {
-    auto b = m_magneticField->getField({0.0, 0.0, double(z)});
+    auto b = m_magneticField->getField({0.0, 0.0, double(z)}, bCache);
     debug() << "B(z=" << z << " mm) = " << b.transpose()  << " T" << endmsg;
   }
 

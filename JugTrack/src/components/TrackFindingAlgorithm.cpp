@@ -82,10 +82,10 @@ namespace Jug::Reco {
 
     m_BField   = std::dynamic_pointer_cast<const Jug::BField::DD4hepBField>(m_geoSvc->getFieldProvider());
     m_fieldctx = Jug::BField::BFieldVariant(m_BField);
-
+    auto bCache = m_BField->makeCache(m_fieldctx);
 
     for(int z : {0,1000,2000,4000,5899}){
-      auto b =  m_BField->getField({0.0,0.0,double(z)})/(Acts::UnitConstants::T);
+      auto b = m_BField->getField({0.0,0.0,double(z)},bCache)/(Acts::UnitConstants::T);
       debug() << "B(z=" << z << " mm) = " << b.transpose()  << " T"   << endmsg;
     }
 

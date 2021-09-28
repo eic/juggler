@@ -13,6 +13,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include "DD4hep/Detector.h"
 #include "DD4hep/DD4hepUnits.h"

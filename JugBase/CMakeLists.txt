@@ -7,7 +7,7 @@ find_package(Acts REQUIRED COMPONENTS Core PluginIdentification PluginTGeo Plugi
 find_package(ROOT COMPONENTS RIO Tree Core REQUIRED)
 find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 find_library(genfit2 genfit2 /usr/local/lib REQUIRED)
-
+find_path(genfit2_INCLUDE_DIR NAMES GFGbl.h PATHS /usr/local/include ${genfit2}/../include REQUIRED)
 
 ROOT_GENERATE_DICTIONARY(G__JugBase JugBase/DataHandle.h LINKDEF JugBaseLinkDef.h)
 
@@ -35,7 +35,9 @@ add_dependencies(JugBase JugBase_ROOTDICTS)
 
 target_include_directories(JugBase PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  ${genfit2_INCLUDE_DIR}
+)
 
 target_compile_options(JugBase PRIVATE -Wno-suggest-override)
 
@@ -63,7 +65,9 @@ gaudi_add_module(JugBasePlugins
 
 target_include_directories(JugBasePlugins PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  ${genfit2_INCLUDE_DIR}
+)
 
 target_compile_options(JugBasePlugins PRIVATE -Wno-suggest-override)
 
