@@ -24,10 +24,14 @@ StatusCode PodioDataSvc::initialize() {
     if (m_filenames[0] != "") {
       m_reader.openFiles(m_filenames);
       m_eventMax = m_reader.getEntries();
-      auto idTable = m_reader.getCollectionIDTable();
-
-      setCollectionIDs(idTable);
       m_provider.setReader(&m_reader);
+      auto idTable = m_reader.getCollectionIDTable();
+      setCollectionIDs(idTable);
+
+      if (m_1stEvtEntry != 0) {
+        m_reader.goToEvent(m_1stEvtEntry);
+        m_eventMax -= m_1stEvtEntry;
+      }
     }
   }
   return status;
@@ -97,8 +101,9 @@ StatusCode PodioDataSvc::readCollection(const std::string& collName, int collect
   podio::CollectionBase* collection(nullptr);
   m_provider.get(collectionID, collection);
   auto wrapper = new DataWrapper<podio::CollectionBase>;
-  int id = m_collectionIDs->add(collName);
+  const int id = m_collectionIDs->add(collName);
   collection->setID(id);
+  collection->prepareAfterRead();
   wrapper->setData(collection);
   m_readCollections.emplace_back(std::make_pair(collName, collection));
   return DataSvc::registerObject("/Event", "/" + collName, wrapper);
@@ -106,12 +111,12 @@ StatusCode PodioDataSvc::readCollection(const std::string& collName, int collect
 
 StatusCode PodioDataSvc::registerObject(std::string_view parentPath, std::string_view fullPath, DataObject* pObject) {
   DataWrapperBase* wrapper = dynamic_cast<DataWrapperBase*>(pObject);
-  if (wrapper != nullptr) {
+  if (wrapper) {
     podio::CollectionBase* coll = wrapper->collectionBase();
-    if (coll != nullptr) {
-      size_t pos = fullPath.find_last_of("/");
-      std::string shortPath(fullPath.substr(pos + 1, fullPath.length()));
-      int id = m_collectionIDs->add(shortPath);
+    if (coll) {
+      const size_t pos = fullPath.find_last_of("/");
+      const std::string shortPath(fullPath.substr(pos + 1, fullPath.length()));
+      const int id = m_collectionIDs->add(shortPath);
       coll->setID(id);
       m_collections.emplace_back(std::make_pair(shortPath, coll));
     }

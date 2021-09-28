@@ -49,7 +49,6 @@ gaudi_add_module(JugBasePlugins
   src/components/MC2DummyParticle.cpp
   src/components/PodioInput.cpp
   src/components/PodioOutput.cpp
-  src/components/type.cpp
   src/components/ReadTestConsumer.cxx
   LINK
   Gaudi::GaudiKernel Gaudi::GaudiAlgLib
