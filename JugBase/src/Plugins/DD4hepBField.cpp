@@ -13,28 +13,17 @@
 
 namespace Jug::BField {
 
-  Acts::Vector3 DD4hepBField::getField(const Acts::Vector3& position) const
+  Acts::Result<Acts::Vector3> DD4hepBField::getField(const Acts::Vector3& position,
+                                                     Acts::MagneticFieldProvider::Cache& /*cache*/) const
   {
     dd4hep::Position pos(position[0]/10.0,position[1]/10.0,position[2]/10.0);
     auto field = m_det->field().magneticField(pos) * (Acts::UnitConstants::T / dd4hep::tesla); 
-    return {field.x(), field.y(),field.z()};
+    return Acts::Result<Acts::Vector3>::success({field.x(), field.y(),field.z()});
   }
 
-  Acts::Vector3 DD4hepBField::getField(const Acts::Vector3& position, Acts::MagneticFieldProvider::Cache& /*cache*/) const
-  {
-    dd4hep::Position pos(position[0]/10.0,position[1]/10.0,position[2]/10.0);
-    auto field = m_det->field().magneticField(pos) * (Acts::UnitConstants::T / dd4hep::tesla); 
-    return {field.x(), field.y(),field.z()};
-  }
-
-  Acts::Vector3 DD4hepBField::getFieldGradient(const Acts::Vector3& position,
-                                               Acts::ActsMatrix<3, 3>& /*derivative*/) const
-  {
-    return this->getField(position);
-  }
-
-  Acts::Vector3 DD4hepBField::getFieldGradient(const Acts::Vector3& position, Acts::ActsMatrix<3, 3>& /*derivative*/,
-                                               Acts::MagneticFieldProvider::Cache&               cache) const
+  Acts::Result<Acts::Vector3> DD4hepBField::getFieldGradient(const Acts::Vector3& position,
+		                                             Acts::ActsMatrix<3, 3>& /*derivative*/,
+                                                             Acts::MagneticFieldProvider::Cache& cache) const
   {
     return this->getField(position, cache);
   }

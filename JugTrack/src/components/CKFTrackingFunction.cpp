@@ -57,10 +57,11 @@ namespace Jug::Reco {
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField)
   {
     Stepper   stepper(std::move(magneticField));
-    Navigator navigator(trackingGeometry);
-    navigator.resolvePassive   = false;
-    navigator.resolveMaterial  = true;
-    navigator.resolveSensitive = true;
+    Navigator::Config cfg{trackingGeometry};
+    cfg.resolvePassive   = false;
+    cfg.resolveMaterial  = true;
+    cfg.resolveSensitive = true;
+    Navigator navigator(cfg);
 
     Propagator propagator(std::move(stepper), std::move(navigator));
     CKF        trackFinder(std::move(propagator));

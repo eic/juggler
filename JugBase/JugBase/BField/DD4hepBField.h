@@ -51,13 +51,6 @@ namespace Jug::BField {
     */
     explicit DD4hepBField(dd4hep::Detector* det) : m_det(std::shared_ptr<dd4hep::Detector>(det)) {}
 
-    /** Retrieve magnetic field value.
-     *
-     *  @param [in] position global position
-     *  @return magnetic field vector
-     */
-    Acts::Vector3 getField(const Acts::Vector3& position) const override;
-
     /**  retrieve magnetic field value.
      *
      *  @param [in] position global position
@@ -67,22 +60,7 @@ namespace Jug::BField {
      *  @note The @p position is ignored and only kept as argument to provide
      *        a consistent interface with other magnetic field services.
      */
-    Acts::Vector3 getField(const Acts::Vector3& position, Acts::MagneticFieldProvider::Cache& cache) const override;
-
-    /** @brief retrieve magnetic field value & its gradient
-     *
-     * @param [in]  position   global position
-     * @param [out] derivative gradient of magnetic field vector as (3x3)
-     * matrix
-     * @return magnetic field vector
-     *
-     * @note The @p position is ignored and only kept as argument to provide
-     *       a consistent interface with other magnetic field services.
-     * @note currently the derivative is not calculated
-     * @todo return derivative
-     */
-    Acts::Vector3 getFieldGradient(const Acts::Vector3& position,
-                                   Acts::ActsMatrix<3, 3>& /*derivative*/) const override;
+    Acts::Result<Acts::Vector3> getField(const Acts::Vector3& position, Acts::MagneticFieldProvider::Cache& cache) const override;
 
     /** @brief retrieve magnetic field value & its gradient
      *
@@ -97,8 +75,8 @@ namespace Jug::BField {
      * @note currently the derivative is not calculated
      * @todo return derivative
      */
-    Acts::Vector3 getFieldGradient(const Acts::Vector3& position, Acts::ActsMatrix<3, 3>& /*derivative*/,
-                                   Acts::MagneticFieldProvider::Cache& cache) const override;
+    Acts::Result<Acts::Vector3> getFieldGradient(const Acts::Vector3& position, Acts::ActsMatrix<3, 3>& /*derivative*/,
+                                                 Acts::MagneticFieldProvider::Cache& cache) const override;
   };
 
   using BFieldVariant = std::variant<std::shared_ptr<const DD4hepBField>>;

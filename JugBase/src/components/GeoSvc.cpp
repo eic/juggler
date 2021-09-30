@@ -163,7 +163,7 @@ StatusCode GeoSvc::initialize() {
   Acts::MagneticFieldContext m_fieldctx{Jug::BField::BFieldVariant(m_magneticField)};
   auto bCache = m_magneticField->makeCache(m_fieldctx);
   for (int z : {0, 1000, 2000, 4000}) {
-    auto b = m_magneticField->getField({0.0, 0.0, double(z)}, bCache);
+    auto b = m_magneticField->getField({0.0, 0.0, double(z)}, bCache).value();
     debug() << "B(z=" << z << " mm) = " << b.transpose()  << " T" << endmsg;
   }
 

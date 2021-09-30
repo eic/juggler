@@ -85,7 +85,7 @@ namespace Jug::Reco {
     auto bCache = m_BField->makeCache(m_fieldctx);
 
     for(int z : {0,1000,2000,4000,5899}){
-      auto b = m_BField->getField({0.0,0.0,double(z)},bCache)/(Acts::UnitConstants::T);
+      auto b = m_BField->getField({0.0,0.0,double(z)},bCache).value()/(Acts::UnitConstants::T);
       debug() << "B(z=" << z << " mm) = " << b.transpose()  << " T"   << endmsg;
     }
 
@@ -123,7 +123,7 @@ namespace Jug::Reco {
 
     // Set the CombinatorialKalmanFilter options
     TrackFindingAlgorithm::TrackFinderOptions options(
-        m_geoctx, m_fieldctx, m_calibctx, MeasurementCalibrator(*measurements),
+        m_geoctx, m_fieldctx, m_calibctx, IndexSourceLinkAccessor(), MeasurementCalibrator(*measurements),
         Acts::MeasurementSelector(m_sourcelinkSelectorCfg), Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
 
     auto results = m_trackFinderFunc(*src_links, *init_trk_params, options);
@@ -137,7 +137,7 @@ namespace Jug::Reco {
         const auto& trackFindingOutput = result.value();
         // Create a SimMultiTrajectory
         trajectories->emplace_back(std::move(trackFindingOutput.fittedStates), 
-                                   std::move(trackFindingOutput.trackTips),
+                                   std::move(trackFindingOutput.lastMeasurementIndices),
                                    std::move(trackFindingOutput.fittedParameters));
       } else {
         if (msgLevel(MSG::DEBUG)) {

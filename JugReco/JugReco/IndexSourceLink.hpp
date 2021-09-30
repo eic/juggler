@@ -59,4 +59,10 @@ namespace Jug {
   /// stored in an ordered geometry container.
   using IndexSourceLinkContainer = GeometryIdMultiset<IndexSourceLink>;
 
+  /// Accessor for the above source link container
+￼ ///
+￼ /// It wraps up a few lookup methods to be used in the Combinatorial Kalman
+￼ /// Filter
+  using IndexSourceLinkAccessor = GeometryIdMultisetAccessor<IndexSourceLink>;
+
 } // namespace Jug

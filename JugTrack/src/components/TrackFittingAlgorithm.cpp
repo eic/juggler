@@ -161,7 +161,7 @@ namespace Jug::Reco {
       //  const auto& trackFindingOutput = result.value();
       //  // Create a SimMultiTrajectory
       //  trajectories->emplace_back(std::move(trackFindingOutput.fittedStates),
-      //  std::move(trackFindingOutput.trackTips),
+      //  std::move(trackFindingOutput.lastMeasurementIndices),
       //                             std::move(trackFindingOutput.fittedParameters));
       //} else {
       //  debug() << "Track finding failed for truth seed " << iseed << endmsg;
