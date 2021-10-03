@@ -93,7 +93,7 @@ juggler:default:
   needs:
     - version
   script:
-    - git clone https://eicweb.phy.anl.gov/containers/eic_container.git
+    - GIT_SSL_NO_VERIFY=1 git clone -b master --depth=1 https://eicweb.phy.anl.gov/containers/eic_container.git
     - ./eic_container/gitlab-ci/docker_login.sh --ci -n $DOCKER_NTRIES -t $DOCKER_WAIT_TIME
     - echo ${CI_COMMIT_BRANCH}
     - docker build -t ${CI_REGISTRY_IMAGE}/${BUILD_IMAGE}:${INTERNAL_TAG}
@@ -208,5 +208,5 @@ cleanup:
   script:
     ## remove the pipeline specific export from eicweb if needed
     - echo "Cleaning up pipeline specific docker tags if needed"
-    - git clone https://eicweb.phy.anl.gov/containers/eic_container.git
+    - GIT_SSL_NO_VERIFY=1 git clone -b master --depth=1 https://eicweb.phy.anl.gov/containers/eic_container.git
     - ./eic_container/gitlab-ci/cleanup_registry.sh -i ${BUILD_IMAGE} -r 50 ${INTERNAL_TAG}
