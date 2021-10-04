@@ -134,10 +134,25 @@ private:
         continue;
       }
       const double E    = std::hypot(part.ps().mag(), part.mass());
-      const double dE   = sqrt((0.05 * E) * (0.05 * E) + 0.5 * 0.5 * E) * m_gaussDist();
+      double conTerm = 0.05; //default 5%
+      double stoTerm = 0.5;  //default 50%
+      double angTerm = 0.003; //3mrad
+
+      if(part.pdgID() == 2112){
+        conTerm = 0.05; //default 5%
+        stoTerm = 0.5;  //default 50%
+        angTerm = 0.003; //3mrad
+      }
+      else if(part.pdgID() == 22){  //EMCAL expected to have slightly better performance
+        conTerm = 0.03; //default 3%
+        stoTerm = 0.25;  //default 25%
+        angTerm = 0.003; //3mrad
+      }
+
+      const double dE   = sqrt((conTerm * E) * (conTerm * E) + stoTerm * stoTerm * E) * m_gaussDist(); //50%/SqrtE + 5%
       const double Es   = E + dE;
       const double th   = mom_ion.theta();
-      const double dth  = (3e-3 / sqrt(E)) * m_gaussDist();
+      const double dth  = (angTerm / sqrt(E)) * m_gaussDist();
       const double ths  = th + dth;
       const double phi  = mom_ion.phi();
       const double dphi = 0;
