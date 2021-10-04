@@ -51,6 +51,8 @@ workflow:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "master"'
 
+default:
+
 ## plan:
 ##  Workflows:
 ##  - master      --> config + build (eic_container) + singularity (this repo)
@@ -88,6 +90,8 @@ version:
  
 juggler:default:
   stage: build
+  tags: 
+   - docker
   rules:
     - if:  '$CI_SERVER_HOST == "eicweb.phy.anl.gov"'
   needs:
