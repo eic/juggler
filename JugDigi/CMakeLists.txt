@@ -15,6 +15,7 @@ file(GLOB JugDigiPlugins_sources src/components/*.cpp)
 gaudi_add_module(JugDigiPlugins
   SOURCES
   src/components/CalorimeterHitDigi.cpp 
+  src/components/CalorimeterBirksCorr.cpp
   src/components/PhotoMultiplierDigi.cpp 
   src/components/UFSDTrackerDigi.cpp 
   src/components/SiliconTrackerDigi.cpp 

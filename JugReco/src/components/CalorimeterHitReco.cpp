@@ -48,15 +48,19 @@ namespace Jug::Reco {
     Gaudi::Property<double> m_dyRangeADC{this, "dynamicRangeADC", 100. * MeV};
     Gaudi::Property<int>    m_pedMeanADC{this, "pedestalMean", 400};
     Gaudi::Property<double> m_pedSigmaADC{this, "pedestalSigma", 3.2};
+    Gaudi::Property<double>             m_resolutionTDC{this, "resolutionTDC", 10 * ps};
 
     // zero suppression values
-    Gaudi::Property<double> m_thresholdADC{this, "thresholdFactor", 3.0};
+    Gaudi::Property<double> m_thresholdFactor{this, "thresholdFactor", 0.0};
+    Gaudi::Property<double> m_thresholdValue{this, "thresholdValue", 0.0};
 
-    // Calibration!
+    // energy correction with sampling fraction
     Gaudi::Property<double> m_sampFrac{this, "samplingFraction", 1.0};
 
     // unitless counterparts of the input parameters
     double                  dyRangeADC;
+    double                  thresholdADC;
+    double                  stepTDC;
 
     DataHandle<eic::RawCalorimeterHitCollection> m_inputHitCollection{
         "inputHitCollection", Gaudi::DataHandle::Reader, this};
@@ -103,6 +107,12 @@ namespace Jug::Reco {
 
       // unitless conversion
       dyRangeADC = m_dyRangeADC.value()/GeV;
+
+      // threshold for firing
+      thresholdADC = m_thresholdFactor.value()*m_pedSigmaADC.value() + m_thresholdValue.value();
+
+      // TDC channels to timing conversion
+      stepTDC    = ns / m_resolutionTDC.value();
 
       // do not get the layer/sector ID if no readout class provided
       if (m_readout.value().empty()) {
@@ -166,14 +176,14 @@ namespace Jug::Reco {
       // energy time reconstruction
       for (const auto& rh : rawhits) {
         // did not pass the zero-suppression threshold
-        if ((rh.amplitude() - m_pedMeanADC) < m_thresholdADC * m_pedSigmaADC) {
+        if ((rh.amplitude() - m_pedMeanADC) < thresholdADC) {
           continue;
         }
 
         // convert ADC -> energy
         float energy = (rh.amplitude() - m_pedMeanADC) / static_cast<float>(m_capADC.value()) * dyRangeADC / m_sampFrac;
 
-        float time = rh.time()*1.e-6; // ns @FIXME: this should not be hardcoded
+        float time = rh.time() / stepTDC; 
         auto  cellID   = rh.cellID();
         int   lid  = ((id_dec != nullptr) && m_layerField.value().size())
                       ? static_cast<int>(id_dec->get(cellID, layer_idx))

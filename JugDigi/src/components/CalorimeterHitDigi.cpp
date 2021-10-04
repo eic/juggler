@@ -2,12 +2,14 @@
 // 1. Smear energy deposit with a/sqrt(E/GeV) + b + c/E or a/sqrt(E/GeV) (relative value)
 // 2. Digitize the energy with dynamic ADC range and add pedestal (mean +- sigma)
 // 3. Time conversion with smearing resolution (absolute value)
+// 4. Signal is summed if the SumFields are provided
 //
 // Author: Chao Peng
 // Date: 06/02/2021
 
 #include <algorithm>
 #include <cmath>
+#include <unordered_map>
 
 #include "GaudiAlg/GaudiTool.h"
 #include "GaudiAlg/Transformer.h"
@@ -15,8 +17,15 @@
 #include "Gaudi/Property.h"
 #include "GaudiKernel/RndmGenerators.h"
 
+#include "DDRec/CellIDPositionConverter.h"
+#include "DDSegmentation/BitFieldCoder.h"
+
+#include "JugBase/IGeoSvc.h"
 #include "JugBase/DataHandle.h"
 #include "JugBase/UniqueID.h"
+
+#include "fmt/format.h"
+#include "fmt/ranges.h"
 
 // Event Model related classes
 #include "dd4pod/CalorimeterHitCollection.h"
@@ -40,21 +49,34 @@ namespace Jug::Digi {
     Gaudi::Property<double>              m_tRes{this, "timeResolution", 0.0 * ns};
 
     // digitization settings
-    Gaudi::Property<int>    m_capADC{this, "capacityADC", 8096};
-    Gaudi::Property<double> m_dyRangeADC{this, "dynamicRangeADC", 100 * MeV};
-    Gaudi::Property<int>    m_pedMeanADC{this, "pedestalMean", 400};
-    Gaudi::Property<double> m_pedSigmaADC{this, "pedestalSigma", 3.2};
-    Rndm::Numbers           m_normDist;
+    Gaudi::Property<int>                m_capADC{this, "capacityADC", 8096};
+    Gaudi::Property<double>             m_dyRangeADC{this, "dynamicRangeADC", 100 * MeV};
+    Gaudi::Property<int>                m_pedMeanADC{this, "pedestalMean", 400};
+    Gaudi::Property<double>             m_pedSigmaADC{this, "pedestalSigma", 3.2};
+    Gaudi::Property<double>             m_resolutionTDC{this, "resolutionTDC", 10 * ps};
 
-    DataHandle<dd4pod::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
-                                                                      this};
-    DataHandle<eic::RawCalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
-                                                                       this};
+    // signal sums
+    // @TODO: implement signal sums with timing
+    // field names to generate id mask, the hits will be grouped by masking the field
+    Gaudi::Property<std::vector<std::string>> u_fields{this, "signalSumFields", {}};
+    // ref field ids are used for the merged hits, 0 is used if nothing provided
+    Gaudi::Property<std::vector<int>>         u_refs{this, "fieldRefNumbers", {}};
+    Gaudi::Property<std::string>              m_geoSvcName{this, "geoServiceName", "GeoSvc"};
+    Gaudi::Property<std::string>              m_readout{this, "readoutClass", ""};
+
     // unitless counterparts of inputs
-    double dyRangeADC, tRes, eRes[3] = {0., 0., 0.};
+    double           dyRangeADC, stepTDC, tRes, eRes[3] = {0., 0., 0.};
+    Rndm::Numbers    m_normDist;
+    SmartIF<IGeoSvc> m_geoSvc;
+    uint64_t         id_mask, ref_mask;
+
+    DataHandle<dd4pod::CalorimeterHitCollection> m_inputHitCollection{
+      "inputHitCollection", Gaudi::DataHandle::Reader, this};
+    DataHandle<eic::RawCalorimeterHitCollection> m_outputHitCollection{
+      "outputHitCollection", Gaudi::DataHandle::Writer, this};
 
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
-    CalorimeterHitDigi(const std::string& name, ISvcLocator* svcLoc) 
+    CalorimeterHitDigi(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc)
       , AlgorithmIDMixin{name, info()}
     {
@@ -81,12 +103,61 @@ namespace Jug::Digi {
       // using juggler internal units (GeV, mm, radian, ns)
       dyRangeADC = m_dyRangeADC.value() / GeV;
       tRes       = m_tRes.value() / ns;
+      stepTDC    = ns / m_resolutionTDC.value();
+
+      // need signal sum
+      if (u_fields.value().size()) {
+        m_geoSvc = service(m_geoSvcName);
+        // sanity checks
+        if (!m_geoSvc) {
+          error() << "Unable to locate Geometry Service. "
+                  << "Make sure you have GeoSvc and SimSvc in the right order in the configuration."
+                  << endmsg;
+          return StatusCode::FAILURE;
+        }
+        if (m_readout.value().empty()) {
+          error() << "readoutClass is not provided, it is needed to know the fields in readout ids"
+                  << endmsg;
+          return StatusCode::FAILURE;
+        }
+
+        // get decoders
+        try {
+          auto id_desc = m_geoSvc->detector()->readout(m_readout).idSpec();
+          id_mask      = 0;
+          std::vector<std::pair<std::string, int>> ref_fields;
+          for (size_t i = 0; i < u_fields.size(); ++i) {
+            id_mask |= id_desc.field(u_fields[i])->mask();
+            // use the provided id number to find ref cell, or use 0
+            int ref = i < u_refs.size() ? u_refs[i] : 0;
+            ref_fields.push_back({u_fields[i], ref});
+          }
+          ref_mask = id_desc.encode(ref_fields);
+          // debug() << fmt::format("Referece id mask for the fields {:#064b}", ref_mask) << endmsg;
+        } catch (...) {
+          error() << "Failed to load ID decoder for " << m_readout << endmsg;
+          return StatusCode::FAILURE;
+        }
+        id_mask = ~id_mask;
+        info() << fmt::format("ID mask in {:s}: {:#064b}", m_readout, id_mask) << endmsg;
+        return StatusCode::SUCCESS;
+      }
 
       return StatusCode::SUCCESS;
     }
 
     StatusCode execute() override
     {
+      if (u_fields.value().size()) {
+        signal_sum_digi();
+      } else {
+        single_hits_digi();
+      }
+      return StatusCode::SUCCESS;
+    }
+
+  private:
+    void single_hits_digi() {
       // input collections
       const auto simhits = m_inputHitCollection.get();
       // Create output collections
@@ -94,20 +165,68 @@ namespace Jug::Digi {
       int nhits = 0;
       for (const auto& ahit : *simhits) {
         // Note: juggler internal unit of energy is GeV
-        double                 eResRel = std::sqrt(std::pow(m_normDist() * eRes[0] / sqrt(ahit.energyDeposit()), 2) +
-                                   std::pow(m_normDist() * eRes[1], 2) +
-                                   std::pow(m_normDist() * eRes[2] / (ahit.energyDeposit()), 2));
-        double                 ped     = m_pedMeanADC + m_normDist() * m_pedSigmaADC;
-        long long              adc = std::llround(ped + ahit.energyDeposit() * (1. + eResRel) / dyRangeADC * m_capADC);
+        double    eResRel = std::sqrt(std::pow(m_normDist() * eRes[0] / std::sqrt(ahit.energyDeposit()), 2) +
+                                      std::pow(m_normDist() * eRes[1], 2) +
+                                      std::pow(m_normDist() * eRes[2] / (ahit.energyDeposit()), 2));
+        double    ped     = m_pedMeanADC + m_normDist() * m_pedSigmaADC;
+        long long adc     = std::llround(ped + ahit.energyDeposit() * (1. + eResRel) / dyRangeADC * m_capADC);
+        long long tdc     = std::llround((ahit.truth().time + m_normDist() * tRes) * stepTDC);
         eic::RawCalorimeterHit rawhit(
-            {nhits++, algorithmID()},
-            (long long)ahit.cellID(), 
-            (adc > m_capADC.value() ? m_capADC.value() : adc),
-            static_cast<int64_t>(1e6*(double)ahit.truth().time + m_normDist() * tRes) // @FIXME: this shouldn't be hardcoded, but should still be stored as an integer type
-            );
+          {nhits++, algorithmID()},
+          (long long)ahit.cellID(),
+          (adc > m_capADC.value() ? m_capADC.value() : adc),
+          tdc
+        );
         rawhits->push_back(rawhit);
       }
-      return StatusCode::SUCCESS;
+    }
+
+    void signal_sum_digi() {
+      const auto simhits = m_inputHitCollection.get();
+      auto rawhits = m_outputHitCollection.createAndPut();
+
+      // find the hits that belong to the same group (for merging)
+      std::unordered_map<long long, std::vector<dd4pod::ConstCalorimeterHit>> merge_map;
+      for (const auto &ahit : *simhits) {
+        int64_t hid = (ahit.cellID() & id_mask) | ref_mask;
+        auto    it  = merge_map.find(hid);
+
+        if (it == merge_map.end()) {
+          merge_map[hid] = {ahit};
+        } else {
+          it->second.push_back(ahit);
+        }
+      }
+
+      // signal sum
+      int nhits = 0;
+      for (auto &[id, hits] : merge_map) {
+        double edep     = hits[0].energyDeposit();
+        double time     = hits[0].truth().time;
+        double max_edep = hits[0].energyDeposit();
+        // sum energy, take time from the most energetic hit
+        for (size_t i = 1; i < hits.size(); ++i) {
+          edep += hits[i].energyDeposit();
+          if (hits[i].energyDeposit() > max_edep) {
+            max_edep = hits[i].energyDeposit();
+            time     = hits[i].truth().time;
+          }
+        }
+        double    eResRel = std::sqrt(std::pow(m_normDist() * eRes[0] / std::sqrt(edep), 2) +
+                                      std::pow(m_normDist() * eRes[1], 2) +
+                                      std::pow(m_normDist() * eRes[2] / edep, 2));
+        double    ped     = m_pedMeanADC + m_normDist() * m_pedSigmaADC;
+        long long adc     = std::llround(ped + edep * (1. + eResRel) / dyRangeADC * m_capADC);
+        long long tdc     = std::llround((time + m_normDist() * tRes) * stepTDC);
+
+        eic::RawCalorimeterHit rawhit(
+          {nhits++, algorithmID()},
+          id,
+          (adc > m_capADC.value() ? m_capADC.value() : adc),
+          tdc
+        );
+        rawhits->push_back(rawhit);
+      }
     }
   };
   DECLARE_COMPONENT(CalorimeterHitDigi)
