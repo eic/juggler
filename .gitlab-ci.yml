@@ -127,21 +127,21 @@ juggler:default:
       ./eic_container/gitlab-ci/docker_push.sh -i ${BUILD_IMAGE} -l ${INTERNAL_TAG}     \
                                                -n $DOCKER_NTRIES -t $DOCKER_WAIT_TIME   \
                                                ${INTERNAL_TAG} --eicweb
-juggler:singularity:default:
-  stage: deploy
-  rules:
-    - if:  '$CI_SERVER_HOST == "eicweb.phy.anl.gov"'
-  artifacts:
-      expire_in: 90 days
-      paths:
-        - build/${EXPORT_IMAGE}.sif
-  needs:
-    - version
-    - juggler:default
-  script:
-    - mkdir build
-    - singularity pull build/${EXPORT_IMAGE}.sif 
-                  docker://${CI_REGISTRY_IMAGE}/${BUILD_IMAGE}:${INTERNAL_TAG}
+#juggler:singularity:default:
+#  stage: deploy
+#  rules:
+#    - if:  '$CI_SERVER_HOST == "eicweb.phy.anl.gov"'
+#  artifacts:
+#      expire_in: 90 days
+#      paths:
+#        - build/${EXPORT_IMAGE}.sif
+#  needs:
+#    - version
+#    - juggler:default
+#  script:
+#    - mkdir build
+#    - singularity pull build/${EXPORT_IMAGE}.sif 
+#                  docker://${CI_REGISTRY_IMAGE}/${BUILD_IMAGE}:${INTERNAL_TAG}
 
 jug_xl:master:
   stage: deploy
