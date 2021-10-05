@@ -88,8 +88,8 @@ public:
       if (msgLevel(MSG::DEBUG)) {
         debug() << "Processing charged particle " << trkIdx << endmsg;
       }
-      outparts.push_back(inparts[trkIdx]);
-      outrels.push_back(inrels[trkIdx]);
+      outparts.push_back(inparts[trkIdx].clone());
+      outrels.push_back(inrels[trkIdx].clone());
       auto rel = outrels[trkIdx];
       if (!rel.mcID()) {
         if (msgLevel(MSG::DEBUG)) {
