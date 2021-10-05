@@ -168,7 +168,14 @@ private:
     for (const auto& cluster_handle : cluster_collections) {
       const auto& clusters = *(cluster_handle->get());
       for (const auto& cluster : clusters) {
-        matched[cluster.ID()] = cluster;
+        if (msgLevel(MSG::VERBOSE)) { 
+          const bool duplicate = matched.count(cluster.mcID());
+          verbose() << "Found cluster: " << cluster.ID() << " with mcID " << cluster.mcID() << endmsg;
+          if (duplicate) {
+            verbose() << " --> WARNING: this is a duplicate mcID, overwriting previous cluster" << endmsg;
+          }
+        }
+        matched[cluster.mcID()] = cluster;
       }
     }
     return matched;
