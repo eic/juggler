@@ -38,7 +38,10 @@ namespace Jug {
         if (GaudiAlgorithm::initialize().isFailure()) {
           return StatusCode::FAILURE;
         }
-        warning() << "DEPRECATED ALGORITH, no need to use this anymore, we can do a proper straight passthrough from input to output." << endmsg;
+        warning() << "DEPRECATED ALGORITHM, no need to use this anymore, we can do a proper straight passthrough from input to output." << endmsg;
+        warning() << "1) Remove the calls to InputCopier from your options file." << endmsg;
+        warning() << "2) Add 'keep mcparticles' to the PodioOutput.outputCommands." << endmsg;
+        warning() << "3) Update your analysis code to use 'mcparticles' directly." << endmsg;
         return StatusCode::SUCCESS;
       }
       StatusCode execute() override
