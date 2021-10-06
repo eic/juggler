@@ -26,6 +26,15 @@
 #include "TGeoMaterialInterface.h"
 #include "PlanarMeasurement.h"
 
+static const std::map<int, Acts::Logging::Level> _msgMap = {
+    {MSG::DEBUG, Acts::Logging::DEBUG},
+    {MSG::VERBOSE, Acts::Logging::VERBOSE},
+    {MSG::INFO, Acts::Logging::INFO},
+    {MSG::WARNING, Acts::Logging::WARNING},
+    {MSG::FATAL, Acts::Logging::FATAL},
+    {MSG::ERROR, Acts::Logging::ERROR},
+};
+
 void draw_surfaces(std::shared_ptr<const Acts::TrackingGeometry> trk_geo, const std::string& fname)
 {
   using namespace Acts;
@@ -128,8 +137,17 @@ StatusCode GeoSvc::initialize() {
   }
 
   // ACTS
-  m_trackingGeo = std::move(Acts::convertDD4hepDetector(m_dd4hepGeo->world(), Acts::Logging::VERBOSE, Acts::equidistant,
-                                                        Acts::equidistant, Acts::equidistant));
+  auto im = _msgMap.find(msgLevel());
+  if (im != _msgMap.end()) {
+    m_actsLoggingLevel = im->second;
+  }
+
+  m_trackingGeo = std::move(Acts::convertDD4hepDetector(m_dd4hepGeo->world(),
+                                                        m_actsLoggingLevel,
+                                                        Acts::equidistant,
+                                                        Acts::equidistant,
+                                                        Acts::equidistant));
+
   if (m_trackingGeo) {
     draw_surfaces(m_trackingGeo, "tracking_geometry.obj");
     debug() << "visiting all the surfaces  " << endmsg;

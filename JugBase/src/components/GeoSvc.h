@@ -13,6 +13,7 @@
 #include "JugBase/IGeoSvc.h"
 
 // ACTS
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Definitions/Common.hpp"
@@ -57,6 +58,9 @@ private:
 
   /// Genfit DetPlane map
   std::map< int64_t, std::shared_ptr<genfit::DetPlane> > m_detPlaneMap ;
+
+  /// ACTS Logging Level
+  Acts::Logging::Level m_actsLoggingLevel = Acts::Logging::INFO;
 
   /// ACTS Tracking  Geometry
   std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeo{nullptr};
