@@ -15,7 +15,6 @@
 // Event Model related classes
 #include "dd4pod/Geant4ParticleCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
-#include "eicd/ReconstructedParticleRelationsCollection.h"
 #include "eicd/TrackParametersCollection.h"
 #include "eicd/VectorPolar.h"
 
@@ -29,8 +28,6 @@ public:
                                                                     this};
   DataHandle<eic::ReconstructedParticleCollection> m_outputParticleCollection{
       "ReconstructedParticles", Gaudi::DataHandle::Writer, this};
-  DataHandle<eic::ReconstructedParticleRelationsCollection> m_outputRelationsCollection{
-      "ReconstructedParticleRelations", Gaudi::DataHandle::Writer, this};
 
   // Matching momentum tolerance requires 10% by default;
   Gaudi::Property<double> m_pRelativeTolerance{this, "pRelativeTolerance", {0.1}};
@@ -46,7 +43,6 @@ public:
     declareProperty("inputMCParticles", m_inputTruthCollection, "mcparticles");
     declareProperty("inputTrackParameters", m_inputTrackCollection, "outputTrackParameters");
     declareProperty("outputParticles", m_outputParticleCollection, "ReconstructedParticles");
-    declareProperty("outputRelations", m_outputRelationsCollection, "ReconstructedParticleRelations");
   }
   StatusCode initialize() override {
     if (GaudiAlgorithm::initialize().isFailure())
@@ -59,7 +55,6 @@ public:
     const auto& mc     = *(m_inputTruthCollection.get());
     const auto& tracks = *(m_inputTrackCollection.get());
     auto& part         = *(m_outputParticleCollection.createAndPut());
-    auto& rel          = *(m_outputRelationsCollection.createAndPut());
 
     const double sinPhiOver2Tolerance = sin(0.5 * m_phiTolerance);
     std::vector<bool> consumed(mc.size(), false);
@@ -108,23 +103,21 @@ public:
         mass                 = mcpart.mass();
         mcID                 = {mcpart.ID(), m_kMonteCarloSource};
       }
-      eic::ReconstructedParticle rec_part{{ID++, algorithmID()},
-                                          mom,
-                                          vertex,
-                                          time,
-                                          best_pid,
-                                          static_cast<int16_t>(best_match >= 0 ? 0 : -1) /* status */,
-                                          static_cast<int16_t>(charge_rec),
-                                          1. /* weight */,
-                                          {mom.theta(), mom.phi()},
-                                          mom.mag(),
-                                          std::hypot(mom.mag(), mass),
-                                          mass};
-      eic::ReconstructedParticleRelations rel_part;
-      rel_part.recID(rec_part.ID());
-      rel_part.mcID(mcID);
-      part.push_back(rec_part);
-      rel.push_back(rel_part);
+      auto rec_part = part.create();
+      rec_part.ID({ID++, algorithmID()});
+      rec_part.p(mom);
+      rec_part.v(vertex);
+      rec_part.time(time);
+      rec_part.pid(best_pid);
+      rec_part.status(static_cast<int16_t>(best_match >= 0 ? 0 : -1));
+      rec_part.charge(static_cast<int16_t>(charge_rec));
+      rec_part.weight(1.);
+      rec_part.direction({mom.theta(), mom.phi()});
+      rec_part.momentum(mom.mag());
+      rec_part.energy(std::hypot(mom.mag(), mass));
+      rec_part.mass(mass);
+      rec_part.mcID(mcID);
+
       if (msgLevel(MSG::DEBUG)) {
         if (best_match > 0) {
           const auto& mcpart = mc[best_match];

@@ -14,7 +14,6 @@
 // Event Model related classes
 #include "dd4pod/Geant4ParticleCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
-#include "eicd/ReconstructedParticleRelationsCollection.h"
 #include "eicd/VectorPolar.h"
 
 namespace Jug::Fast {
@@ -23,8 +22,6 @@ class SmearedFarForwardParticles : public GaudiAlgorithm, AlgorithmIDMixin<> {
 public:
   DataHandle<dd4pod::Geant4ParticleCollection> m_inputParticles{"inputMCParticles", Gaudi::DataHandle::Reader, this};
   DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"SmearedFarForwardParticles", Gaudi::DataHandle::Writer,
-                                                                     this};
-  DataHandle<eic::ReconstructedParticleRelationsCollection> m_outputRelations{"SmearedFarForwardRelations", Gaudi::DataHandle::Writer,
                                                                      this};
 
   Gaudi::Property<bool> m_enableZDC{this, "enableZDC", true};
@@ -63,14 +60,13 @@ public:
   const int32_t m_kMonteCarloSource{uniqueID<int32_t>("mcparticles")};
 
   private:
-  using RecData = std::pair<eic::ReconstructedParticle, eic::ReconstructedParticleRelations>;
+  using RecData = eic::ReconstructedParticle;
 
   public:
   SmearedFarForwardParticles(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
     declareProperty("inputMCParticles", m_inputParticles, "mcparticles");
     declareProperty("outputParticles", m_outputParticles, "ReconstructedParticles");
-    declareProperty("outputRelations", m_outputRelations, "ReconstructedParticleRelations");
   }
   StatusCode initialize() override {
     if (GaudiAlgorithm::initialize().isFailure())
@@ -88,7 +84,6 @@ public:
   StatusCode execute() override {
     const auto& mc = *(m_inputParticles.get());
     auto& rc       = *(m_outputParticles.createAndPut());
-    auto& rel      = *(m_outputRelations.createAndPut());
 
     std::vector<std::vector<RecData>> rc_parts;
     if (m_enableZDC) {
@@ -105,8 +100,7 @@ public:
     }
     for (const auto& det : rc_parts) {
       for (const auto& part : det) {
-        rc.push_back(part.first);
-        rel.push_back(part.second);
+        rc.push_back(part);
       }
     }
     return StatusCode::SUCCESS;
@@ -160,22 +154,21 @@ private:
       const double moms = sqrt(Es * Es - part.mass() * part.mass());
       const eic::VectorPolar mom3s_ion{moms, ths, phis};
       const auto mom3s = rotateIonToLabDirection(mom3s_ion);
-      eic::ReconstructedParticle rec_part{{part.ID(), algorithmID()},
-                                          mom3s,
-                                          {part.vs().x, part.vs().y, part.vs().z},
-                                          static_cast<float>(part.time()),
-                                          part.pdgID(),
-                                          0,
-                                          static_cast<int16_t>(part.charge()),
-                                          1.,
-                                          {mom3s.theta(), mom3s.phi()},
-                                          static_cast<float>(moms),
-                                          static_cast<float>(Es),
-                                          static_cast<float>(part.mass())};
-      eic::ReconstructedParticleRelations rel;
-      rel.recID(rec_part.ID());
-      rel.mcID({part.ID(), m_kMonteCarloSource});
-      rc.push_back({rec_part, rel});
+      eic::ReconstructedParticle rec_part;
+      rec_part.ID({part.ID(), algorithmID()});
+      rec_part.p(mom3s);
+      rec_part.v({part.vs().x, part.vs().y, part.vs().z});
+      rec_part.time(static_cast<float>(part.time()));
+      rec_part.pid(part.pdgID());
+      rec_part.status(0);
+      rec_part.charge(static_cast<int16_t>(part.charge()));
+      rec_part.weight(1.);
+      rec_part.direction({mom3s.theta(), mom3s.phi()});
+      rec_part.momentum(static_cast<float>(moms));
+      rec_part.energy(static_cast<float>(Es));
+      rec_part.mass(static_cast<float>(part.mass()));
+      rec_part.mcID({part.ID(), m_kMonteCarloSource});
+      rc.push_back(rec_part);
 
       if (msgLevel(MSG::DEBUG)) {
         debug()
@@ -210,7 +203,7 @@ private:
       }
       rc.push_back(smearMomentum(part));
       if (msgLevel(MSG::DEBUG)) {
-        auto& rec_part = rc.back().first;
+        auto& rec_part = rc.back();
         debug() << fmt::format("Found B0 particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
                                part.pdgID(), part.ps().mag(), rec_part.momentum(), std::hypot(part.ps().x, part.ps().y),
@@ -242,7 +235,7 @@ private:
       }
       rc.push_back(smearMomentum(part));
       if (msgLevel(MSG::DEBUG)) {
-        auto& rec_part = rc.back().first;
+        auto& rec_part = rc.back();
         debug() << fmt::format("Found RP particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
                                part.pdgID(), part.ps().mag(), rec_part.momentum(), std::hypot(part.ps().x, part.ps().y),
@@ -279,7 +272,7 @@ private:
       }
       rc.push_back(smearMomentum(part));
       if (msgLevel(MSG::DEBUG)) {
-        auto& rec_part = rc.back().first;
+        auto& rec_part = rc.back();
         debug() << fmt::format("Found OMD particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
                                part.pdgID(), part.ps().mag(), rec_part.momentum(), std::hypot(part.ps().x, part.ps().y),
@@ -308,23 +301,21 @@ private:
     // And build our 3-vector
     const eic::VectorXYZ psmear_ion = {pxs, pys, pzs};
     const auto psmear               = rotateIonToLabDirection(psmear_ion);
-    eic::ReconstructedParticle rec{
-        {part.ID(), algorithmID()},
-        psmear,
-        {part.vs().x, part.vs().y, part.vs().z},
-        static_cast<float>(part.time()),
-        part.pdgID(),
-        0,
-        static_cast<int16_t>(part.charge()),
-        1.,
-        {psmear.theta(), psmear.phi()},
-        static_cast<float>(ps),
-        static_cast<float>(std::hypot(psmear.mag(), part.mass())),
-        static_cast<float>(part.mass())};
-    eic::ReconstructedParticleRelations rel;
-    rel.recID(rec.ID());
-    rel.mcID({part.ID(), m_kMonteCarloSource});
-    return {rec, rel};
+    eic::ReconstructedParticle rec_part;
+    rec_part.ID({part.ID(), algorithmID()});
+    rec_part.p(psmear);
+    rec_part.v({part.vs().x, part.vs().y, part.vs().z});
+    rec_part.time(static_cast<float>(part.time()));
+    rec_part.pid(part.pdgID());
+    rec_part.status(0);
+    rec_part.charge(static_cast<int16_t>(part.charge()));
+    rec_part.weight(1.);
+    rec_part.direction({psmear.theta(), psmear.phi()});
+    rec_part.momentum(static_cast<float>(ps));
+    rec_part.energy(std::hypot(ps, part.mass()));
+    rec_part.mass(static_cast<float>(part.mass()));
+    rec_part.mcID({part.ID(), m_kMonteCarloSource});
+    return rec_part;
   }
 
   // Rotate 25mrad about the y-axis

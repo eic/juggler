@@ -89,6 +89,7 @@ public:
     std::vector<double> hity;
     std::vector<double> hitz;
 
+    int32_t idx = 0;
     for (const auto& h : *rawhits) {
 
       // The actual hit position:
@@ -189,8 +190,19 @@ public:
       // static_cast<float>(Es),
       // static_cast<float>(part.mass())};
 
-      eic::ReconstructedParticle rpTrack{{-1, -1}, recoMom, primVtx, 0.0, 1, 0, 1, 1., {recoMom.theta(), recoMom.phi()},
-                                         p_reco,   p_reco,  0.938};
+      eic::ReconstructedParticle rpTrack;
+      rpTrack.ID({idx++, algorithmID()});
+      rpTrack.p(recoMom);
+      rpTrack.v(primVtx);
+      rpTrack.time(0);
+      rpTrack.pid(2122);
+      rpTrack.status(0);
+      rpTrack.charge(1);
+      rpTrack.weight(1.);
+      rpTrack.direction({recoMom.theta(), recoMom.phi()});
+      rpTrack.momentum(p_reco);
+      rpTrack.energy(std::hypot(p_reco, .938272));
+      rpTrack.mass(.938272);
       rc->push_back(rpTrack);
 
     } // end enough hits for matrix reco

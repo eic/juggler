@@ -12,17 +12,14 @@
 // Event Model related classes
 #include "dd4pod/Geant4ParticleCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
-#include "eicd/ReconstructedParticleRelationsCollection.h"
 
 namespace Jug::Base {
 
     class MC2DummyParticle : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
     public:
-      DataHandle<dd4pod::Geant4ParticleCollection> m_inputHitCollection{"mcparticles", Gaudi::DataHandle::Reader, this};
-      DataHandle<eic::ReconstructedParticleCollection> m_outputHitCollection{"DummyReconstructedParticles",
+      DataHandle<dd4pod::Geant4ParticleCollection> m_inputParticles{"mcparticles", Gaudi::DataHandle::Reader, this};
+      DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"DummyReconstructedParticles",
                                                                              Gaudi::DataHandle::Writer, this};
-      DataHandle<eic::ReconstructedParticleRelationsCollection> 
-        m_outputRelCollection{"DummyReconstructedParticleRelations", Gaudi::DataHandle::Writer, this};
       Rndm::Numbers                                    m_gaussDist;
       Gaudi::Property<double>                          m_smearing{this, "smearing", 0.01 /* 1 percent*/};
 
@@ -32,9 +29,8 @@ namespace Jug::Base {
         : GaudiAlgorithm(name, svcLoc)
         , AlgorithmIDMixin(name, info())
       {
-        declareProperty("inputCollection", m_inputHitCollection, "mcparticles");
-        declareProperty("outputCollection", m_outputHitCollection, "DummyReconstructedParticles");
-        declareProperty("outputRelations", m_outputRelCollection, "DummyReconstructedParticles");
+        declareProperty("inputCollection", m_inputParticles, "mcparticles");
+        declareProperty("outputCollection", m_outputParticles, "DummyReconstructedParticles");
       }
       StatusCode initialize() override
       {
@@ -51,10 +47,9 @@ namespace Jug::Base {
       StatusCode execute() override
       {
         // input collection
-        const dd4pod::Geant4ParticleCollection* parts = m_inputHitCollection.get();
+        const dd4pod::Geant4ParticleCollection* parts = m_inputParticles.get();
         // output collection
-        auto out_parts = m_outputHitCollection.createAndPut();
-        auto relations = m_outputRelCollection.createAndPut();
+        auto& out_parts = *(m_outputParticles.createAndPut());
         int ID = 0;
         for (const auto& p : *parts) {
           if (p.genStatus() > 1) {
@@ -80,25 +75,20 @@ namespace Jug::Base {
 
           eic::VectorXYZ psmear{px, py, pz};
 
-          eic::ReconstructedParticle rec_part{
-            {ID++, algorithmID()},            // Unique index
-            psmear,                           // 3-momentum [GeV]
-            {vx, vy, vz},                     // Vertex [mm]
-            static_cast<float>(p.time()),     // time [ns]
-            p.pdgID(),                        // PDG type
-            static_cast<int16_t>(p.status()), // Status
-            static_cast<int16_t>(p.charge()), // Charge
-            1.,                               // particle weight
-            {psmear.theta(), psmear.phi()},   // direction
-            momentum,                         // 3-momentum magnitude [GeV]
-            energy,                           // energy [GeV]
-            static_cast<float>(p.mass())};    // mass [GeV]
-
-          out_parts->push_back(rec_part);
-
-          eic::ReconstructedParticleRelations rel;
-          rel.mcID({p.ID(), kMonteCarloSource});
-          relations->push_back(rel);
+          auto rec_part = out_parts.create();
+          rec_part.ID({ID++, algorithmID()});
+          rec_part.p(psmear);
+          rec_part.v({vx, vy, vz});
+          rec_part.time(static_cast<float>(p.time()));
+          rec_part.pid(p.pdgID());
+          rec_part.status(p.status());
+          rec_part.charge(p.charge());
+          rec_part.weight(1.);
+          rec_part.direction({psmear.theta(), psmear.phi()});
+          rec_part.momentum(momentum);
+          rec_part.energy(energy);
+          rec_part.mass(p.mass());
+          rec_part.mcID({p.ID(), kMonteCarloSource});
         }
         return StatusCode::SUCCESS;
       }
