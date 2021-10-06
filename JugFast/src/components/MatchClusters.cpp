@@ -128,6 +128,7 @@ public:
         debug() << " --> Processing unmatched ECAL cluster (" << eclus.ID() << "), energy: " << eclus.energy()
                 << endmsg;
       }
+
       // get mass/PID from mcparticles, photon in case the matched particle is charged.
       const auto& mc    = mcparticles[mcID.value];
       const double mass = (!mc.charge()) ? mc.mass() : 0;
@@ -185,6 +186,12 @@ private:
         if (msgLevel(MSG::VERBOSE)) {
           verbose() << " --> Found cluster: " << cluster.ID() << " with mcID " << cluster.mcID() << " and energy "
                     << cluster.energy() << endmsg;
+        }
+        if (!cluster.mcID()) {
+          if (msgLevel(MSG::VERBOSE)) {
+            verbose() << "   --> WARNING: no valid MC truth link found, skipping cluster..." << endmsg;
+          }
+          continue;
         }
         const bool duplicate = matched.count(cluster.mcID());
         if (duplicate) {

@@ -9,10 +9,12 @@ find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 
 gaudi_add_module(JugFastPlugins
   SOURCES
+  src/components/ClusterMerger.cpp 
   src/components/MatchClusters.cpp 
   src/components/MC2SmearedParticle.cpp 
   src/components/ParticlesWithTruthPID.cpp 
   src/components/SmearedFarForwardParticles.cpp 
+  src/components/TruthEnergyPositionClusterMerger.cpp
   LINK
   Gaudi::GaudiAlgLib Gaudi::GaudiKernel
   JugBase
