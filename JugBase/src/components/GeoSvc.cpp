@@ -6,9 +6,12 @@
 #include "DD4hep/Printout.h"
 
 #include "JugBase/ACTSLogger.h"
+#include "JugBase/Acts/MaterialWiper.hpp"
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
+#include "Acts/Plugins/Json/JsonMaterialDecorator.hpp"
+#include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 
@@ -177,6 +180,18 @@ StatusCode GeoSvc::initialize() {
       }
       this->m_surfaces.insert_or_assign(vol_id, surface);
     });
+  }
+
+  if (m_jsonFileName.size() > 0) {
+    m_log << MSG::INFO << "loading materials map from file:  '" << m_jsonFileName << "'" << endmsg;
+    // Set up the converter first
+    Acts::MaterialMapJsonConverter::Config jsonGeoConvConfig;
+    // Set up the json-based decorator
+    m_materialDeco = std::make_shared<const Acts::JsonMaterialDecorator>(
+      jsonGeoConvConfig, m_jsonFileName, Acts::Logging::VERBOSE);
+  } else {
+    m_log << MSG::WARNING << "no ACTS materials map has been loaded" << endmsg;
+    m_materialDeco = std::make_shared<const Acts::MaterialWiper>();
   }
 
   m_magneticField = std::make_shared<const Jug::BField::DD4hepBField>(m_dd4hepGeo);

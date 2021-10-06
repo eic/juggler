@@ -19,6 +19,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#include <Acts/Material/IMaterialDecorator.hpp>
 
 // Gaudi
 #include "GaudiKernel/MsgStream.h"
@@ -62,8 +63,11 @@ private:
   /// ACTS Logging Level
   Acts::Logging::Level m_actsLoggingLevel = Acts::Logging::INFO;
 
-  /// ACTS Tracking  Geometry
+  /// ACTS Tracking Geometry
   std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeo{nullptr};
+
+  /// ACTS Material Decorator
+  std::shared_ptr<const Acts::IMaterialDecorator> m_materialDeco{nullptr};
 
   /// ACTS surface lookup container for hit surfaces that generate smeared hits
   VolumeSurfaceMap m_surfaces;
@@ -80,6 +84,10 @@ private:
   /// XML-files with the detector description
   Gaudi::Property<std::vector<std::string>> m_xmlFileNames{
       this, "detectors", {}, "Detector descriptions XML-files"};
+
+  /// JSON-file with the material map
+  Gaudi::Property<std::string> m_jsonFileName{
+      this, "materials", {}, "Material map JSON-file"};
 
   /// Gaudi logging output
   MsgStream m_log;
