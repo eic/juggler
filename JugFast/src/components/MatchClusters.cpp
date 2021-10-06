@@ -66,7 +66,7 @@ public:
   }
   StatusCode execute() override {
     if (msgLevel(MSG::DEBUG)) {
-      debug() << "Adding cluster info to event" << endmsg;
+      debug() << "Processing cluster info for new event" << endmsg;
     }
     // input collection
     const auto& mcparticles = *(m_inputMCParticles.get());
@@ -75,6 +75,9 @@ public:
     auto& outparts          = *(m_outputParticles.createAndPut());
     auto& outrels           = *(m_outputRelations.createAndPut());
 
+    if (msgLevel(MSG::DEBUG)) {
+      debug() << "Step 0/2: Getting indexed list of clusters..." << endmsg;
+    }
     // get an indexed map of all clusters
     auto ecalClusterMap = indexedClusters(m_inputEcalClusterCollections);
     auto hcalClusterMap = indexedClusters(m_inputHcalClusterCollections);
@@ -82,25 +85,26 @@ public:
     // loop over all tracks and link matched clusters where applicable
     // (removing matched clusters from the cluster maps)
     if (msgLevel(MSG::DEBUG)) {
-      debug() << "Matching clusters to charged particles..." << endmsg;
+      debug() << "Step 1/2: Matching clusters to charged particles..." << endmsg;
     }
     for (size_t trkIdx = 0; trkIdx < inparts.size(); ++trkIdx) {
       if (msgLevel(MSG::DEBUG)) {
-        debug() << "Processing charged particle " << trkIdx << endmsg;
+        debug() << " --> Processing charged particle " << trkIdx << ", PID: " << inparts[trkIdx].pid()
+                << ", energy: " << inparts[trkIdx].energy() << endmsg;
       }
       outparts.push_back(inparts[trkIdx].clone());
       outrels.push_back(inrels[trkIdx].clone());
       auto rel = outrels[trkIdx];
       if (!rel.mcID()) {
         if (msgLevel(MSG::DEBUG)) {
-          debug() << " --> cannot match track without associated mcID" << endmsg;
+          debug() << "    --> cannot match track without associated mcID" << endmsg;
         }
         continue;
       }
       if (ecalClusterMap.count(rel.mcID())) {
         const auto& clus = ecalClusterMap[rel.mcID()];
         if (msgLevel(MSG::DEBUG)) {
-          debug() << " --> found matching Ecal cluster (" << clus.ID() << ")" << endmsg;
+          debug() << "    --> found matching Ecal cluster (" << clus.ID() << "), energy: " << clus.energy() << endmsg;
         }
         rel.ecalID(clus.ID());
         ecalClusterMap.erase(rel.mcID());
@@ -108,7 +112,7 @@ public:
       if (hcalClusterMap.count(rel.mcID())) {
         const auto& clus = hcalClusterMap[rel.mcID()];
         if (msgLevel(MSG::DEBUG)) {
-          debug() << " --> found matching Hcal cluster (" << clus.ID() << ")" << endmsg;
+          debug() << " --> found matching Hcal cluster (" << clus.ID() << "), energy: " << clus.energy() << endmsg;
         }
         rel.hcalID(clus.ID());
         hcalClusterMap.erase(rel.mcID());
@@ -117,11 +121,12 @@ public:
     // Now loop over all remaining Ecal clusters and add neutrals. Also add in Hcal energy
     // if a matching cluster is available
     if (msgLevel(MSG::DEBUG)) {
-      debug() << "Creating neutrals for remaining Ecal clusters..." << endmsg;
+      debug() << "Step 2/2: Creating neutrals for remaining Ecal clusters..." << endmsg;
     }
     for (const auto& [mcID, eclus] : ecalClusterMap) {
       if (msgLevel(MSG::DEBUG)) {
-        debug() << "Processing unmatched cluster (" << eclus.ID() << ")" << endmsg;
+        debug() << " --> Processing unmatched ECAL cluster (" << eclus.ID() << "), energy: " << eclus.energy()
+                << endmsg;
       }
       // get mass/PID from mcparticles, photon in case the matched particle is charged.
       const auto& mc    = mcparticles[mcID.value];
@@ -129,20 +134,29 @@ public:
       const int32_t pid = (!mc.charge()) ? mc.pdgID() : 22;
       if (msgLevel(MSG::DEBUG)) {
         if (mc.charge()) {
-          debug() << " --> associated mcparticle is not a neutral (PID: " << mc.pdgID()
-                  << ", setting the reconstructed particle ID to photon" << endmsg;
+          debug() << "   --> associated mcparticle is not a neutral (PID: " << mc.pdgID()
+                  << "), setting the reconstructed particle ID to photon" << endmsg;
         }
-        debug() << " --> found matching associated mcparticle with PID: " << pid << endmsg;
+        debug() << "   --> found matching associated mcparticle with PID: " << pid << ", energy: " << mc.energy()
+                << endmsg;
       }
       // Do we also have any other matching clusters we need to add energy from (just
       // considering HCAL for now)
       const eic::ConstCluster* optional_hclus = nullptr;
       if (hcalClusterMap.count(mcID)) {
         optional_hclus = &(hcalClusterMap[mcID]);
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << "   --> found matching HCAL cluster (" << *optional_hclus
+                  << "), energy: " << optional_hclus->energy() << endmsg;
+        }
       }
       // Reconstruct our neutrals and add them to the list
       const auto [part, rel] =
           reconstruct_neutral(eclus, optional_hclus, mass, pid, {static_cast<int32_t>(outparts.size()), algorithmID()});
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << " --> Reconstructed neutral particle with PID: " << part.pid() << ", energy: " << part.energy()
+                << endmsg;
+      }
       outparts.push_back(part);
       outrels.push_back(rel);
       // That's all!
@@ -168,11 +182,17 @@ private:
     for (const auto& cluster_handle : cluster_collections) {
       const auto& clusters = *(cluster_handle->get());
       for (const auto& cluster : clusters) {
-        if (msgLevel(MSG::VERBOSE)) { 
-          const bool duplicate = matched.count(cluster.mcID());
-          verbose() << "Found cluster: " << cluster.ID() << " with mcID " << cluster.mcID() << endmsg;
-          if (duplicate) {
-            verbose() << " --> WARNING: this is a duplicate mcID, overwriting previous cluster" << endmsg;
+        if (msgLevel(MSG::VERBOSE)) {
+          verbose() << " --> Found cluster: " << cluster.ID() << " with mcID " << cluster.mcID() << " and energy "
+                    << cluster.energy() << endmsg;
+        }
+        const bool duplicate = matched.count(cluster.mcID());
+        if (duplicate) {
+          if (msgLevel(MSG::VERBOSE)) {
+            verbose() << "   --> WARNING: this is a duplicate mcID, keeping the higher energy cluster" << endmsg;
+          }
+          if (cluster.energy() < matched[cluster.mcID()].energy()) {
+            continue;
           }
         }
         matched[cluster.mcID()] = cluster;
@@ -211,7 +231,7 @@ private:
     }
     return {part, rel};
   }
-};
+}; // namespace Jug::Fast
 
 DECLARE_COMPONENT(MatchClusters)
 
