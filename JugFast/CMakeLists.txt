@@ -9,6 +9,7 @@ find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 
 gaudi_add_module(JugFastPlugins
   SOURCES
+  src/components/InclusiveKinematicsTruth.cpp
   src/components/ClusterMerger.cpp 
   src/components/MatchClusters.cpp 
   src/components/MC2SmearedParticle.cpp 
