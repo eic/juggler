@@ -9,7 +9,11 @@ find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 find_library(genfit2 genfit2 /usr/local/lib REQUIRED)
 find_path(genfit2_INCLUDE_DIR NAMES GFGbl.h PATHS /usr/local/include ${genfit2}/../include REQUIRED)
 
-ROOT_GENERATE_DICTIONARY(G__JugBase JugBase/DataHandle.h LINKDEF JugBaseLinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__JugBase
+  JugBase/DataHandle.h
+  LINKDEF JugBaseLinkDef.h
+  OPTIONS -I${Gaudi_INCLUDE_DIR}
+)
 
 gaudi_add_library(JugBase
   SOURCES
