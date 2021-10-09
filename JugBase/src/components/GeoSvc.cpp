@@ -188,7 +188,7 @@ StatusCode GeoSvc::initialize() {
     Acts::MaterialMapJsonConverter::Config jsonGeoConvConfig;
     // Set up the json-based decorator
     m_materialDeco = std::make_shared<const Acts::JsonMaterialDecorator>(
-      jsonGeoConvConfig, m_jsonFileName, Acts::Logging::VERBOSE);
+      jsonGeoConvConfig, m_jsonFileName, m_actsLoggingLevel);
   } else {
     m_log << MSG::WARNING << "no ACTS materials map has been loaded" << endmsg;
     m_materialDeco = std::make_shared<const Acts::MaterialWiper>();
