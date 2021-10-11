@@ -23,6 +23,7 @@ gaudi_add_module(JugTrackPlugins
   src/components/TrackParamVertexClusterInit.cpp 
   src/components/TrackParamImagingClusterInit.cpp 
   src/components/ParticlesFromTrackFit.cpp 
+  src/components/ProjectTrack.cpp 
   src/components/TrajectoryFromTrackFit.cpp 
   src/components/TruthTrackSeeding.cpp 
   LINK
