@@ -99,6 +99,10 @@ public:
       auto kin = out_kinematics.create();
       const auto q = ei.subtract(ef.front().first);
       kin.Q2(q.mass());
+      kin.y(q.dot(pi) / ei.dot(pi));
+      kin.nu(q.dot(pi) / .938272);
+      kin.x(kin.Q2() / (2. * q.dot(pi)));
+      kin.W(sqrt(pi.add(q).mass()));
       kin.scatID(ef.front().second);
     }
 
