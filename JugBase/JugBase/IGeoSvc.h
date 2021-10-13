@@ -23,8 +23,6 @@ namespace genfit {
   class DetPlane;
 }
 
-class G4VUserDetectorConstruction;
-
 /** Geometry service interface.
  *
  * \ingroup base
@@ -46,8 +44,6 @@ public:
   virtual std::shared_ptr<const Acts::MagneticFieldProvider>  getFieldProvider() const = 0;
   virtual double centralMagneticField() const = 0;
 
-  // receive Geant4 Geometry
-  //virtual G4VUserDetectorConstruction* getGeant4Geo() = 0;
   virtual const VolumeSurfaceMap& surfaceMap() const = 0;
 
   // Note this hsould return a const& but is just copied for the moment to get around genfit's api

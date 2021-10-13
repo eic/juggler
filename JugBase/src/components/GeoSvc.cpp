@@ -107,14 +107,6 @@ StatusCode GeoSvc::initialize() {
   else
     m_log << MSG::INFO << "DD4Hep geometry SUCCESSFULLY built" << endmsg;
 
-  // if (buildGeant4Geo().isFailure())
-  //  m_log << MSG::ERROR << "Could not build Geant4 geometry" << endmsg;
-  // else
-  //  m_log << MSG::INFO << "Geant4 geometry SUCCESSFULLY built" << endmsg;
-  // if (m_failureFlag) {
-  //  return StatusCode::FAILURE;
-  //}
-
   // Genfit
   genfit::FieldManager::getInstance()->init(new genfit::ConstField(
       0., 0., this->centralMagneticField() * 10.0)); // gentfit uses kilo-Gauss
@@ -245,21 +237,3 @@ StatusCode GeoSvc::buildDD4HepGeo() {
 dd4hep::Detector* GeoSvc::detector() { return (m_dd4hepGeo); }
 
 dd4hep::DetElement GeoSvc::getDD4HepGeo() { return (detector()->world()); }
-
-//StatusCode GeoSvc::buildGeant4Geo() {
-//  std::shared_ptr<G4VUserDetectorConstruction> detector(new det::GeoConstruction(*lcdd()));
-//  m_geant4geo = detector;
-//  if (m_geant4geo) {
-//    return StatusCode::SUCCESS;
-//  } else
-//    return StatusCode::FAILURE;
-//}
-
-//G4VUserDetectorConstruction* GeoSvc::getGeant4Geo() { return (m_geant4geo.get()); }
-
-//void GeoSvc::handle(const Incident& inc) {
-//  error() << "Handling incident '" << inc.type() << "'" << endmsg;
-//  if (!inc.type().compare("GeometryFailure")) {
-//    m_failureFlag = true;
-//  }
-//}
