@@ -102,29 +102,33 @@ public:
     }
 
     // Loop over reconstructed particles to get outgoing electrons
-    std::vector<std::pair<eic::VectorXYZT, eic::Index>> ef;
+    typedef std::pair<eic::VectorXYZT, eic::Index> t_electron;
+    std::vector<t_electron> electrons;
     for (const auto& p : parts) {
       if (p.pid() == 11) {
         // Outgoing electron
-        ef.push_back(std::make_pair<eic::VectorXYZT, eic::Index>(eic::VectorXYZT(p.p().x, p.p().y, p.p().z, p.energy()), eic::Index(p.ID())));
+        electrons.push_back(t_electron(eic::VectorXYZT(p.p().x, p.p().y, p.p().z, p.energy()), eic::Index(p.ID())));
       }
     }
 
-    if (ef.size() > 0) {
+    if (electrons.size() > 0) {
       // Sort by momentum magnitude
-      std::sort(ef.begin(), ef.end(), [](std::pair<eic::VectorXYZT, eic::Index> a,  std::pair<eic::VectorXYZT, eic::Index> b) {
+      auto compare = [](const t_electron& a, const t_electron& b) {
         return a.first.mag() > b.first.mag();
-      });
+      };
+      std::sort(electrons.begin(), electrons.end(), compare);
 
       // DIS kinematics calculations
       auto kin = out_kinematics.create();
-      const auto q = ei.subtract(ef.front().first);
-      kin.Q2(q.mass());
-      kin.y(q.dot(pi) / ei.dot(pi));
-      kin.nu(q.dot(pi) / m_proton);
-      kin.x(kin.Q2() / (2. * q.dot(pi)));
-      kin.W(sqrt(pi.add(q).mass()));
-      kin.scatID(ef.front().second);
+      const auto [ef, scatID] = electrons.front();
+      const auto q = ei.subtract(ef);
+      const auto q_dot_pi = q.dot(pi);
+      kin.Q2(-q.dot(q));
+      kin.y(q_dot_pi / ei.dot(pi));
+      kin.nu(q_dot_pi / m_proton);
+      kin.x(kin.Q2() / (2.*q_dot_pi));
+      kin.W(m_proton*m_proton + 2.*q_dot_pi - kin.Q2());
+      kin.scatID(scatID);
 
       // Debugging output
       if (msgLevel(MSG::DEBUG)) {
