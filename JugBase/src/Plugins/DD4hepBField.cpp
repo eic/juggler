@@ -22,7 +22,7 @@ namespace Jug::BField {
   }
 
   Acts::Result<Acts::Vector3> DD4hepBField::getFieldGradient(const Acts::Vector3& position,
-		                                             Acts::ActsMatrix<3, 3>& /*derivative*/,
+                                                             Acts::ActsMatrix<3, 3>& /*derivative*/,
                                                              Acts::MagneticFieldProvider::Cache& cache) const
   {
     return this->getField(position, cache);

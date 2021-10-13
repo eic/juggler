@@ -38,10 +38,9 @@ static const std::map<int, Acts::Logging::Level> _msgMap = {
     {MSG::ERROR, Acts::Logging::ERROR},
 };
 
-void draw_surfaces(std::shared_ptr<const Acts::TrackingGeometry> trk_geo, const std::string& fname)
+void draw_surfaces(std::shared_ptr<const Acts::TrackingGeometry> trk_geo, const Acts::GeometryContext geo_ctx, const std::string& fname)
 {
   using namespace Acts;
-  Acts::GeometryContext tgContext = Acts::GeometryContext();
   std::vector<const Surface*> surfaces;
 
   trk_geo->visitSurfaces([&](const Acts::Surface* surface) {
@@ -60,7 +59,7 @@ void draw_surfaces(std::shared_ptr<const Acts::TrackingGeometry> trk_geo, const 
     const PlaneSurface*                 srf    = dynamic_cast<const PlaneSurface*>(srfx);
     const PlanarBounds*                 bounds = dynamic_cast<const PlanarBounds*>(&srf->bounds());
     for (const auto& vtxloc : bounds->vertices()) {
-      Vector3 vtx = srf->transform(tgContext) * Vector3(vtxloc.x(), vtxloc.y(), 0);
+      Vector3 vtx = srf->transform(geo_ctx) * Vector3(vtxloc.x(), vtxloc.y(), 0);
       os << "v " << vtx.x() << " " << vtx.y() << " " << vtx.z() << "\n";
     }
     // connect them
@@ -139,20 +138,51 @@ StatusCode GeoSvc::initialize() {
     }
   }
 
-  // ACTS
+  // Set ACTS logging level
   auto im = _msgMap.find(msgLevel());
   if (im != _msgMap.end()) {
     m_actsLoggingLevel = im->second;
   }
 
-  m_trackingGeo = std::move(Acts::convertDD4hepDetector(m_dd4hepGeo->world(),
-                                                        m_actsLoggingLevel,
-                                                        Acts::equidistant,
-                                                        Acts::equidistant,
-                                                        Acts::equidistant));
+  // Load ACTS materials maps
+  if (m_jsonFileName.size() > 0) {
+    m_log << MSG::INFO << "loading materials map from file:  '" << m_jsonFileName << "'" << endmsg;
+    // Set up the converter first
+    Acts::MaterialMapJsonConverter::Config jsonGeoConvConfig;
+    // Set up the json-based decorator
+    m_materialDeco = std::make_shared<const Acts::JsonMaterialDecorator>(
+      jsonGeoConvConfig, m_jsonFileName, m_actsLoggingLevel);
+  } else {
+    m_log << MSG::WARNING << "no ACTS materials map has been loaded" << endmsg;
+    m_materialDeco = std::make_shared<const Acts::MaterialWiper>();
+  }
 
+  // Convert DD4hep geometry to ACTS
+  Acts::BinningType bTypePhi = Acts::equidistant;
+  Acts::BinningType bTypeR = Acts::equidistant;
+  Acts::BinningType bTypeZ = Acts::equidistant;
+  double layerEnvelopeR = Acts::UnitConstants::mm;
+  double layerEnvelopeZ = Acts::UnitConstants::mm;
+  double defaultLayerThickness = Acts::UnitConstants::fm;
+  using Acts::sortDetElementsByID;
+  m_trackingGeo = std::move(
+    Acts::convertDD4hepDetector(
+      m_dd4hepGeo->world(),
+      m_actsLoggingLevel,
+      bTypePhi,
+      bTypeR,
+      bTypeZ,
+      layerEnvelopeR,
+      layerEnvelopeZ,
+      defaultLayerThickness,
+      sortDetElementsByID,
+      m_trackingGeoCtx,
+      m_materialDeco
+    )
+  );
+  // Visit surfaces
   if (m_trackingGeo) {
-    draw_surfaces(m_trackingGeo, "tracking_geometry.obj");
+    draw_surfaces(m_trackingGeo, m_trackingGeoCtx, "tracking_geometry.obj");
     debug() << "visiting all the surfaces  " << endmsg;
     m_trackingGeo->visitSurfaces([this](const Acts::Surface* surface) {
       // for now we just require a valid surface
@@ -161,7 +191,7 @@ StatusCode GeoSvc::initialize() {
         return;
       }
       auto det_element =
-          dynamic_cast<const Acts::DD4hepDetectorElement*>(surface->associatedDetectorElement());
+        dynamic_cast<const Acts::DD4hepDetectorElement*>(surface->associatedDetectorElement());
 
       if (!det_element) {
         error() << "invalid det_element!!! " << endmsg;
@@ -182,18 +212,7 @@ StatusCode GeoSvc::initialize() {
     });
   }
 
-  if (m_jsonFileName.size() > 0) {
-    m_log << MSG::INFO << "loading materials map from file:  '" << m_jsonFileName << "'" << endmsg;
-    // Set up the converter first
-    Acts::MaterialMapJsonConverter::Config jsonGeoConvConfig;
-    // Set up the json-based decorator
-    m_materialDeco = std::make_shared<const Acts::JsonMaterialDecorator>(
-      jsonGeoConvConfig, m_jsonFileName, m_actsLoggingLevel);
-  } else {
-    m_log << MSG::WARNING << "no ACTS materials map has been loaded" << endmsg;
-    m_materialDeco = std::make_shared<const Acts::MaterialWiper>();
-  }
-
+  // Load ACTS magnetic field
   m_magneticField = std::make_shared<const Jug::BField::DD4hepBField>(m_dd4hepGeo);
   Acts::MagneticFieldContext m_fieldctx{Jug::BField::BFieldVariant(m_magneticField)};
   auto bCache = m_magneticField->makeCache(m_fieldctx);

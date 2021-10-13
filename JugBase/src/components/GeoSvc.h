@@ -63,6 +63,9 @@ private:
   /// ACTS Logging Level
   Acts::Logging::Level m_actsLoggingLevel = Acts::Logging::INFO;
 
+  /// ACTS Tracking Geometry Context
+  Acts::GeometryContext m_trackingGeoCtx;
+
   /// ACTS Tracking Geometry
   std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeo{nullptr};
 
