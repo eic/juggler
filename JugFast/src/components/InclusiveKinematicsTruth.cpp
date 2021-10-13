@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include "JugBase/IParticleSvc.h"
 #include "JugBase/DataHandle.h"
 #include "JugBase/UniqueID.h"
 
@@ -24,6 +25,9 @@ public:
   DataHandle<eic::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{"InclusiveKinematicsTruth",
                                                                                        Gaudi::DataHandle::Writer, this};
 
+  SmartIF<IParticleSvc> m_pidSvc;
+  double m_proton;
+
   InclusiveKinematicsTruth(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
     declareProperty("inputMCParticles", m_inputParticleCollection, "mcparticles");
@@ -33,6 +37,15 @@ public:
   StatusCode initialize() override {
     if (GaudiAlgorithm::initialize().isFailure())
       return StatusCode::FAILURE;
+
+    m_pidSvc = service("ParticleSvc");
+    if (!m_pidSvc) {
+      error() << "Unable to locate Particle Service. "
+              << "Make sure you have ParticleSvc in the configuration."
+              << endmsg;
+      return StatusCode::FAILURE;
+    }
+    m_proton = m_pidSvc->particle(2212).mass;
 
     return StatusCode::SUCCESS;
   }
@@ -65,7 +78,7 @@ public:
         ei.setE(p.energy());
         ebeam_found = true;
       }
-      if (p.genStatus() == 4 && p.pdgID() == 2122) { // Incoming proton
+      if (p.genStatus() == 4 && p.pdgID() == 2212) { // Incoming proton
         pi.setPx(p.ps().x);
         pi.setPy(p.ps().y);
         pi.setPz(p.ps().z);
@@ -90,15 +103,44 @@ public:
       }
     }
 
+    // Not all particles found
+    if (ebeam_found == false) {
+      info() << "No initial electron found" << endmsg;
+      return StatusCode::SUCCESS;
+    }
+    if (pbeam_found == false) {
+      info() << "No initial proton found" << endmsg;
+      return StatusCode::SUCCESS;
+    }
+    if (scatID == 0) {
+      info() << "No scattered electron found" << endmsg;
+      return StatusCode::SUCCESS;
+    }
+
     // DIS kinematics calculations
     auto kin = out_kinematics.create();
-    const auto q    = ei - ef;
+    const auto q = ei - ef;
     kin.Q2(-1. * q.m2());
     kin.y((q * pi) / (ei * pi));
-    kin.nu(q * pi / .938272);
+    kin.nu(q * pi / m_proton);
     kin.x(kin.Q2() / (2. * q * pi));
     kin.W(sqrt((pi + q).m2()));
     kin.scatID(scatID);
+
+    // Debugging output
+    if (msgLevel(MSG::DEBUG)) {
+      debug() << "pi = " << pi << endmsg;
+      debug() << "ei = " << ei << endmsg;
+      debug() << "ef = " << ef << endmsg;
+      debug() << "q = " << q << endmsg;
+      debug() << "x,y,Q2,W,nu = "
+              << kin.x() << "," 
+              << kin.y() << ","
+              << kin.Q2() << ","
+              << kin.W() << ","
+              << kin.nu()
+              << endmsg;
+    }
 
     return StatusCode::SUCCESS;
   }

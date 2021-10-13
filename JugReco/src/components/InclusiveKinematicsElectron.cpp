@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include "JugBase/IParticleSvc.h"
 #include "JugBase/DataHandle.h"
 #include "JugBase/UniqueID.h"
 
@@ -33,6 +34,9 @@ public:
     Gaudi::DataHandle::Writer,
     this};
 
+  SmartIF<IParticleSvc> m_pidSvc;
+  double m_proton;
+
   InclusiveKinematicsElectron(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
     declareProperty("inputMCParticles", m_inputMCParticleCollection, "mcparticles");
@@ -43,6 +47,15 @@ public:
   StatusCode initialize() override {
     if (GaudiAlgorithm::initialize().isFailure())
       return StatusCode::FAILURE;
+
+    m_pidSvc = service("ParticleSvc");
+    if (!m_pidSvc) {
+      error() << "Unable to locate Particle Service. "
+              << "Make sure you have ParticleSvc in the configuration."
+              << endmsg;
+      return StatusCode::FAILURE;
+    }
+    m_proton = m_pidSvc->particle(2212).mass;
 
     return StatusCode::SUCCESS;
   }
@@ -79,6 +92,14 @@ public:
         break;
       }
     }
+    if (found_electron == false) {
+      info() << "No initial electron found" << endmsg;
+      return StatusCode::SUCCESS;
+    }
+    if (found_proton == false) {
+      info() << "No initial proton found" << endmsg;
+      return StatusCode::SUCCESS;
+    }
 
     // Loop over reconstructed particles to get outgoing electrons
     std::vector<std::pair<eic::VectorXYZT, eic::Index>> ef;
@@ -100,10 +121,25 @@ public:
       const auto q = ei.subtract(ef.front().first);
       kin.Q2(q.mass());
       kin.y(q.dot(pi) / ei.dot(pi));
-      kin.nu(q.dot(pi) / .938272);
+      kin.nu(q.dot(pi) / m_proton);
       kin.x(kin.Q2() / (2. * q.dot(pi)));
       kin.W(sqrt(pi.add(q).mass()));
       kin.scatID(ef.front().second);
+
+      // Debugging output
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << "pi = " << pi << endmsg;
+        debug() << "ei = " << ei << endmsg;
+        debug() << "ef = " << ef << endmsg;
+        debug() << "q = " << q << endmsg;
+        debug() << "x,y,Q2,W,nu = "
+                << kin.x() << "," 
+                << kin.y() << ","
+                << kin.Q2() << ","
+                << kin.W() << ","
+                << kin.nu()
+                << endmsg;
+      }
     }
 
     return StatusCode::SUCCESS;
