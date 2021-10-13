@@ -2,15 +2,6 @@
 # Package: JugDigi
 ################################################################################
 
-find_package(EICD REQUIRED)
-#set(PODIO $ENV{PODIO})
-#set(CMAKE_MODULE_PATH CMAKE_MODULE_PATH PODIO)
-#find_package(podio 0.11.01 REQUIRED)
-#include_directories(${podio_INCLUDE_DIR})
-
-find_package(ROOT COMPONENTS RIO Tree Core REQUIRED)
-find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
-
 file(GLOB JugDigiPlugins_sources src/components/*.cpp)
 gaudi_add_module(JugDigiPlugins
   SOURCES

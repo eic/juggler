@@ -2,13 +2,6 @@
 # Package: JugBase
 ################################################################################
 
-find_package(EICD)
-find_package(Acts REQUIRED COMPONENTS Core PluginIdentification PluginTGeo PluginDD4hep )
-find_package(ROOT COMPONENTS RIO Tree Core REQUIRED)
-find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
-find_library(genfit2 genfit2 /usr/local/lib REQUIRED)
-find_path(genfit2_INCLUDE_DIR NAMES GFGbl.h PATHS /usr/local/include ${genfit2}/../include REQUIRED)
-
 ROOT_GENERATE_DICTIONARY(G__JugBase
   JugBase/DataHandle.h
   LINKDEF JugBaseLinkDef.h

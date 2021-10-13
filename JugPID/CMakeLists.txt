@@ -2,11 +2,6 @@
 # Package: JugPID
 ################################################################################
 
-find_package(EICD REQUIRED)
-
-find_package(ROOT COMPONENTS RIO Tree Core REQUIRED)
-find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
-
 gaudi_add_module(JugPIDPlugins
   SOURCES
   src/components/FuzzyKClusters.cpp 
