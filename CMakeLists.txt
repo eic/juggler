@@ -9,14 +9,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(EICD REQUIRED)
 find_package(NPDet REQUIRED)
-#---------------------------------------------------------------
-# to use ROOT targets, find_package ROOT must come before find_package Gaudi
-# (for now) # see issue Gaudi#103
-set(PODIO $ENV{PODIO})
-set(CMAKE_MODULE_PATH CMAKE_MODULE_PATH PODIO)
 find_package(podio 0.11.0 REQUIRED)
-
-include_directories(${podio_INCLUDE_DIR})
 find_package(ROOT COMPONENTS Core RIO Tree MathCore GenVector Geom REQUIRED)
 find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 find_package(Acts REQUIRED COMPONENTS Core PluginIdentification PluginTGeo PluginDD4hep )
