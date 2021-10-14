@@ -54,6 +54,8 @@ public:
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
     declareProperty("energyClusters", m_energyClusters, "Cluster collection with good energy precision");
     declareProperty("positionClusters", m_positionClusters, "Cluster collection with good position precision");
+    declareProperty("outputClusters", m_outputClusters, "");
+    declareProperty("outputCluster", m_relations, "");
   }
 
   StatusCode initialize() override {
