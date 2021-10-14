@@ -3,6 +3,7 @@
 
 #include "GaudiAlg/Transformer.h"
 #include "GaudiAlg/GaudiTool.h"
+#include "GaudiKernel/PhysicalConstants.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "Gaudi/Property.h"
 
@@ -24,6 +25,7 @@ namespace Jug::Digi {
   class SiliconTrackerDigi : public GaudiAlgorithm, AlgorithmIDMixin<> {
   public:
     Gaudi::Property<double>                  m_timeResolution{this, "timeResolution", 10}; // todo : add units
+    Gaudi::Property<double>                  m_threshold{this, "threshold", 0. * Gaudi::Units::keV};
     Rndm::Numbers                            m_gaussDist;
     DataHandle<dd4pod::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                   this};
@@ -60,11 +62,23 @@ namespace Jug::Digi {
       std::map<long long, int> cell_hit_map;
       int ID = 0;
       for (const auto& ahit : *simhits) {
-        debug() << "--------------------" << ahit.cellID() << endmsg;
-        debug() << "Hit in cellID = " << ahit.cellID() << endmsg;
-        debug() << "     position = (" << ahit.position().x  << "," << ahit.position().y <<","<< ahit.position().z << ")" << endmsg;
-        debug() << "    xy_radius = " << std::hypot(ahit.position().x  , ahit.position().y ) << endmsg;
-        debug() << "     momentum = (" << ahit.momentum().x  << "," << ahit.momentum().y <<","<< ahit.momentum().z << ")" << endmsg;
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << "--------------------" << ahit.cellID() << endmsg;
+          debug() << "Hit in cellID = " << ahit.cellID() << endmsg;
+          debug() << "     position = (" << ahit.position().x  << "," << ahit.position().y <<","<< ahit.position().z << ")" << endmsg;
+          debug() << "    xy_radius = " << std::hypot(ahit.position().x  , ahit.position().y ) << endmsg;
+          debug() << "     momentum = (" << ahit.momentum().x  << "," << ahit.momentum().y <<","<< ahit.momentum().z << ")" << endmsg;
+        }
+        if (ahit.energyDeposit() * Gaudi::Units::keV < m_threshold) {
+          if (msgLevel(MSG::DEBUG)) {
+            debug() << "         edep = " << ahit.energyDeposit() << " (below threshold of " << m_threshold / Gaudi::Units::keV << " keV)" << endmsg;
+          }          
+          continue;
+        } else {
+          if (msgLevel(MSG::DEBUG)) {
+            debug() << "         edep = " << ahit.energyDeposit() << endmsg;
+          }
+        }
         // std::cout << ahit << "\n";
         if (cell_hit_map.count(ahit.cellID()) == 0) {
           cell_hit_map[ahit.cellID()] = rawhits->size();
