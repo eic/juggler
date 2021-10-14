@@ -105,15 +105,21 @@ public:
 
     // Not all particles found
     if (ebeam_found == false) {
-      info() << "No initial electron found" << endmsg;
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << "No initial electron found" << endmsg;
+      }
       return StatusCode::SUCCESS;
     }
     if (pbeam_found == false) {
-      info() << "No initial proton found" << endmsg;
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << "No initial proton found" << endmsg;
+      }
       return StatusCode::SUCCESS;
     }
     if (scatID == 0) {
-      info() << "No scattered electron found" << endmsg;
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << "No scattered electron found" << endmsg;
+      }
       return StatusCode::SUCCESS;
     }
 

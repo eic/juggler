@@ -93,11 +93,15 @@ public:
       }
     }
     if (found_electron == false) {
-      info() << "No initial electron found" << endmsg;
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << "No initial electron found" << endmsg;
+      }
       return StatusCode::SUCCESS;
     }
     if (found_proton == false) {
-      info() << "No initial proton found" << endmsg;
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << "No initial proton found" << endmsg;
+      }
       return StatusCode::SUCCESS;
     }
 
