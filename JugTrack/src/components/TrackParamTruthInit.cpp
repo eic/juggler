@@ -1,11 +1,12 @@
 #include <cmath>
 // Gaudi
+#include "Gaudi/Property.h"
 #include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiKernel/ToolHandle.h"
 #include "GaudiAlg/Transformer.h"
 #include "GaudiAlg/GaudiTool.h"
+#include "GaudiKernel/PhysicalConstants.h"
 #include "GaudiKernel/RndmGenerators.h"
-#include "Gaudi/Property.h"
+#include "GaudiKernel/ToolHandle.h"
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
@@ -45,6 +46,12 @@ namespace Jug::Reco {
                                                                     this};
     DataHandle<TrackParametersContainer>         m_outputInitialTrackParameters{"outputInitialTrackParameters",
                                                                         Gaudi::DataHandle::Writer, this};
+    
+    // selection settings
+    Gaudi::Property<double> m_maxVertexX{this, "maxVertexX", 80. * Gaudi::Units::mm};
+    Gaudi::Property<double> m_maxVertexY{this, "maxVertexY", 80. * Gaudi::Units::mm};
+    Gaudi::Property<double> m_maxVertexZ{this, "maxVertexZ", 200. * Gaudi::Units::mm};
+    Gaudi::Property<double> m_minMomentum{this, "minMomentum", 100. * Gaudi::Units::MeV};
 
     SmartIF<IParticleSvc> m_pidSvc;
 
@@ -81,13 +88,43 @@ namespace Jug::Reco {
 
       for(const auto& part : *mcparts) {
 
-        // genStatus = 1 means thrown G4Primary 
+        // genStatus = 1 means thrown G4Primary, but dd4gun uses genStatus == 0
         if (part.genStatus() > 1 ) {
           if (msgLevel(MSG::DEBUG)) {
             debug() << "ignoring particle with genStatus = " << part.genStatus() << endmsg;
           }
           continue;
         }
+
+        // require close to interaction vertex
+        if (abs(part.vs().x) * Gaudi::Units::mm > m_maxVertexX
+         || abs(part.vs().y) * Gaudi::Units::mm > m_maxVertexY
+         || abs(part.vs().z) * Gaudi::Units::mm > m_maxVertexZ) {
+          if (msgLevel(MSG::DEBUG)) {
+            debug() << "ignoring particle with vs = " << part.vs() << " mm" << endmsg;
+          }
+          continue;
+        }
+
+        // require minimum momentum
+        if (part.ps().mag() * Gaudi::Units::GeV < m_minMomentum) {
+          if (msgLevel(MSG::DEBUG)) {
+            debug() << "ignoring particle with p = " << part.ps().mag() << " GeV" << endmsg;
+          }
+          continue;
+        }
+
+        // get the particle charge
+        // note that we cannot trust the mcparticles charge, as DD4hep
+        // sets this value to zero! let's lookup by PDGID instead
+        const double charge = m_pidSvc->particle(part.pdgID()).charge;
+        if (abs(charge) < std::numeric_limits<double>::epsilon()) {
+          if (msgLevel(MSG::DEBUG)) {
+            debug() << "ignoring neutral particle" << endmsg;
+          }
+          continue;
+        }
+
         using Acts::UnitConstants::GeV;
         using Acts::UnitConstants::MeV;
         using Acts::UnitConstants::mm;
@@ -95,14 +132,6 @@ namespace Jug::Reco {
         using Acts::UnitConstants::ns;
 
         const double p = part.ps().mag() * GeV;
-
-        // get the particle charge
-        // note that we cannot trust the mcparticles charge, as DD4hep
-        // sets this value to zero! let's lookup by PDGID instead
-        const double charge = m_pidSvc->particle(part.pdgID()).charge;
-        if (abs(charge) < std::numeric_limits<double>::epsilon()) {
-          continue;
-        }
 
         // build some track cov matrix
         Acts::BoundSymMatrix cov                    = Acts::BoundSymMatrix::Zero();
