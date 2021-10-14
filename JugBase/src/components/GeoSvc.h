@@ -90,7 +90,7 @@ private:
 
   /// JSON-file with the material map
   Gaudi::Property<std::string> m_jsonFileName{
-      this, "materials", {}, "Material map JSON-file"};
+      this, "materials", "", "Material map JSON-file"};
 
   /// Gaudi logging output
   MsgStream m_log;
