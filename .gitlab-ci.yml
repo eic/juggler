@@ -39,8 +39,9 @@ variables:
   TRIGGERED_BY_NIGHTLY: 0
 
 stages:
-  - config    
-  - build     ## build new version of juggler
+  - build
+  - config
+  - docker    ## build new version of juggler
   - deploy    ## repo-local singularity image for development work
   - finalize
 
@@ -55,14 +56,22 @@ default:
 
 ## plan:
 ##  Workflows:
-##  - master      --> config + build (eic_container) + singularity (this repo)
+##  - master      --> config + docker (eic_container) + singularity (this repo)
 ##      --> trigger eic_container master
-##  - MR          --> config + build (eic_container) + singularity (this repo)
+##  - MR          --> config + docker (eic_container) + singularity (this repo)
 ##  - upstream trigger from eic_container (nightly) --> run master
 ##
 ##  Container images tags
 ##  - master      --> nightly on eicweb & DH, and export to eic_container
 ##  - MR          --> unstable-mr-XXX (on eicweb only, untag at end of pipeline)
+
+juggler:local:
+  image: eicweb.phy.anl.gov:4567/eic/juggler/juggler:latest
+  stage: build
+  script:
+    - |
+      cmake -Bbuild -S.
+      cmake --build build -j20
 
 version:
   stage: config 
@@ -87,9 +96,9 @@ version:
   artifacts:
     reports:
       dotenv: build.env
- 
+
 juggler:default:
-  stage: build
+  stage: docker
   tags: 
    - docker
   rules:
