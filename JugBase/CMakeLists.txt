@@ -55,7 +55,7 @@ gaudi_add_module(JugBasePlugins
   JugBase
   NPDet::DD4podIO
   DD4hep::DDRec
-  ActsCore ActsPluginDD4hep
+  ActsCore ActsPluginDD4hep ActsPluginJson
   EICD::eicd
   ${genfit2}
 )
