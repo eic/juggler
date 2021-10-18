@@ -13,6 +13,7 @@ find_package(podio 0.11.0 REQUIRED)
 find_package(ROOT COMPONENTS Core RIO Tree MathCore GenVector Geom REQUIRED)
 find_package(DD4hep COMPONENTS DDG4 DDG4IO DDRec REQUIRED)
 find_package(Acts REQUIRED COMPONENTS Core PluginIdentification PluginTGeo PluginDD4hep PluginJson)
+#find_package(IRT REQUIRED)
 find_library(genfit2 genfit2 /usr/local/lib REQUIRED)
 find_path(genfit2_INCLUDE_DIR NAMES GFGbl.h PATHS /usr/local/include ${genfit2}/../include REQUIRED)
 
