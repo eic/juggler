@@ -157,8 +157,7 @@ StatusCode GeoSvc::initialize() {
   double layerEnvelopeZ = Acts::UnitConstants::mm;
   double defaultLayerThickness = Acts::UnitConstants::fm;
   using Acts::sortDetElementsByID;
-  m_trackingGeo = std::move(
-    Acts::convertDD4hepDetector(
+  m_trackingGeo = Acts::convertDD4hepDetector(
       m_dd4hepGeo->world(),
       m_actsLoggingLevel,
       bTypePhi,
@@ -169,9 +168,7 @@ StatusCode GeoSvc::initialize() {
       defaultLayerThickness,
       sortDetElementsByID,
       m_trackingGeoCtx,
-      m_materialDeco
-    )
-  );
+      m_materialDeco);
   // Visit surfaces
   if (m_trackingGeo) {
     draw_surfaces(m_trackingGeo, m_trackingGeoCtx, "tracking_geometry.obj");
