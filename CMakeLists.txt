@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.12)
 # CMP0074: find_package() uses <PackageName>_ROOT variables
 cmake_policy(SET CMP0074 NEW)
 
-project(Juggler VERSION 4.0.0)
+project(Juggler VERSION 4.1.0)
 
 set(CMAKE_CXX_STANDARD 17)
 
