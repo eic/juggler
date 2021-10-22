@@ -25,7 +25,7 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class TestIRTAlgorithm : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
+  class TestIRTAlgorithm : public GaudiAlgorithm, AlgorithmIDMixin<> {
   public:
 
     // local vars and pointers
@@ -40,13 +40,13 @@ namespace Jug::Reco {
       Gaudi::DataHandle::Writer,
       this
     };
+    //Gaudi::Property<int>    m_nRings{this, "nRings", 1}; // TODO: example property
 
     // ------------------------------------------------------------
 
     // constructor
     TestIRTAlgorithm(const std::string& name, ISvcLocator* svcLoc) 
-      : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin(name, info())
+      : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info())
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputClusterCollection", m_outputClusterCollection, "");
@@ -69,9 +69,9 @@ namespace Jug::Reco {
 
     StatusCode execute() override {
       // input collections
-      const auto& rawhits = *m_inputHitCollection.get();
+      //const auto& rawhits = *m_inputHitCollection.get();
       // output collections
-      auto& results = *m_outputClusterCollection.createAndPut();
+      //auto& results = *m_outputClusterCollection.createAndPut();
 
       // algorithm
       //auto alg = IRT CODE //// TODO
