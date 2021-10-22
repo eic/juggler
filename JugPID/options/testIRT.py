@@ -20,7 +20,28 @@ podioevent = EICDataSvc("EventDataSvc", inputs=[input_sim_file], OutputLevel=DEB
 from Configurables import PodioInput
 from Configurables import Jug__Digi__PhotoMultiplierDigi as PhotoMultiplierDigi
 from Configurables import Jug__Reco__PhotoMultiplierReco as PhotoMultiplierReco
-from Configurables import Jug__Reco__TestIRT as TestIRT
+from Configurables import Jug__Reco__TestIRTAlgorithm as TestIRTAlgorithm
+
+# S13660-3050AE-08 SiPM quantum efficiency [(wavelength [nm], q.e.)]
+# Note: this is consistent with S13361-3050AE-08 (for eRICH)
+# TODO: is this where we want these parameters?
+qe_data = [
+    (325, 0.04),
+    (340, 0.10),
+    (350, 0.20),
+    (370, 0.30),
+    (400, 0.35),
+    (450, 0.40),
+    (500, 0.38),
+    (550, 0.35),
+    (600, 0.27),
+    (650, 0.20),
+    (700, 0.15),
+    (750, 0.12),
+    (800, 0.08),
+    (850, 0.06),
+    (900, 0.04)
+]
 
 podioinput = PodioInput(
         "PodioReader",
@@ -28,20 +49,31 @@ podioinput = PodioInput(
         OutputLevel=DEBUG
         )
 
-irtrec = TestIRT(
-        "irt_rec",
+pmtdigi = PhotoMultiplierDigi(
         inputHitCollection="ERICHHits",
-        outputPidCollection="ERICHPid"
+        outputHitCollection="DigiERICHHits",
+        quantumEfficiency=[ ((1239.84/a)*units.eV, b) for a, b in qe_data ]
+        )
+
+pmtreco = PhotoMultiplierReco(
+        inputHitCollection="DigiERICHHits",
+        outputHitCollection="RecoERICHHits"
+        )
+
+irtrec = TestIRTAlgorithm(
+        inputHitCollection="RecoERICHHits",
+        outputClusterCollection="ERICHClusters"
         )
 
 out = PodioOutput("out", filename=output_rec_file)
 out.outputCommands = ["keep *"]
 
 ApplicationMgr(
-        TopAlg = [podioinput, irtrec, out],
+        TopAlg = [podioinput, pmtdigi, pmtreco, irtrec, out],
         EvtSel = 'NONE',
         EvtMax = n_events,
         ExtSvc = [podioevent],
-        OutputLevel = DEBUG
+        OutputLevel = DEBUG,
+        PluginDebugLevel = 2
         )
 

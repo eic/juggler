@@ -1,5 +1,3 @@
-#include <algorithm>
-
 #include "Gaudi/Property.h"
 #include "GaudiAlg/GaudiAlgorithm.h"
 #include "GaudiAlg/GaudiTool.h"
@@ -27,7 +25,7 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class TestIRT : public GaudiAlgorithm, AlgorithmIDMixin<> {
+  class TestIRTAlgorithm : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
   public:
 
     // local vars and pointers
@@ -37,8 +35,8 @@ namespace Jug::Reco {
       Gaudi::DataHandle::Reader,
       this
     };
-    DataHandle<eic::RingImageCollection> m_outputPidCollection{ // TODO: change `RingImageCollection`
-      "outputPidCollection",
+    DataHandle<eic::RingImageCollection> m_outputClusterCollection{ // TODO: change `RingImageCollection`
+      "outputClusterCollection",
       Gaudi::DataHandle::Writer,
       this
     };
@@ -46,12 +44,12 @@ namespace Jug::Reco {
     // ------------------------------------------------------------
 
     // constructor
-    TestIRT(const std::string& name, ISvcLocator* svcLoc) 
+    TestIRTAlgorithm(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
       , AlgorithmIDMixin(name, info())
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
-      declareProperty("outputPidCollection", m_outputPidCollection, "");
+      declareProperty("outputClusterCollection", m_outputClusterCollection, "");
     }
 
 
@@ -69,12 +67,11 @@ namespace Jug::Reco {
     }
 
 
-    StatusCode execute() override
-    {
+    StatusCode execute() override {
       // input collections
       const auto& rawhits = *m_inputHitCollection.get();
       // output collections
-      auto& results = *m_outputPidCollection.createAndPut();
+      auto& results = *m_outputClusterCollection.createAndPut();
 
       // algorithm
       //auto alg = IRT CODE //// TODO
@@ -83,14 +80,16 @@ namespace Jug::Reco {
     }
 
 
+    /*
     StatusCode finalize() override {
-      info() << "TestIRT: Finalizing..." << endmsg;
+      info() << "TestIRTAlgorithm: Finalizing..." << endmsg;
       return Algorithm::finalize(); // must be executed last
     }
+    */
 
 
   };
 
-  DECLARE_COMPONENT(TestIRT)
+  DECLARE_COMPONENT(TestIRTAlgorithm)
 
 } // namespace Jug::Reco
