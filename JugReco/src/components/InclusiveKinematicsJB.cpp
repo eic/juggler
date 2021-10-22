@@ -2,8 +2,8 @@
 #include "GaudiAlg/GaudiTool.h"
 #include "GaudiAlg/Producer.h"
 #include "GaudiAlg/Transformer.h"
-#include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/PhysicalConstants.h"
+#include "GaudiKernel/RndmGenerators.h"
 #include <algorithm>
 #include <cmath>
 
@@ -20,7 +20,7 @@
 
 namespace Jug::Reco {
 
-class InclusiveKinematicsElectron : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
+class InclusiveKinematicsJB : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
 public:
   DataHandle<dd4pod::Geant4ParticleCollection> m_inputMCParticleCollection{
     "inputMCParticles",
@@ -31,7 +31,7 @@ public:
     Gaudi::DataHandle::Reader,
     this};
   DataHandle<eic::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{
-    "InclusiveKinematicsElectron",
+    "InclusiveKinematicsJB",
     Gaudi::DataHandle::Writer,
     this};
 
@@ -40,11 +40,11 @@ public:
   SmartIF<IParticleSvc> m_pidSvc;
   double m_proton, m_electron;
 
-  InclusiveKinematicsElectron(const std::string& name, ISvcLocator* svcLoc)
+  InclusiveKinematicsJB(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
     declareProperty("inputMCParticles", m_inputMCParticleCollection, "mcparticles");
     declareProperty("inputParticles", m_inputParticleCollection, "ReconstructedParticles");
-    declareProperty("outputData", m_outputInclusiveKinematicsCollection, "InclusiveKinematicsElectron");
+    declareProperty("outputData", m_outputInclusiveKinematicsCollection, "InclusiveKinematicsJB");
   }
 
   StatusCode initialize() override {
@@ -139,7 +139,6 @@ public:
         break;
       }
     }
-
     if (found_electron == false) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "No initial electron found" << endmsg;
@@ -153,37 +152,72 @@ public:
       return StatusCode::SUCCESS;
     }
 
-    // Loop over reconstructed particles to get outgoing scattered electron
-    // Use the true scattered electron from the MC information
-    typedef std::pair<eic::VectorXYZT, eic::Index> t_electron;
-    std::vector<t_electron> electrons;
+    // Loop over reconstructed particles to get all outgoing particles other than the scattered electron
+    // ----------------------------------------------------------------- 
+    // Right now, everything is taken from Reconstructed particles branches.
+    // 
+    // This means the tracking detector is used for charged particles to caculate the momentum,
+    // and the magnitude of this momentum plus the true PID to calculate the energy.
+    // No requirement is made that these particles produce a hit in any other detector
+    // 
+    // Using the Reconstructed particles branches also means that the reconstruction for neutrals is done using the
+    // calorimeter(s) information for the energy and angles, and then using this energy and the true PID to get the
+    // magnitude of the momentum.
+    // -----------------------------------------------------------------
+
+    // Reconstructed Index of scattered electron
+    eic::Index scatID;
+
+    //Sums in colinear frame
+    double pxsum = 0;
+    double pysum = 0;
+    double pzsum = 0;
+    double Esum = 0;    
     for (const auto& p : parts) {
-      if (p.mcID() == mcscatID) {
-        // Outgoing electron
-        electrons.push_back(t_electron(eic::VectorXYZT(p.p().x, p.p().y, p.p().z, p.energy()), eic::Index(p.ID())));
+
+      //Get Reconstructed Index of scattered electron
+      if (p.mcID() == mcscatID){
+        scatID = p.ID();
+      }
+      //Sum over all particles other than scattered electron
+      else{
+        //Boost to colinear frame using first-order matrix
+        double px_boosted = (-m_crossingAngle)/2.*p.energy() + p.p().x + (-m_crossingAngle)/2.*p.p().z;
+        double py_boosted = p.p().y;
+        double pz_boosted = (m_crossingAngle)/2.*p.p().x + p.p().z;
+        double E_boosted = p.energy() + (-m_crossingAngle)/2.*p.p().x;
+
+        pxsum += px_boosted;
+        pysum += py_boosted;
+        pzsum += pz_boosted;
+        Esum += E_boosted;
       }
     }
 
-    if (electrons.size() > 0) {
+    // DIS kinematics calculations
+    auto sigma_h = Esum - pzsum;
+    auto ptsum = sqrt(pxsum*pxsum + pysum*pysum);
 
-      // DIS kinematics calculations
+    if(sigma_h>0){
+      auto y_jb = sigma_h / (2.*ei.energy());
+      auto Q2_jb = ptsum*ptsum / (1. - y_jb);
+      auto x_jb = Q2_jb / (4.*ei.energy()*pi.energy()*y_jb);
+      auto nu_jb = Q2_jb / (2.*m_proton*x_jb);
+      auto W_jb = sqrt ( m_proton*m_proton + 2*m_proton*nu_jb - Q2_jb );      
+
       auto kin = out_kinematics.create();
-      const auto [ef, scatID] = electrons.front();
-      const auto q = ei.subtract(ef);
-      const auto q_dot_pi = q.dot(pi);
-      kin.Q2(-q.dot(q));
-      kin.y(q_dot_pi / ei.dot(pi));
-      kin.nu(q_dot_pi / m_proton);
-      kin.x(kin.Q2() / (2.*q_dot_pi));
-      kin.W(m_proton*m_proton + 2.*q_dot_pi - kin.Q2());
-      kin.scatID(scatID);
+      kin.Q2(Q2_jb);
+      kin.y(y_jb);
+      kin.nu(nu_jb);
+      kin.x(x_jb);
+      kin.W(W_jb);
+    
+      kin.scatID(scatID); //MC index of scattered electron
 
-      // Debugging output
-      if (msgLevel(MSG::DEBUG)) {
+    // Debugging output
+    if (msgLevel(MSG::DEBUG)) {
         debug() << "pi = " << pi << endmsg;
         debug() << "ei = " << ei << endmsg;
-        debug() << "ef = " << ef << endmsg;
-        debug() << "q = " << q << endmsg;
         debug() << "x,y,Q2,W,nu = "
                 << kin.x() << "," 
                 << kin.y() << ","
@@ -191,13 +225,13 @@ public:
                 << kin.W() << ","
                 << kin.nu()
                 << endmsg;
-      }
     }
+  }
 
     return StatusCode::SUCCESS;
   }
 };
 
-DECLARE_COMPONENT(InclusiveKinematicsElectron)
+DECLARE_COMPONENT(InclusiveKinematicsJB)
 
 } // namespace Jug::Reco

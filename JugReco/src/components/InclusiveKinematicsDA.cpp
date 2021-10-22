@@ -20,7 +20,7 @@
 
 namespace Jug::Reco {
 
-class InclusiveKinematicsElectron : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
+class InclusiveKinematicsDA : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
 public:
   DataHandle<dd4pod::Geant4ParticleCollection> m_inputMCParticleCollection{
     "inputMCParticles",
@@ -31,7 +31,7 @@ public:
     Gaudi::DataHandle::Reader,
     this};
   DataHandle<eic::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{
-    "InclusiveKinematicsElectron",
+    "InclusiveKinematicsDA",
     Gaudi::DataHandle::Writer,
     this};
 
@@ -40,11 +40,11 @@ public:
   SmartIF<IParticleSvc> m_pidSvc;
   double m_proton, m_electron;
 
-  InclusiveKinematicsElectron(const std::string& name, ISvcLocator* svcLoc)
+  InclusiveKinematicsDA(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
     declareProperty("inputMCParticles", m_inputMCParticleCollection, "mcparticles");
     declareProperty("inputParticles", m_inputParticleCollection, "ReconstructedParticles");
-    declareProperty("outputData", m_outputInclusiveKinematicsCollection, "InclusiveKinematicsElectron");
+    declareProperty("outputData", m_outputInclusiveKinematicsCollection, "InclusiveKinematicsDA");
   }
 
   StatusCode initialize() override {
@@ -98,7 +98,7 @@ public:
         else if( fabs(ei.z - 18.0) < 1.0 )
           ei.z = -18.0;
         
-        ei.t = sqrt( ei.z*ei.z + m_electron*m_electron );
+        ei.t = sqrt( ei.z*ei.z + m_electron*m_electron);
 
         found_electron = true;
       }
@@ -153,37 +153,75 @@ public:
       return StatusCode::SUCCESS;
     }
 
-    // Loop over reconstructed particles to get outgoing scattered electron
-    // Use the true scattered electron from the MC information
-    typedef std::pair<eic::VectorXYZT, eic::Index> t_electron;
-    std::vector<t_electron> electrons;
-    for (const auto& p : parts) {
-      if (p.mcID() == mcscatID) {
-        // Outgoing electron
-        electrons.push_back(t_electron(eic::VectorXYZT(p.p().x, p.p().y, p.p().z, p.energy()), eic::Index(p.ID())));
-      }
+    // Loop over reconstructed particles to get all outgoing particles
+    // ----------------------------------------------------------------- 
+    // Right now, everything is taken from Reconstructed particles branches.
+    // 
+    // This means the tracking detector is used for charged particles to caculate the momentum,
+    // and the magnitude of this momentum plus the true PID to calculate the energy.
+    // No requirement is made that these particles produce a hit in any other detector
+    // 
+    // Using the Reconstructed particles branches also means that the reconstruction for neutrals is done using the
+    // calorimeter(s) information for the energy and angles, and then using this energy and the true PID to get the
+    // magnitude of the momentum.
+    // -----------------------------------------------------------------
+
+    // Reconstructed Index of scattered electron
+    eic::Index scatID;
+
+    //Sums in colinear frame
+    double pxsum = 0;
+    double pysum = 0;
+    double pzsum = 0;
+    double Esum = 0;
+    double theta_e = 0;
+    for(const auto& p : parts){
+        //Boost to colinear frame using first-order matrix
+        double px_boosted = (-m_crossingAngle)/2.*p.energy() + p.p().x + (-m_crossingAngle)/2.*p.p().z;
+        double py_boosted = p.p().y;
+        double pz_boosted = (m_crossingAngle)/2.*p.p().x + p.p().z;
+        double E_boosted = p.energy() + (-m_crossingAngle)/2.*p.p().x;
+
+        //Get the scattered electron index and angle
+        if(p.mcID() == mcscatID){
+          scatID = p.ID();
+          theta_e = acos( pz_boosted /sqrt(px_boosted*px_boosted + py_boosted*py_boosted + pz_boosted*pz_boosted) );
+        }
+        //Sum over all particles other than scattered electron
+        else{
+          pxsum += px_boosted;
+          pysum += py_boosted;
+          pzsum += pz_boosted;
+          Esum += E_boosted;
+        }
     }
 
-    if (electrons.size() > 0) {
+    // DIS kinematics calculations
+    auto sigma_h = Esum - pzsum;
+    auto ptsum = sqrt(pxsum*pxsum + pysum*pysum);
+    auto theta_h = 2.*atan(sigma_h/ptsum);
 
-      // DIS kinematics calculations
+    if (scatID && sigma_h>0) {
+
+      auto y_da = tan(theta_h/2.) / ( tan(theta_e/2.) + tan(theta_h/2.) );
+      auto Q2_da = 4.*ei.energy()*ei.energy() * ( 1. / tan(theta_e/2.) ) * ( 1. / (tan(theta_e/2.) + tan(theta_h/2.)) );
+      auto x_da = Q2_da / (4.*ei.energy()*pi.energy()*y_da);
+      auto nu_da = Q2_da / (2.*m_proton*x_da);
+      auto W_da = sqrt ( m_proton*m_proton + 2*m_proton*nu_da - Q2_da );      
+
       auto kin = out_kinematics.create();
-      const auto [ef, scatID] = electrons.front();
-      const auto q = ei.subtract(ef);
-      const auto q_dot_pi = q.dot(pi);
-      kin.Q2(-q.dot(q));
-      kin.y(q_dot_pi / ei.dot(pi));
-      kin.nu(q_dot_pi / m_proton);
-      kin.x(kin.Q2() / (2.*q_dot_pi));
-      kin.W(m_proton*m_proton + 2.*q_dot_pi - kin.Q2());
-      kin.scatID(scatID);
+      kin.Q2(Q2_da);
+      kin.y(y_da);
+      kin.nu(nu_da);
+      kin.x(x_da);
+      kin.W(W_da);
+    
+      kin.scatID(scatID); //MC index of scattered electron
 
       // Debugging output
       if (msgLevel(MSG::DEBUG)) {
         debug() << "pi = " << pi << endmsg;
         debug() << "ei = " << ei << endmsg;
-        debug() << "ef = " << ef << endmsg;
-        debug() << "q = " << q << endmsg;
         debug() << "x,y,Q2,W,nu = "
                 << kin.x() << "," 
                 << kin.y() << ","
@@ -198,6 +236,6 @@ public:
   }
 };
 
-DECLARE_COMPONENT(InclusiveKinematicsElectron)
+DECLARE_COMPONENT(InclusiveKinematicsDA)
 
 } // namespace Jug::Reco
