@@ -13,8 +13,6 @@ variables:
   ## to keep the container functionally identical to jug_xl:nightly
   JUGGLER_NPDET_VERSION: "master"
   JUGGLER_EICD_VERSION: "master"
-  JUGGLER_DETECTOR_VERSION: "master"
-  JUGGLER_IP6_VERSION: "master"
 
   ## We have:
   ##   - Juggler triggers eic_container on a master pipeline
@@ -109,6 +107,7 @@ juggler:default:
     - GIT_SSL_NO_VERIFY=1 git clone -b master --depth=1 https://eicweb.phy.anl.gov/containers/eic_container.git
     - ./eic_container/gitlab-ci/docker_login.sh --ci -n $DOCKER_NTRIES -t $DOCKER_WAIT_TIME
     - echo ${CI_COMMIT_BRANCH}
+    - cp eic_container/detectors.yaml eic_container/containers/jug
     - docker build -t ${CI_REGISTRY_IMAGE}/${BUILD_IMAGE}:${INTERNAL_TAG}
                    -f eic_container/containers/jug/xl.Dockerfile
                    --build-arg INTERNAL_TAG=${EIC_DEV_TAG}
