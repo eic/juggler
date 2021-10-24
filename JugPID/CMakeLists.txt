@@ -20,10 +20,15 @@ gaudi_add_module(JugPIDPlugins
   EDM4HEP::edm4hep
   EICD::eicd
   DD4hep::DDRec
+  IRT
 )
 
 # TODO: is ${CMAKE_SOURCE_DIR}/JugBase needed? (added for debugging missing algo issue)
+# TODO: need to include also ${IRT_INCLUDE_DIR}>/IRT, since `#include <...>` calls in IRT
+#       headers do not have `IRT/` in their path
 target_include_directories(JugPIDPlugins PUBLIC
+  $<BUILD_INTERFACE:${IRT_INCLUDE_DIR}>
+  $<BUILD_INTERFACE:${IRT_INCLUDE_DIR}>/IRT
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/JugBase>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
