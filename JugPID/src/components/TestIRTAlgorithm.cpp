@@ -18,6 +18,9 @@
 #include "eicd/PMTHitCollection.h"
 #include "eicd/RingImageCollection.h" // TODO: remove when no longer needed
 
+// IRT
+#include "IRT/CherenkovDetectorCollection.h"
+
 using namespace Gaudi::Units;
 
 namespace Jug::Reco {
@@ -26,6 +29,7 @@ namespace Jug::Reco {
    * \ingroup reco
    */
   class TestIRTAlgorithm : public GaudiAlgorithm, AlgorithmIDMixin<> {
+
   public:
 
     // local vars and pointers
@@ -63,6 +67,13 @@ namespace Jug::Reco {
                 << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
         return StatusCode::FAILURE;
       }
+
+      info() << "IRT AQUI-----------------------------------------" << endmsg;
+      auto geometry = new CherenkovDetectorCollection();
+      geometry->AddNewDetector();
+      auto detector = geometry->GetDetector(0);
+      info() << "-----------------------------------------" << endmsg;
+
       return StatusCode::SUCCESS;
     }
 
