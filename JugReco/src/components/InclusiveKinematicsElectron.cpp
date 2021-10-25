@@ -181,7 +181,7 @@ public:
       kin.y(q_dot_pi / ei.dot(pi));
       kin.nu(q_dot_pi / m_proton);
       kin.x(kin.Q2() / (2.*q_dot_pi));
-      kin.W(m_proton*m_proton + 2.*q_dot_pi - kin.Q2());
+      kin.W(sqrt(m_proton*m_proton + 2.*q_dot_pi - kin.Q2()));
       kin.scatID(scatID);
 
       // Debugging output
