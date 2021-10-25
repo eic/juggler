@@ -77,7 +77,7 @@ public:
     bool found_proton = false;
     //Also get the true scattered electron, which will not be included in the sum
     //over final-state particles for the JB reconstruction
-    eic::Index mcscatID;
+    int32_t mcscatID = -1;
     for (const auto& p : mcparts) {
       if (p.genStatus() == 4 && p.pdgID() == 11) {
         // Incoming electron
@@ -131,11 +131,11 @@ public:
         found_proton = true;
       }
       // Index of true Scattered electron. Currently taken as first status==1 electron in HEPMC record.
-      if (p.genStatus() == 1 && p.pdgID() == 11 && !mcscatID) {
+      if (p.genStatus() == 1 && p.pdgID() == 11 && mcscatID == -1) {
         mcscatID = p.ID();
       }
 
-      if (found_electron && found_proton && mcscatID) {
+      if (found_electron && found_proton && mcscatID != -1) {
         break;
       }
     }
@@ -151,6 +151,12 @@ public:
         debug() << "No initial proton found" << endmsg;
       }
       return StatusCode::SUCCESS;
+    }
+    if (mcscatID == -1) {
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << "No truth scattered electron found" << endmsg;
+      }
+      return StatusCode::SUCCESS;      
     }
 
     // Loop over reconstructed particles to get all outgoing particles
@@ -183,7 +189,7 @@ public:
         double E_boosted = p.energy() + (-m_crossingAngle)/2.*p.p().x;
 
         //Get the scattered electron index and angle
-        if(p.mcID() == mcscatID){
+        if(p.mcID().value == mcscatID){
           scatID = p.ID();
           theta_e = acos( pz_boosted /sqrt(px_boosted*px_boosted + py_boosted*py_boosted + pz_boosted*pz_boosted) );
         }

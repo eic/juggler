@@ -77,7 +77,7 @@ public:
     bool found_proton = false;
     //Also get the true scattered electron, which will not be included in the sum
     //over final-state particles for the JB reconstruction
-    eic::Index mcscatID;
+    int32_t mcscatID = -1;
     for (const auto& p : mcparts) {
       if (p.genStatus() == 4 && p.pdgID() == 11) {
         // Incoming electron
@@ -131,11 +131,11 @@ public:
         found_proton = true;
       }
       // Index of true Scattered electron. Currently taken as first status==1 electron in HEPMC record.
-      if (p.genStatus() == 1 && p.pdgID() == 11 && !mcscatID) {
+      if (p.genStatus() == 1 && p.pdgID() == 11 && mcscatID == -1) {
         mcscatID = p.ID();
       }
 
-      if (found_electron && found_proton && mcscatID) {
+      if (found_electron && found_proton && mcscatID != -1) {
         break;
       }
     }
@@ -150,6 +150,12 @@ public:
         debug() << "No initial proton found" << endmsg;
       }
       return StatusCode::SUCCESS;
+    }
+    if (mcscatID == -1) {
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << "No truth scattered electron found" << endmsg;
+      }
+      return StatusCode::SUCCESS;      
     }
 
     // Loop over reconstructed particles to get all outgoing particles other than the scattered electron
@@ -176,7 +182,7 @@ public:
     for (const auto& p : parts) {
 
       //Get Reconstructed Index of scattered electron
-      if (p.mcID() == mcscatID){
+      if (p.mcID().value == mcscatID){
         scatID = p.ID();
       }
       //Sum over all particles other than scattered electron

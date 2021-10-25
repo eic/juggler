@@ -67,8 +67,8 @@ public:
 
     bool ebeam_found = false;
     bool pbeam_found = false;
-    eic::Index scatID;
-
+    int32_t mcscatID = -1;
+  
     for (const auto& p : parts) {
 
       if (p.genStatus() == 4 && p.pdgID() == 11) { // Incoming electron
@@ -89,15 +89,15 @@ public:
       // which seems to be correct based on a cursory glance at the Pythia8 output. In the future,
       // it may be better to trace back each final-state electron and see which one originates from
       // the beam.
-      if (p.genStatus() == 1 && p.pdgID() == 11 && !scatID) {
+      if (p.genStatus() == 1 && p.pdgID() == 11 && mcscatID == -1) {
         ef.setPx(p.ps().x);
         ef.setPy(p.ps().y);
         ef.setPz(p.ps().z);
         ef.setE(p.energy());
 
-        scatID = p.ID();
+        mcscatID = p.ID();
       }
-      if (ebeam_found && pbeam_found && scatID) {
+      if (ebeam_found && pbeam_found && mcscatID != -1) {
         // all done!
         break;
       }
@@ -116,7 +116,7 @@ public:
       }
       return StatusCode::SUCCESS;
     }
-    if (scatID == 0) {
+    if (mcscatID == -1) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "No scattered electron found" << endmsg;
       }
@@ -131,7 +131,7 @@ public:
     kin.nu(q * pi / m_proton);
     kin.x(kin.Q2() / (2. * q * pi));
     kin.W(sqrt((pi + q).m2()));
-    kin.scatID(scatID);
+    kin.scatID(mcscatID);
 
     // Debugging output
     if (msgLevel(MSG::DEBUG)) {
