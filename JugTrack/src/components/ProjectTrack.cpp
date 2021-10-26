@@ -36,6 +36,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
 
 #include "eicd/VectorPolar.h"
 #include "eicd/VectorXYZ.h"
@@ -56,10 +57,9 @@ namespace Jug::Reco {
    public:
     //DataHandle<eic::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<TrajectoriesContainer>     m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
-    DataHandle<eic::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters", Gaudi::DataHandle::Writer, this};
 
     SmartIF<IGeoSvc> m_geoSvc;
-    std::shared_ptr<const Acts::TrackingGeometry> m_tGeometry;
+    // std::shared_ptr<const Acts::TrackingGeometry> m_tGeometry;
     Acts::GeometryContext m_geoContext;
     Acts::MagneticFieldContext m_fieldContext;
 
@@ -69,7 +69,6 @@ namespace Jug::Reco {
         : GaudiAlgorithm(name, svcLoc)
         , AlgorithmIDMixin(name, info()) {
           declareProperty("inputTrajectories", m_inputTrajectories,"");
-          declareProperty("outputTrackParameters", m_outputTrackParameters, "ACTS Track Parameters");
         }
 
     StatusCode initialize() override {
@@ -83,8 +82,6 @@ namespace Jug::Reco {
                 << endmsg;
         return StatusCode::FAILURE;
       }
-
-      m_tGeometry = m_geoSvc->trackingGeometry();
 
       return StatusCode::SUCCESS;
     }
@@ -104,45 +101,39 @@ namespace Jug::Reco {
                / params.momentum().norm())
             << std::endl;
 
-      auto magField = std::dynamic_pointer_cast<const Jug::BField::DD4hepBField>(m_geoSvc->getFieldProvider());
-      auto bfieldvariant = Jug::BField::BFieldVariant(magField);
 
-      return std::visit([params, targetSurf, this]
-            (auto && inputField) -> BoundTrackParamPtrResult {
-          using InputMagneticField = 
-      typename std::decay_t<decltype(inputField)>::element_type;
-          using MagneticField      = Acts::SharedBField<InputMagneticField>;
-          using Stepper            = Acts::EigenStepper<MagneticField>;
-          using Propagator         = Acts::Propagator<Stepper>;
+      std::shared_ptr<const Acts::TrackingGeometry>
+            trackingGeometry = m_geoSvc->trackingGeometry();
+      std::shared_ptr<const Acts::MagneticFieldProvider>
+            magneticField = m_geoSvc->getFieldProvider();
+      
+      using Stepper            = Acts::EigenStepper<>;
+      using Propagator         = Acts::Propagator<Stepper>;
 
-          MagneticField field(inputField);
-          Stepper stepper(field);
-          Propagator propagator(stepper);
+      Stepper stepper(magneticField);
+      Propagator propagator(stepper);
 
-          Acts::Logging::Level logLevel = Acts::Logging::FATAL;
-          // logLevel = Acts::Logging::DEBUG;
+      // Acts::Logging::Level logLevel = Acts::Logging::FATAL;
+      Acts::Logging::Level logLevel = Acts::Logging::DEBUG;
 
-          ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("ProjectTrack Logger", logLevel));
-          
-          Acts::PropagatorOptions<> options(m_geoContext,
-              m_fieldContext,
-              Acts::LoggerWrapper{logger()});
-         
-          auto result = propagator.propagate(params, *targetSurf, 
-               options);
-       
-          if(result.ok()) return std::move((*result).endParameters);
-         
-          return result.error();
-       },
-         std::move(bfieldvariant));
+      ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("ProjectTrack Logger", logLevel));
+      
+      Acts::PropagatorOptions<> options(m_geoContext,
+          m_fieldContext,
+          Acts::LoggerWrapper{logger()});
+     
+      auto result = propagator.propagate(params, *targetSurf, 
+           options);
+   
+      if(result.ok()) return std::move((*result).endParameters);
+     
+      return result.error();
     }
 
     StatusCode execute() override {
       // input collection
       const TrajectoriesContainer* trajectories = m_inputTrajectories.get();
       // create output collections
-      auto track_pars = m_outputTrackParameters.createAndPut();
 
       if (msgLevel(MSG::DEBUG)) {
         debug() << std::size(*trajectories) << " trajectories " << endmsg;
@@ -229,24 +220,49 @@ namespace Jug::Reco {
             //
             // Reference sPHENIX code: https://github.com/sPHENIX-Collaboration/coresoftware/blob/335e6da4ccacc8374cada993485fe81d82e74a4f/offline/packages/trackreco/PHActsTrackProjection.h
             //=================================================
-            // make a reference cylinder to mimic DIRC
-            const auto dircRadius = 900;
-            const auto eta = 1.1;
-            const auto theta = 2. * atan(exp(-eta));
-            const auto halfZ = dircRadius / tan(theta);
-            
             auto transform = Acts::Transform3::Identity();
-      
-            std::shared_ptr<Acts::CylinderSurface> dircSurf = 
-              Acts::Surface::makeShared<Acts::CylinderSurface>(transform,
-                                                               dircRadius,
-                                                               halfZ);
+
+            // make a reference cylinder to mimic DIRC
+            const auto dircRadius = 910;
+            const auto dircEta = 1.1;
+            const auto dircTheta = 2. * atan(exp(-dircEta));
+            const auto halfZ = dircRadius / tan(dircTheta);      
+            std::shared_ptr<Acts::DiscSurface> dircSurf = 
+              Acts::Surface::makeShared<Acts::DiscSurface>(transform, dircRadius, halfZ);
+
+            // make a reference cylinder to mimic dRICH
+            const auto drichZ = 1900;
+            const auto drichMinEta = 1.1, drichMaxEta = 3.3;
+            const auto drichMinTheta = 2. * atan(exp(-drichMinEta));
+            const auto drichMaxTheta = 2. * atan(exp(-drichMaxEta));
+            const auto drichMinR = drichZ * tan(drichMaxTheta);
+            const auto drichMaxR = drichZ * tan(drichMinTheta);
+            if (msgLevel(MSG::DEBUG)) {
+              debug() << "dRICH min " << drichMinR << " max " << drichMaxR << endmsg;
+            }
+            m_outerDiscBounds = std::make_shared<RadialBounds>(drichMinR, drichMaxR);
+            auto drichTrf = transform * Translation3(Vector3(0, 0, drichZ));
+            auto drichSurf =
+                Acts::Surface::makeShared<Acts::DiscSurface>(drichTrf, m_outerDiscBounds);
             
             // project track parameters to target surface
             auto result = propagateTrack(boundParam, dircSurf);
             if(result.ok())
             {
               auto trackStateParams = std::move(**result);
+              auto projectionPos = trackStateParams.position(m_geoContext);
+
+              auto projectionPhi = atan2(projectionPos(1), projectionPos(0));
+              auto projectionEta = asinh(projectionPos(2) / 
+                       sqrt(projectionPos(0) * projectionPos(0)
+                      + projectionPos(1) * projectionPos(1)));
+              if (msgLevel(MSG::DEBUG))
+              {
+                debug() << "projection radius: " << sqrt(projectionPos(0)*projectionPos(0)+projectionPos(1)*projectionPos(1)) << endmsg;
+                debug() << "projected track pos: " << projectionPos(0) << ", " << projectionPos(1) << ", " << projectionPos(2) << endmsg;
+                debug() << "projected track phi: " << projectionPhi << endmsg;
+                debug() << "projected track eta: " << projectionEta << endmsg;
+              }
             }
           }
         }
