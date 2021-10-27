@@ -13,6 +13,7 @@ variables:
   ## to keep the container functionally identical to jug_xl:nightly
   JUGGLER_NPDET_VERSION: "master"
   JUGGLER_EICD_VERSION: "master"
+  JUGGLER_IRT_VERSION: "main"
   JUGGLER_DETECTOR_VERSION: "master"
   JUGGLER_IP6_VERSION: "master"
 
@@ -70,6 +71,13 @@ juggler:local:
   stage: build
   script:
     - |
+      # TODO: remove when no longer needed ##############
+      git clone https://eicweb.phy.anl.gov/EIC/irt
+      cd irt
+      cmake -B build -S . -DCMAKE_INSTALL_PREFIX=install && cmake --build build -j20 -- install
+      cd ..
+      export IRT_ROOT=$PWD/irt/install
+      ###################################################
       cmake -Bbuild -S.
       cmake --build build -j20
 
@@ -115,6 +123,7 @@ juggler:default:
                    --build-arg JUGGLER_VERSION=${CI_COMMIT_REF_NAME}
                    --build-arg NPDET_VERSION=${JUGGLER_NPDET_VERSION}
                    --build-arg EICD_VERSION=${JUGGLER_EICD_VERSION}
+                   --build-arg IRT_VERSION=${JUGGLER_IRT_VERSION}
                    --build-arg DETECTOR_VERSION=${JUGGLER_DETECTOR_VERSION}
                    --build-arg IP6_VERSION=${JUGGLER_IP6_VERSION}
                    --build-arg JUG_VERSION=juggler-${INTERNAL_TAG}-$(date +%Y-%m-%d_%H-%M-%S)-$(git rev-parse HEAD)
