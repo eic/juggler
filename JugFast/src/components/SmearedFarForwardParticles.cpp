@@ -52,7 +52,7 @@ public:
   Gaudi::Property<double> m_pMaxRigidityOMD{this, "pMaxRigidityOMD", 0.60};
 
   // Crossing angle, set to -25mrad
-  Gaudi::Property<double> m_crossingAngle{this, "crossingAngle", -0.025};
+  Gaudi::Property<double> m_crossingAngle{this, "crossingAngle", -0.025}; //-0.025}; -- causes double rotation with afterburner
 
   Rndm::Numbers m_gaussDist;
 
@@ -197,7 +197,7 @@ private:
         continue;
       }
       // only 6-->20 mrad
-      const auto mom_ion = rotateLabToIonDirection(part.ps());
+      const auto mom_ion = removeCrossingAngle(part.ps()); //rotateLabToIonDirection(part.ps());
       if (mom_ion.theta() < m_thetaMinB0 || mom_ion.theta() > m_thetaMaxB0) {
         continue;
       }
@@ -228,7 +228,7 @@ private:
       if (part.pdgID() != 2212) {
         continue;
       }
-      const auto mom_ion = rotateLabToIonDirection(part.ps());
+      const auto mom_ion = removeCrossingAngle(part.ps()); //rotateLabToIonDirection(part.ps());
       if (mom_ion.theta() < m_thetaMinRP || mom_ion.theta() > m_thetaMaxRP ||
           mom_ion.z < m_pMinRigidityRP * m_ionBeamEnergy) {
         continue;
@@ -259,7 +259,7 @@ private:
       if (part.pdgID() != 2212) {
         continue;
       }
-      const auto mom_ion = rotateLabToIonDirection(part.ps());
+      const auto mom_ion = removeCrossingAngle(part.ps()); //rotateLabToIonDirection(part.ps());
       if (mom_ion.z < m_pMinRigidityOMD * m_ionBeamEnergy || mom_ion.z > m_pMaxRigidityOMD * m_ionBeamEnergy) {
         continue;
       }
@@ -286,13 +286,13 @@ private:
   // all momentum smearing in EIC-smear for the far-forward region uses
   // the same 2 relations for P and Pt smearing (B0, RP, OMD)
   RecData smearMomentum(const dd4pod::ConstGeant4Particle& part) {
-    const auto mom_ion = rotateLabToIonDirection(part.ps());
+    const auto mom_ion = part.ps(); //rotateLabToIonDirection(part.ps());
     const double p     = mom_ion.mag();
-    const double dp    = (0.005 * p) * m_gaussDist();
+    const double dp    = (0.000 * p) * m_gaussDist();
     const double ps    = p + dp;
 
     const double pt  = std::hypot(mom_ion.x, mom_ion.y);
-    const double dpt = (0.03 * pt) * m_gaussDist();
+    const double dpt = (0.00 * pt) * m_gaussDist();
     // just apply relative smearing on px and py
     const double pxs = mom_ion.x + (1 + dpt / pt);
     const double pys = mom_ion.y + (1 + dpt / pt);
@@ -300,7 +300,7 @@ private:
     const double pzs = sqrt(ps * ps - pxs * pxs - pys * pys);
     // And build our 3-vector
     const eic::VectorXYZ psmear_ion = {pxs, pys, pzs};
-    const auto psmear               = rotateIonToLabDirection(psmear_ion);
+    const auto psmear               = psmear_ion; //rotateIonToLabDirection(psmear_ion);
     eic::ReconstructedParticle rec_part;
     rec_part.ID({part.ID(), algorithmID()});
     rec_part.p(psmear);
@@ -335,6 +335,20 @@ private:
   }
   eic::VectorXYZ rotateIonToLabDirection(const dd4pod::VectorXYZ& vec) const {
     return rotateIonToLabDirection(eic::VectorXYZ{vec.x, vec.y, vec.z});
+  }
+  eic::VectorXYZ removeCrossingAngle(const dd4pod::VectorXYZ& vec) const {
+
+    Double_t px = vec.x;
+    Double_t py = vec.y;
+    Double_t pz = vec.z;
+    Double_t s = std::sin(-m_crossingAngle);
+    Double_t c = std::cos(-m_crossingAngle);
+    Double_t zz = pz;
+    Double_t xx = px;
+    pz = c*zz - s*xx;
+    px = s*zz + c*xx;
+    return {px, py, pz};
+    //momenta.push_back(ROOT::Math::PxPyPzMVector{px, py, pz, i1.mass});
   }
 
 }; 
