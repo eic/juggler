@@ -8,6 +8,7 @@ gaudi_add_module(JugPIDPlugins
   SOURCES
   src/components/FuzzyKClusters.cpp 
   src/components/PhotoRingClusters.cpp
+  src/components/TestIRTAlgorithmServices.cpp
   src/components/TestIRTAlgorithm.cpp
   LINK
   Gaudi::GaudiAlgLib Gaudi::GaudiKernel
