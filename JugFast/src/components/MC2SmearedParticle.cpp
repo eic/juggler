@@ -77,7 +77,7 @@ public:
       rec_part.v({vx, vy, vz});
       rec_part.time(static_cast<float>(p.time()));
       rec_part.pid(p.pdgID());
-      rec_part.status(p.status());
+      rec_part.status(p.genStatus());
       rec_part.charge(p.charge());
       rec_part.weight(1.);
       rec_part.direction({psmear.theta(), psmear.phi()});
