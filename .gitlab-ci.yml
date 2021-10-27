@@ -13,6 +13,7 @@ variables:
   ## to keep the container functionally identical to jug_xl:nightly
   JUGGLER_NPDET_VERSION: "master"
   JUGGLER_EICD_VERSION: "master"
+  JUGGLER_IRT_VERSION: "main"
 
   ## We have:
   ##   - Juggler triggers eic_container on a master pipeline
@@ -143,6 +144,7 @@ juggler:default:
                    --build-arg JUGGLER_VERSION=${CI_COMMIT_REF_NAME}
                    --build-arg NPDET_VERSION=${JUGGLER_NPDET_VERSION}
                    --build-arg EICD_VERSION=${JUGGLER_EICD_VERSION}
+                   --build-arg IRT_VERSION=${JUGGLER_IRT_VERSION}
                    --build-arg DETECTOR_VERSION=${JUGGLER_DETECTOR_VERSION}
                    --build-arg IP6_VERSION=${JUGGLER_IP6_VERSION}
                    --build-arg JUG_VERSION=juggler-${INTERNAL_TAG}-$(date +%Y-%m-%d_%H-%M-%S)-$(git rev-parse HEAD)
