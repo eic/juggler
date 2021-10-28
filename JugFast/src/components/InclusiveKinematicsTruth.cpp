@@ -27,6 +27,7 @@ public:
 
   SmartIF<IParticleSvc> m_pidSvc;
   double m_proton;
+  double m_neutron;
 
   InclusiveKinematicsTruth(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
@@ -46,6 +47,7 @@ public:
       return StatusCode::FAILURE;
     }
     m_proton = m_pidSvc->particle(2212).mass;
+    m_neutron = m_pidSvc->particle(2112).mass;
 
     return StatusCode::SUCCESS;
   }
@@ -78,7 +80,14 @@ public:
         ei.setE(p.energy());
         ebeam_found = true;
       }
-      if (p.genStatus() == 4 && p.pdgID() == 2212) { // Incoming proton
+      else if (p.genStatus() == 4 && p.pdgID() == 2212) { // Incoming proton
+        pi.setPx(p.ps().x);
+        pi.setPy(p.ps().y);
+        pi.setPz(p.ps().z);
+        pi.setE(p.energy());
+        pbeam_found = true;
+      }
+      else if (p.genStatus() == 4 && p.pdgID() == 2112) { // Incoming neutron
         pi.setPx(p.ps().x);
         pi.setPy(p.ps().y);
         pi.setPz(p.ps().z);
@@ -89,7 +98,7 @@ public:
       // which seems to be correct based on a cursory glance at the Pythia8 output. In the future,
       // it may be better to trace back each final-state electron and see which one originates from
       // the beam.
-      if (p.genStatus() == 1 && p.pdgID() == 11 && mcscatID == -1) {
+      else if (p.genStatus() == 1 && p.pdgID() == 11 && mcscatID == -1) {
         ef.setPx(p.ps().x);
         ef.setPy(p.ps().y);
         ef.setPz(p.ps().z);

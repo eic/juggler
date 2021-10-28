@@ -38,7 +38,7 @@ public:
   Gaudi::Property<double> m_crossingAngle{this, "crossingAngle", -0.025 * Gaudi::Units::radian};
 
   SmartIF<IParticleSvc> m_pidSvc;
-  double m_proton, m_electron;
+  double m_proton, m_neutron, m_electron;
 
   InclusiveKinematicsJB(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
@@ -59,6 +59,7 @@ public:
       return StatusCode::FAILURE;
     }
     m_proton = m_pidSvc->particle(2212).mass;
+    m_neutron = m_pidSvc->particle(2112).mass;
     m_electron = m_pidSvc->particle(11).mass;
 
     return StatusCode::SUCCESS;
@@ -102,7 +103,7 @@ public:
 
         found_electron = true;
       }
-      if (p.genStatus() == 4 && p.pdgID() == 2212) {
+      if (p.genStatus() == 4 && (p.pdgID() == 2212 || p.pdgID() == 2112)) {
         // Incoming proton
         pi.x = p.ps().x;
         pi.y = p.ps().y;
@@ -126,7 +127,7 @@ public:
           pi.z = 275.0*cos(m_crossingAngle);
         }
 
-        pi.t = sqrt( pi.x*pi.x + pi.z*pi.z + m_proton*m_proton);
+        pi.t = std::hypot(pi.x, pi.z, (p.pdgID() == 2212) ? m_proton : m_neutron);
 
         found_proton = true;
       }
