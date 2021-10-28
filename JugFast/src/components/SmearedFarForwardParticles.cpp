@@ -286,21 +286,26 @@ private:
   // all momentum smearing in EIC-smear for the far-forward region uses
   // the same 2 relations for P and Pt smearing (B0, RP, OMD)
   RecData smearMomentum(const dd4pod::ConstGeant4Particle& part) {
-    const auto mom_ion = part.ps(); //rotateLabToIonDirection(part.ps());
+    const auto mom_ion = rotateLabToIonDirection(part.ps());
     const double p     = mom_ion.mag();
-    const double dp    = (0.000 * p) * m_gaussDist();
+    const double dp    = (0.05 * p) * m_gaussDist();
     const double ps    = p + dp;
 
     const double pt  = std::hypot(mom_ion.x, mom_ion.y);
-    const double dpt = (0.00 * pt) * m_gaussDist();
+    const double dpt = (0.03 * pt) * m_gaussDist();
     // just apply relative smearing on px and py
-    const double pxs = mom_ion.x + (1 + dpt / pt);
-    const double pys = mom_ion.y + (1 + dpt / pt);
+    const double dpxs = (0.03 * mom_ion.x) * m_gaussDist(); //+ (1 + dpt / pt);
+    const double dpys = (0.03 * mom_ion.y) * m_gaussDist(); //+ (1 + dpt / pt);
+
+    const double pxs = mom_ion.x + dpxs; 
+    const double pys = mom_ion.y + dpys; 
+
     // now get pz
     const double pzs = sqrt(ps * ps - pxs * pxs - pys * pys);
+
     // And build our 3-vector
     const eic::VectorXYZ psmear_ion = {pxs, pys, pzs};
-    const auto psmear               = psmear_ion; //rotateIonToLabDirection(psmear_ion);
+    const auto psmear               = rotateIonToLabDirection(psmear_ion);
     eic::ReconstructedParticle rec_part;
     rec_part.ID({part.ID(), algorithmID()});
     rec_part.p(psmear);
