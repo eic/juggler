@@ -9,7 +9,7 @@
 #include "eicd/TrajectoryPoint.h"
 class ParametricSurface;
 
-namespace Jug::Reco {
+namespace Jug::PID {
 
   // Wanto to split off the part, which knows nothing about Gaudi & Co; somehow this is 
   // less trivial than expected (need to pass the initial parameters separately);
@@ -35,6 +35,6 @@ namespace Jug::Reco {
     TVector3 GetMomentum(const eic::TrajectoryPoint *point) const;
   };
 
-} // namespace Jug::Reco
+} // namespace Jug::PID
 
 #endif
