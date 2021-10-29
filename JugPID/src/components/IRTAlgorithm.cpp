@@ -13,8 +13,6 @@
 // FIXME: make sure that 'mm' in initialize() are what they are expected!;
 using namespace Gaudi::Units;
 
-//sed -i.bak 's/\:\/usr\/local\/lib\:/\:/g' jugglerenv.sh && echo "export LD_LIBRARY_PATH=\${LD_LIBRARY_PATH}:/usr/local/lib && export PYTHONPATH=\${PYTHONPATH}:/usr/local/lib" >> jugglerenv.sh
-
 // -------------------------------------------------------------------------------------
 
 Jug::PID::IRTAlgorithm::IRTAlgorithm(const std::string& name, ISvcLocator* svcLoc) 
@@ -93,7 +91,7 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
       
       // set IRT container volume
       auto boundary = new FlatSurface(TVector3(0,0,0), TVector3(1,0,0), TVector3(0,1,0));
-      m_IrtGeo->SetContainerVolume(m_IrtDet, (G4LogicalVolume*)(0x0), 0, boundary);
+      m_IrtGeo->SetContainerVolume(m_IrtDet, 0, (G4LogicalVolume*)(0x0), 0, boundary);
       
       // eRICH loop :::::::::::::::::::::::
       int sector;
@@ -117,14 +115,14 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
 						 TVector3(1,0,0),
 						 TVector3(0,1,0)
 						 );
-	      m_IrtGeo->AddFlatRadiator(m_IrtDet, (G4LogicalVolume*)(0x1), 0, aerogelSurf, thickness/mm); // TODO: correct units?
+	      m_IrtGeo->AddFlatRadiator(m_IrtDet, 0, (G4LogicalVolume*)(0x1), 0, aerogelSurf, thickness/mm); // TODO: correct units?
 	    } else {
 	      auto filterSurf = new FlatSurface(
 						(1/mm)*TVector3(0,0,pos.z()-0.01), // TODO: correct position?
 						TVector3(1,0,0),
 						TVector3(0,1,0)
 						);
-	      m_IrtGeo->AddFlatRadiator(m_IrtDet, (G4LogicalVolume*)(0x2), 0, filterSurf, thickness/mm);
+	      m_IrtGeo->AddFlatRadiator(m_IrtDet, 0, (G4LogicalVolume*)(0x2), 0, filterSurf, thickness/mm);
 	    }
 	  }
 	} // end if aerogel
@@ -141,7 +139,7 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
 					    TVector3(1,0,0),
 					    TVector3(0,1,0)
 					    );
-	  m_IrtDet->AddPhotonDetector(new CherenkovPhotonDetector(0,0,sensorSurf));
+	  m_IrtDet->AddPhotonDetector(0, new CherenkovPhotonDetector(0,0,sensorSurf));
 	}
 	
       } // end loop over eRICH detector elements
@@ -251,7 +249,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 
       {
 	// FIXME: hardcoded; give the algorithm aerogel surface boundaries as encoded in ERich_geo.cpp;  
-	auto s1 = m_IrtDet->m_OpticalBoundaries[1], s2 = m_IrtDet->m_OpticalBoundaries[2];
+	auto s1 = m_IrtDet->_m_OpticalBoundaries[0][1], s2 = m_IrtDet->_m_OpticalBoundaries[0][2];
 	//printf("%ld\n", m_IrtDet->m_OpticalBoundaries.size());
 
 #ifdef _USE_TRAJECTORIES_
