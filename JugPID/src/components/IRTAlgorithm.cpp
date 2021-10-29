@@ -10,9 +10,14 @@
 #include "IRT/CherenkovEvent.h"
 #include "IRT/CherenkovDetectorCollection.h"
 
+// FIXME: make sure that 'mm' in initialize() are what they are expected!;
+using namespace Gaudi::Units;
+
+//sed -i.bak 's/\:\/usr\/local\/lib\:/\:/g' jugglerenv.sh && echo "export LD_LIBRARY_PATH=\${LD_LIBRARY_PATH}:/usr/local/lib && export PYTHONPATH=\${PYTHONPATH}:/usr/local/lib" >> jugglerenv.sh
+
 // -------------------------------------------------------------------------------------
 
-Jug::Reco::IRTAlgorithm::IRTAlgorithm(const std::string& name, ISvcLocator* svcLoc) 
+Jug::PID::IRTAlgorithm::IRTAlgorithm(const std::string& name, ISvcLocator* svcLoc) 
   : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()), m_IrtGeo(0), m_IrtDet(0) 
 {
   declareProperty("inputMCParticles",                 m_inputMCParticles,              "");
@@ -20,14 +25,16 @@ Jug::Reco::IRTAlgorithm::IRTAlgorithm(const std::string& name, ISvcLocator* svcL
 #ifdef _USE_RECONSTRUCTED_TRACKS_
   declareProperty("inputRecoParticles",               m_inputRecoParticles,            "");
 #endif
+#ifdef _USE_TRAJECTORIES_
   declareProperty("inputTrajectories",                m_inputTrajectories,             "");
+#endif
 
-  declareProperty("CherenkovPID",                     m_outputCherenkovPID,            "");
-} // Jug::Reco::IRTAlgorithm::IRTAlgorithm()
+  declareProperty("outputCherenkovPID",               m_outputCherenkovPID,            "");
+} // Jug::PID::IRTAlgorithm::IRTAlgorithm()
 
 // -------------------------------------------------------------------------------------
 
-StatusCode Jug::Reco::IRTAlgorithm::initialize( void ) 
+StatusCode Jug::PID::IRTAlgorithm::initialize( void ) 
 {
   if (GaudiAlgorithm::initialize().isFailure()) {
     return StatusCode::FAILURE;
@@ -53,6 +60,7 @@ StatusCode Jug::Reco::IRTAlgorithm::initialize( void )
 
     // Well, a back door: if a config file name was given, import from file;
     if (config.size()) {
+      //exit(0);
       auto fcfg  = new TFile(config.c_str());
       if (!fcfg) {
 	error() << "Failed to open IRT config .root file." << endmsg;
@@ -166,11 +174,11 @@ StatusCode Jug::Reco::IRTAlgorithm::initialize( void )
   configure_QE_lookup_table(m_QE_input_data.value(), m_QEbins.value());
 
   return StatusCode::SUCCESS;
-} // Jug::Reco::IRTAlgorithm::initialize()
+} // Jug::PID::IRTAlgorithm::initialize()
 
 // -------------------------------------------------------------------------------------
 
-StatusCode Jug::Reco::IRTAlgorithm::execute( void )
+StatusCode Jug::PID::IRTAlgorithm::execute( void )
 {
   // Input collection(s);
   const auto &hits         = *m_inputHitCollection.get();
@@ -178,15 +186,19 @@ StatusCode Jug::Reco::IRTAlgorithm::execute( void )
 #ifdef _USE_RECONSTRUCTED_TRACKS_
   const auto &rctracks     = *m_inputRecoParticles.get();
 #endif
+#ifdef _USE_TRAJECTORIES_
   const auto &trajectories = *m_inputTrajectories.get();
+#endif
 
   // Output collection(s);
   auto &cpid          = *m_outputCherenkovPID.createAndPut();
 
   // First populate the trajectory-to-reconstructed (or -to-simulated) mapping table;
+#ifdef _USE_TRAJECTORIES_
   std::map<eic::Index, const eic::ConstTrajectory*> rc2trajectory;
   for(const auto &trajectory: trajectories)
     rc2trajectory[trajectory.trackID()] = &trajectory;
+#endif
     
   // An interface variable; FIXME: check memory cleanup;
   auto event = new CherenkovEvent();
@@ -204,7 +216,7 @@ StatusCode Jug::Reco::IRTAlgorithm::execute( void )
 #endif
 
     // At this point have a reference to a 'mctrack', either this or that way;
-    // Follow the logic of TrackParamTruthInit.cpp; 
+    // Now just follow the logic of TrackParamTruthInit.cpp; 
 
     // genStatus = 1 means thrown G4Primary, but dd4gun uses genStatus == 0
     if (mctrack.genStatus() > 1 ) {
@@ -242,6 +254,7 @@ StatusCode Jug::Reco::IRTAlgorithm::execute( void )
 	auto s1 = m_IrtDet->m_OpticalBoundaries[1], s2 = m_IrtDet->m_OpticalBoundaries[2];
 	//printf("%ld\n", m_IrtDet->m_OpticalBoundaries.size());
 
+#ifdef _USE_TRAJECTORIES_
 	// If trajectory parameterizations are actually available, use them;
 #ifdef _USE_RECONSTRUCTED_TRACKS_
 	auto index = rctrack.ID();
@@ -251,7 +264,7 @@ StatusCode Jug::Reco::IRTAlgorithm::execute( void )
 	auto trajectory = rc2trajectory.find(index) == rc2trajectory.end() ? 0 : 
 	  rc2trajectory[index];
 
-	// FIXME: merge this if-elseif somehow; 
+	// FIXME: merge this if-elseif somehow;
 	if (trajectory && trajectory->points().size()) {
 	  // Assume 's1' (front surface) is good enough;
 	  auto surface = s1->GetSurface();
@@ -276,6 +289,7 @@ StatusCode Jug::Reco::IRTAlgorithm::execute( void )
 	    history->AddStep(new ChargedParticleStep(  to, p0));
 	  }
 	} else {
+#endif
 	  // FIXME: need it not at vertex, but in the radiator; as coded here, this can 
 	  // hardly work once the magnetic field is turned on; but this is a best guess 
 	  // if nothing else is available;
@@ -289,16 +303,20 @@ StatusCode Jug::Reco::IRTAlgorithm::execute( void )
 	  
 	  history->AddStep(new ChargedParticleStep(from, p0));
 	  history->AddStep(new ChargedParticleStep(  to, p0));
+#ifdef _USE_TRAJECTORIES_
 	} //if
+#endif
       }
 
       for(const auto &hit: hits) {
 	// FIXME: yes, use MC truth here; not really needed I guess; 
 	if (hit.g4ID() != mctrack.ID()) continue;
 
-	// Simulate QE; FIXME: random seed, reproducibility, etc;
-	// FIXME: check units;
-	if (!QE_pass(hit.energy(), m_rngUni()*m_GeometricEfficiency.value())) continue;
+	// Simulate QE & geometric sensor efficiency; FIXME: hit.energy() is numerically 
+	// in GeV units, but Gaudi::Units::GeV = 1000; prefer to convert photon energies 
+	// to [eV] in all places by hand;
+	if (!QE_pass(1E9*hit.energy(), m_rngUni()*m_GeometricEfficiency.value())) 
+	  continue;
 	
 	// Photon accepted; add it to the internal event structure;
 	auto photon = new OpticalPhoton();
@@ -327,18 +345,14 @@ StatusCode Jug::Reco::IRTAlgorithm::execute( void )
 	} //if
       } //for hit
 
-	//printf("%d %d %d\n", mctrack.ID, mctrack.pdgID, mctrack.g4Parent);
-
       // Now that all internal mctrack-level structures are populated, run IRT code;
       {
 	// IRT side of the story;
 	CherenkovPID pid;
 	// Should suffice for now: e+/pi+/K+/p?;
 	int pdg_table[] = {-11, 211, 321, 2212};
-	// Flip sign if needed; FIXME: use reconstructed one?;
 	for(unsigned ip=0; ip<sizeof(pdg_table)/sizeof(pdg_table[0]); ip++) {
-	  const auto &service = m_pidSvc->particle(mctrack.pdgID());
-	  if (service.charge < 0.0) pdg_table[ip] *= -1;
+	  const auto &service = m_pidSvc->particle(pdg_table[ip]);
 
 	  pid.AddMassHypothesis(service.mass);
 	} //for ip
@@ -354,8 +368,11 @@ StatusCode Jug::Reco::IRTAlgorithm::execute( void )
 	    auto hypo = pid.GetHypothesis(ip);
 	    eic::CherenkovPdgHypothesis hypothesis;
 
+	    // Flip sign if needed; FIXME: use reconstructed one?;
+	    if (m_pidSvc->particle(mctrack.pdgID()).charge < 0.0) pdg_table[ip] *= -1;
+
 	    hypothesis.pdg    = pdg_table[ip];
-	    hypothesis.npe    = hypo->GetNph();
+	    hypothesis.npe    = hypo->GetNpe();
 	    hypothesis.weight = hypo->GetWeight();
 
 	    cbuffer.addoptions(hypothesis);
@@ -370,8 +387,6 @@ StatusCode Jug::Reco::IRTAlgorithm::execute( void )
 #else
 	  cbuffer.recID(mctrack.ID());
 #endif
-
-	  //cpid.push_back(cbuffer);
 	}
       }
     }  
@@ -381,15 +396,15 @@ StatusCode Jug::Reco::IRTAlgorithm::execute( void )
   delete event;
 
   return StatusCode::SUCCESS;
-} // Jug::Reco::IRTAlgorithm::execute()
+} // Jug::PID::IRTAlgorithm::execute()
 
 // -------------------------------------------------------------------------------------
 
-StatusCode Jug::Reco::IRTAlgorithm::finalize( void ) 
+StatusCode Jug::PID::IRTAlgorithm::finalize( void ) 
 {
   info() << "IRTAlgorithm: Finalizing..." << endmsg;
 
   return Algorithm::finalize(); // must be executed last
-} // Jug::Reco::IRTAlgorithm::finalize()
+} // Jug::PID::IRTAlgorithm::finalize()
 
 // -------------------------------------------------------------------------------------
