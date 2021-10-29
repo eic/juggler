@@ -9,12 +9,9 @@
 
 // -------------------------------------------------------------------------------------
 
-void Jug::Reco::IRTAlgorithmServices::configure_QE_lookup_table(const std::vector<std::pair<double, double>> &QE_vector, 
-								    unsigned nbins)
+void Jug::PID::IRTAlgorithmServices::configure_QE_lookup_table(const std::vector<std::pair<double, 
+							       double>> &QE_vector, unsigned nbins)
 {
-  //const std::vector<std::pair<double, double>> &QE_vector = m_QE_input_data.value();
-  //unsigned nbins = m_QEbins.value();
-
   // Well, could have probably just reordered the initial vector;
   std::map<double, double> QE_map;
 
@@ -23,6 +20,9 @@ void Jug::Reco::IRTAlgorithmServices::configure_QE_lookup_table(const std::vecto
 
   // Sanity checks;
   if (QE_map.size() < 2 || nbins < 2) return;
+
+  //m_QE_lookup_table.push_back(std::make_pair((*QE_map.begin()).first , 0.3));
+  //m_QE_lookup_table.push_back(std::make_pair((*QE_map.rbegin()).first, 0.3)); 
 
   double from = (*QE_map.begin()).first, to = (*QE_map.rbegin()).first;
   // Will be "nbins+1" equidistant entries;
@@ -47,11 +47,14 @@ void Jug::Reco::IRTAlgorithmServices::configure_QE_lookup_table(const std::vecto
 	m_QE_lookup_table.push_back(std::make_pair(e, a*e + b));
     } //if
   } //for entry
-} // Jug::Reco::IRTAlgorithmServices::configure_QE_lookup_table()
+
+  //for(auto entry: m_QE_lookup_table) 
+  //printf("%7.2f -> %7.2f\n", entry.first, entry.second);
+} // Jug::PID::IRTAlgorithmServices::configure_QE_lookup_table()
 
 // -------------------------------------------------------------------------------------
 
-bool Jug::Reco::IRTAlgorithmServices::QE_pass(double ev, double rand) const
+bool Jug::PID::IRTAlgorithmServices::QE_pass(double ev, double rand) const
 {
   // Get the tabulated table reference; perform sanity checks;
   //const std::vector<std::pair<double, double>> &qe = u_quantumEfficiency.value();
@@ -61,17 +64,19 @@ bool Jug::Reco::IRTAlgorithmServices::QE_pass(double ev, double rand) const
   auto const &from = m_QE_lookup_table[0], &to = m_QE_lookup_table[dim-1];
   double emin = from.first, emax = to.first, step = (emax - emin) / (dim - 1);
   int ibin = (int)floor((ev - emin) / step);
+
+  //printf("%f vs %f, %f -> %d\n", ev, from.first, to. first, ibin);
   
   // Out of range check;
   if (ibin < 0 || ibin >= int(dim)) return false;
 
   // Get tabulated QE value, compare against the provided random variable;
   return (rand <= m_QE_lookup_table[ibin].second);
-} // Jug::Reco::IRTAlgorithmServices::QE_pass()
+} // Jug::PID::IRTAlgorithmServices::QE_pass()
 
 // -------------------------------------------------------------------------------------
 
-double Jug::Reco::IRTAlgorithmServices::GetDistance(const ParametricSurface *surface, 
+double Jug::PID::IRTAlgorithmServices::GetDistance(const ParametricSurface *surface, 
 							const eic::TrajectoryPoint *point) const
 {
   if (!surface || !point) return 0.0;
@@ -79,35 +84,35 @@ double Jug::Reco::IRTAlgorithmServices::GetDistance(const ParametricSurface *sur
   auto pt = TVector3(point->position.x, point->position.y, point->position.z);
   
   return surface->GetDistance(TVector3(point->position.x, point->position.y, point->position.z));
-} // Jug::Reco::IRTAlgorithmServices::GetDistance()
+} // Jug::PID::IRTAlgorithmServices::GetDistance()
 
 // -------------------------------------------------------------------------------------
 
-bool Jug::Reco::IRTAlgorithmServices::GetCrossing(const ParametricSurface *surface, 
+bool Jug::PID::IRTAlgorithmServices::GetCrossing(const ParametricSurface *surface, 
 						      const eic::TrajectoryPoint *point, 
 						      TVector3 *crs) const
 {
   if (!surface || !point) return false;
   
   return surface->GetCrossing(GetLocation(point), GetMomentum(point).Unit(), crs);
-} // Jug::Reco::IRTAlgorithmServices::GetCrossing()
+} // Jug::PID::IRTAlgorithmServices::GetCrossing()
 
 // -------------------------------------------------------------------------------------
 
-TVector3 Jug::Reco::IRTAlgorithmServices::GetLocation(const eic::TrajectoryPoint *point) const
+TVector3 Jug::PID::IRTAlgorithmServices::GetLocation(const eic::TrajectoryPoint *point) const
 {
   return TVector3(point->position.x, point->position.y, point->position.z);
-} // Jug::Reco::IRTAlgorithmServices::GetLocation()
+} // Jug::PID::IRTAlgorithmServices::GetLocation()
 
 // -------------------------------------------------------------------------------------
 
-TVector3 Jug::Reco::IRTAlgorithmServices::GetMomentum(const eic::TrajectoryPoint *point) const
+TVector3 Jug::PID::IRTAlgorithmServices::GetMomentum(const eic::TrajectoryPoint *point) const
 {
   double theta = point->p.theta, phi = point->p.phi; 
 
   return point->p.r*TVector3(sin(theta)*cos(phi), 
 			     sin(theta)*sin(phi), 
 			     cos(theta));
-} // Jug::Reco::IRTAlgorithmServices::GetMomentum()
+} // Jug::PID::IRTAlgorithmServices::GetMomentum()
 
 // -------------------------------------------------------------------------------------

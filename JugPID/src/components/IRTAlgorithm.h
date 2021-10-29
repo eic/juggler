@@ -8,8 +8,6 @@
 #include "JugBase/IParticleSvc.h"
 #include "JugBase/UniqueID.h"
 
-using namespace Gaudi::Units;
-
 #include "dd4pod/Geant4ParticleCollection.h"
 #include "dd4pod/PhotoMultiplierHitCollection.h"
 
@@ -17,7 +15,8 @@ using namespace Gaudi::Units;
 #include "eicd/ReconstructedParticleCollection.h"
 #include "eicd/CherenkovParticleIDCollection.h"
 
-#define _USE_RECONSTRUCTED_TRACKS_
+//#define _USE_RECONSTRUCTED_TRACKS_
+//#define _USE_TRAJECTORIES_
 
 #ifndef _IRT_ALGORITHM_
 #define _IRT_ALGORITHM_
@@ -27,7 +26,7 @@ using namespace Gaudi::Units;
 class CherenkovDetector;
 class CherenkovDetectorCollection;
 
-namespace Jug::Reco {
+namespace Jug::PID {
   /** RICH IRT
    *
    * \ingroup reco
@@ -66,14 +65,16 @@ namespace Jug::Reco {
 	this
 	};
 #endif
+#ifdef _USE_TRAJECTORIES_
     DataHandle<eic::TrajectoryCollection> m_inputTrajectories {
       "inputTrajectories", 
 	Gaudi::DataHandle::Reader, 
 	this
 	};
+#endif
 
     DataHandle<eic::CherenkovParticleIDCollection> m_outputCherenkovPID {
-      "CherenkovPID", 
+      "outputCherenkovPID", 
 	Gaudi::DataHandle::Writer, 
 	this
 	};
@@ -100,6 +101,6 @@ namespace Jug::Reco {
 
   DECLARE_COMPONENT(IRTAlgorithm)
 
-} // namespace Jug::Reco
+} // namespace Jug::PID
 
 #endif
