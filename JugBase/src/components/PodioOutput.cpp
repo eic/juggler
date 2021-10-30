@@ -1,4 +1,5 @@
 #include "PodioOutput.h"
+#include "podio/podioVersion.h"
 #include "GaudiKernel/ISvcLocator.h"
 #include "JugBase/PodioDataSvc.h"
 #include "TFile.h"
@@ -32,10 +33,21 @@ StatusCode PodioOutput::initialize() {
 
 void PodioOutput::resetBranches(const std::vector<std::pair<std::string, podio::CollectionBase*>>& collections) {
   for (auto& [collName, collBuffers] : collections) {
+    #if podio_VERSION_MAJOR == 0 && podio_VERSION_MINOR < 14
+    auto data = collBuffers->getBufferAddress();
+    auto references = collBuffers->referenceCollections();
+    auto vecmembers = collBuffers->vectorMembers();
+    #else
+    auto buffers = collBuffers->getBuffers();
+    auto data = buffers.data;
+    auto references = buffers.references;
+    auto vecmembers = buffers.vectorMembers;
+    #endif
+
     if (m_switch.isOn(collName)) {
       // Reconnect branches and collections
-      m_datatree->SetBranchAddress(collName.c_str(), collBuffers->getBufferAddress());
-      auto colls = collBuffers->referenceCollections();
+      m_datatree->SetBranchAddress(collName.c_str(), data);
+      auto colls = references;
       if (colls) {
         int j = 0;
         for (auto& c : (*colls)) {
@@ -44,7 +56,7 @@ void PodioOutput::resetBranches(const std::vector<std::pair<std::string, podio::
           ++j;
         }
       }
-      auto colls_v = collBuffers->vectorMembers();
+      auto colls_v = vecmembers;
       if (colls_v) {
         int j = 0;
         for (auto& [dataType, add] : (*colls_v)) {
@@ -60,15 +72,26 @@ void PodioOutput::resetBranches(const std::vector<std::pair<std::string, podio::
 
 void PodioOutput::createBranches(const std::vector<std::pair<std::string, podio::CollectionBase*>>& collections) {
   for (auto& [collName, collBuffers] : collections) {
+    #if podio_VERSION_MAJOR == 0 && podio_VERSION_MINOR < 14
+    auto data = collBuffers->getBufferAddress();
+    auto references = collBuffers->referenceCollections();
+    auto vecmembers = collBuffers->vectorMembers();
+    #else
+    auto buffers = collBuffers->getBuffers();
+    auto data = buffers.data;
+    auto references = buffers.references;
+    auto vecmembers = buffers.vectorMembers;
+    #endif
+
     const std::string className     = collBuffers->getValueTypeName();
     const std::string collClassName = "vector<" + className + "Data>";
 
     int isOn = 0;
     if (m_switch.isOn(collName)) {
       isOn = 1;
-      m_datatree->Branch(collName.c_str(), collClassName.c_str(), collBuffers->getBufferAddress());
+      m_datatree->Branch(collName.c_str(), collClassName.c_str(), data);
       // Create branches for collections holding relations
-      if (auto refColls = collBuffers->referenceCollections()) {
+      if (auto refColls = references) {
         int j = 0;
         for (auto& c : (*refColls)) {
           const auto brName = podio::root_utils::refBranch(collName, j);
@@ -77,7 +100,7 @@ void PodioOutput::createBranches(const std::vector<std::pair<std::string, podio:
         }
       }
       // vector members
-      if (auto vminfo = collBuffers->vectorMembers()) {
+      if (auto vminfo = vecmembers) {
         int j = 0;
         for (auto& [dataType, add] : (*vminfo)) {
           const std::string typeName = "vector<" + dataType + ">";
