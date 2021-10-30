@@ -128,9 +128,9 @@ public:
       double base = hitz[2] - hitz[0];
 
       if (base == 0) {
-        error() << "Detector separation = 0!"
+        warning() << "Detector separation = 0!"
                 << "Cannot calculate slope!" << endmsg;
-        return StatusCode::FAILURE;
+        return StatusCode::SUCCESS;
       }
 
       double Xomd[2] = {XL[1], (1000 * (XL[1] - XL[0]) / (base)) - local_x_slope_offset};

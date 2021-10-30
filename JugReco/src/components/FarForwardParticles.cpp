@@ -129,9 +129,9 @@ public:
       double base = hitz[2] - hitz[0];
 
       if (base == 0) {
-        error() << "Detector separation = 0!"
+        warning() << "Detector separation = 0!"
                 << "Cannot calculate slope!" << endmsg;
-        return StatusCode::FAILURE;
+        return StatusCode::SUCCESS;
       }
 
       double Xrp[2], Xip[2] = {0.0, 0.0};
