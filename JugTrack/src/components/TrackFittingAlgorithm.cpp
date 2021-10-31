@@ -104,9 +104,16 @@ namespace Jug::Reco {
     // kfOptions.multipleScattering = m_cfg.multipleScattering;
     // kfOptions.energyLoss         = m_cfg.energyLoss;
 
+    #if Acts_VERSION_MAJOR < 14
     Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder> kfOptions(
         m_geoctx, m_fieldctx, m_calibctx, MeasurementCalibrator(*measurements),
         Acts::VoidOutlierFinder(), Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
+    #else
+    Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder, Acts::VoidReverseFilteringLogic> kfOptions(
+        m_geoctx, m_fieldctx, m_calibctx, MeasurementCalibrator(*measurements),
+        Acts::VoidOutlierFinder(), Acts::VoidReverseFilteringLogic(),
+        Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
+    #endif
 
     // used for processing the data
     std::vector<IndexSourceLink>      trackSourceLinks;
