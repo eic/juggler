@@ -33,7 +33,7 @@ StatusCode PodioOutput::initialize() {
 
 void PodioOutput::resetBranches(const std::vector<std::pair<std::string, podio::CollectionBase*>>& collections) {
   for (auto& [collName, collBuffers] : collections) {
-    #if podio_VERSION_MAJOR == 0 && podio_VERSION_MINOR < 14
+    #if podio_VERSION_MAJOR == 0 && (podio_VERSION_MINOR < 13 || (podio_VERSION_MINOR == 13 && podio_VERSION_PATCH < 2))
     auto data = collBuffers->getBufferAddress();
     auto references = collBuffers->referenceCollections();
     auto vecmembers = collBuffers->vectorMembers();
@@ -72,7 +72,7 @@ void PodioOutput::resetBranches(const std::vector<std::pair<std::string, podio::
 
 void PodioOutput::createBranches(const std::vector<std::pair<std::string, podio::CollectionBase*>>& collections) {
   for (auto& [collName, collBuffers] : collections) {
-    #if podio_VERSION_MAJOR == 0 && podio_VERSION_MINOR < 14
+    #if podio_VERSION_MAJOR == 0 && (podio_VERSION_MINOR < 13 || (podio_VERSION_MINOR == 13 && podio_VERSION_PATCH < 2))
     auto data = collBuffers->getBufferAddress();
     auto references = collBuffers->referenceCollections();
     auto vecmembers = collBuffers->vectorMembers();
