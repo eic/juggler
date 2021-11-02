@@ -7,6 +7,7 @@
 
 #include "IRTAlgorithm.h"
 
+#include "IRT/CherenkovRadiator.h"
 #include "IRT/CherenkovEvent.h"
 #include "IRT/CherenkovDetectorCollection.h"
 
@@ -174,6 +175,56 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
     m_outputCherenkovPID =
       std::make_unique<DataHandle<eic::CherenkovParticleIDCollection>>((*dname + "PID").c_str(), 
 								       Gaudi::DataHandle::Writer, this);
+
+    // FIXME: how about Gaudi::Property<std::vector<std::tuple>>?;
+    {
+      const auto &radiators = m_RadiatorConfig.value();
+      
+      char name[128-1], mode[128-1];
+      unsigned zbins;
+      float mrad;
+      // FIXME: yes, a fixed format (and fixed order!) for now;
+      const char *format = "%s zbins=%u smearing=%s %fmrad";
+      
+      for(auto rptr: radiators) {
+	sscanf(rptr.c_str(), format, &name, &zbins, &mode, &mrad);
+	//printf("%s %s %d %7.1f\n", name, mode, zbins, mrad);
+
+	if (!zbins || mrad < 0.0) {
+	  error() << "Provided parameters do not pass a sanity check." << endmsg;
+	  return StatusCode::FAILURE;
+	} //if
+
+	// FIXME: sanity check would not hurt;
+	auto radiator = m_IrtDet->GetRadiator(name);
+	if (radiator) {
+	  m_SelectedRadiators.push_back(radiator);
+	  
+	  radiator->m_AverageRefractiveIndex = radiator->n();
+	  if (mrad) {
+	    // Well, want them readable in the config file, but pass in [rad] to the IRT algorithm;
+	    mrad /= 1000.;
+
+	    if (strcmp(mode, "uniform") && strcmp(mode, "gaussian")) {
+	      error() << "Unknown smearing mode." << endmsg;
+	      return StatusCode::FAILURE;
+	    } //if
+
+	    (!strcmp(mode, "uniform") ? radiator->SetUniformSmearing(mrad) : radiator->SetGaussianSmearing(mrad));
+	  } //if
+
+	  radiator->SetTrajectoryBinCount(zbins);
+	} else {
+	  error() << "Unknown radiator name." << endmsg;
+	  return StatusCode::FAILURE;
+	} //if
+      } //for radiator
+
+      if (!m_SelectedRadiators.size()) {
+	error() << "At least one radiator name should be provided." << endmsg;
+	return StatusCode::FAILURE;
+      } //if
+    }
   }
 
 #if _TODAY_  
@@ -229,11 +280,6 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
     
   // An interface variable; FIXME: check memory cleanup;
   auto event = new CherenkovEvent();
-
-  // FIXME: hardcoded;
-  auto aerogel = m_IrtDet->GetRadiator("Aerogel");
-  aerogel->m_AverageRefractiveIndex = aerogel->n();
-  aerogel->SetUniformSmearing(0.003);
 
   // Loop through either MC or reconstructed tracks;
 #ifdef _USE_RECONSTRUCTED_TRACKS_
@@ -311,14 +357,13 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       photons.push_back(photon);
     } //for hit
 
-    {
+    for(auto radiator: m_SelectedRadiators) {
       // FIXME: yes, for now assume all the photons were produced in aerogel; 
-      particle->StartRadiatorHistory(std::make_pair(aerogel, new RadiatorHistory()));
+      particle->StartRadiatorHistory(std::make_pair(radiator, new RadiatorHistory()));
 
       {
-	// FIXME: hardcoded; give the algorithm aerogel surface boundaries as encoded in ERich_geo.cpp;  
-	auto s1 = aerogel->GetFrontSide(0), s2 = aerogel->GetRearSide(0);
-	//printf("%ld\n", m_IrtDet->m_OpticalBoundaries.size());
+	// FIXME: hardcoded; give the algorithm radiator surface boundaries as encoded in ERich_geo.cpp;  
+	auto s1 = radiator->GetFrontSide(0), s2 = radiator->GetRearSide(0);
 
 	TVector3 from, to, p0;
 
@@ -366,12 +411,22 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 #ifdef _USE_TRAJECTORIES_
 	} //if
 #endif
+	radiator->ResetLocations();
 
-	TVector3 nn = (to - from).Unit(); from += (0.010)*nn; to -= (0.010)*nn;
-	aerogel->AddLocation(from, p0);
-	aerogel->AddLocation(  to, p0);
+	{
+	  unsigned zbins = radiator->GetTrajectoryBinCount();
+	  TVector3 nn = (to - from).Unit(); from += (0.010)*nn; to -= (0.010)*nn;
+
+	  // FIXME: assume a straight line to the moment;
+	  auto span = to - from;
+	  double tlen = span.Mag(), step = tlen / zbins;
+	  for(unsigned iq=0; iq<zbins+1; iq++) 
+	    radiator->AddLocation(from + iq*step*nn, p0);
+	}
       }
+    } //for radiator
 
+    {
       // Now that all internal mctrack-level structures are populated, run IRT code;
       {
 	// IRT side of the story;
@@ -388,7 +443,11 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	particle->PIDReconstruction(pid, &photons);
 
 	// Now the interesting part comes: how to populate the output collection;
-	{
+	auto aerogel = m_IrtDet->GetRadiator("Aerogel");
+	for(auto radiator: m_SelectedRadiators) {
+	  // FIXME: extend the eicd table layout; FIXME: this loop is anyway inefficient;
+	  if (radiator != aerogel && m_SelectedRadiators.size() != 1) continue;
+
 	  auto cbuffer = cpid.create();
 
 	  for(unsigned ip=0; ip<sizeof(pdg_table)/sizeof(pdg_table[0]); ip++) {
@@ -399,8 +458,8 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	    if (m_pidSvc->particle(mctrack.pdgID()).charge < 0.0) pdg_table[ip] *= -1;
 
 	    hypothesis.pdg    = pdg_table[ip];
-	    hypothesis.npe    = hypo->GetNpe(aerogel);
-	    hypothesis.weight = hypo->GetWeight(aerogel);
+	    hypothesis.npe    = hypo->GetNpe   (radiator);//aerogel);
+	    hypothesis.weight = hypo->GetWeight(radiator);//aerogel);
 
 	    cbuffer.addoptions(hypothesis);
 	  } //for ip
