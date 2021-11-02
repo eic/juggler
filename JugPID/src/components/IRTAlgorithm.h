@@ -1,6 +1,4 @@
 
-//#include <tuple>
-
 #include "GaudiAlg/GaudiAlgorithm.h"
 #include "GaudiKernel/PhysicalConstants.h"
 #include "GaudiKernel/RndmGenerators.h"
@@ -74,12 +72,7 @@ namespace Jug::PID {
 #endif
 
     // Output collection;
-    DataHandle<eic::CherenkovParticleIDCollection> m_outputCherenkovPID {
-      //std::unique_ptr<DataHandle<eic::CherenkovParticleIDCollection>> m_outputCherenkovPID;// {
-      "outputCherenkovPID", 
-    	Gaudi::DataHandle::Writer, 
-    	this
-    	};
+    std::unique_ptr<DataHandle<eic::CherenkovParticleIDCollection>> m_outputCherenkovPID;
 
     /// Pointer to the geometry and PDG service;
     SmartIF<IGeoSvc> m_geoSvc;
