@@ -109,13 +109,6 @@ TVector3 Jug::PID::IRTAlgorithmServices::GetLocation(const eic::TrajectoryPoint 
 TVector3 Jug::PID::IRTAlgorithmServices::GetMomentum(const eic::TrajectoryPoint *point) const
 {
   return TVector3(point->p.x, point->p.y, point->p.z);
-#if _OLD_
-  double theta = point->p.theta, phi = point->p.phi; 
-
-  return point->p.r*TVector3(sin(theta)*cos(phi), 
-			     sin(theta)*sin(phi), 
-			     cos(theta));
-#endif
 } // Jug::PID::IRTAlgorithmServices::GetMomentum()
 
 // -------------------------------------------------------------------------------------

@@ -1,4 +1,6 @@
 
+//#include <tuple>
+
 #include "GaudiAlg/GaudiAlgorithm.h"
 #include "GaudiKernel/PhysicalConstants.h"
 #include "GaudiKernel/RndmGenerators.h"
@@ -26,6 +28,9 @@
 class CherenkovDetector;
 class CherenkovDetectorCollection;
 
+//typedef SimpleProperty   < std::vector< std::pair<std::string, double> > >      QStringArrayProperty;
+//typedef SimplePropertyRef< std::vector< std::pair<std::string, double> > >      QStringArrayPropertyRef;
+
 namespace Jug::PID {
   /** RICH IRT
    *
@@ -46,13 +51,8 @@ namespace Jug::PID {
     // FINALIZE .....................................................
     StatusCode finalize( void ) override;
 
-    // FIXME: the collection names make no sense; synchronize with the upstream plugins;
-    // FIXME: names either here or in the source code must be duplicates;
-    DataHandle<dd4pod::PhotoMultiplierHitCollection> m_inputHitCollection {
-      "inputHitCollection",
-	Gaudi::DataHandle::Reader,
-	this
-	};
+    // Input collections;
+    std::unique_ptr<DataHandle<dd4pod::PhotoMultiplierHitCollection>> m_inputHitCollection;
     DataHandle<dd4pod::Geant4ParticleCollection> m_inputMCParticles {
       "inputMCParticles", 
 	Gaudi::DataHandle::Reader, 
@@ -73,11 +73,13 @@ namespace Jug::PID {
 	};
 #endif
 
+    // Output collection;
     DataHandle<eic::CherenkovParticleIDCollection> m_outputCherenkovPID {
+      //std::unique_ptr<DataHandle<eic::CherenkovParticleIDCollection>> m_outputCherenkovPID;// {
       "outputCherenkovPID", 
-	Gaudi::DataHandle::Writer, 
-	this
-	};
+    	Gaudi::DataHandle::Writer, 
+    	this
+    	};
 
     /// Pointer to the geometry and PDG service;
     SmartIF<IGeoSvc> m_geoSvc;
@@ -85,18 +87,20 @@ namespace Jug::PID {
 
     // A .root file with a CherenkovDetectorCollection entry, to run in a back door mode;
     Gaudi::Property<std::string>                            m_ConfigFile          {this, "ConfigFile", ""};
+    Gaudi::Property<std::string>                            m_Detector            {this, "Detector", ""};
     // The famous ~0.85 for the S13660-3050AE-08 SiPM and its QE table expected;
     Gaudi::Property<double>                                 m_GeometricEfficiency {this, "GeometricEfficiency", 1.0};
     // Array of {e, qe} points and the desired number of bins in a fast lookup table;
     Gaudi::Property<std::vector<std::pair<double, double>>> m_QE_input_data       {this, "QEcurve"};
     Gaudi::Property<unsigned>                               m_QEbins              {this, "QEbins",      0};
+    //Gaudi::Property<std::vector<std::pair<std::string, double>>*> m_Radiators        {this, "Radiators"};
 
   private:
     // FIXME: will need several detectors;
     CherenkovDetectorCollection *m_IrtGeo;
     CherenkovDetector           *m_IrtDet;
 
-    Rndm::Numbers m_rngUni;//, m_rngNorm;
+    Rndm::Numbers m_rngUni;
   };
 
   DECLARE_COMPONENT(IRTAlgorithm)
