@@ -318,6 +318,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
     auto particle = new ChargedParticle(mctrack.pdgID());
     event->AddChargedParticle(particle);
 
+    // Fill one global array of photon hits (shared by all radiators);
     std::vector<OpticalPhoton*> photons; 
     for(const auto &hit: hits) {
       // FIXME: yes, use MC truth here; not really needed I guess; 
@@ -357,6 +358,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       photons.push_back(photon);
     } //for hit
 
+    // Loop through the radiators one by one, using the same set of photons;
     for(auto radiator: m_SelectedRadiators) {
       // FIXME: yes, for now assume all the photons were produced in aerogel; 
       particle->StartRadiatorHistory(std::make_pair(radiator, new RadiatorHistory()));
@@ -426,54 +428,51 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       }
     } //for radiator
 
-    {
       // Now that all internal mctrack-level structures are populated, run IRT code;
-      {
-	// IRT side of the story;
-	CherenkovPID pid;
-	// Should suffice for now: e+/pi+/K+/p?;
-	int pdg_table[] = {-11, 211, 321, 2212};
-	for(unsigned ip=0; ip<sizeof(pdg_table)/sizeof(pdg_table[0]); ip++) {
-	  const auto &service = m_pidSvc->particle(pdg_table[ip]);
-
-	  pid.AddMassHypothesis(service.mass);
-	} //for ip
-
+    {
+      CherenkovPID pid;
+      // Should suffice for now: e+/pi+/K+/p?; FIXME: hardcoded;
+      int pdg_table[] = {-11, 211, 321, 2212};
+      for(unsigned ip=0; ip<sizeof(pdg_table)/sizeof(pdg_table[0]); ip++) {
+	const auto &service = m_pidSvc->particle(pdg_table[ip]);
+	
+	pid.AddMassHypothesis(service.mass);
+      } //for ip
+      
 	// Eventually call the IRT code;
-	particle->PIDReconstruction(pid, &photons);
-
-	// Now the interesting part comes: how to populate the output collection;
-	auto aerogel = m_IrtDet->GetRadiator("Aerogel");
-	for(auto radiator: m_SelectedRadiators) {
-	  // FIXME: extend the eicd table layout; FIXME: this loop is anyway inefficient;
-	  if (radiator != aerogel && m_SelectedRadiators.size() != 1) continue;
-
-	  auto cbuffer = cpid.create();
-
-	  for(unsigned ip=0; ip<sizeof(pdg_table)/sizeof(pdg_table[0]); ip++) {
-	    auto hypo = pid.GetHypothesis(ip);
-	    eic::CherenkovPdgHypothesis hypothesis;
-
-	    // Flip sign if needed; FIXME: use reconstructed one?;
-	    if (m_pidSvc->particle(mctrack.pdgID()).charge < 0.0) pdg_table[ip] *= -1;
-
-	    hypothesis.pdg    = pdg_table[ip];
-	    hypothesis.npe    = hypo->GetNpe   (radiator);//aerogel);
-	    hypothesis.weight = hypo->GetWeight(radiator);//aerogel);
-
-	    cbuffer.addoptions(hypothesis);
-	  } //for ip
-
+      particle->PIDReconstruction(pid, &photons);
+      
+      // Now the interesting part comes: how to populate the output collection;
+      auto aerogel = m_IrtDet->GetRadiator("Aerogel");
+      for(auto radiator: m_SelectedRadiators) {
+	// FIXME: extend the eicd table layout; FIXME: this loop is anyway inefficient;
+	if (radiator != aerogel && m_SelectedRadiators.size() != 1) continue;
+	
+	auto cbuffer = cpid.create();
+	
+	for(unsigned ip=0; ip<sizeof(pdg_table)/sizeof(pdg_table[0]); ip++) {
+	  auto hypo = pid.GetHypothesis(ip);
+	  eic::CherenkovPdgHypothesis hypothesis;
+	  
+	  // Flip sign if needed; FIXME: use reconstructed one?;
+	  if (m_pidSvc->particle(mctrack.pdgID()).charge < 0.0) pdg_table[ip] *= -1;
+	  
+	  hypothesis.pdg    = pdg_table[ip];
+	  hypothesis.npe    = hypo->GetNpe   (radiator);//aerogel);
+	  hypothesis.weight = hypo->GetWeight(radiator);//aerogel);
+	  
+	  cbuffer.addoptions(hypothesis);
+	} //for ip
+	
 	  // FIXME: well, and what does go here instead of 0?;
-	  cbuffer.ID({0, algorithmID()});
-
-	  // Reference to either MC track or a reconstructed track;
+	cbuffer.ID({0, algorithmID()});
+	
+	// Reference to either MC track or a reconstructed track;
 #ifdef _USE_RECONSTRUCTED_TRACKS_
-	  cbuffer.recID(rctrack.ID());
+	cbuffer.recID(rctrack.ID());
 #else
-	  cbuffer.recID(mctrack.ID());
+	cbuffer.recID(mctrack.ID());
 #endif
-	}
       }
     }  
   } //for rctrack (mctrack)
