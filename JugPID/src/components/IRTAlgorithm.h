@@ -23,6 +23,7 @@
 
 #include "IRTAlgorithmServices.h"
 
+class CherenkovRadiator;
 class CherenkovDetector;
 class CherenkovDetectorCollection;
 
@@ -86,12 +87,14 @@ namespace Jug::PID {
     // Array of {e, qe} points and the desired number of bins in a fast lookup table;
     Gaudi::Property<std::vector<std::pair<double, double>>> m_QE_input_data       {this, "QEcurve"};
     Gaudi::Property<unsigned>                               m_QEbins              {this, "QEbins",      0};
-    //Gaudi::Property<std::vector<std::pair<std::string, double>>*> m_Radiators        {this, "Radiators"};
+    Gaudi::Property<std::vector<std::string>>               m_RadiatorConfig      {this, "Radiators"};
 
   private:
     // FIXME: will need several detectors;
     CherenkovDetectorCollection *m_IrtGeo;
     CherenkovDetector           *m_IrtDet;
+
+    std::vector<CherenkovRadiator*> m_SelectedRadiators;
 
     Rndm::Numbers m_rngUni;
   };
