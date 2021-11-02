@@ -16,21 +16,15 @@ using namespace Gaudi::Units;
 // -------------------------------------------------------------------------------------
 
 Jug::PID::IRTAlgorithm::IRTAlgorithm(const std::string& name, ISvcLocator* svcLoc) 
-  : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()), /*m_outputCherenkovPID(0),*/ m_IrtGeo(0), m_IrtDet(0) 
+  : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()), m_IrtGeo(0), m_IrtDet(0) 
 {
   declareProperty("inputMCParticles",                 m_inputMCParticles,              "");
-  //declareProperty("inputHitCollection",               m_inputHitCollection,            "");
-  //m_inputHitCollection.set("ERICHHits");
 #ifdef _USE_RECONSTRUCTED_TRACKS_
   declareProperty("inputRecoParticles",               m_inputRecoParticles,            "");
 #endif
 #ifdef _USE_TRAJECTORIES_
   declareProperty("inputTrajectories",                m_inputTrajectories,             "");
 #endif
-
-  declareProperty("outputCherenkovPID",               m_outputCherenkovPID,            "");
-
-  //m_outputCherenkovPID = 0;//.assign(0);// = 0;
 } // Jug::PID::IRTAlgorithm::IRTAlgorithm()
 
 // -------------------------------------------------------------------------------------
@@ -58,7 +52,7 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
 
   {
     auto const &config = m_ConfigFile.value();
-    auto const &dname  = m_Detector.value();
+    std::string *dname = &m_Detector.value();
 
     // Well, a back door: if a config file name was given, import from file;
     if (config.size()) {
@@ -69,18 +63,35 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
       } //if
 
       m_IrtGeo = dynamic_cast<CherenkovDetectorCollection*>(fcfg->Get("CherenkovDetectorCollection"));
-      if (!m_IrtGeo || dname.empty()) {
+      if (!m_IrtGeo) {
 	error() << "Failed to import IRT geometry from the config .root file." << endmsg;
 	return StatusCode::FAILURE;
       } //if
 
-      // Detector pointer;
-      m_IrtDet = m_IrtGeo->GetDetector(dname.c_str());
-      if (!m_IrtDet) {
-	error() << "Failed to import IRT geometry from the config .root file." << endmsg;
-	return StatusCode::FAILURE;
+      // May want to fish the detector name out of the geometry file, if it is unique;
+      if (dname->empty()) {
+	auto &detectors = m_IrtGeo->GetDetectors();
+	if (detectors.size() != 1) {
+	  error() << "More than one detector in the provided IRT geometry config .root file." << endmsg;
+	  return StatusCode::FAILURE;
+	} //if
+
+	dname = new std::string((*detectors.begin()).first.Data());
+	m_IrtDet = (*detectors.begin()).second;
+      } else {
+      	// Detector pointer;
+	m_IrtDet = m_IrtGeo->GetDetector(dname->c_str());
+	if (!m_IrtDet) {
+	  error() << "Failed to import IRT geometry from the config .root file." << endmsg;
+	  return StatusCode::FAILURE;
+	} //if
       } //if
     } else {
+      if (dname->empty()) {
+	error() << "No RICH detector name provided." << endmsg;
+	return StatusCode::FAILURE;
+      } //if
+
 #if _LATER_
       // Otherwise create IRT detector collection geometry;
       m_IrtGeo = new CherenkovDetectorCollection();
@@ -157,14 +168,12 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
 
       // Input hit collection;
     m_inputHitCollection =
-      std::make_unique<DataHandle<dd4pod::PhotoMultiplierHitCollection>>((dname + "Hits").c_str(), 
+      std::make_unique<DataHandle<dd4pod::PhotoMultiplierHitCollection>>((*dname + "Hits").c_str(), 
 									 Gaudi::DataHandle::Reader, this);
-    //m_outputCherenkovPID =
-    //DataHandle<eic::CherenkovParticleIDCollection>((dname + "PID").c_str(), 
-    //					       Gaudi::DataHandle::Writer, this);
-    //m_outputCherenkovPID =
-    //std::make_unique<DataHandle<eic::CherenkovParticleIDCollection>>((dname + "PID").c_str(), 
-    //Gaudi::DataHandle::Writer, this);
+    // Output PID info collection;
+    m_outputCherenkovPID =
+      std::make_unique<DataHandle<eic::CherenkovParticleIDCollection>>((*dname + "PID").c_str(), 
+								       Gaudi::DataHandle::Writer, this);
   }
 
 #if _TODAY_  
@@ -208,11 +217,8 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 #ifdef _USE_TRAJECTORIES_
   const auto &trajectories = *m_inputTrajectories.get();
 #endif
-
   // Output collection(s);
-  //auto &cpid               = *m_outputCherenkovPID->createAndPut();
-  auto &cpid               = *m_outputCherenkovPID.createAndPut();
-  //eic::CherenkovParticleIDCollection &cpid               = *m_outputCherenkovPID.createAndPut();
+  auto &cpid               = *m_outputCherenkovPID->createAndPut();
 
   // First populate the trajectory-to-reconstructed (or -to-simulated) mapping table;
 #ifdef _USE_TRAJECTORIES_
