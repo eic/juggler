@@ -16,10 +16,11 @@ using namespace Gaudi::Units;
 // -------------------------------------------------------------------------------------
 
 Jug::PID::IRTAlgorithm::IRTAlgorithm(const std::string& name, ISvcLocator* svcLoc) 
-  : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()), m_IrtGeo(0), m_IrtDet(0) 
+  : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()), /*m_outputCherenkovPID(0),*/ m_IrtGeo(0), m_IrtDet(0) 
 {
   declareProperty("inputMCParticles",                 m_inputMCParticles,              "");
-  declareProperty("inputHitCollection",               m_inputHitCollection,            "");
+  //declareProperty("inputHitCollection",               m_inputHitCollection,            "");
+  //m_inputHitCollection.set("ERICHHits");
 #ifdef _USE_RECONSTRUCTED_TRACKS_
   declareProperty("inputRecoParticles",               m_inputRecoParticles,            "");
 #endif
@@ -28,6 +29,8 @@ Jug::PID::IRTAlgorithm::IRTAlgorithm(const std::string& name, ISvcLocator* svcLo
 #endif
 
   declareProperty("outputCherenkovPID",               m_outputCherenkovPID,            "");
+
+  //m_outputCherenkovPID = 0;//.assign(0);// = 0;
 } // Jug::PID::IRTAlgorithm::IRTAlgorithm()
 
 // -------------------------------------------------------------------------------------
@@ -55,10 +58,10 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
 
   {
     auto const &config = m_ConfigFile.value();
+    auto const &dname  = m_Detector.value();
 
     // Well, a back door: if a config file name was given, import from file;
     if (config.size()) {
-      //exit(0);
       auto fcfg  = new TFile(config.c_str());
       if (!fcfg) {
 	error() << "Failed to open IRT config .root file." << endmsg;
@@ -66,13 +69,19 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
       } //if
 
       m_IrtGeo = dynamic_cast<CherenkovDetectorCollection*>(fcfg->Get("CherenkovDetectorCollection"));
-      if (!m_IrtGeo) {
+      if (!m_IrtGeo || dname.empty()) {
 	error() << "Failed to import IRT geometry from the config .root file." << endmsg;
 	return StatusCode::FAILURE;
       } //if
 
-      m_IrtDet = m_IrtGeo->GetDetector(0);
+      // Detector pointer;
+      m_IrtDet = m_IrtGeo->GetDetector(dname.c_str());
+      if (!m_IrtDet) {
+	error() << "Failed to import IRT geometry from the config .root file." << endmsg;
+	return StatusCode::FAILURE;
+      } //if
     } else {
+#if _LATER_
       // Otherwise create IRT detector collection geometry;
       m_IrtGeo = new CherenkovDetectorCollection();
       m_IrtGeo->AddNewDetector();
@@ -143,7 +152,19 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
 	}
 	
       } // end loop over eRICH detector elements
+#endif
     } //if
+
+      // Input hit collection;
+    m_inputHitCollection =
+      std::make_unique<DataHandle<dd4pod::PhotoMultiplierHitCollection>>((dname + "Hits").c_str(), 
+									 Gaudi::DataHandle::Reader, this);
+    //m_outputCherenkovPID =
+    //DataHandle<eic::CherenkovParticleIDCollection>((dname + "PID").c_str(), 
+    //					       Gaudi::DataHandle::Writer, this);
+    //m_outputCherenkovPID =
+    //std::make_unique<DataHandle<eic::CherenkovParticleIDCollection>>((dname + "PID").c_str(), 
+    //Gaudi::DataHandle::Writer, this);
   }
 
 #if _TODAY_  
@@ -179,7 +200,7 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
 StatusCode Jug::PID::IRTAlgorithm::execute( void )
 {
   // Input collection(s);
-  const auto &hits         = *m_inputHitCollection.get();
+  const auto &hits         = *m_inputHitCollection->get();
   const auto &mctracks     = *m_inputMCParticles.get();
 #ifdef _USE_RECONSTRUCTED_TRACKS_
   const auto &rctracks     = *m_inputRecoParticles.get();
@@ -189,7 +210,9 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 #endif
 
   // Output collection(s);
-  auto &cpid          = *m_outputCherenkovPID.createAndPut();
+  //auto &cpid               = *m_outputCherenkovPID->createAndPut();
+  auto &cpid               = *m_outputCherenkovPID.createAndPut();
+  //eic::CherenkovParticleIDCollection &cpid               = *m_outputCherenkovPID.createAndPut();
 
   // First populate the trajectory-to-reconstructed (or -to-simulated) mapping table;
 #ifdef _USE_TRAJECTORIES_
@@ -200,6 +223,11 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
     
   // An interface variable; FIXME: check memory cleanup;
   auto event = new CherenkovEvent();
+
+  // FIXME: hardcoded;
+  auto aerogel = m_IrtDet->GetRadiator("Aerogel");
+  aerogel->m_AverageRefractiveIndex = aerogel->n();
+  aerogel->SetUniformSmearing(0.003);
 
   // Loop through either MC or reconstructed tracks;
 #ifdef _USE_RECONSTRUCTED_TRACKS_
@@ -238,19 +266,55 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
     auto particle = new ChargedParticle(mctrack.pdgID());
     event->AddChargedParticle(particle);
 
-    // FIXME: hardcoded;
-    auto aerogel = m_IrtDet->Radiators()[1];
-    aerogel->m_AverageRefractiveIndex = aerogel->n();
+    std::vector<OpticalPhoton*> photons; 
+    for(const auto &hit: hits) {
+      // FIXME: yes, use MC truth here; not really needed I guess; 
+      if (hit.g4ID() != mctrack.ID()) continue;
+      
+      // Simulate QE & geometric sensor efficiency; FIXME: hit.energy() is numerically 
+      // in GeV units, but Gaudi::Units::GeV = 1000; prefer to convert photon energies 
+      // to [eV] in all places by hand;
+      if (!QE_pass(1E9*hit.energy(), m_rngUni()*m_GeometricEfficiency.value())) 
+	continue;
+      
+      //printf("next photon() ... %5d %5d\n", hit.g4ID(), mctrack.ID());
+
+      // Photon accepted; add it to the internal event structure;
+      auto photon = new OpticalPhoton();
+      
+      {
+	const auto &x = hit.position();
+	photon->SetDetectionPosition(TVector3(x.x, x.y, x.z));
+      }
+      
+      //
+      // FIXME: detector ID check needed?;
+      // 
+      
+      //<id>system:8,module:12,x:20:16,y:16</id>
+      //printf("%4ld %4ld %4ld %4ld\n", 
+      //     ( hit.cellID        & 0x00FF), 
+      //     ((hit.cellID >>  8) & 0x0FFF),
+      //     ((hit.cellID >> 12) & 0xFFFF),
+      //     ((hit.cellID >> 28) & 0xFFFF));
+      unsigned module = (hit.cellID() >>  8) & 0x0FFF;
+      photon->SetPhotonDetector(m_IrtDet->m_PhotonDetectors[0]);
+      photon->SetDetected(true);
+      photon->SetVolumeCopy(module);
+      
+      photons.push_back(photon);
+    } //for hit
 
     {
-      auto history = new RadiatorHistory();
       // FIXME: yes, for now assume all the photons were produced in aerogel; 
-      particle->StartRadiatorHistory(std::make_pair(aerogel, history));
+      particle->StartRadiatorHistory(std::make_pair(aerogel, new RadiatorHistory()));
 
       {
 	// FIXME: hardcoded; give the algorithm aerogel surface boundaries as encoded in ERich_geo.cpp;  
-	auto s1 = m_IrtDet->_m_OpticalBoundaries[0][1], s2 = m_IrtDet->_m_OpticalBoundaries[0][2];
+	auto s1 = aerogel->GetFrontSide(0), s2 = aerogel->GetRearSide(0);
 	//printf("%ld\n", m_IrtDet->m_OpticalBoundaries.size());
+
+	TVector3 from, to, p0;
 
 #ifdef _USE_TRAJECTORIES_
 	// If trajectory parameterizations are actually available, use them;
@@ -264,28 +328,22 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 
 	// FIXME: merge this if-elseif somehow;
 	if (trajectory && trajectory->points().size()) {
-	  // Assume 's1' (front surface) is good enough;
-	  auto surface = s1->GetSurface();
 	  const eic::TrajectoryPoint *best = 0;
 
 	  // In case of aerogel, just find the closest point; gas case will be more complicated,
 	  // but in general pretty much straightforward too;
 	  for(const auto &point: trajectory->points()) 
 	    // FIXME: optimize for efficiency later; now calculate every time new;
-	    if (!best || IRTAlgorithmServices::GetDistance(surface, &point) < 
-		IRTAlgorithmServices::GetDistance(surface, best))
+	    // Assume 's1' (front surface) is good enough;
+	    if (!best || IRTAlgorithmServices::GetDistance(s1, &point) < 
+		IRTAlgorithmServices::GetDistance(s1, best))
 	      best = &point;
 
 	  // FIXME: well, may want to check how far away the best point actually is;
-	  {
-	    TVector3 from, to;
-	    IRTAlgorithmServices::GetCrossing(s1->GetSurface(), best, &from);
-	    IRTAlgorithmServices::GetCrossing(s2->GetSurface(), best, &to);
+	  IRTAlgorithmServices::GetCrossing(s1, best, &from);
+	  IRTAlgorithmServices::GetCrossing(s2, best, &to);
 	    
-	    auto p0 = IRTAlgorithmServices::GetMomentum(best);
-	    history->AddStep(new ChargedParticleStep(from, p0));
-	    history->AddStep(new ChargedParticleStep(  to, p0));
-	  }
+	  p0 = IRTAlgorithmServices::GetMomentum(best);
 	} else {
 #endif
 	  // FIXME: need it not at vertex, but in the radiator; as coded here, this can 
@@ -293,55 +351,20 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	  // if nothing else is available;
 	  const auto &vtx = mctrack.vs(), &p = mctrack.ps();
   
-	  auto x0 = TVector3(vtx.x, vtx.y, vtx.z), p0 = TVector3(p.x, p.y, p.z), n0 = p0.Unit();
-		
-	  TVector3 from, to;
-	  s1->GetSurface()->GetCrossing(x0, n0, &from);
-	  s2->GetSurface()->GetCrossing(x0, n0, &to);
+	  p0 = TVector3(p.x, p.y, p.z);
+	  auto x0 = TVector3(vtx.x, vtx.y, vtx.z), n0 = p0.Unit();
+
+	  s1->GetCrossing(x0, n0, &from);
+	  s2->GetCrossing(x0, n0, &to);
 	  
-	  history->AddStep(new ChargedParticleStep(from, p0));
-	  history->AddStep(new ChargedParticleStep(  to, p0));
 #ifdef _USE_TRAJECTORIES_
 	} //if
 #endif
+
+	TVector3 nn = (to - from).Unit(); from += (0.010)*nn; to -= (0.010)*nn;
+	aerogel->AddLocation(from, p0);
+	aerogel->AddLocation(  to, p0);
       }
-
-      for(const auto &hit: hits) {
-	// FIXME: yes, use MC truth here; not really needed I guess; 
-	if (hit.g4ID() != mctrack.ID()) continue;
-
-	// Simulate QE & geometric sensor efficiency; FIXME: hit.energy() is numerically 
-	// in GeV units, but Gaudi::Units::GeV = 1000; prefer to convert photon energies 
-	// to [eV] in all places by hand;
-	if (!QE_pass(1E9*hit.energy(), m_rngUni()*m_GeometricEfficiency.value())) 
-	  continue;
-	
-	// Photon accepted; add it to the internal event structure;
-	auto photon = new OpticalPhoton();
-	  
-	{
-	  const auto &x = hit.position();
-	  photon->SetDetectionPosition(TVector3(x.x, x.y, x.z));
-	}
-
-	//
-	// FIXME: detector ID check needed?;
-	// 
-
-	//<id>system:8,module:12,x:20:16,y:16</id>
-	//printf("%4ld %4ld %4ld %4ld\n", 
-	//     ( hit.cellID        & 0x00FF), 
-	//     ((hit.cellID >>  8) & 0x0FFF),
-	//     ((hit.cellID >> 12) & 0xFFFF),
-	//     ((hit.cellID >> 28) & 0xFFFF));
-	unsigned module = (hit.cellID() >>  8) & 0x0FFF;
-	if (module < m_IrtDet->m_PhotonDetectors.size()) {
-	  photon->SetPhotonDetector(m_IrtDet->m_PhotonDetectors[module]);
-	  photon->SetDetected(true);
-	  
-	  history->AddOpticalPhoton(photon);
-	} //if
-      } //for hit
 
       // Now that all internal mctrack-level structures are populated, run IRT code;
       {
@@ -356,7 +379,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	} //for ip
 
 	// Eventually call the IRT code;
-	particle->PIDReconstruction(pid);
+	particle->PIDReconstruction(pid, &photons);
 
 	// Now the interesting part comes: how to populate the output collection;
 	{
@@ -370,8 +393,8 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	    if (m_pidSvc->particle(mctrack.pdgID()).charge < 0.0) pdg_table[ip] *= -1;
 
 	    hypothesis.pdg    = pdg_table[ip];
-	    hypothesis.npe    = hypo->GetNpe();
-	    hypothesis.weight = hypo->GetWeight();
+	    hypothesis.npe    = hypo->GetNpe(aerogel);
+	    hypothesis.weight = hypo->GetWeight(aerogel);
 
 	    cbuffer.addoptions(hypothesis);
 	  } //for ip
