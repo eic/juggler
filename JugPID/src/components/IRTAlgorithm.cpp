@@ -17,7 +17,8 @@ using namespace Gaudi::Units;
 // -------------------------------------------------------------------------------------
 
 Jug::PID::IRTAlgorithm::IRTAlgorithm(const std::string& name, ISvcLocator* svcLoc) 
-  : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()), m_IrtGeo(0), m_IrtDet(0) 
+  : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()), m_IrtGeo(0), m_IrtDet(0), 
+    m_ReadoutCellMask(0x0)
 {
   declareProperty("inputMCParticles",                 m_inputMCParticles,              "");
 #ifdef _USE_RECONSTRUCTED_TRACKS_
@@ -87,6 +88,8 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
 	  return StatusCode::FAILURE;
 	} //if
       } //if
+
+      m_ReadoutCellMask = m_IrtDet->GetReadoutCellMask();
     } else {
       if (dname->empty()) {
 	error() << "No RICH detector name provided." << endmsg;
@@ -350,10 +353,10 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       //     ((hit.cellID >>  8) & 0x0FFF),
       //     ((hit.cellID >> 12) & 0xFFFF),
       //     ((hit.cellID >> 28) & 0xFFFF));
-      unsigned module = (hit.cellID() >>  8) & 0x0FFF;
+      //unsigned module = (hit.cellID() >>  8) & 0x0FFF;
       photon->SetPhotonDetector(m_IrtDet->m_PhotonDetectors[0]);
       photon->SetDetected(true);
-      photon->SetVolumeCopy(module);
+      photon->SetVolumeCopy(hit.cellID() & m_ReadoutCellMask);//module);
       
       photons.push_back(photon);
     } //for hit
