@@ -94,6 +94,9 @@ namespace Jug::PID {
     CherenkovDetectorCollection *m_IrtGeo;
     CherenkovDetector           *m_IrtDet;
 
+    // This is needed for dd4hep cell index decoding;
+    uint64_t m_ReadoutCellMask;
+
     std::vector<CherenkovRadiator*> m_SelectedRadiators;
 
     Rndm::Numbers m_rngUni;
