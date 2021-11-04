@@ -139,8 +139,8 @@ private:
       }
       else if(part.pdgID() == 22){  //EMCAL expected to have slightly better performance
         conTerm = 0.03; //default 3%
-        stoTerm = 0.25;  //default 25%
-        angTerm = 0.003; //3mrad
+        stoTerm = 0.10;  //default 10% for WSciFi
+        angTerm = 0.001; //1mrad is the detault for the block size
       }
 
       const double dE   = sqrt((conTerm * E) * (conTerm * E) + stoTerm * stoTerm * E) * m_gaussDist(); //50%/SqrtE + 5%
@@ -264,12 +264,12 @@ private:
         continue;
       }
       // angle cut
-      const double phi          = (mom_ion.phi() < M_PI) ? mom_ion.phi() : mom_ion.phi() - 2 * M_PI;
-      const bool in_small_angle = (mom_ion.theta() > m_thetaMinFullOMD && mom_ion.theta() < m_thetaMaxFullOMD);
-      const bool in_large_angle = (mom_ion.theta() > m_thetaMinPartialOMD && mom_ion.theta() < m_thetaMaxPartialOMD);
-      if (!in_small_angle || (std::abs(phi) > 1 && !in_large_angle)) {
-        continue;
-      }
+      //const double phi          = (mom_ion.phi() < M_PI) ? mom_ion.phi() : mom_ion.phi() - 2 * M_PI;
+      //const bool in_small_angle = (mom_ion.theta() > m_thetaMinFullOMD && mom_ion.theta() < m_thetaMaxFullOMD);
+      //const bool in_large_angle = (mom_ion.theta() > m_thetaMinPartialOMD && mom_ion.theta() < m_thetaMaxPartialOMD);
+      //if (!in_small_angle || (std::abs(phi) > 1 && !in_large_angle)) {
+      //  continue;
+      //}
       rc.push_back(smearMomentum(part));
       if (msgLevel(MSG::DEBUG)) {
         auto& rec_part = rc.back();
@@ -288,7 +288,7 @@ private:
   RecData smearMomentum(const dd4pod::ConstGeant4Particle& part) {
     const auto mom_ion = rotateLabToIonDirection(part.ps());
     const double p     = mom_ion.mag();
-    const double dp    = (0.05 * p) * m_gaussDist();
+    const double dp    = (0.025 * p) * m_gaussDist();
     const double ps    = p + dp;
 
     const double pt  = std::hypot(mom_ion.x, mom_ion.y);
