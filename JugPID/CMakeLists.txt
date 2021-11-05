@@ -2,8 +2,6 @@
 # Package: JugPID
 ################################################################################
 
-file(GLOB JugPIDPlugins_sources src/components/*.cpp)
-
 gaudi_add_module(JugPIDPlugins
   SOURCES
   src/components/FuzzyKClusters.cpp 
@@ -16,7 +14,6 @@ gaudi_add_module(JugPIDPlugins
   ROOT::Core ROOT::RIO ROOT::Tree
   NPDet::DD4podIO
   EICD::eicd
-  DD4hep::DDRec
   IRT
 )
 

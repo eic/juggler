@@ -69,13 +69,6 @@ juggler:local:
   stage: build
   script:
     - |
-      # TODO: remove when no longer needed ##############
-      git clone https://eicweb.phy.anl.gov/EIC/irt
-      cd irt
-      cmake -B build -S . -DCMAKE_INSTALL_PREFIX=install && cmake --build build -j20 -- install
-      cd ..
-      export IRT_ROOT=$PWD/irt/install
-      ###################################################
       cmake -Bbuild -S.
       cmake --build build -j20
 
