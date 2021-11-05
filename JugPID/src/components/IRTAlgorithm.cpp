@@ -98,7 +98,7 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
 
     } else { // USE GEOMETRY SERVICE to help create IRT detector collection geometry
 
-      bool debug_geosvc = 1; // print out geometry attributes, etc.
+      bool debug_geosvc = 0; // print out geometry attributes, etc.
 
       // set IRT geometry
       m_IrtGeo = new CherenkovDetectorCollection();
