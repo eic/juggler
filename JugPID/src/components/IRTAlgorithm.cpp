@@ -446,10 +446,12 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       particle->PIDReconstruction(pid, &photons);
       
       // Now the interesting part comes: how to populate the output collection;
-      auto aerogel = m_IrtDet->GetRadiator("Aerogel");
-      for(auto radiator: m_SelectedRadiators) {
+      //auto aerogel = m_IrtDet->GetRadiator("Aerogel");
+      for(unsigned ir=0; ir< m_SelectedRadiators.size(); ir++) {
+	const auto radiator = m_SelectedRadiators[ir];
+	//for(auto radiator: m_SelectedRadiators) {
 	// FIXME: extend the eicd table layout; FIXME: this loop is anyway inefficient;
-	if (radiator != aerogel && m_SelectedRadiators.size() != 1) continue;
+	//if (radiator != aerogel && m_SelectedRadiators.size() != 1) continue;
 	
 	auto cbuffer = cpid.create();
 	
@@ -460,9 +462,11 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	  // Flip sign if needed; FIXME: use reconstructed one?;
 	  if (m_pidSvc->particle(mctrack.pdgID()).charge < 0.0) pdg_table[ip] *= -1;
 	  
-	  hypothesis.pdg    = pdg_table[ip];
-	  hypothesis.npe    = hypo->GetNpe   (radiator);//aerogel);
-	  hypothesis.weight = hypo->GetWeight(radiator);//aerogel);
+	  // Storage model is not exactly efficient, but it is simple for users;
+	  hypothesis.radiator = ir;
+	  hypothesis.pdg      = pdg_table[ip];
+	  hypothesis.npe      = hypo->GetNpe   (radiator);
+	  hypothesis.weight   = hypo->GetWeight(radiator);
 	  
 	  cbuffer.addoptions(hypothesis);
 	} //for ip
