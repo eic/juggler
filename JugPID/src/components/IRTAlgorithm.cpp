@@ -40,143 +40,223 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
   m_geoSvc = service("GeoSvc");
   if (!m_geoSvc) {
     error() << "Unable to locate Geometry Service. "
-	    << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
+            << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
     return StatusCode::FAILURE;
   }
   
   m_pidSvc = service("ParticleSvc");
   if (!m_pidSvc) {
     error() << "Unable to locate Particle Service. "
-	    << "Make sure you have ParticleSvc in the configuration."
-	    << endmsg;
+            << "Make sure you have ParticleSvc in the configuration."
+            << endmsg;
     return StatusCode::FAILURE;
   } //if
 
   {
-    auto const &config = m_ConfigFile.value();
-    std::string *dname = &m_Detector.value();
+    std::string config = m_ConfigFile.value();
+    std::string dname = m_Detector.value();
 
     // Well, a back door: if a config file name was given, import from file;
     if (config.size()) {
       auto fcfg  = new TFile(config.c_str());
       if (!fcfg) {
-	error() << "Failed to open IRT config .root file." << endmsg;
-	return StatusCode::FAILURE;
+        error() << "Failed to open IRT config .root file." << endmsg;
+        return StatusCode::FAILURE;
       } //if
 
       m_IrtGeo = dynamic_cast<CherenkovDetectorCollection*>(fcfg->Get("CherenkovDetectorCollection"));
       if (!m_IrtGeo) {
-	error() << "Failed to import IRT geometry from the config .root file." << endmsg;
-	return StatusCode::FAILURE;
+        error() << "Failed to import IRT geometry from the config .root file." << endmsg;
+        return StatusCode::FAILURE;
       } //if
 
       // May want to fish the detector name out of the geometry file, if it is unique;
-      if (dname->empty()) {
-	auto &detectors = m_IrtGeo->GetDetectors();
-	if (detectors.size() != 1) {
-	  error() << "More than one detector in the provided IRT geometry config .root file." << endmsg;
-	  return StatusCode::FAILURE;
-	} //if
+      if (dname.empty()) {
+        auto &detectors = m_IrtGeo->GetDetectors();
+        if (detectors.size() != 1) {
+          error() << "More than one detector in the provided IRT geometry config .root file." << endmsg;
+          return StatusCode::FAILURE;
+        } //if
 
-	dname = new std::string((*detectors.begin()).first.Data());
-	m_IrtDet = (*detectors.begin()).second;
+        dname = (*detectors.begin()).first.Data();
+        m_IrtDet = (*detectors.begin()).second;
       } else {
-      	// Detector pointer;
-	m_IrtDet = m_IrtGeo->GetDetector(dname->c_str());
-	if (!m_IrtDet) {
-	  error() << "Failed to import IRT geometry from the config .root file." << endmsg;
-	  return StatusCode::FAILURE;
-	} //if
+        // Detector pointer;
+        m_IrtDet = m_IrtGeo->GetDetector(dname.c_str());
+        if (!m_IrtDet) {
+          error() << "Failed to import IRT geometry from the config .root file." << endmsg;
+          return StatusCode::FAILURE;
+        } //if
       } //if
 
       m_ReadoutCellMask = m_IrtDet->GetReadoutCellMask();
-    } else {
-      if (dname->empty()) {
-	error() << "No RICH detector name provided." << endmsg;
-	return StatusCode::FAILURE;
+
+      if (dname.empty()) {
+        error() << "No RICH detector name provided." << endmsg;
+        return StatusCode::FAILURE;
       } //if
 
-#if _LATER_
-      // Otherwise create IRT detector collection geometry;
-      m_IrtGeo = new CherenkovDetectorCollection();
-      m_IrtGeo->AddNewDetector();
+    } else { // USE GEOMETRY SERVICE to help create IRT detector collection geometry
 
-      m_IrtDet = m_IrtGeo->GetDetector(0);
-      // TODO: copy over Alexander's FIXME comments
+      bool debug_geosvc = 1; // print out geometry attributes, etc.
+
+      // set IRT geometry
+      m_IrtGeo = new CherenkovDetectorCollection();
+      m_IrtGeo->AddNewDetector(dname.c_str());
+      m_IrtDet = m_IrtGeo->GetDetector(dname.c_str());
       
-      // get detector elements
+      // get RICH detector element and position
       auto dd4Det = m_geoSvc->detector();
-      auto erichDet = dd4Det->detector("ERICH");
-      //auto drichDet = dd4Det->detector("DRICH");
-      
-      // get detector positions
-      auto erichPos = erichDet.placement().position();
-      //auto drichPos = drichDet.placement().position();
+      auto richDet = dd4Det->detector(dname.c_str());
+      auto richPos = richDet.placement().position();
+
+      // RICH-specific settings
+      int zDirection = (dname.compare("DRICH")==0) ? 1 : -1;
+      if(debug_geosvc)
+        info() << "Initialize IRT algorithm for " << (zDirection<0?"-":"+") << "z endcap RICH (" << dname << ")" << endmsg;
+      int nSectors;
+      TVector3 nx,ny;
+      std::function<std::pair<int,int>(int)> id2secmod; // DetElement id -> pair(sector#,module#)
+      switch(zDirection) {
+        case -1:
+          nSectors = 1;
+          nx = TVector3(1,0,0);
+          ny = TVector3(0,1,0);
+          id2secmod = [](int id){ return std::pair<int,int>(0,id); };
+          break;
+        case  1:
+          nSectors = 6;
+          nx = TVector3(1,0,0);
+          ny = TVector3(0,-1,0);
+          id2secmod = [](int id){ return std::pair<int,int>(id&0x7,id>>3); }; 
+                                  // FIXME: make sure this is in sync with `athena/src/*Rich_geo.cpp`
+          break;
+      };
       
       // set IRT container volume
-      auto boundary = new FlatSurface(TVector3(0,0,0), TVector3(1,0,0), TVector3(0,1,0));
-      m_IrtGeo->SetContainerVolume(m_IrtDet, 0, (G4LogicalVolume*)(0x0), 0, boundary);
+      // FIXME: Z-location does not really matter here, right?; but Z-axis orientation does;
+      // FIXME: have no connection to GEANT G4LogicalVolume pointers; however all is needed 
+      // is to make them unique so that std::map works internally; resort to using integers, 
+      // who cares; material pointer can seemingly be '0', and the effective refractive index 
+      // for all radiators will be assigned at the end by hand; FIXME: should assign it on 
+      // per-photon basis, at birth, like standalone GEANT code does;
+      for(int isec=0; isec<nSectors; isec++) { // FIXME: do we need a sector loop? probably not...
+        m_IrtGeo->SetContainerVolume(
+            m_IrtDet, "GasVolume", isec,
+            (G4LogicalVolume*)(0x0), 0, new FlatSurface(TVector3(0,0,0), nx, ny)
+            );
+      };
+
+      // FIXME: Get access to the readout structure decoder
+      // m_IrtDet->SetReadoutCellMask( ... )
+
+      // set IRT sensors // FIXME: '0' stands for the unknown (and irrelevant) G4LogicalVolume;
+      auto pd = new CherenkovPhotonDetector(0, 0);
+      m_IrtGeo->AddPhotonDetector(m_IrtDet, 0, pd);
       
-      // eRICH loop :::::::::::::::::::::::
-      int sector;
-      for(auto const& [erichDEname, erichDE] : erichDet.children()) {
-	//info() << "FOUND ERICH DE: " << erichDEname << endmsg;
-	auto pos = erichPos + erichDE.placement().position();
-	
-	// aerogel and filter
-	if(erichDEname.find("aerogel")!=std::string::npos || erichDEname.find("filter")!=std::string::npos) {
-	  double thickness = 2 * erichDE.volume().boundingBox().dimensions()[2];
-	  sector = erichDE.id();
-	  info() << "ERICH RADIATOR: " << erichDEname
-		 << "\n\t(x,y,z)-position = " << pos.x() << ", " << pos.y() << ", " << pos.z()
-		 << "\n\tsector = " << sector
-		 << "\n\tthickness = " << thickness
-		 << endmsg;
-	  if(sector==0) {
-	    if(erichDEname.find("aerogel")!=std::string::npos) {
-	      auto aerogelSurf = new FlatSurface(
-						 (1/mm)*TVector3(0,0,pos.z()), // TODO: correct position?
-						 TVector3(1,0,0),
-						 TVector3(0,1,0)
-						 );
-	      m_IrtGeo->AddFlatRadiator(m_IrtDet, 0, (G4LogicalVolume*)(0x1), 0, aerogelSurf, thickness/mm); // TODO: correct units?
-	    } else {
-	      auto filterSurf = new FlatSurface(
-						(1/mm)*TVector3(0,0,pos.z()-0.01), // TODO: correct position?
-						TVector3(1,0,0),
-						TVector3(0,1,0)
-						);
-	      m_IrtGeo->AddFlatRadiator(m_IrtDet, 0, (G4LogicalVolume*)(0x2), 0, filterSurf, thickness/mm);
-	    }
-	  }
-	} // end if aerogel
-	
-	
-	// sensors
-	if(erichDEname.find("sensor")!=std::string::npos) {
-	  info() << "ERICH SENSOR: " << erichDEname
-		 << "\n\t(x,y,z)-position = " << pos.x() << ", " << pos.y() << ", " << pos.z()
-		 << "\n\tid = " << erichDE.id()
-		 << endmsg;
-	  auto sensorSurf = new FlatSurface(
-					    (1/mm)*TVector3(0.0, 0.0, pos.z()), // TODO: why not `pos.x(), pos.y(), pos.z()`?
-					    TVector3(1,0,0),
-					    TVector3(0,1,0)
-					    );
-	  m_IrtDet->AddPhotonDetector(0, new CherenkovPhotonDetector(0,0,sensorSurf));
-	}
-	
-      } // end loop over eRICH detector elements
-#endif
+      // loop over RICH detector elements
+      bool radClosed = false;
+      for(auto const& [richDEname, richDE] : richDet.children()) {
+
+        // get element attributes
+        //if(debug_geosvc) info() << "FOUND RICH element: " << richDEname << endmsg;
+        auto dePos = richPos + richDE.placement().position();
+        int deID = richDE.id();
+
+        // aerogel and filter ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        if(richDEname.find("aerogel")!=std::string::npos || richDEname.find("filter")!=std::string::npos) {
+          double thickness = 2 * richDE.volume().boundingBox().dimensions()[2];
+          int isec = deID;
+          if(debug_geosvc) {
+            info() << "RICH RADIATOR: " << richDEname
+                   << "\n\t(x,y,z)-position = " << dePos.x() << ", " << dePos.y() << ", " << dePos.z()
+                   << "\n\tsector = " << isec
+                   << "\n\tthickness = " << thickness
+                   << endmsg;
+          }
+          if(isec<nSectors) { // FIXME: need sector loop?
+            if(richDEname.find("aerogel")!=std::string::npos) {
+              auto aerogelSurf = new FlatSurface( (1/mm)*TVector3(0,0,dePos.z()), nx, ny);
+              m_IrtGeo->AddFlatRadiator(m_IrtDet, "Aerogel", isec, (G4LogicalVolume*)(0x1), 0, aerogelSurf, thickness/mm);
+            } else { // elif filter
+              auto filterSurf = new FlatSurface( (1/mm)*TVector3(0,0,dePos.z()), nx, ny); // NOTE: there is an airgap in geometry
+              m_IrtGeo->AddFlatRadiator(m_IrtDet, "Filter", isec, (G4LogicalVolume*)(0x2), 0, filterSurf, thickness/mm);
+            }
+          }
+        }
+
+        // mirrors ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        if(richDEname.find("mirror")!=std::string::npos) {
+          int isec = deID;
+
+          // spherical mirror DetElement solid is a BooleanSolid; to get the sphere attributes
+          // we need to access both the primitive Sphere and its relative positioning
+          dd4hep::Solid sphPrim;
+          auto sphPos = dePos;
+          findPrimitive("TGeoSphere",richDE.solid(),sphPrim,sphPos); // get sphere primitive
+          auto sph = (dd4hep::Sphere) sphPrim;
+
+          // for some reason, the sector z-rotation is not accounted for in `findPrimitive`, so we correct for it here:
+          if(richDE.placement().matrix().IsRotAboutZ()) {
+            Double_t sphPosArrLocal[3], sphPosArrMaster[3];
+            sphPos.GetCoordinates(sphPosArrLocal);
+            richDE.placement().matrix().LocalToMaster(sphPosArrLocal,sphPosArrMaster);
+            sphPos.SetCoordinates(sphPosArrMaster);
+          } else error() << "richDE.placement().matrix() is not a z-rotation; cross check mirror center coords!!!" << endmsg;
+
+          // mirror attributes
+          double mirrorRadius = sph.rMin();
+          if(debug_geosvc) {
+            info() << "RICH MIRROR: " << richDEname
+                   << "\n\t(x,y,z)-position = " << sphPos.x() << ", " << sphPos.y() << ", " << sphPos.z()
+                   << "\n\tsector = " << isec
+                   << "\n\tradius = " << mirrorRadius
+                   << endmsg;
+          }
+          auto mirrorSurf = new SphericalSurface(
+              (1/mm)*TVector3(sphPos.x(),sphPos.y(),sphPos.z()),
+              mirrorRadius/mm
+              );
+          m_IrtDet->AddOpticalBoundary(isec, new OpticalBoundary(m_IrtDet->GetContainerVolume(), mirrorSurf, false));
+        }
+
+        // sensors ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        if(richDEname.find("sensor")!=std::string::npos) {
+          int ielem = deID;
+          if(debug_geosvc) {
+            auto secmod = id2secmod(ielem);
+            int isec = secmod.first;
+            int imod = secmod.second;
+            info() << "RICH SENSOR: " << richDEname
+                   << "\n\t(x,y,z)-position = " << dePos.x() << ", " << dePos.y() << ", " << dePos.z()
+                   << "\n\tid   = " << ielem
+                   << "\n\tisec = " << isec
+                   << "\n\timod = " << imod
+                   << endmsg;
+          }
+
+          // FIXME: why not `dePos.x(), dePos.y(), dePos.z()`? why the orientation `nx.cross(ny)`, rather than along sphere radius?
+          auto sensorSurf = new FlatSurface( (1/mm)*TVector3(0.0, 0.0, dePos.z()), nx, ny);
+          m_IrtDet->CreatePhotonDetectorInstance(0, pd, ielem, sensorSurf);
+
+          // close IRT gas radiator by hand (once) // FIXME: why don't we do this after this DetElement loop?
+          if(!radClosed && zDirection==-1) { // FIXME: needs to be done for dRICH too
+            m_IrtDet->GetRadiator("GasVolume")->m_Borders[0].second = dynamic_cast<ParametricSurface*>(sensorSurf);
+            radClosed = true;
+          }
+        }
+
+      } // end loop over RICH detector elements
+
     } //if
 
       // Input hit collection;
     m_inputHitCollection =
-      std::make_unique<DataHandle<dd4pod::PhotoMultiplierHitCollection>>((*dname + "Hits").c_str(), 
+      std::make_unique<DataHandle<dd4pod::PhotoMultiplierHitCollection>>((dname + "Hits").c_str(), 
 									 Gaudi::DataHandle::Reader, this);
     // Output PID info collection;
     m_outputCherenkovPID =
-      std::make_unique<DataHandle<eic::CherenkovParticleIDCollection>>((*dname + "PID").c_str(), 
+      std::make_unique<DataHandle<eic::CherenkovParticleIDCollection>>((dname + "PID").c_str(), 
 								       Gaudi::DataHandle::Writer, this);
 
     // FIXME: how about Gaudi::Property<std::vector<std::tuple>>?;
@@ -233,14 +313,14 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
 #if _TODAY_  
   // set radiator refractive indices
   info() << "C4F10 RINDEX: " << endmsg;
-  auto gasRmatrix = dd4Det->material("C4F10_ERICH").property("RINDEX"); // TODO: get material from gas volume instead
+  auto gasRmatrix = dd4Det->material("C4F10_ERICH").property("RINDEX"); // FIXME: get material from gas volume instead
   for(size_t r=0; r<gasRmatrix->GetRows(); r++) {
     info() << "   " << gasRmatrix->Get(r,0) << "   " << gasRmatrix->Get(r,1) << endmsg;
   };
 #endif
-  // TODO: irtDet->Radiators()[0]->SetReferenceRefractiveIndex( N ) // aerogel
-  // TODO: irtDet->Radiators()[1]->SetReferenceRefractiveIndex( N ) // filter
-  // TODO: irtDet->Radiators()[2]->SetReferenceRefractiveIndex( N ) // gas
+  // FIXME: irtDet->Radiators()[0]->SetReferenceRefractiveIndex( N ) // aerogel
+  // FIXME: irtDet->Radiators()[1]->SetReferenceRefractiveIndex( N ) // filter
+  // FIXME: irtDet->Radiators()[2]->SetReferenceRefractiveIndex( N ) // gas
 
   // Need a random number generator for the QE stuff;
   {
@@ -496,3 +576,27 @@ StatusCode Jug::PID::IRTAlgorithm::finalize( void )
 } // Jug::PID::IRTAlgorithm::finalize()
 
 // -------------------------------------------------------------------------------------
+
+
+// Search a boolean solid's composition tree for primitive of type `typeName` (e.g., `TGeoSphere`)
+// - `prim` will be set to the primitive; can be empty initially
+// - `pos` will be set to the primitive's position (careful, it only considers translation of the operands);
+//   should be initially set to the position of `sol`
+// - `matx` stores operand transformations; you do not need to set it initially
+void Jug::PID::IRTAlgorithm::findPrimitive(
+    const std::string typeName, const dd4hep::Solid sol,
+    dd4hep::Solid &prim, dd4hep::Position &pos, const TGeoMatrix *matx
+) const {
+  if(sol->IsComposite()) {
+    auto node = (dd4hep::BooleanSolid) sol;
+    findPrimitive(typeName, node.leftShape(),  prim, pos, node.leftMatrix()  );
+    findPrimitive(typeName, node.rightShape(), prim, pos, node.rightMatrix() );
+  } else if(typeName.compare(sol.type())==0) {
+    prim = sol;
+    //matx->Print();
+    dd4hep::Position translation;
+    translation.SetCoordinates(matx->GetTranslation());
+    pos += translation;
+  }
+}
+
