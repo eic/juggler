@@ -5,6 +5,7 @@
 gaudi_add_module(JugPIDPlugins
   SOURCES
   src/components/FuzzyKClusters.cpp 
+  src/components/TOFPID.cpp 
   src/components/PhotoRingClusters.cpp
   LINK
   Gaudi::GaudiAlgLib Gaudi::GaudiKernel
