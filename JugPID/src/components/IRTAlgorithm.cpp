@@ -128,7 +128,7 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
           nSectors = 6;
           nx = TVector3(1,0,0);
           ny = TVector3(0,-1,0);
-          id2secmod = [](int id){ return std::pair<int,int>(id&0x7,id>>3); }; 
+          id2secmod = [](int id){ return std::pair<int,int>(id&0x7,id>>3); };
                                   // FIXME: make sure this is in sync with `athena/src/*Rich_geo.cpp`
           break;
       };
@@ -448,7 +448,8 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 
       {
 	// FIXME: hardcoded; give the algorithm radiator surface boundaries as encoded in ERich_geo.cpp;  
-	auto s1 = radiator->GetFrontSide(0), s2 = radiator->GetRearSide(0);
+	auto s1 = radiator->GetFrontSide(0);
+	auto s2 = radiator->GetRearSide(0);
 
 	TVector3 from, to, p0;
 
@@ -485,10 +486,12 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	  // FIXME: need it not at vertex, but in the radiator; as coded here, this can 
 	  // hardly work once the magnetic field is turned on; but this is a best guess 
 	  // if nothing else is available;
-	  const auto &vtx = mctrack.vs(), &p = mctrack.ps();
+	  const auto &vtx = mctrack.vs();
+	  const auto &p = mctrack.ps();
   
 	  p0 = TVector3(p.x, p.y, p.z);
-	  auto x0 = TVector3(vtx.x, vtx.y, vtx.z), n0 = p0.Unit();
+	  auto x0 = TVector3(vtx.x, vtx.y, vtx.z);
+	  auto n0 = p0.Unit();
 
 	  s1->GetCrossing(x0, n0, &from);
 	  s2->GetCrossing(x0, n0, &to);
@@ -500,11 +503,14 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 
 	{
 	  unsigned zbins = radiator->GetTrajectoryBinCount();
-	  TVector3 nn = (to - from).Unit(); from += (0.010)*nn; to -= (0.010)*nn;
+	  TVector3 nn = (to - from).Unit();
+	  from += (0.010)*nn;
+	  to -= (0.010)*nn;
 
 	  // FIXME: assume a straight line to the moment;
 	  auto span = to - from;
-	  double tlen = span.Mag(), step = tlen / zbins;
+	  double tlen = span.Mag();
+	  double step = tlen / zbins;
 	  for(unsigned iq=0; iq<zbins+1; iq++) 
 	    radiator->AddLocation(from + iq*step*nn, p0);
 	}
