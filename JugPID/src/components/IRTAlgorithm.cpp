@@ -263,23 +263,39 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
     {
       const auto &radiators = m_RadiatorConfig.value();
       
-      char name[128-1], mode[128-1];
-      unsigned zbins;
-      float mrad;
-      // FIXME: yes, a fixed format (and fixed order!) for now;
-      const char *format = "%s zbins=%u smearing=%s %fmrad";
+      // radiator specifications, to be parsed from options file
+      std::string name = "";
+      std::string mode = "";
+      unsigned zbins = 0;
+      float mrad = -1;
       
       for(auto rptr: radiators) {
-	sscanf(rptr.c_str(), format, &name, &zbins, &mode, &mrad);
-	//printf("%s %s %d %7.1f\n", name, mode, zbins, mrad);
+        // parse radiator specification string; FIXME: expected format could be more consistent, e.g. each token is `this=that`
+        //                                      FIXME: check for incorrect formatting
+        /* expected tokens (delimited by space, order does not matter):
+         * - "%s"          parses to  `name`
+         * - "zbins=%u"    parses to  `zbins`
+         * - "smearing=%s" parses to  `mode`
+         * - "%fmrad"      parses to  `mrad`
+         */
+        std::stringstream rptrStream(rptr);
+        std::string rptrTok;
+        std::regex rmEq("^.*=");
+        while(rptrStream >> rptrTok) {
+          if(rptrTok.find("zbins")!=std::string::npos) zbins = std::stoul(std::regex_replace(rptrTok,rmEq,""));
+          else if(rptrTok.find("smearing")!=std::string::npos) mode = std::regex_replace(rptrTok,rmEq,"");
+          else if(rptrTok.find("mrad")!=std::string::npos) mrad = std::stof(std::regex_replace(rptrTok,std::regex("mrad$"),""));
+          else name = rptrTok; // otherwise assume it's the name
+        }
+	//printf("%s %s %d %7.1f\n", name.c_str(), mode.c_str(), zbins, mrad);
 
-	if (!zbins || mrad < 0.0) {
-	  error() << "Provided parameters do not pass a sanity check." << endmsg;
+	if (!zbins || mrad<0.0 || name.compare("")==0 || mode.compare("")==0) {
+	  error() << "Parsed radiator parameters do not pass a sanity check." << endmsg;
 	  return StatusCode::FAILURE;
 	} //if
 
 	// FIXME: sanity check would not hurt;
-	auto radiator = m_IrtDet->GetRadiator(name);
+	auto radiator = m_IrtDet->GetRadiator(name.c_str());
 	if (radiator) {
 	  m_SelectedRadiators.push_back(radiator);
 	  
@@ -288,12 +304,12 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
 	    // Well, want them readable in the config file, but pass in [rad] to the IRT algorithm;
 	    mrad /= 1000.;
 
-	    if (strcmp(mode, "uniform") && strcmp(mode, "gaussian")) {
+	    if (strcmp(mode.c_str(), "uniform") && strcmp(mode.c_str(), "gaussian")) {
 	      error() << "Unknown smearing mode." << endmsg;
 	      return StatusCode::FAILURE;
 	    } //if
 
-	    (!strcmp(mode, "uniform") ? radiator->SetUniformSmearing(mrad) : radiator->SetGaussianSmearing(mrad));
+	    (!strcmp(mode.c_str(), "uniform") ? radiator->SetUniformSmearing(mrad) : radiator->SetGaussianSmearing(mrad));
 	  } //if
 
 	  radiator->SetTrajectoryBinCount(zbins);
