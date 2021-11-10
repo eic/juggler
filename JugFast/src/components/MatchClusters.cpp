@@ -203,7 +203,7 @@ private:
                                                  const eic::ConstCluster* optional_hclus, const double mass,
                                                  const int32_t pid, const eic::Index& newID) const {
     const float energy   = (optional_hclus) ? eclus.energy() + optional_hclus->energy() : eclus.energy();
-    const float momentum = sqrt(energy * energy - mass * mass);
+    const float momentum = energy < mass ? 0 : std::hypot(energy, mass);
     const eic::VectorPolar p{momentum, eclus.position().theta(), eclus.position().phi()};
     // setup our particle
     eic::ReconstructedParticle part;
