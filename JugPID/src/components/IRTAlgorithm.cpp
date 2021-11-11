@@ -24,15 +24,76 @@ Jug::PID::IRTAlgorithm::IRTAlgorithm(const std::string& name, ISvcLocator* svcLo
 #ifdef _USE_RECONSTRUCTED_TRACKS_
   declareProperty("inputRecoParticles",               m_inputRecoParticles,            "");
 #endif
-#ifdef _USE_TRAJECTORIES_
+#ifdef _USE_STORED_TRAJECTORIES_
   declareProperty("inputTrajectories",                m_inputTrajectories,             "");
 #endif
 } // Jug::PID::IRTAlgorithm::IRTAlgorithm()
 
 // -------------------------------------------------------------------------------------
 
+//
+// FIXME: several things need to be cached here once they are made working;
+//
+
+#ifdef _USE_ON_THE_FLY_TRAJECTORIES_
+BoundTrackParamPtrResult Jug::PID::IRTAlgorithm::propagateTrack(const Acts::BoundTrackParameters& params, 
+								const SurfacePtr& targetSurf) 
+{ 
+#if _OFF_    
+  std::cout << "Propagating final track fit with momentum: " 
+            << params.momentum() << " and position " 
+            << params.position(m_geoContext)
+            << std::endl
+            << "track fit phi/eta "
+            << atan2(params.momentum()(1), 
+		     params.momentum()(0)) 
+            << " and " 
+            << atanh(params.momentum()(2) 
+		     / params.momentum().norm())
+            << std::endl;
+#endif
+
+  //+@@@std::shared_ptr<const Acts::TrackingGeometry>
+  //+@@@      trackingGeometry = m_geoSvc->trackingGeometry();
+  std::shared_ptr<const Acts::MagneticFieldProvider>
+    magneticField = m_geoSvc->getFieldProvider();
+  
+  using Stepper            = Acts::EigenStepper<>;
+  using Propagator         = Acts::Propagator<Stepper>;
+  
+  Stepper stepper(magneticField);
+  Propagator propagator(stepper);
+  
+  // Acts::Logging::Level logLevel = Acts::Logging::FATAL;
+  Acts::Logging::Level logLevel = Acts::Logging::DEBUG;
+  
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("ProjectTrack Logger", logLevel));
+  
+  Acts::PropagatorOptions<> options(m_geoContext,
+				    m_fieldContext,
+				    Acts::LoggerWrapper{logger()});
+  
+  auto result = propagator.propagate(params, *targetSurf, 
+				     options);
+  
+  if(result.ok()) return std::move((*result).endParameters);
+  
+  return result.error();
+} // Jug::PID::IRTAlgorithm::propagateTrack()
+#endif
+// -------------------------------------------------------------------------------------
+
 StatusCode Jug::PID::IRTAlgorithm::initialize( void ) 
 {
+  // Either get rid of some of this branching, after the most reasonable way is 
+  // chosen, or just make the #define's configurable;
+#if defined (_USE_STORED_TRAJECTORIES_) && defined(_USE_ON_THE_FLY_TRAJECTORIES_)
+#error _USE_STORED_TRAJECTORIES_ and _USE_ON_THE_FLY_TRAJECTORIES_ are mutually exclusive.
+#endif
+#if defined(_USE_ON_THE_FLY_TRAJECTORIES_) && !defined(_USE_RECONSTRUCTED_TRACKS_)
+#error _USE_ON_THE_FLY_TRAJECTORIES_ requires _USE_RECONSTRUCTED_TRACKS_.
+#endif
+
   if (GaudiAlgorithm::initialize().isFailure()) {
     return StatusCode::FAILURE;
   } //if
@@ -364,18 +425,18 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 #ifdef _USE_RECONSTRUCTED_TRACKS_
   const auto &rctracks     = *m_inputRecoParticles.get();
 #endif
-#ifdef _USE_TRAJECTORIES_
+#ifdef _USE_STORED_TRAJECTORIES_
   const auto &trajectories = *m_inputTrajectories.get();
-#endif
-  // Output collection(s);
-  auto &cpid               = *m_outputCherenkovPID->createAndPut();
-
   // First populate the trajectory-to-reconstructed (or -to-simulated) mapping table;
-#ifdef _USE_TRAJECTORIES_
   std::map<eic::Index, const eic::ConstTrajectory*> rc2trajectory;
   for(const auto &trajectory: trajectories)
     rc2trajectory[trajectory.trackID()] = &trajectory;
 #endif
+#ifdef _USE_ON_THE_FLY_TRAJECTORIES_
+  const TrajectoriesContainer* trajectories = m_inputTrajectories.get();
+#endif
+  // Output collection(s);
+  auto &cpid               = *m_outputCherenkovPID->createAndPut();
     
   // An interface variable; FIXME: check memory cleanup;
   auto event = new CherenkovEvent();
@@ -439,20 +500,9 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	photon->SetDetectionPosition(TVector3(x.x, x.y, x.z));
       }
       
-      //
-      // FIXME: detector ID check needed?;
-      // 
-      
-      //<id>system:8,module:12,x:20:16,y:16</id>
-      //printf("%4ld %4ld %4ld %4ld\n", 
-      //     ( hit.cellID        & 0x00FF), 
-      //     ((hit.cellID >>  8) & 0x0FFF),
-      //     ((hit.cellID >> 12) & 0xFFFF),
-      //     ((hit.cellID >> 28) & 0xFFFF));
-      //unsigned module = (hit.cellID() >>  8) & 0x0FFF;
       photon->SetPhotonDetector(m_IrtDet->m_PhotonDetectors[0]);
       photon->SetDetected(true);
-      photon->SetVolumeCopy(hit.cellID() & m_ReadoutCellMask);//module);
+      photon->SetVolumeCopy(hit.cellID() & m_ReadoutCellMask);
       
       photons.push_back(photon);
     } //for hit
@@ -469,13 +519,15 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 
 	TVector3 from, to, p0;
 
-#ifdef _USE_TRAJECTORIES_
+#if defined (_USE_STORED_TRAJECTORIES_) || defined(_USE_ON_THE_FLY_TRAJECTORIES_)
 	// If trajectory parameterizations are actually available, use them;
 #ifdef _USE_RECONSTRUCTED_TRACKS_
 	auto index = rctrack.ID();
 #else
 	auto index = mctrack.ID();
 #endif
+
+#ifdef _USE_STORED_TRAJECTORIES_
 	auto trajectory = rc2trajectory.find(index) == rc2trajectory.end() ? 0 : 
 	  rc2trajectory[index];
 
@@ -497,6 +549,58 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	  IRTAlgorithmServices::GetCrossing(s2, best, &to);
 	    
 	  p0 = IRTAlgorithmServices::GetMomentum(best);
+#else
+	if (true) {
+	  // THINK: this 1:1 indexing must be correct, or?;
+	  const auto& traj = (*trajectories)[index.value];
+	  const auto& mj        = traj.multiTrajectory();
+	  const auto& trackTips = traj.tips();
+	  if (trackTips.empty()) {
+	    // FIXME: need to eliminate one #ifdef to handle this branch;
+	    printf("trackTips.empty(): should not happen?\n");
+	    exit(0);
+	  } //if
+
+	  auto& trackTip = trackTips.front();
+	  auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
+
+	  if (traj.hasTrackParameters(trackTip)) {
+	    const auto& boundParam = traj.trackParameters(trackTip);
+	    //const auto& parameter  = boundParam.parameters();
+	    //const auto& covariance = *boundParam.covariance();
+	    // FIXME: may want to consider two separate surfaces, since projections 
+	    // are anyway generated on the fly;
+	    double zref = (s1->GetCenter().z() + s2->GetCenter().z())/2;//-1500.0;
+            const auto MinEta = 1.1, MaxEta = 3.3;
+            const auto MinTheta = 2. * atan(exp(-MinEta));
+            const auto MaxTheta = 2. * atan(exp(-MaxEta));
+            const auto MinR = fabs(zref) * tan(MaxTheta);
+            const auto MaxR = fabs(zref) * tan(MinTheta);
+	    
+            auto m_outerDiscBounds = std::make_shared<Acts::RadialBounds>(MinR, MaxR);
+            auto richTrf = 
+	      Acts::Transform3::Identity() * Acts::Translation3(Acts::Vector3(0, 0, zref));
+            auto richSurf =
+	      Acts::Surface::makeShared<Acts::DiscSurface>(richTrf, m_outerDiscBounds);
+
+            auto result = propagateTrack(boundParam, richSurf);
+            if(result.ok()) {
+              auto trackStateParams = std::move(**result);
+              auto projectionPos = trackStateParams.position(m_geoContext);
+              auto projectionMom = trackStateParams.momentum();//m_geoContext);
+	      
+	      TVector3 xx  (projectionPos(0), projectionPos(1), projectionPos(2));
+	      p0 = TVector3(projectionMom(0), projectionMom(1), projectionMom(2));
+	      TVector3 nn = p0.Unit();
+	      s1->GetCrossing(xx, nn, &from);
+	      s2->GetCrossing(xx, nn, &to);
+	    } else {
+	      // FIXME: straighten up the branches here durinbg debugging phase;
+	      printf("result.ok() = 0: take care about this possibility\n");
+	      exit(0);
+	    } //if
+	  } //if
+#endif
 	} else {
 #endif
 	  // FIXME: need it not at vertex, but in the radiator; as coded here, this can 
@@ -512,7 +616,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	  s1->GetCrossing(x0, n0, &from);
 	  s2->GetCrossing(x0, n0, &to);
 	  
-#ifdef _USE_TRAJECTORIES_
+#if defined (_USE_STORED_TRAJECTORIES_) || defined(_USE_ON_THE_FLY_TRAJECTORIES_)
 	} //if
 #endif
 	radiator->ResetLocations();

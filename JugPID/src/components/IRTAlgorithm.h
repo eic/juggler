@@ -1,4 +1,8 @@
 
+#define _USE_RECONSTRUCTED_TRACKS_
+//#define _USE_STORED_TRAJECTORIES_
+#define _USE_ON_THE_FLY_TRAJECTORIES_
+
 #include "GaudiAlg/GaudiAlgorithm.h"
 #include "GaudiKernel/PhysicalConstants.h"
 #include "GaudiKernel/RndmGenerators.h"
@@ -15,8 +19,19 @@
 #include "eicd/ReconstructedParticleCollection.h"
 #include "eicd/CherenkovParticleIDCollection.h"
 
-//#define _USE_RECONSTRUCTED_TRACKS_
-//#define _USE_TRAJECTORIES_
+#ifdef _USE_ON_THE_FLY_TRAJECTORIES_
+#include "JugBase/BField/DD4hepBField.h"
+#include "JugTrack/Trajectories.hpp"
+
+#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
+
+using BoundTrackParamPtr = std::unique_ptr<const Acts::BoundTrackParameters>;
+using BoundTrackParamPtrResult = Acts::Result<BoundTrackParamPtr>;
+using SurfacePtr = std::shared_ptr<const Acts::Surface>;
+#endif
 
 #ifndef _IRT_ALGORITHM_
 #define _IRT_ALGORITHM_
@@ -26,9 +41,6 @@
 class CherenkovRadiator;
 class CherenkovDetector;
 class CherenkovDetectorCollection;
-
-//typedef SimpleProperty   < std::vector< std::pair<std::string, double> > >      QStringArrayProperty;
-//typedef SimplePropertyRef< std::vector< std::pair<std::string, double> > >      QStringArrayPropertyRef;
 
 namespace Jug::PID {
   /** RICH IRT
@@ -64,8 +76,15 @@ namespace Jug::PID {
 	this
 	};
 #endif
-#ifdef _USE_TRAJECTORIES_
+#ifdef _USE_STORED_TRAJECTORIES_
     DataHandle<eic::TrajectoryCollection> m_inputTrajectories {
+      "inputTrajectories", 
+	Gaudi::DataHandle::Reader, 
+	this
+	};
+#endif
+#ifdef _USE_ON_THE_FLY_TRAJECTORIES_
+    DataHandle<TrajectoriesContainer> m_inputTrajectories {
       "inputTrajectories", 
 	Gaudi::DataHandle::Reader, 
 	this
@@ -90,9 +109,10 @@ namespace Jug::PID {
     Gaudi::Property<std::vector<std::string>>               m_RadiatorConfig      {this, "Radiators"};
 
   private:
-    // FIXME: will need several detectors;
-    CherenkovDetectorCollection *m_IrtGeo;
-    CherenkovDetector           *m_IrtDet;
+    // FIXME: 'const' does not seem to work (?), since this structure is populated via the front 
+    // door mechanism, piece by piece, instead of being assigned once;
+    /*const*/ CherenkovDetectorCollection *m_IrtGeo;
+    /*const*/ CherenkovDetector           *m_IrtDet;
 
     // This is needed for dd4hep cell index decoding;
     uint64_t m_ReadoutCellMask;
@@ -100,6 +120,14 @@ namespace Jug::PID {
     std::vector<CherenkovRadiator*> m_SelectedRadiators;
 
     Rndm::Numbers m_rngUni;
+
+#ifdef _USE_ON_THE_FLY_TRAJECTORIES_
+    Acts::GeometryContext m_geoContext;
+    Acts::MagneticFieldContext m_fieldContext;
+
+    BoundTrackParamPtrResult propagateTrack(const Acts::BoundTrackParameters& params, 
+					    const SurfacePtr& targetSurf);
+#endif
 
     void findPrimitive(
         const std::string typeName, const dd4hep::Solid sol,
