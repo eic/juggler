@@ -2,10 +2,18 @@
 # Package: JugPID
 ################################################################################
 
+include_directories( 
+  # For now assume that newly installed eicd::(...) event structures are available 
+  # in the installation area;
+  ${CMAKE_INSTALL_PREFIX}/include 
+
+  ${PROJECT_SOURCE_DIR}/JugTrack
+)
+
 gaudi_add_module(JugPIDPlugins
   SOURCES
-  src/components/FuzzyKClusters.cpp 
   src/components/TOFPID.cpp 
+  src/components/FuzzyKClusters.cpp 
   src/components/PhotoRingClusters.cpp
   LINK
   Gaudi::GaudiAlgLib Gaudi::GaudiKernel

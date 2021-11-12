@@ -7,14 +7,23 @@
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/IParticleSvc.h"
 #include "JugBase/UniqueID.h"
+#include "JugBase/BField/DD4hepBField.h"
+#include "JugTrack/Trajectories.hpp"
 
 #include "dd4pod/Geant4ParticleCollection.h"
 #include "dd4pod/PhotoMultiplierHitCollection.h"
 
 #include "eicd/ReconstructedParticleCollection.h"
-//#include "eicd/CherenkovParticleIDCollection.h"
+#include "eicd/TofParticleIDCollection.h"
 
-//#define _USE_RECONSTRUCTED_TRACKS_
+#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
+
+using BoundTrackParamPtr = std::unique_ptr<const Acts::BoundTrackParameters>;
+using BoundTrackParamPtrResult = Acts::Result<BoundTrackParamPtr>;
+using SurfacePtr = std::shared_ptr<const Acts::Surface>;
 
 #ifndef _TOF_PID_
 #define _TOF_PID_
@@ -46,16 +55,19 @@ namespace Jug::PID {
 	Gaudi::DataHandle::Reader, 
 	this
 	};
-#ifdef _USE_RECONSTRUCTED_TRACKS_
     DataHandle<eic::ReconstructedParticleCollection> m_inputRecoParticles {
       "inputRecoParticles", 
 	Gaudi::DataHandle::Reader, 
 	this
 	};
-#endif
+    DataHandle<TrajectoriesContainer> m_inputTrajectories {
+      "inputTrajectories", 
+	Gaudi::DataHandle::Reader, 
+	this
+	};
 
     // Output collection;
-    //+std::unique_ptr<DataHandle<eic::CherenkovParticleIDCollection>> m_outputCherenkovPID;
+    std::unique_ptr<DataHandle<eic::TofParticleIDCollection>> m_outputTofPID;
 
     /// Pointer to the geometry and PDG service;
     SmartIF<IGeoSvc> m_geoSvc;
@@ -70,6 +82,11 @@ namespace Jug::PID {
   private:
     Rndm::Numbers m_rngGauss, m_rngUni;
 
+    Acts::GeometryContext m_geoContext;
+    Acts::MagneticFieldContext m_fieldContext;
+
+    BoundTrackParamPtrResult propagateTrack(const Acts::BoundTrackParameters& params, 
+					    const SurfacePtr& targetSurf);
   };
 
   DECLARE_COMPONENT(TOFPID)
