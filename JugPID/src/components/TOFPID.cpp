@@ -59,8 +59,7 @@ BoundTrackParamPtrResult Jug::PID::TOFPID::propagateTrack(const Acts::BoundTrack
 				    m_fieldContext,
 				    Acts::LoggerWrapper{logger()});
   
-  auto result = propagator.propagate(params, *targetSurf, 
-				     options);
+  auto result = propagator.propagate(params, *targetSurf, options);
   
   if(result.ok()) return std::move((*result).endParameters);
   
@@ -110,8 +109,8 @@ StatusCode Jug::PID::TOFPID::initialize( void )
 
   // Input hit collection; detector name tagged;
   m_inputHitCollection =
-    std::make_unique<DataHandle<dd4pod::PhotoMultiplierHitCollection>>((dname + "Hits").c_str(), 
-									 Gaudi::DataHandle::Reader, this);
+    std::make_unique<DataHandle<dd4pod::TrackerHitCollection>>((dname + "Hits").c_str(), 
+							       Gaudi::DataHandle::Reader, this);
   // Output PID info collection;
   m_outputTofPID =
     std::make_unique<DataHandle<eic::TofParticleIDCollection>>((dname + "PID").c_str(), 
@@ -134,6 +133,8 @@ StatusCode Jug::PID::TOFPID::execute( void )
     
   // Loop through the reconstructed tracks in this code; obviously only for them
   // we may have ACTS trajectory parameterization; 
+  printf("@@@ tracks: %ld\n", rctracks.size());
+  printf("@@@ hits: %ld\n",   hits.size());
   for(const auto &rctrack: rctracks) {
     unsigned id = rctrack.mcID().value;
     // FIXME: do the sanity checks in a more meaningful way later;
@@ -164,89 +165,95 @@ StatusCode Jug::PID::TOFPID::execute( void )
       // FIXME: consider only primaries for the time being;
     if (mctrack.g4Parent()) continue;
 
+    //printf("@@@ %d\n", rctrack.ID().value);
+
     // Get track parameterization at a given radius; Zhenyu, I'm not sure indexing 
-    // correspondence here is a 1:1; it should work for the single-track events for sure;
-    const auto& traj = (*trajectories)[rctrack.ID().value];//index.value];
+    // correspondence here is a 1:1; perhaps a remapping will be required; start with the 
+    // single-track events;
+    const auto& traj = (*trajectories)[rctrack.ID().value];
     const auto& mj        = traj.multiTrajectory();
     const auto& trackTips = traj.tips();
     if (trackTips.empty()) {
-      printf("trackTips.empty(): should not happen?\n");
+      printf("@@@ trackTips.empty(): should not happen?\n");
       continue;
     } //if
 
+    //printf("@@@ %ld\n", trackTips.size());
     auto& trackTip = trackTips.front();
-    auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
 
     if (traj.hasTrackParameters(trackTip)) {
       const auto& boundParam = traj.trackParameters(trackTip);
       //const auto& parameter  = boundParam.parameters();
-      //const auto& covariance = *boundParam.covariance();
-      // FIXME: may want to consider two separate surfaces, since projections 
-      // are anyway generated on the fly;
-      double zref = -1500.0;//(s1->GetCenter().z() + s2->GetCenter().z())/2;//-1500.0;
-      const auto MinEta = 1.1, MaxEta = 3.3;
-      const auto MinTheta = 2. * atan(exp(-MinEta));
-      const auto MaxTheta = 2. * atan(exp(-MaxEta));
-      const auto MinR = fabs(zref) * tan(MaxTheta);
-      const auto MaxR = fabs(zref) * tan(MinTheta);
+      //debug() << "pos 0 = " << parameter[Acts::eFreePos0] << endmsg;
+      //debug() << "pos 1 = " << parameter[Acts::eFreePos1] << endmsg;
+      //debug() << "pos 2 = " << parameter[Acts::eFreePos2] << endmsg;
 	    
-      auto m_outerDiscBounds = std::make_shared<Acts::RadialBounds>(MinR, MaxR);
-      auto richTrf = 
-	Acts::Transform3::Identity() * Acts::Translation3(Acts::Vector3(0, 0, zref));
-      auto richSurf =
-	Acts::Surface::makeShared<Acts::DiscSurface>(richTrf, m_outerDiscBounds);
+      // make a reference cylinder to mimic BTOF; one can use m_geoSvc to extract this number;
+      const auto btofRadius = 500.0;
+      const auto btofEta = 1.1;
+      const auto btofTheta = 2. * atan(exp(-btofEta));
+      const auto halfZ = btofRadius / tan(btofTheta);  
+      std::shared_ptr<Acts::DiscSurface> btofSurf = 
+	Acts::Surface::makeShared<Acts::DiscSurface>(Acts::Transform3::Identity(), btofRadius, halfZ);
       
-      auto result = propagateTrack(boundParam, richSurf);
+      auto result = propagateTrack(boundParam, btofSurf);
       if(result.ok()) {
 	auto trackStateParams = std::move(**result);
 	auto projectionPos = trackStateParams.position(m_geoContext);
 	auto projectionMom = trackStateParams.momentum();//m_geoContext);
 	
+	// And one also needs to fish out the trajectory path length to this point;
 	TVector3 xx (projectionPos(0), projectionPos(1), projectionPos(2));
 	TVector3 p0 (projectionMom(0), projectionMom(1), projectionMom(2));
 	TVector3 nn = p0.Unit();
-	//s1->GetCrossing(xx, nn, &from);
-	//s2->GetCrossing(xx, nn, &to);
       } else {
-	printf("result.ok() = 0: take care about this possibility\n");
+	printf("@@@ result.ok() = 0: take care about this possibility\n");
 	continue;
       } //if
     } //if
 
+    // Now find a matching (Barrel) TOF hit, perform TOF PID calculations, and fill 
+    // out the output structures;
     for(const auto &hit: hits) {
-      // FIXME: yes, use MC truth here; not really needed I guess; 
+      // FIXME: yes, use MC truth here; FIXME: should create a lookup std::map;
       if (hit.g4ID() != mctrack.ID()) continue;
       
-      // Simulate QE & geometric sensor efficiency; FIXME: hit.energy() is numerically 
-      // in GeV units, but Gaudi::Units::GeV = 1000; prefer to convert photon energies 
-      // to [eV] in all places by hand;
-      //if (!QE_pass(1E9*hit.energy(), m_rngUni()*m_GeometricEfficiency.value())) 
-      //continue;
-      
       {
-	//const auto &x = hit.position();
-	//auto id = hit.cellID();
+	const auto &x = hit.position();
+	auto hid = hit.cellID();
       }
-    } //for hit
 
-    {
-      auto cbuffer = cpid.create();
-#if _TODAY_
-      eic::CherenkovPdgHypothesis hypothesis;
-	  	  
-      hypothesis.npe    = hypo->GetNpe   (radiator);
-      hypothesis.weight = hypo->GetWeight(radiator);
-	  
-      cbuffer.addoptions(hypothesis);
-#endif
+      {
+	// Create an output PID entry;
+	auto cbuffer = cpid.create();
 
-      // FIXME: well, and what does go here instead of 0?;
-      cbuffer.ID({0, algorithmID()});
+	// Some random number; can be a confidence level for the "winning hypothesis", etc;
+	cbuffer.reserved(111.1);
+
+	// Fill out just one single (pion) hypothesis as an example; for more than one 
+	// there should just be a loop with more than one cbuffer.addoptions(hypothesis) call;
+	eic::TofPdgHypothesis hypothesis;
 	
-	// Reference to either MC track or a reconstructed track;
-      cbuffer.recID(rctrack.ID());
-    }  
-  } //for rctrack (mctrack)
+	// Let's say '1' stands for the barrel TOF;
+	hypothesis.detector = 1;
+	// pion;
+	hypothesis.pdg      = 211;
+	// Something like a chi^ CDF, which come after the track-to-hit matching in time
+	// for a given mass hypothesis;
+	hypothesis.chi2cdf  = 0.55;
+	// Some random number; 
+	hypothesis.reserved = 222.2;
+	
+	cbuffer.addoptions(hypothesis);
+	
+	// FIXME: well, and what does go here instead of 0?;
+	cbuffer.ID({0, algorithmID()});
+	
+	// Reference to the reconstructed track;
+	cbuffer.recID(rctrack.ID());
+      }  
+    } //for hit
+  } //for rctrack
 
   return StatusCode::SUCCESS;
 } // Jug::PID::TOFPID::execute()

@@ -11,14 +11,14 @@
 #include "JugTrack/Trajectories.hpp"
 
 #include "dd4pod/Geant4ParticleCollection.h"
-#include "dd4pod/PhotoMultiplierHitCollection.h"
+#include "dd4pod/TrackerHitCollection.h"
 
 #include "eicd/ReconstructedParticleCollection.h"
 #include "eicd/TofParticleIDCollection.h"
 
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Surfaces/RadialBounds.hpp"
+//#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 
 using BoundTrackParamPtr = std::unique_ptr<const Acts::BoundTrackParameters>;
@@ -49,7 +49,7 @@ namespace Jug::PID {
     StatusCode finalize( void ) override;
 
     // Input collections;
-    std::unique_ptr<DataHandle<dd4pod::PhotoMultiplierHitCollection>> m_inputHitCollection;
+    std::unique_ptr<DataHandle<dd4pod::TrackerHitCollection>> m_inputHitCollection;
     DataHandle<dd4pod::Geant4ParticleCollection> m_inputMCParticles {
       "inputMCParticles", 
 	Gaudi::DataHandle::Reader, 
