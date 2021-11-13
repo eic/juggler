@@ -70,6 +70,21 @@ juggler:local:
     - |
       cmake -Bbuild -S.
       cmake --build build -j20
+  artifacts:
+    paths:
+      - build/
+
+juggler:clang-tidy:
+  image: eicweb.phy.anl.gov:4567/eic/juggler/juggler:latest
+  stage: build
+  needs: 
+    - juggler:local
+  script:
+    - |
+      run-clang-tidy -p build -j20 -export-fixes clang_tidy_fixes.yml
+  artifacts:
+    paths:
+      - clang_tidy_fixes.yml
 
 version:
   stage: config 
