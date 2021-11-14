@@ -1,7 +1,7 @@
 
-#define _USE_RECONSTRUCTED_TRACKS_
+//#define _USE_RECONSTRUCTED_TRACKS_
 //#define _USE_STORED_TRAJECTORIES_
-#define _USE_ON_THE_FLY_TRAJECTORIES_
+//#define _USE_ON_THE_FLY_TRAJECTORIES_
 
 #include "GaudiAlg/GaudiAlgorithm.h"
 #include "GaudiKernel/PhysicalConstants.h"
