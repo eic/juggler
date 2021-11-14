@@ -77,7 +77,7 @@ juggler:local:
 
 analysis:clang-tidy:
   image: eicweb.phy.anl.gov:4567/eic/juggler/juggler:latest
-  stage: anlysis
+  stage: analysis
   needs: 
     - juggler:local
   script:
