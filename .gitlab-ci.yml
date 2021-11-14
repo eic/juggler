@@ -41,6 +41,7 @@ stages:
   - config
   - docker    ## build new version of juggler
   - deploy    ## repo-local singularity image for development work
+  - analysis
   - finalize
 
 workflow:
@@ -74,9 +75,9 @@ juggler:local:
     paths:
       - build/
 
-juggler:clang-tidy:
+analysis:clang-tidy:
   image: eicweb.phy.anl.gov:4567/eic/juggler/juggler:latest
-  stage: build
+  stage: anlysis
   needs: 
     - juggler:local
   script:
