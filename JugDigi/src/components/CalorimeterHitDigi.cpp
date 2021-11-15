@@ -165,9 +165,13 @@ namespace Jug::Digi {
       int nhits = 0;
       for (const auto& ahit : *simhits) {
         // Note: juggler internal unit of energy is GeV
-        double    eResRel = std::sqrt(std::pow(m_normDist() * eRes[0] / std::sqrt(ahit.energyDeposit()), 2) +
-                                      std::pow(m_normDist() * eRes[1], 2) +
-                                      std::pow(m_normDist() * eRes[2] / (ahit.energyDeposit()), 2));
+        double eResRel = 0.;
+        if (ahit.energyDeposit() > 1e-6) {
+            eResRel = m_normDist() * eRes[0] / std::sqrt(ahit.energyDeposit()) +
+                      m_normDist() * eRes[1] +
+                      m_normDist() * eRes[2] / ahit.energyDeposit();
+        }
+
         double    ped     = m_pedMeanADC + m_normDist() * m_pedSigmaADC;
         long long adc     = std::llround(ped + ahit.energyDeposit() * (1. + eResRel) / dyRangeADC * m_capADC);
         long long tdc     = std::llround((ahit.truth().time + m_normDist() * tRes) * stepTDC);
@@ -212,9 +216,14 @@ namespace Jug::Digi {
             time     = hits[i].truth().time;
           }
         }
-        double    eResRel = std::sqrt(std::pow(m_normDist() * eRes[0] / std::sqrt(edep), 2) +
-                                      std::pow(m_normDist() * eRes[1], 2) +
-                                      std::pow(m_normDist() * eRes[2] / edep, 2));
+
+        double eResRel = 0.;
+        // safety check
+        if (edep > 1e-6) {
+            eResRel = m_normDist() * eRes[0] / std::sqrt(edep) +
+                      m_normDist() * eRes[1] +
+                      m_normDist() * eRes[2] / edep;
+        }
         double    ped     = m_pedMeanADC + m_normDist() * m_pedSigmaADC;
         long long adc     = std::llround(ped + edep * (1. + eResRel) / dyRangeADC * m_capADC);
         long long tdc     = std::llround((time + m_normDist() * tRes) * stepTDC);
