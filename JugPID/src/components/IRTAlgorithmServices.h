@@ -3,6 +3,8 @@
 
 #include <TVector3.h>
 
+#include "DDRec/CellIDPositionConverter.h"
+
 #ifndef _IRT_ALGORITHM_SERVICES_
 #define _IRT_ALGORITHM_SERVICES_
 
@@ -33,6 +35,11 @@ namespace Jug::PID {
 		     TVector3 *crs) const;
     TVector3 GetLocation(const eic::TrajectoryPoint *point) const;
     TVector3 GetMomentum(const eic::TrajectoryPoint *point) const;
+
+    void findPrimitive(
+        const std::string typeName, const dd4hep::Solid sol,
+        dd4hep::Solid &prim, dd4hep::Position &pos, const TGeoMatrix *matx=nullptr
+        ) const;
   };
 
 } // namespace Jug::PID

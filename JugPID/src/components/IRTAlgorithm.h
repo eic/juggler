@@ -129,10 +129,6 @@ namespace Jug::PID {
 					    const SurfacePtr& targetSurf);
 #endif
 
-    void findPrimitive(
-        const std::string typeName, const dd4hep::Solid sol,
-        dd4hep::Solid &prim, dd4hep::Position &pos, const TGeoMatrix *matx=nullptr
-        ) const;
   };
 
   DECLARE_COMPONENT(IRTAlgorithm)

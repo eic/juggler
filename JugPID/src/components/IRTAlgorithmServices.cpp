@@ -119,3 +119,27 @@ TVector3 Jug::PID::IRTAlgorithmServices::GetMomentum(const eic::TrajectoryPoint 
 } // Jug::PID::IRTAlgorithmServices::GetMomentum()
 
 // -------------------------------------------------------------------------------------
+
+// Search a boolean solid's composition tree for primitive of type `typeName` (e.g., `TGeoSphere`)
+// - `prim` will be set to the primitive; can be empty initially
+// - `pos` will be set to the primitive's position (careful, it only considers translation of the operands);
+//   should be initially set to the position of `sol`
+// - `matx` stores operand transformations; you do not need to set it initially
+void Jug::PID::IRTAlgorithmServices::findPrimitive(
+    const std::string typeName, const dd4hep::Solid sol,
+    dd4hep::Solid &prim, dd4hep::Position &pos, const TGeoMatrix *matx
+) const {
+  if(sol->IsComposite()) {
+    auto node = (dd4hep::BooleanSolid) sol;
+    findPrimitive(typeName, node.leftShape(),  prim, pos, node.leftMatrix()  );
+    findPrimitive(typeName, node.rightShape(), prim, pos, node.rightMatrix() );
+  } else if(typeName.compare(sol.type())==0) {
+    prim = sol;
+    //matx->Print();
+    dd4hep::Position translation;
+    translation.SetCoordinates(matx->GetTranslation());
+    pos += translation;
+  }
+}
+
+// -------------------------------------------------------------------------------------
