@@ -160,7 +160,8 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
     std::string name = "";
     std::string mode = "";
     unsigned zbins = 0;
-    float qmrad = -1;
+    float qmrad = -1.;
+    float ri = -1.;
     
     for(auto rptr: radiators) {
       // parse radiator specification string; FIXME: expected format could be more consistent, e.g. each token is `this=that`
@@ -177,6 +178,8 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
       while(rptrStream >> rptrTok) {
 	if(rptrTok.find("zbins")!=std::string::npos) 
 	  zbins = std::stoul(std::regex_replace(rptrTok,rmEq,""));
+	else if(rptrTok.find("rindex")!=std::string::npos) 
+	  ri = std::stof(std::regex_replace(rptrTok,rmEq,""));
 	else if(rptrTok.find("smearing")!=std::string::npos) 
 	  mode = std::regex_replace(rptrTok,rmEq,"");
 	else if(rptrTok.find("mrad")!=std::string::npos) 
@@ -185,7 +188,7 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
       }
       //printf("@@@ %s %s %d %7.1f\n", name.c_str(), mode.c_str(), zbins, qmrad);
       
-      if (!zbins || qmrad<0.0 || name.compare("")==0 || mode.compare("")==0) {
+      if (!zbins || qmrad<0.0 || ri<0.0 || name.compare("")==0 || mode.compare("")==0) {
 	error() << "Parsed radiator parameters do not pass a sanity check." << endmsg;
 	return StatusCode::FAILURE;
       } //if
@@ -195,7 +198,8 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
       if (radiator) {
 	m_SelectedRadiators.push_back(radiator);
 	
-	radiator->m_AverageRefractiveIndex = radiator->n();
+	radiator->m_AverageRefractiveIndex = ri;//radiator->n();
+	radiator->SetReferenceRefractiveIndex(ri);
 	if (qmrad) {
 	  // Well, want them readable in the config file, but pass in [rad] to the IRT algorithm;
 	  qmrad /= 1000.;
@@ -309,7 +313,8 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       // Simulate QE & geometric sensor efficiency; FIXME: hit.energy() is numerically 
       // in GeV units, but Gaudi::Units::GeV = 1000; prefer to convert photon energies 
       // to [eV] in all places by hand;
-      if (!QE_pass(1E9*hit.energy(), m_rngUni()*m_GeometricEfficiency.value())) 
+      if (!QE_pass(1E9*hit.energy(), m_rngUni()) || 
+	  m_rngUni() > m_GeometricEfficiency.value()*m_SafetyFactor.value()) 
 	continue;
       
       //printf("next photon() ... %5d %5d\n", hit.g4ID(), mctrack.ID());
