@@ -101,8 +101,11 @@ namespace Jug::PID {
     // A .root file with a CherenkovDetectorCollection entry, to run in a back door mode;
     Gaudi::Property<std::string>                            m_ConfigFile          {this, "ConfigFile", ""};
     Gaudi::Property<std::string>                            m_Detector            {this, "Detector", ""};
-    // The famous ~0.85 for the S13660-3050AE-08 SiPM and its QE table expected;
+    // The famous ~0.85 for the S13660-3050AE-08 SiPM and its QE table expected; well, as long 
+    // as the fill factor is actually mimiced in E(D)Rich_geo.cpp, geometric efficiency should be 1.0 here;
     Gaudi::Property<double>                                 m_GeometricEfficiency {this, "GeometricEfficiency", 1.0};
+    // Another famous factor (life is always below expectations) which people like to see ~0.7;
+    Gaudi::Property<double>                                 m_SafetyFactor        {this, "SafetyFactor", 1.0};
     // Array of {e, qe} points and the desired number of bins in a fast lookup table;
     Gaudi::Property<std::vector<std::pair<double, double>>> m_QE_input_data       {this, "QEcurve"};
     Gaudi::Property<unsigned>                               m_QEbins              {this, "QEbins",      0};
