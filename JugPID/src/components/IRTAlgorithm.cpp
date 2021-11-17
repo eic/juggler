@@ -471,7 +471,8 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
     {
       CherenkovPID pid;
       // Should suffice for now: e+/pi+/K+/p?; FIXME: hardcoded;
-      int pdg_table[] = {-11, 211, 321, 2212};
+      //int pdg_table[] = {-11, 211, 321, 2212};
+      int pdg_table[] = {211, 321};
       for(unsigned ip=0; ip<sizeof(pdg_table)/sizeof(pdg_table[0]); ip++) {
 	const auto &service = m_pidSvc->particle(pdg_table[ip]);
 	
@@ -506,7 +507,28 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	  
 	  cbuffer.addoptions(hypothesis);
 	} //for ip
-	
+
+	// Theta angle estimates, per radiator;
+	{
+	  unsigned npe = 0;
+	  double theta = 0.0;
+	  eic::CherenkovThetaAngleMeasurement rdata;
+
+	  rdata.radiator = ir;
+	  
+	  for(auto photon: photons) {
+	    if (!photon->m_Selected) continue;
+
+	    npe++;
+	    theta += photon->_m_PDF[radiator].GetAverage();
+	  } //for photon
+
+	  rdata.npe   = npe;
+	  rdata.theta = npe ? theta / npe : 0.0;
+	  //printf("%7.2f\n", 1000*rdata.theta);
+	  cbuffer.addangles(rdata);
+	}
+
 	  // FIXME: well, and what does go here instead of 0?;
 	cbuffer.ID({0, algorithmID()});
 	
