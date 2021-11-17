@@ -16,6 +16,15 @@
 #include "eicd/ReconstructedParticleCollection.h"
 #include "eicd/VectorPolar.h"
 
+namespace {
+  enum DetectorTags {
+    kTagB0 = 1,
+    kTagRP = 2,
+    kTagOMD = 3,
+    kTagZDC = 4
+  };
+}
+
 namespace Jug::Fast {
 
 class SmearedFarForwardParticles : public GaudiAlgorithm, AlgorithmIDMixin<> {
@@ -160,7 +169,7 @@ private:
       rec_part.v({part.vs().x, part.vs().y, part.vs().z});
       rec_part.time(static_cast<float>(part.time()));
       rec_part.pid(part.pdgID());
-      rec_part.status(0);
+      rec_part.status(kTagZDC);
       rec_part.charge(static_cast<int16_t>(part.charge()));
       rec_part.weight(1.);
       rec_part.direction({mom3s.theta(), mom3s.phi()});
@@ -201,7 +210,14 @@ private:
       if (mom_ion.theta() < m_thetaMinB0 || mom_ion.theta() > m_thetaMaxB0) {
         continue;
       }
-      rc.push_back(smearMomentum(part));
+      auto rc_part = smearMomentum(part);
+      // we don't detect photon energy, just its angles and presence
+      if (part.pdgID() == 22) {
+        rc_part.p({0,0,0});
+        rc_part.energy(0);
+      }
+      rc_part.status(kTagB0);
+      rc.push_back(rc_part);
       if (msgLevel(MSG::DEBUG)) {
         auto& rec_part = rc.back();
         debug() << fmt::format("Found B0 particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
@@ -233,7 +249,9 @@ private:
           mom_ion.z < m_pMinRigidityRP * m_ionBeamEnergy) {
         continue;
       }
-      rc.push_back(smearMomentum(part));
+      auto rc_part = smearMomentum(part);
+      rc_part.status(kTagRP);
+      rc.push_back(rc_part);
       if (msgLevel(MSG::DEBUG)) {
         auto& rec_part = rc.back();
         debug() << fmt::format("Found RP particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
@@ -270,7 +288,9 @@ private:
       //if (!in_small_angle || (std::abs(phi) > 1 && !in_large_angle)) {
       //  continue;
       //}
-      rc.push_back(smearMomentum(part));
+      auto rc_part = smearMomentum(part);
+      rc_part.status(kTagOMD);
+      rc.push_back(rc_part);
       if (msgLevel(MSG::DEBUG)) {
         auto& rec_part = rc.back();
         debug() << fmt::format("Found OMD particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
