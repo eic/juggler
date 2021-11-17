@@ -55,6 +55,12 @@ namespace Jug::Digi {
     Gaudi::Property<double>             m_pedSigmaADC{this, "pedestalSigma", 3.2};
     Gaudi::Property<double>             m_resolutionTDC{this, "resolutionTDC", 10 * ps};
 
+    Gaudi::Property<double>             m_corrMeanScale{this, "scaleResponse", 1.0};
+    // These are better variable names for the "energyResolutions" array which is a bit
+    // magic @FIXME
+    //Gaudi::Property<double>             m_corrSigmaCoeffE{this, "responseCorrectionSigmaCoeffE", 0.0};
+    //Gaudi::Property<double>             m_corrSigmaCoeffSqrtE{this, "responseCorrectionSigmaCoeffSqrtE", 0.0};
+
     // signal sums
     // @TODO: implement signal sums with timing
     // field names to generate id mask, the hits will be grouped by masking the field
@@ -165,16 +171,21 @@ namespace Jug::Digi {
       int nhits = 0;
       for (const auto& ahit : *simhits) {
         // Note: juggler internal unit of energy is GeV
-        double eResRel = 0.;
-        if (ahit.energyDeposit() > 1e-6) {
-            eResRel = m_normDist() * eRes[0] / std::sqrt(ahit.energyDeposit()) +
-                      m_normDist() * eRes[1] +
-                      m_normDist() * eRes[2] / ahit.energyDeposit();
-        }
+        // --> optional energy correction to allow for modifying the response for
+        // effective impelentations, e.g. a homogenous implementation of a fiber
+        // calorimeter.
+        const double eDep    = ahit.energyDeposit() * m_corrMeanScale;
 
-        double    ped     = m_pedMeanADC + m_normDist() * m_pedSigmaADC;
-        long long adc     = std::llround(ped + ahit.energyDeposit() * (1. + eResRel) / dyRangeADC * m_capADC);
-        long long tdc     = std::llround((ahit.truth().time + m_normDist() * tRes) * stepTDC);
+        // apply additional calorimeter noise to corrected energy deposit
+        const double eResRel = (eDep > 1e-6)
+                                   ? m_normDist() * std::sqrt(std::pow(eRes[0] / std::sqrt(eDep), 2) +
+                                                              std::pow(eRes[1], 2) + std::pow(eRes[2] / (eDep), 2))
+                                   : 0;
+
+        const double ped    = m_pedMeanADC + m_normDist() * m_pedSigmaADC;
+        const long long adc = std::llround(ped + eDep * (1. + eResRel) / dyRangeADC * m_capADC);
+        const long long tdc = std::llround((ahit.truth().time + m_normDist() * tRes) * stepTDC);
+
         eic::RawCalorimeterHit rawhit(
           {nhits++, algorithmID()},
           (long long)ahit.cellID(),
