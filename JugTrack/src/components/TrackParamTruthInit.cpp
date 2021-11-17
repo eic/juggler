@@ -52,6 +52,8 @@ namespace Jug::Reco {
     Gaudi::Property<double> m_maxVertexY{this, "maxVertexY", 80. * Gaudi::Units::mm};
     Gaudi::Property<double> m_maxVertexZ{this, "maxVertexZ", 200. * Gaudi::Units::mm};
     Gaudi::Property<double> m_minMomentum{this, "minMomentum", 100. * Gaudi::Units::MeV};
+    Gaudi::Property<double> m_maxEtaForward{this, "maxEtaForward", 4.0};
+    Gaudi::Property<double> m_maxEtaBackward{this, "maxEtaBackward", 4.1};
 
     SmartIF<IParticleSvc> m_pidSvc;
 
@@ -110,6 +112,14 @@ namespace Jug::Reco {
         if (part.ps().mag() * Gaudi::Units::GeV < m_minMomentum) {
           if (msgLevel(MSG::DEBUG)) {
             debug() << "ignoring particle with p = " << part.ps().mag() << " GeV" << endmsg;
+          }
+          continue;
+        }
+
+        // require minimum pseudorapidity
+        if (part.ps().eta() > m_maxEtaForward || part.ps().eta() < -std::abs(m_maxEtaBackward)) {
+          if (msgLevel(MSG::DEBUG)) {
+            debug() << "ignoring particle with Eta = " << part.ps().eta() << endmsg;
           }
           continue;
         }
