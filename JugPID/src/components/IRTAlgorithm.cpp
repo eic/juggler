@@ -247,10 +247,16 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
   // Need a random number generator for the QE stuff;
   {
     auto randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
-    auto sc = m_rngUni.initialize(randSvc, Rndm::Flat(0., 1.));
-    if (!sc.isSuccess()) {
-      error() << "Cannot initialize random generator!" << endmsg;
-      return StatusCode::FAILURE;
+    //auto sc = m_rngUni.initialize(randSvc, Rndm::Flat(0., 1.));
+    //if (!sc.isSuccess()) {
+    //error() << "Cannot initialize random generator!" << endmsg;
+    //return StatusCode::FAILURE;
+    //} //if     
+    auto gauss = m_rngGauss.initialize(randSvc, Rndm::Gauss(0., 1.));     
+    auto flat  = m_rngUni.initialize  (randSvc, Rndm::Flat (0., 1.));     
+    if (!gauss.isSuccess() || !flat.isSuccess()) {       
+      error() << "Cannot initialize random generator!" << endmsg;       
+      return StatusCode::FAILURE;     
     } //if
   }
 
@@ -430,8 +436,12 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 
       // Hit location;
       {
+	// FIXME: take sensor plane orientation into account, and also use floor()
+	// rather than gaussian smearing;
+	double sigma = 3.4/sqrt(12.0);
 	const auto &x = hit.position();
-	photon->SetDetectionPosition(TVector3(x.x, x.y, x.z));
+	//printf("%10.3f %10.3f\n", x.x, x.y);
+	photon->SetDetectionPosition(TVector3(x.x + sigma*m_rngUni(), x.y + sigma*m_rngUni(), x.z));
       }     
       
       // At this point all of the CherenkovPhoton class internal variables are actually 
