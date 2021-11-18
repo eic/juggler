@@ -23,7 +23,10 @@ namespace Jug::PID {
   protected:
     std::vector<std::pair<double, double>> m_QE_lookup_table;
 
-    void configure_QE_lookup_table(const std::vector<std::pair<double, double>> &QE_vector, unsigned nbins);
+    std::vector<std::pair<double, double>> ApplyFineBinning(const std::vector<std::pair<double, double>> &input, 
+							    unsigned nbins);
+    bool GetFinelyBinnedTableEntry(const std::vector<std::pair<double, double>> &table, 
+				   double argument, double *value) const;
 
     // Keep the same method name as in Chao's PhotoMultiplierDigi.cpp; however implement 
     // a fast equidistant array lookup instead;

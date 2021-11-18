@@ -142,6 +142,23 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
       return StatusCode::FAILURE;
     } //if
 
+    {
+      // Extract refractive index information; build internal lookup table;
+      auto dd4Det = m_geoSvc->detector();
+      
+      for(auto rptr: m_IrtDet->Radiators()) {
+	const auto radiator = rptr.second;
+	// FIXME: sanity checks;
+	auto rindex = dd4Det->material(radiator->GetAlternativeMaterialName()).property("RINDEX"); 
+	std::vector<std::pair<double, double>> buffer;
+	for(unsigned iq=0; iq<rindex->GetRows(); iq++)
+	  buffer.push_back(std::make_pair(1E9*rindex->Get(iq,0), rindex->Get(iq,1)));
+
+	// FIXME: may want to use different binning here?;
+	radiator->m_ri_lookup_table = ApplyFineBinning(buffer, m_QEbins.value());
+      } //for rptr
+    } 
+	  
     // Input hit collection;
     m_inputHitCollection =
       std::make_unique<DataHandle<dd4pod::PhotoMultiplierHitCollection>>((dname + "Hits").c_str(), 
@@ -198,8 +215,10 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
       if (radiator) {
 	m_SelectedRadiators.push_back(radiator);
 	
+	// FIXME: this looks awkward;
 	radiator->m_AverageRefractiveIndex = ri;//radiator->n();
 	radiator->SetReferenceRefractiveIndex(ri);
+
 	if (qmrad) {
 	  // Well, want them readable in the config file, but pass in [rad] to the IRT algorithm;
 	  qmrad /= 1000.;
@@ -236,7 +255,7 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
   }
 
   // Initialize the QE lookup table;
-  configure_QE_lookup_table(m_QE_input_data.value(), m_QEbins.value());
+  m_QE_lookup_table = ApplyFineBinning(m_QE_input_data.value(), m_QEbins.value());
 
   return StatusCode::SUCCESS;
 } // Jug::PID::IRTAlgorithm::initialize()
@@ -283,6 +302,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
     // Now just follow the logic of TrackParamTruthInit.cpp; 
 
     // genStatus = 1 means thrown G4Primary, but dd4gun uses genStatus == 0
+    //printf("@@@ %d\n", mctrack.genStatus());
     if (mctrack.genStatus() > 1 ) {
       if (msgLevel(MSG::DEBUG)) {
 	debug() << "ignoring particle with genStatus = " << mctrack.genStatus() << endmsg;
@@ -300,51 +320,144 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 
       // FIXME: consider only primaries for the time being;
     if (mctrack.g4Parent()) continue;
+    //printf("@@@ %d %d %d\n", mctrack.ID(), mctrack.pdgID(), mctrack.g4Parent());
 
     auto particle = new ChargedParticle(mctrack.pdgID());
     event->AddChargedParticle(particle);
 
-    // Fill one global array of photon hits (shared by all radiators);
-    std::vector<OpticalPhoton*> photons; 
-    for(const auto &hit: hits) {
-      // FIXME: yes, use MC truth here; not really needed I guess; 
-      if (hit.g4ID() != mctrack.ID()) continue;
+    // Start radiator history for all known radiators;
+    for(auto rptr: m_IrtDet->Radiators()) 
+      particle->StartRadiatorHistory(std::make_pair(rptr.second, new RadiatorHistory()));
       
+    // Fill one global array of photon hits (shared by all radiators);
+    //std::vector<OpticalPhoton*> photons; 
+    //unsigned legitimate_photon_stat = 0;
+    std::set<unsigned> sectors_of_interest;
+    for(const auto &hit: hits) {
+      const auto &phtrack = mctracks[hit.truth().trackID];
+
+      // FIXME: yes, use MC truth here; not really needed I guess; 
+      //if (hit.g4ID() != mctrack.ID()) continue;
+      // FIXME: range checks;
+      if (phtrack.parents()[0] != mctrack.ID()) continue;
+      
+      //printf("   @@@ %d\n", hit.g4ID());
       // Simulate QE & geometric sensor efficiency; FIXME: hit.energy() is numerically 
       // in GeV units, but Gaudi::Units::GeV = 1000; prefer to convert photon energies 
       // to [eV] in all places by hand;
-      if (!QE_pass(1E9*hit.energy(), m_rngUni()) || 
+      double eVenergy = 1E9*hit.energy();
+      if (!QE_pass(eVenergy, m_rngUni()) || 
 	  m_rngUni() > m_GeometricEfficiency.value()*m_SafetyFactor.value()) 
 	continue;
-      
-      //printf("next photon() ... %5d %5d\n", hit.g4ID(), mctrack.ID());
+
+      //printf("next photon() ... %5d %5d %5d -> %5d\n", 
+      //hit.g4ID(), hit.truth().trackID, mctracks[mctracks[hit.truth().trackID].g4Parent()].ID(), mctrack.ID());
+      //	     hit.g4ID(), hit.truth().trackID, mctracks[hit.truth().trackID].parents()[0], mctrack.ID());
 
       // Photon accepted; add it to the internal event structure;
       auto photon = new OpticalPhoton();
       
+      // FIXME: '0' - for now assume a single photon detector type for the whole ERICH (DRICH),
+      // which must be a reasonable assumption; eventually may want to generalize;
+      const auto pd = m_IrtDet->m_PhotonDetectors[0];
+      photon->SetPhotonDetector(pd);//m_IrtDet->m_PhotonDetectors[0]);
+      {
+	//printf("@@@ %lX\n", m_ReadoutCellMask);
+	uint64_t vcopy = hit.cellID() & m_ReadoutCellMask;
+
+	photon->SetVolumeCopy(vcopy);
+	const auto irt = pd->GetIRT(vcopy);
+	if (!irt) {
+	  printf("No photosensor with this cellID found!\n");
+	  continue;
+	} //if
+
+	// Get as much as possible truth information;
+	{
+	  // Start vertex and momentum; 
+	  {
+	    const auto &x = phtrack.vs();
+	    photon->SetVertexPosition(TVector3(x.x, x.y, x.z));
+	  }
+	  {
+	    const auto &p = phtrack.ps();
+	    photon->SetVertexMomentum(TVector3(p.x, p.y, p.z));
+	  }
+	  
+	  {
+	    // Try to figure out, in which radiator the photon was produced; here of course
+	    // it is legitimate to use MC truth, just in order to mimic the standalone 
+	    // GEANT code;
+	    unsigned isec = irt->GetSector();
+	    sectors_of_interest.insert(isec);//]++;
+
+	    for(auto rptr: m_IrtDet->Radiators()) {
+	      const auto radiator = rptr.second;
+ 
+	      // Front and rear surfaces for this particular sector;
+	      auto s1 = radiator->GetFrontSide(isec);
+	      auto s2 = radiator->GetRearSide (isec);
+
+	      // FIXME: move to the trajectory part;
+  
+	      TVector3 from, to;
+	      const auto &x0 = photon->GetVertexPosition();
+	      const auto &n0 = photon->GetVertexMomentum().Unit();
+	      
+	      s1->GetCrossing(x0, n0, &from);
+	      s2->GetCrossing(x0, n0, &to);
+
+	      if ((x0 - from).Dot(to - x0) > 0.0) {
+		//printf("@@@ %7.2f -> Guess it was %lu\n", x0.z(), radiator);//->GetName());
+		
+		particle->FindRadiatorHistory(radiator)->AddOpticalPhoton(photon);
+
+		{
+		  // Retrieve a refractive index estimate; it is not exactly the one, which 
+		  // was used in GEANT, but should be very close;
+		  double ri;
+		  GetFinelyBinnedTableEntry(radiator->m_ri_lookup_table, eVenergy, &ri);
+		  photon->SetVertexRefractiveIndex(ri);
+		}
+
+		break;
+	      } //if
+	    } //for rptr
+	  } 
+
+	}
+      }
+
+      // Hit location;
       {
 	const auto &x = hit.position();
 	photon->SetDetectionPosition(TVector3(x.x, x.y, x.z));
-      }
+      }     
       
-      photon->SetPhotonDetector(m_IrtDet->m_PhotonDetectors[0]);
+      // At this point all of the CherenkovPhoton class internal variables are actually 
+      // set the same way as in a standalone G4 code, except for the parent momentum at vertex;
       photon->SetDetected(true);
-      //printf("@@@ %lX\n", m_ReadoutCellMask);
-      photon->SetVolumeCopy(hit.cellID() & m_ReadoutCellMask);
-      
-      photons.push_back(photon);
+      //photons.push_back(photon);
+
+      //legitimate_photon_stat++;
     } //for hit
-    //printf("\n");
+
+    // FIXME: figure out where from do we have muons in the .hepmc files;
+    //if (photons.empty()) continue;
+    if (sectors_of_interest.empty()) continue;//photons.empty()) continue;
 
     // Loop through the radiators one by one, using the same set of photons;
     for(auto radiator: m_SelectedRadiators) {
       // FIXME: yes, for now assume all the photons were produced in aerogel; 
-      particle->StartRadiatorHistory(std::make_pair(radiator, new RadiatorHistory()));
+      //+++particle->StartRadiatorHistory(std::make_pair(radiator, new RadiatorHistory()));
 
-      {
-	// FIXME: hardcoded; give the algorithm radiator surface boundaries as encoded in ERich_geo.cpp;  
-	auto s1 = radiator->GetFrontSide(0);
-	auto s2 = radiator->GetRearSide(0);
+      radiator->ResetLocations();
+
+      for(auto isec: sectors_of_interest) {
+	// FIXME: '0' hardcoded, should be isec; give the algorithm radiator surface 
+	// boundaries as encoded in ERich_geo.cpp;  
+	auto s1 = radiator->GetFrontSide(isec);//sector);
+	auto s2 = radiator->GetRearSide (isec);//sector);
 
 	TVector3 from, to, p0;
 
@@ -449,7 +562,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	} //if
 #endif
 
-	radiator->ResetLocations();
+	//radiator->ResetLocations();
 
 	{
 	  unsigned zbins = radiator->GetTrajectoryBinCount();
@@ -462,9 +575,9 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	  double tlen = span.Mag();
 	  double step = tlen / zbins;
 	  for(unsigned iq=0; iq<zbins+1; iq++) 
-	    radiator->AddLocation(from + iq*step*nn, p0);
+	    radiator->AddLocation(isec, from + iq*step*nn, p0);
 	}
-      }
+	} //for isec
     } //for radiator
 
       // Now that all internal mctrack-level structures are populated, run IRT code;
@@ -480,8 +593,10 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       } //for ip
       
 	// Eventually call the IRT code;
-      particle->PIDReconstruction(pid, &photons);
+      particle->PIDReconstruction(pid);//, &photons);
       
+      auto cbuffer = cpid.create();
+
       // Now the interesting part comes: how to populate the output collection;
       //auto aerogel = m_IrtDet->GetRadiator("Aerogel");
       for(unsigned ir=0; ir< m_SelectedRadiators.size(); ir++) {
@@ -490,7 +605,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	// FIXME: extend the eicd table layout; FIXME: this loop is anyway inefficient;
 	//if (radiator != aerogel && m_SelectedRadiators.size() != 1) continue;
 	
-	auto cbuffer = cpid.create();
+	//auto cbuffer = cpid.create();
 	
 	for(unsigned ip=0; ip<sizeof(pdg_table)/sizeof(pdg_table[0]); ip++) {
 	  auto hypo = pid.GetHypothesis(ip);
@@ -512,33 +627,37 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	{
 	  unsigned npe = 0;
 	  double theta = 0.0;
+	  double ri = 0.0;
 	  eic::CherenkovThetaAngleMeasurement rdata;
 
 	  rdata.radiator = ir;
 	  
-	  for(auto photon: photons) {
+	  //for(auto photon: photons) {
+	  for(auto photon: particle->FindRadiatorHistory(radiator)->Photons()) {
 	    if (!photon->m_Selected) continue;
 
 	    npe++;
 	    theta += photon->_m_PDF[radiator].GetAverage();
+	    ri    += photon->GetVertexRefractiveIndex();
 	  } //for photon
 
-	  rdata.npe   = npe;
-	  rdata.theta = npe ? theta / npe : 0.0;
-	  //printf("%7.2f\n", 1000*rdata.theta);
+	  rdata.npe    = npe;
+	  rdata.theta  = npe ? theta / npe : 0.0;
+	  rdata.rindex = npe ? ri    / npe : 0.0;
+	  //printf("@@@ %7.2f\n", 1000*rdata.theta);
 	  cbuffer.addangles(rdata);
 	}
+      } //for ir
 
-	  // FIXME: well, and what does go here instead of 0?;
-	cbuffer.ID({0, algorithmID()});
+      // FIXME: well, and what does go here instead of 0?;
+      cbuffer.ID({0, algorithmID()});
 	
-	// Reference to either MC track or a reconstructed track;
+      // Reference to either MC track or a reconstructed track;
 #ifdef _USE_RECONSTRUCTED_TRACKS_
-	cbuffer.recID(rctrack.ID());
+      cbuffer.recID(rctrack.ID());
 #else
-	cbuffer.recID(mctrack.ID());
+      cbuffer.recID(mctrack.ID());
 #endif
-      }
     }  
   } //for rctrack (mctrack)
 
