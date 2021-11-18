@@ -9,37 +9,40 @@
 
 // -------------------------------------------------------------------------------------
 
-void Jug::PID::IRTAlgorithmServices::configure_QE_lookup_table(const std::vector<std::pair<double, 
-							       double>> &QE_vector, unsigned nbins)
+std::vector<std::pair<double, double>> 
+  Jug::PID::IRTAlgorithmServices::ApplyFineBinning(const std::vector<std::pair<double, 
+						   double>> &input, unsigned nbins)
 {
+  std::vector<std::pair<double, double>> ret;
+
   // Well, could have probably just reordered the initial vector;
-  std::map<double, double> QE_map;
+  std::map<double, double> buffer;
 
-  for(auto entry: QE_vector)
-    QE_map[entry.first] = entry.second;
+  for(auto entry: input)
+    buffer[entry.first] = entry.second;
 
-  // Sanity checks;
-  if (QE_map.size() < 2 || nbins < 2) return;
+  // Sanity checks; return empty map in case do not pass them;
+  if (buffer.size() < 2 || nbins < 2) return ret;
 
   //m_QE_lookup_table.push_back(std::make_pair((*QE_map.begin()).first , 0.3));
   //m_QE_lookup_table.push_back(std::make_pair((*QE_map.rbegin()).first, 0.3)); 
 
-  double from = (*QE_map.begin()).first;
-  double to   = (*QE_map.rbegin()).first;
+  double from = (*buffer.begin()).first;
+  double to   = (*buffer.rbegin()).first;
   // Will be "nbins+1" equidistant entries;
   double step = (to - from) / nbins;
 
   // Just in case somebody considers to call this method twice :-);
-  m_QE_lookup_table.clear();
+  //m_QE_lookup_table.clear();
 
-  for(auto entry: QE_map) {
+  for(auto entry: buffer) {
     double e1 = entry.first;
     double qe1 = entry.second;
 
-    if (!m_QE_lookup_table.size())
-      m_QE_lookup_table.push_back(std::make_pair(e1, qe1));
+    if (!ret.size())
+      ret.push_back(std::make_pair(e1, qe1));
     else {
-      const auto &prev = m_QE_lookup_table[m_QE_lookup_table.size()-1];
+      const auto &prev = ret[ret.size()-1];
 
       double e0 = prev.first;
       double qe0 = prev.second;
@@ -48,37 +51,50 @@ void Jug::PID::IRTAlgorithmServices::configure_QE_lookup_table(const std::vector
       // FIXME: check floating point accuracy when moving to a next point; do we actually 
       // care whether the overall number of bins will be "nbins+1" or more?;
       for(double e = e0+step; e<e1; e+=step)
-	m_QE_lookup_table.push_back(std::make_pair(e, a*e + b));
+	ret.push_back(std::make_pair(e, a*e + b));
     } //if
   } //for entry
 
   //for(auto entry: m_QE_lookup_table) 
   //printf("%7.2f -> %7.2f\n", entry.first, entry.second);
-} // Jug::PID::IRTAlgorithmServices::configure_QE_lookup_table()
+  return ret;
+} // Jug::PID::IRTAlgorithmServices::ApplyFineBinning()
 
 // -------------------------------------------------------------------------------------
 
-bool Jug::PID::IRTAlgorithmServices::QE_pass(double ev, double rand) const
+bool Jug::PID::IRTAlgorithmServices::GetFinelyBinnedTableEntry(const std::vector<std::pair<double, double>> &table, 
+							       double argument, double *entry) const
 {
   // Get the tabulated table reference; perform sanity checks;
   //const std::vector<std::pair<double, double>> &qe = u_quantumEfficiency.value();
-  unsigned dim = m_QE_lookup_table.size(); if (dim < 2) return false;
+  unsigned dim = table.size(); if (dim < 2) return false;
 
   // Find a proper bin; no tricks, they are all equidistant;
-  auto const &from = m_QE_lookup_table[0];
-  auto const &to = m_QE_lookup_table[dim-1];
+  auto const &from = table[0];
+  auto const &to = table[dim-1];
   double emin = from.first;
   double emax = to.first;
   double step = (emax - emin) / (dim - 1);
-  int ibin = (int)floor((ev - emin) / step);
+  int ibin = (int)floor((argument - emin) / step);
 
   //printf("%f vs %f, %f -> %d\n", ev, from.first, to. first, ibin);
   
   // Out of range check;
   if (ibin < 0 || ibin >= int(dim)) return false;
 
+  *entry = table[ibin].second;
+  return true;
+} // Jug::PID::IRTAlgorithmServices::GetFinelyBinnedTableEntry()
+
+// -------------------------------------------------------------------------------------
+
+bool Jug::PID::IRTAlgorithmServices::QE_pass(double ev, double rand) const
+{
+  double value = 0.0;
+  if (!GetFinelyBinnedTableEntry(m_QE_lookup_table, ev, &value)) return false;
+
   // Get tabulated QE value, compare against the provided random variable;
-  return (rand <= m_QE_lookup_table[ibin].second);
+  return (rand <= value);//m_QE_lookup_table[ibin].second);
 } // Jug::PID::IRTAlgorithmServices::QE_pass()
 
 // -------------------------------------------------------------------------------------
