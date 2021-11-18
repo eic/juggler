@@ -122,7 +122,7 @@ namespace Jug::PID {
 
     std::vector<CherenkovRadiator*> m_SelectedRadiators;
 
-    Rndm::Numbers m_rngUni;
+    Rndm::Numbers m_rngGauss, m_rngUni;
 
 #ifdef _USE_ON_THE_FLY_TRAJECTORIES_
     Acts::GeometryContext m_geoContext;
