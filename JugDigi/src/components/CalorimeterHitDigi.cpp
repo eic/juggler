@@ -171,10 +171,7 @@ namespace Jug::Digi {
       int nhits = 0;
       for (const auto& ahit : *simhits) {
         // Note: juggler internal unit of energy is GeV
-        // --> optional energy correction to allow for modifying the response for
-        // effective impelentations, e.g. a homogenous implementation of a fiber
-        // calorimeter.
-        const double eDep    = ahit.energyDeposit() * m_corrMeanScale;
+        const double eDep    = ahit.energyDeposit();
 
         // apply additional calorimeter noise to corrected energy deposit
         const double eResRel = (eDep > 1e-6)
@@ -183,7 +180,7 @@ namespace Jug::Digi {
                                    : 0;
 
         const double ped    = m_pedMeanADC + m_normDist() * m_pedSigmaADC;
-        const long long adc = std::llround(ped + eDep * (1. + eResRel) / dyRangeADC * m_capADC);
+        const long long adc = std::llround(ped +  m_corrMeanScale * eDep * (1. + eResRel) / dyRangeADC * m_capADC);
         const long long tdc = std::llround((ahit.truth().time + m_normDist() * tRes) * stepTDC);
 
         eic::RawCalorimeterHit rawhit(
