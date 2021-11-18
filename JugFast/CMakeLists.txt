@@ -11,6 +11,7 @@ gaudi_add_module(JugFastPlugins
   src/components/ParticlesWithTruthPID.cpp 
   src/components/SmearedFarForwardParticles.cpp 
   src/components/TruthEnergyPositionClusterMerger.cpp
+  src/components/TruthClustering.cpp
   LINK
   Gaudi::GaudiAlgLib Gaudi::GaudiKernel
   JugBase
