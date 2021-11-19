@@ -247,11 +247,6 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
   // Need a random number generator for the QE stuff;
   {
     auto randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
-    //auto sc = m_rngUni.initialize(randSvc, Rndm::Flat(0., 1.));
-    //if (!sc.isSuccess()) {
-    //error() << "Cannot initialize random generator!" << endmsg;
-    //return StatusCode::FAILURE;
-    //} //if     
     auto gauss = m_rngGauss.initialize(randSvc, Rndm::Gauss(0., 1.));     
     auto flat  = m_rngUni.initialize  (randSvc, Rndm::Flat (0., 1.));     
     if (!gauss.isSuccess() || !flat.isSuccess()) {       
@@ -308,7 +303,6 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
     // Now just follow the logic of TrackParamTruthInit.cpp; 
 
     // genStatus = 1 means thrown G4Primary, but dd4gun uses genStatus == 0
-    //printf("@@@ %d\n", mctrack.genStatus());
     if (mctrack.genStatus() > 1 ) {
       if (msgLevel(MSG::DEBUG)) {
 	debug() << "ignoring particle with genStatus = " << mctrack.genStatus() << endmsg;
@@ -335,30 +329,48 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
     for(auto rptr: m_IrtDet->Radiators()) 
       particle->StartRadiatorHistory(std::make_pair(rptr.second, new RadiatorHistory()));
       
-    // Fill one global array of photon hits (shared by all radiators);
-    //std::vector<OpticalPhoton*> photons; 
-    //unsigned legitimate_photon_stat = 0;
-    std::set<unsigned> sectors_of_interest;
+    // Distribute photons over radiators where they were presumably produced, to 
+    // create a structure which would mimic a standalone G4 stepper behavior;
+    bool useful_photons_found = false;
     for(const auto &hit: hits) {
+      // FIXME: range checks;
       const auto &phtrack = mctracks[hit.truth().trackID];
 
-      // FIXME: yes, use MC truth here; not really needed I guess; 
-      //if (hit.g4ID() != mctrack.ID()) continue;
+      // FIXME: yes, use MC truth here; not really needed I guess;
       // FIXME: range checks;
       if (phtrack.parents()[0] != mctrack.ID()) continue;
       
-      //printf("   @@@ %d\n", hit.g4ID());
+      // Vertex where photon was created;
+      const auto &vs = phtrack.vs();
+      TVector3 vtx(vs.x, vs.y, vs.z);
+      
+      // FIXME: this is in general correct, but needs refinement;
+      TVector3 ip(0,0,0);
+      // FIXME: unify with the code below;
+      auto radiator = m_IrtDet->GuessRadiator(vtx, (vtx - ip).Unit());
+      // FIXME: do it better later;
+      if (!radiator) continue;
+
       // Simulate QE & geometric sensor efficiency; FIXME: hit.energy() is numerically 
       // in GeV units, but Gaudi::Units::GeV = 1000; prefer to convert photon energies 
       // to [eV] in all places by hand;
       double eVenergy = 1E9*hit.energy();
       if (!QE_pass(eVenergy, m_rngUni()) || 
-	  m_rngUni() > m_GeometricEfficiency.value()*m_SafetyFactor.value()) 
-	continue;
+	  m_rngUni() > m_GeometricEfficiency.value()*m_SafetyFactor.value()) {
 
-      //printf("next photon() ... %5d %5d %5d -> %5d\n", 
-      //hit.g4ID(), hit.truth().trackID, mctracks[mctracks[hit.truth().trackID].g4Parent()].ID(), mctrack.ID());
-      //	     hit.g4ID(), hit.truth().trackID, mctracks[hit.truth().trackID].parents()[0], mctrack.ID());
+	// Prefer to create the stepping history in a clean way, namely use only those 
+	// photons which were rejected; FIXME: optionally include all; anyway, now 
+	// figure out (1) to which detector sector does this 3D point belongs, (2) 
+	// which radiator this could have been;
+
+	// Add the point to the radiator history buffer; FIXME: all this is not 
+	// needed if trajectory parameterization is used;
+	particle->FindRadiatorHistory(radiator)->AddStepBufferPoint(phtrack.time(), vtx);
+
+	continue;
+      } //if
+
+      useful_photons_found = true;
 
       // Photon accepted; add it to the internal event structure;
       auto photon = new OpticalPhoton();
@@ -366,71 +378,27 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       // FIXME: '0' - for now assume a single photon detector type for the whole ERICH (DRICH),
       // which must be a reasonable assumption; eventually may want to generalize;
       const auto pd = m_IrtDet->m_PhotonDetectors[0];
-      photon->SetPhotonDetector(pd);//m_IrtDet->m_PhotonDetectors[0]);
+      photon->SetPhotonDetector(pd);
       {
-	//printf("@@@ %lX\n", m_ReadoutCellMask);
 	uint64_t vcopy = hit.cellID() & m_ReadoutCellMask;
 
 	photon->SetVolumeCopy(vcopy);
-	const auto irt = pd->GetIRT(vcopy);
-	if (!irt) {
-	  printf("No photosensor with this cellID found!\n");
-	  continue;
-	} //if
 
-	// Get as much as possible truth information;
+	// Start vertex and momentum; 
+	photon->SetVertexPosition(vtx);
 	{
-	  // Start vertex and momentum; 
-	  {
-	    const auto &x = phtrack.vs();
-	    photon->SetVertexPosition(TVector3(x.x, x.y, x.z));
-	  }
-	  {
-	    const auto &p = phtrack.ps();
-	    photon->SetVertexMomentum(TVector3(p.x, p.y, p.z));
-	  }
+	  const auto &p = phtrack.ps();
+	  photon->SetVertexMomentum(TVector3(p.x, p.y, p.z));
+	}
+	
+	{
+	  particle->FindRadiatorHistory(radiator)->AddOpticalPhoton(photon);
 	  
-	  {
-	    // Try to figure out, in which radiator the photon was produced; here of course
-	    // it is legitimate to use MC truth, just in order to mimic the standalone 
-	    // GEANT code;
-	    unsigned isec = irt->GetSector();
-	    sectors_of_interest.insert(isec);//]++;
-
-	    for(auto rptr: m_IrtDet->Radiators()) {
-	      const auto radiator = rptr.second;
- 
-	      // Front and rear surfaces for this particular sector;
-	      auto s1 = radiator->GetFrontSide(isec);
-	      auto s2 = radiator->GetRearSide (isec);
-
-	      // FIXME: move to the trajectory part;
-  
-	      TVector3 from, to;
-	      const auto &x0 = photon->GetVertexPosition();
-	      const auto &n0 = photon->GetVertexMomentum().Unit();
-	      
-	      s1->GetCrossing(x0, n0, &from);
-	      s2->GetCrossing(x0, n0, &to);
-
-	      if ((x0 - from).Dot(to - x0) > 0.0) {
-		//printf("@@@ %7.2f -> Guess it was %lu\n", x0.z(), radiator);//->GetName());
-		
-		particle->FindRadiatorHistory(radiator)->AddOpticalPhoton(photon);
-
-		{
-		  // Retrieve a refractive index estimate; it is not exactly the one, which 
-		  // was used in GEANT, but should be very close;
-		  double ri;
-		  GetFinelyBinnedTableEntry(radiator->m_ri_lookup_table, eVenergy, &ri);
-		  photon->SetVertexRefractiveIndex(ri);
-		}
-
-		break;
-	      } //if
-	    } //for rptr
-	  } 
-
+	  // Retrieve a refractive index estimate; it is not exactly the one, which 
+	  // was used in GEANT, but should be very close;
+	  double ri;
+	  GetFinelyBinnedTableEntry(radiator->m_ri_lookup_table, eVenergy, &ri);
+	  photon->SetVertexRefractiveIndex(ri);
 	}
       }
 
@@ -440,162 +408,75 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	// rather than gaussian smearing;
 	double sigma = 3.4/sqrt(12.0);
 	const auto &x = hit.position();
-	//printf("%10.3f %10.3f\n", x.x, x.y);
 	photon->SetDetectionPosition(TVector3(x.x + sigma*m_rngUni(), x.y + sigma*m_rngUni(), x.z));
       }     
       
       // At this point all of the CherenkovPhoton class internal variables are actually 
       // set the same way as in a standalone G4 code, except for the parent momentum at vertex;
       photon->SetDetected(true);
-      //photons.push_back(photon);
-
-      //legitimate_photon_stat++;
     } //for hit
 
     // FIXME: figure out where from do we have muons in the .hepmc files;
-    //if (photons.empty()) continue;
-    if (sectors_of_interest.empty()) continue;//photons.empty()) continue;
+    if (!useful_photons_found) continue;
 
     // Loop through the radiators one by one, using the same set of photons;
     for(auto radiator: m_SelectedRadiators) {
-      // FIXME: yes, for now assume all the photons were produced in aerogel; 
-      //+++particle->StartRadiatorHistory(std::make_pair(radiator, new RadiatorHistory()));
+      auto history = particle->FindRadiatorHistory(radiator);
+
+      history->CalculateSteps();
+
+      unsigned stCount = history->StepCount();
+      if (!stCount) continue;
+      auto fstep = history->GetStep(0), lstep = history->GetStep(stCount-1);
+
+      // Let's say these are the best guesses;
+      unsigned ifsec = m_IrtDet->GetSector(fstep->GetPosition());
+      unsigned ilsec = m_IrtDet->GetSector(lstep->GetPosition());
 
       radiator->ResetLocations();
 
-      for(auto isec: sectors_of_interest) {
-	// FIXME: '0' hardcoded, should be isec; give the algorithm radiator surface 
-	// boundaries as encoded in ERich_geo.cpp;  
-	auto s1 = radiator->GetFrontSide(isec);//sector);
-	auto s2 = radiator->GetRearSide (isec);//sector);
+      // Give the algorithm radiator surface boundaries as encoded in D(E)Rich_geo.cpp;  
+      auto s1 = radiator->GetFrontSide(ifsec);
+      auto s2 = radiator->GetRearSide (ilsec);
 
-	TVector3 from, to, p0;
+      TVector3 from, to, p0;
+      
+      // FIXME: need it not at vertex, but in the radiator; as coded here, this can 
+      // hardly work once the magnetic field is turned on; but this is a best guess 
+      // if nothing else is available;
+      const auto &p = mctrack.ps();
+      
+      p0 = TVector3(p.x, p.y, p.z);
+      
+      auto x0 = fstep->GetPosition();
+      auto n0 = fstep->GetDirection(); 
+      // Go backwards and ignore surface orientation mismatch;
+      bool b1 = s1->GetCrossing(x0, -1*n0, &from, false);
 
-#if defined (_USE_STORED_TRAJECTORIES_) || defined(_USE_ON_THE_FLY_TRAJECTORIES_)
-	// If trajectory parameterizations are actually available, use them;
-#ifdef _USE_RECONSTRUCTED_TRACKS_
-	auto index = rctrack.ID();
-#else
-	auto index = mctrack.ID();
-#endif
+      auto x1 = lstep->GetPosition();
+      auto n1 = lstep->GetDirection();
+      bool b2 = s2->GetCrossing(x1,    n1, &to);
 
-#ifdef _USE_STORED_TRAJECTORIES_
-	auto trajectory = rc2trajectory.find(index) == rc2trajectory.end() ? 0 : 
-	  rc2trajectory[index];
-
-	// FIXME: merge this if-elseif somehow;
-	if (trajectory && trajectory->points().size()) {
-	  const eic::TrajectoryPoint *best = 0;
-
-	  // In case of aerogel, just find the closest point; gas case will be more complicated,
-	  // but in general pretty much straightforward too;
-	  for(const auto &point: trajectory->points()) 
-	    // FIXME: optimize for efficiency later; now calculate every time new;
-	    // Assume 's1' (front surface) is good enough;
-	    if (!best || IRTAlgorithmServices::GetDistance(s1, &point) < 
-		IRTAlgorithmServices::GetDistance(s1, best))
-	      best = &point;
-
-	  // FIXME: well, may want to check how far away the best point actually is;
-	  IRTAlgorithmServices::GetCrossing(s1, best, &from);
-	  IRTAlgorithmServices::GetCrossing(s2, best, &to);
-	    
-	  p0 = IRTAlgorithmServices::GetMomentum(best);
-#else
-	if (true) {
-	  // THINK: this 1:1 indexing must be correct, or?;
-	  const auto& traj = (*trajectories)[index.value];
-	  const auto& mj        = traj.multiTrajectory();
-	  const auto& trackTips = traj.tips();
-	  if (trackTips.empty()) {
-	    // FIXME: need to eliminate one #ifdef to handle this branch;
-	    printf("trackTips.empty(): should not happen?\n");
-	    exit(0);
-	  } //if
-
-	  auto& trackTip = trackTips.front();
-	  auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
-
-	  if (traj.hasTrackParameters(trackTip)) {
-	    const auto& boundParam = traj.trackParameters(trackTip);
-	    //const auto& parameter  = boundParam.parameters();
-	    //const auto& covariance = *boundParam.covariance();
-	    // FIXME: may want to consider two separate surfaces, since projections 
-	    // are anyway generated on the fly;
-	    double zref = (s1->GetCenter().z() + s2->GetCenter().z())/2;//-1500.0;
-            const auto MinEta = 1.1, MaxEta = 3.3;
-            const auto MinTheta = 2. * atan(exp(-MinEta));
-            const auto MaxTheta = 2. * atan(exp(-MaxEta));
-            const auto MinR = fabs(zref) * tan(MaxTheta);
-            const auto MaxR = fabs(zref) * tan(MinTheta);
-	    
-            auto m_outerDiscBounds = std::make_shared<Acts::RadialBounds>(MinR, MaxR);
-            auto richTrf = 
-	      Acts::Transform3::Identity() * Acts::Translation3(Acts::Vector3(0, 0, zref));
-            auto richSurf =
-	      Acts::Surface::makeShared<Acts::DiscSurface>(richTrf, m_outerDiscBounds);
-
-            auto result = propagateTrack(boundParam, richSurf);
-            if(result.ok()) {
-              auto trackStateParams = std::move(**result);
-              auto projectionPos = trackStateParams.position(m_geoContext);
-              auto projectionMom = trackStateParams.momentum();//m_geoContext);
-	      
-	      TVector3 xx  (projectionPos(0), projectionPos(1), projectionPos(2));
-	      p0 = TVector3(projectionMom(0), projectionMom(1), projectionMom(2));
-	      TVector3 nn = p0.Unit();
-	      s1->GetCrossing(xx, nn, &from);
-	      s2->GetCrossing(xx, nn, &to);
-	    } else {
-	      // FIXME: straighten up the branches here durinbg debugging phase;
-	      printf("result.ok() = 0: take care about this possibility\n");
-	      exit(0);
-	    } //if
-	  } //if
-#endif
-	} else {
-#endif
-	  // FIXME: need it not at vertex, but in the radiator; as coded here, this can 
-	  // hardly work once the magnetic field is turned on; but this is a best guess 
-	  // if nothing else is available;
-	  const auto &vtx = mctrack.vs();
-	  const auto &p = mctrack.ps();
-  
-	  p0 = TVector3(p.x, p.y, p.z);
-	  auto x0 = TVector3(vtx.x, vtx.y, vtx.z);
-	  auto n0 = p0.Unit();
-
-	  s1->GetCrossing(x0, n0, &from);
-	  s2->GetCrossing(x0, n0, &to);
-	  
-#if defined (_USE_STORED_TRAJECTORIES_) || defined(_USE_ON_THE_FLY_TRAJECTORIES_)
-	} //if
-#endif
-
-	//radiator->ResetLocations();
-
-	{
-	  unsigned zbins = radiator->GetTrajectoryBinCount();
-	  TVector3 nn = (to - from).Unit();
-	  from += (0.010)*nn;
-	  to   -= (0.010)*nn;
-
-	  // FIXME: assume a straight line to the moment;
-	  auto span = to - from;
-	  double tlen = span.Mag();
-	  double step = tlen / zbins;
-	  for(unsigned iq=0; iq<zbins+1; iq++) 
-	    radiator->AddLocation(isec, from + iq*step*nn, p0);
-	}
-	} //for isec
+      if (b1 && b2) {
+	unsigned zbins = radiator->GetTrajectoryBinCount();
+	TVector3 nn = (to - from).Unit();
+	from += (0.010)*nn;
+	to   -= (0.010)*nn;
+	
+	// FIXME: assume a straight line to the moment;
+	auto span = to - from;
+	double tlen = span.Mag();
+	double step = tlen / zbins;
+	for(unsigned iq=0; iq<zbins+1; iq++) 
+	  radiator->AddLocation(from + iq*step*nn, p0);
+      } //if
     } //for radiator
 
       // Now that all internal mctrack-level structures are populated, run IRT code;
     {
       CherenkovPID pid;
       // Should suffice for now: e+/pi+/K+/p?; FIXME: hardcoded;
-      //int pdg_table[] = {-11, 211, 321, 2212};
-      int pdg_table[] = {211, 321};
+      int pdg_table[] = {-11, 211, 321, 2212};
       for(unsigned ip=0; ip<sizeof(pdg_table)/sizeof(pdg_table[0]); ip++) {
 	const auto &service = m_pidSvc->particle(pdg_table[ip]);
 	
@@ -603,19 +484,13 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       } //for ip
       
 	// Eventually call the IRT code;
-      particle->PIDReconstruction(pid);//, &photons);
+      particle->PIDReconstruction(pid);
       
+      // Populate the output collection;
       auto cbuffer = cpid.create();
 
-      // Now the interesting part comes: how to populate the output collection;
-      //auto aerogel = m_IrtDet->GetRadiator("Aerogel");
       for(unsigned ir=0; ir< m_SelectedRadiators.size(); ir++) {
 	const auto radiator = m_SelectedRadiators[ir];
-	//for(auto radiator: m_SelectedRadiators) {
-	// FIXME: extend the eicd table layout; FIXME: this loop is anyway inefficient;
-	//if (radiator != aerogel && m_SelectedRadiators.size() != 1) continue;
-	
-	//auto cbuffer = cpid.create();
 	
 	for(unsigned ip=0; ip<sizeof(pdg_table)/sizeof(pdg_table[0]); ip++) {
 	  auto hypo = pid.GetHypothesis(ip);
@@ -642,13 +517,22 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 
 	  rdata.radiator = ir;
 	  
-	  //for(auto photon: photons) {
-	  for(auto photon: particle->FindRadiatorHistory(radiator)->Photons()) {
-	    if (!photon->m_Selected) continue;
+	  auto history = particle->FindRadiatorHistory(radiator);
+	  // This loop goes only over the photons which belong to a given radiator;
+	  for(auto photon: history->Photons()) {
+	    bool selected = false;
+	    // Check whether this photon was selected by at least one mass hypothesis;
+	    for(auto entry: photon->_m_Selected)
+	      if (entry.second == radiator) {
+		selected = true;
+		break;
+	      } //if
 
-	    npe++;
-	    theta += photon->_m_PDF[radiator].GetAverage();
-	    ri    += photon->GetVertexRefractiveIndex();
+	    if (selected) {
+	      npe++;
+	      theta += photon->_m_PDF[radiator].GetAverage();
+	      ri    += photon->GetVertexRefractiveIndex();
+	    } //if
 	  } //for photon
 
 	  rdata.npe    = npe;
