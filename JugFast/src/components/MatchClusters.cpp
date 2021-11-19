@@ -119,14 +119,14 @@ public:
                 << endmsg;
       }
 
-      // get mass/PID from mcparticles, photon in case the matched particle is charged.
+      // get mass/PID from mcparticles, 0 (unidentified) in case the matched particle is charged.
       const auto& mc    = mcparticles[mcID.value];
       const double mass = (!mc.charge()) ? mc.mass() : 0;
-      const int32_t pid = (!mc.charge()) ? mc.pdgID() : 22;
+      const int32_t pid = (!mc.charge()) ? mc.pdgID() : 0;
       if (msgLevel(MSG::DEBUG)) {
         if (mc.charge()) {
           debug() << "   --> associated mcparticle is not a neutral (PID: " << mc.pdgID()
-                  << "), setting the reconstructed particle ID to photon" << endmsg;
+                  << "), setting the reconstructed particle ID to 0 (unidentified)" << endmsg;
         }
         debug() << "   --> found matching associated mcparticle with PID: " << pid << ", energy: " << mc.energy()
                 << endmsg;
