@@ -70,6 +70,10 @@ namespace Jug::Reco {
     Gaudi::Property<double>                   m_depthCorrection{this, "depthCorrection", 0.0};
     Gaudi::Property<std::string>              m_energyWeight{this, "energyWeight", "log"};
     Gaudi::Property<std::string>              m_moduleDimZName{this, "moduleDimZName", ""};
+    // Constrain the cluster position eta to be within
+    // the eta of the contributing hits. This is useful to avoid edge effects
+    // for endcaps.
+    Gaudi::Property<bool>                     m_enableEtaBounds{this, "enableEtaBounds", false};
 
     Gaudi::Property<std::string>              m_mcHits{this, "mcHits", ""};
 
@@ -191,6 +195,9 @@ namespace Jug::Reco {
       // calculate total energy, find the cell with the maximum energy deposit
       float totalE   = 0.;
       float maxE     = 0.;
+      // Used to optionally constrain the cluster eta to those of the contributing hits
+      float minHitEta = std::numeric_limits<float>::max();
+      float maxHitEta = std::numeric_limits<float>::min();
       auto time = hits[pcl.hits(0).index].time();
       for (const auto& clhit : pcl.hits()) {
         const auto& hit = hits[clhit.index];
@@ -202,6 +209,13 @@ namespace Jug::Reco {
         if (energy > maxE) {
           maxE     = energy;
           time = hit.time();
+        }
+        const float eta = hit.position().eta();
+        if (eta < minHitEta) {
+          minHitEta = eta;
+        }
+        if (eta > maxHitEta) {
+          maxHitEta = eta;
         }
       }
       cl.energy(totalE/m_sampFrac);
@@ -222,6 +236,22 @@ namespace Jug::Reco {
       }
       cl.position(v.scale(1/tw));
       cl.positionError({}); // @TODO: Covariance matrix
+
+      // Optionally constrain the cluster to the hit eta values
+      if (m_enableEtaBounds) {
+        const bool overflow  = (cl.position().eta() > maxHitEta);
+        const bool underflow = (cl.position().eta() < minHitEta);
+        if (overflow || underflow) {
+          const double newEta = overflow ? maxHitEta : minHitEta;
+          const double newTheta = 2 * atan(exp(-newEta));
+          const eic::VectorPolar oldPos = cl.position();
+          cl.position(eic::VectorPolar(oldPos.r, newTheta, oldPos.phi));
+          if (msgLevel(MSG::DEBUG)) {
+            debug() << "Bound cluster position to contributing hits due to " << (overflow ? "overflow" : "underflow")
+                    << endmsg;
+          }
+        }
+      }
 
       // Additional convenience variables
       cl.polar(cl.position());
