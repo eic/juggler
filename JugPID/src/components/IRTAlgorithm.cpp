@@ -287,6 +287,8 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
   // An interface variable; FIXME: check memory cleanup;
   auto event = new CherenkovEvent();
 
+  //printf("%3ld track(s) and %4ld hit(s)\n", mctracks.size(), hits.size());
+
   // Loop through either MC or reconstructed tracks;
 #ifdef _USE_RECONSTRUCTED_TRACKS_
   for(const auto &rctrack: rctracks) {
@@ -320,7 +322,9 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 
       // FIXME: consider only primaries for the time being;
     if (mctrack.g4Parent()) continue;
-    //printf("@@@ %d %d %d\n", mctrack.ID(), mctrack.pdgID(), mctrack.g4Parent());
+    //printf("@@@ %d %3d %d\n", mctrack.ID(), mctrack.pdgID(), mctrack.g4Parent());
+    // FIXME: a hack; remove muons;
+    if (mctrack.pdgID() == 13) continue;
 
     auto particle = new ChargedParticle(mctrack.pdgID());
     event->AddChargedParticle(particle);
@@ -332,17 +336,21 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
     // Distribute photons over radiators where they were presumably produced, to 
     // create a structure which would mimic a standalone G4 stepper behavior;
     bool useful_photons_found = false;
+    //printf("%3d\n", mctracks.size());
     for(const auto &hit: hits) {
       // FIXME: range checks;
       const auto &phtrack = mctracks[hit.truth().trackID];
+      //const auto &phtrack = mctracks[hit.truth().trackID-1];
 
       // FIXME: yes, use MC truth here; not really needed I guess;
       // FIXME: range checks;
-      if (phtrack.parents()[0] != mctrack.ID()) continue;
+      //printf("Here: %d %d %3d!\n", phtrack.parents()[0], mctrack.ID(), hit.truth().trackID);
+      //if (phtrack.parents()[0] != mctrack.ID()) continue;
       
       // Vertex where photon was created;
       const auto &vs = phtrack.vs();
       TVector3 vtx(vs.x, vs.y, vs.z);
+      //printf("@@@ %f %f %f\n", vs.x, vs.y, vs.z);
       
       // FIXME: this is in general correct, but needs refinement;
       TVector3 ip(0,0,0);
@@ -350,11 +358,13 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       auto radiator = m_IrtDet->GuessRadiator(vtx, (vtx - ip).Unit());
       // FIXME: do it better later;
       if (!radiator) continue;
+      //printf("Here-1\n");
 
       // Simulate QE & geometric sensor efficiency; FIXME: hit.energy() is numerically 
       // in GeV units, but Gaudi::Units::GeV = 1000; prefer to convert photon energies 
       // to [eV] in all places by hand;
       double eVenergy = 1E9*hit.energy();
+      //printf("%f\n", eVenergy);
       if (!QE_pass(eVenergy, m_rngUni()) || 
 	  m_rngUni() > m_GeometricEfficiency.value()*m_SafetyFactor.value()) {
 
@@ -364,11 +374,12 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	// which radiator this could have been;
 
 	// Add the point to the radiator history buffer; FIXME: all this is not 
-	// needed if trajectory parameterization is used;
+	// needed if ACTS trajectory parameterization is used;
 	particle->FindRadiatorHistory(radiator)->AddStepBufferPoint(phtrack.time(), vtx);
 
 	continue;
       } //if
+      //printf("Here-2\n");
 
       useful_photons_found = true;
 
@@ -419,7 +430,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
     // FIXME: figure out where from do we have muons in the .hepmc files;
     if (!useful_photons_found) continue;
 
-    // Loop through the radiators one by one, using the same set of photons;
+    // Loop through the radiators one by one;
     for(auto radiator: m_SelectedRadiators) {
       auto history = particle->FindRadiatorHistory(radiator);
 
@@ -458,17 +469,63 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       bool b2 = s2->GetCrossing(x1,    n1, &to);
 
       if (b1 && b2) {
-	unsigned zbins = radiator->GetTrajectoryBinCount();
+	const unsigned zbins = radiator->GetTrajectoryBinCount();
 	TVector3 nn = (to - from).Unit();
 	from += (0.010)*nn;
 	to   -= (0.010)*nn;
 	
-	// FIXME: assume a straight line to the moment;
-	auto span = to - from;
-	double tlen = span.Mag();
-	double step = tlen / zbins;
-	for(unsigned iq=0; iq<zbins+1; iq++) 
-	  radiator->AddLocation(from + iq*step*nn, p0);
+#if 1
+	// No assumptions about straight or curved trajectory;
+	{
+	  double zfrom = from.z(), zto = to.z();
+	  //double step = fabs(zto - zfrom) / zbins;
+	  double step = (zto - zfrom) / zbins;
+
+	  for(unsigned iq=0; iq<zbins+1; iq++) {
+	    double z = zfrom + iq*step;
+
+	    //printf("%d %f\n", iq, z);
+	    // Find two neighboring points in the history array, which would 
+	    // allow one to compute the coordinate at this z in a best way;
+	    // FIXME: this loop is not dramatically efficient;
+	    for(unsigned is=1; is<stCount; is++) {
+	      auto st1 = history->GetStep(is-1), st2 = history->GetStep(is);
+	      const auto &pt1 = st1->GetPosition(), &pt2 = st2->GetPosition();
+	      double z1 = pt1.z(), z2 = pt2.z();
+
+	      //printf("%3d -> %f %f\n", is, z1, z2);
+	      if (fabs(z) < fabs(z1) || (fabs(z) >= fabs(z1) && fabs(z) < fabs(z2)) || is == stCount-1) {
+		auto p12 = pt2 - pt1, n12 = p12.Unit();
+		//double len = (pt2 - pt1).Mag();
+		//double zlen = fabs((pt2 - pt1).z());//Mag();
+		double zlen = (pt2 - pt1).z();//Mag();
+
+		//radiator->AddLocation(pt1 + (fabs(z - z1)/len)*nn, p0);//.Mag()*n12);
+		radiator->AddLocation(pt1 + ((z - z1)/zlen)*p12, p0.Mag()*n12);
+		//printf("(1) %f %f %f\n", 
+		//     (pt1 + ((z - z1)/zlen)*p12).x(), 
+		//     (pt1 + ((z - z1)/zlen)*p12).y(), 
+		//     (pt1 + ((z - z1)/zlen)*p12).z());
+		break;
+	      } //if
+	    } //for is
+	  } //for iq
+	}
+#else
+	{
+	  // FIXME: assume a straight line to the moment;
+	  auto span = to - from;
+	  double tlen = span.Mag();
+	  double step = tlen / zbins;
+	  for(unsigned iq=0; iq<zbins+1; iq++) {
+	    radiator->AddLocation(from + iq*step*nn, p0);
+	    printf("(2) %f %f %f\n", 
+		   (from + iq*step*nn).x(),
+		   (from + iq*step*nn).y(),
+		   (from + iq*step*nn).z());
+	  } //for iq
+	}
+#endif
       } //if
     } //for radiator
 
