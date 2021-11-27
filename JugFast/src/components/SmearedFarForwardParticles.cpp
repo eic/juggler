@@ -211,7 +211,7 @@ private:
   }
   // Fast B0 as in
   // https://github.com/eic/eicsmeardetectors/blob/9a1831dd97bf517b80a06043b9ee4bfb96b483d8/SmearMatrixDetector_0_1_FF.cxx#L254
-  std::vector<RecData> b0(const dd4pod::Geant4ParticleCollection& mc) {
+  std::vector<RecData> b0(const dd4pod::Geant4ParticleCollection& mc, const double ionBeamEnergy) {
     std::vector<RecData> rc;
     for (const auto& part : mc) {
       if (part.genStatus() > 1) {
