@@ -94,6 +94,21 @@ public:
     const auto& mc = *(m_inputParticles.get());
     auto& rc       = *(m_outputParticles.createAndPut());
 
+    for (const auto& part : mc) {
+      if (part.genStatus() == 4 && part.pdgID() == 2212) {
+        auto E = std::hypot(part.ps().mag(), part.mass());
+        if (33 < E && E < 50) {
+          m_ionBeamEnergy = 41;
+        } else if (80 < E && E < 120) {
+          m_ionBeamEnergy = 100;
+        } else if (220 < E && E < 330) {
+          m_ionBeamEnergy = 275
+        } else {
+          warning() << "Beam energy " << E << " not supported." << endmsg;
+        }
+      }
+    }
+
     std::vector<std::vector<RecData>> rc_parts;
     if (m_enableZDC) {
       rc_parts.push_back(zdc(mc));
