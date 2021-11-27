@@ -102,7 +102,7 @@ public:
         } else if (80 < E && E < 120) {
           m_ionBeamEnergy = 100;
         } else if (220 < E && E < 330) {
-          m_ionBeamEnergy = 275
+          m_ionBeamEnergy = 275;
         } else {
           warning() << "Beam energy " << E << " not supported." << endmsg;
         }
