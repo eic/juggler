@@ -103,13 +103,14 @@ public:
         } else if (220 < E && E < 330) {
           ionBeamEnergy = 275;
         } else {
-          warning() << "Ion beam energy " << E << " not supported by SmearedFarForward." << endmsg;
+          warning() << "Ion beam energy " << E << " not a standard setting." << endmsg;
+          ionBeamEnergy = E;
         }
         break;
       }
     }
     if (ionBeamEnergy == 0) {
-      warning() << "Ion beam energy " << E << " not defined; using 100 GeV." << endmsg;
+      warning() << "No incoming ion beam; using 100 GeV ion beam energy." << endmsg;
       ionBeamEnergy = 100;
     }
 
