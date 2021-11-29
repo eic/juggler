@@ -38,6 +38,8 @@ public:
   Gaudi::Property<bool> m_enableRP{this, "enableRP", true};
   Gaudi::Property<bool> m_enableOMD{this, "enableOMD", true};
 
+  // Beam energy, only used to determine the RP/OMD momentum ranges
+  Gaudi::Property<double> m_ionBeamEnergy{this, "ionBeamEnergy", 0.};
   // RP default to 10-on-100 setting
   // Pz > 60% of beam energy (60% x 100GeV = 60GeV)
   // theta from 0.2mrad -> 5mrad
@@ -93,25 +95,29 @@ public:
     auto& rc       = *(m_outputParticles.createAndPut());
 
     double ionBeamEnergy = 0;
-    for (const auto& part: mc) {
-      if (part.genStatus() == 4 && part.pdgID() == 2212) {
-        auto E = std::hypot(part.ps().mag(), part.mass());
-        if (33 < E && E < 50) {
-          ionBeamEnergy = 41;
-        } else if (80 < E && E < 120) {
-          ionBeamEnergy = 100;
-        } else if (220 < E && E < 330) {
-          ionBeamEnergy = 275;
-        } else {
-          warning() << "Ion beam energy " << E << " not a standard setting." << endmsg;
-          ionBeamEnergy = E;
+    if (m_ionBeamEnergy > 0) {
+      ionBeamEnergy = m_ionBeamEnergy;
+    } else {
+      for (const auto& part: mc) {
+        if (part.genStatus() == 4 && part.pdgID() == 2212) {
+          auto E = std::hypot(part.ps().mag(), part.mass());
+          if (33 < E && E < 50) {
+            ionBeamEnergy = 41;
+          } else if (80 < E && E < 120) {
+            ionBeamEnergy = 100;
+          } else if (220 < E && E < 330) {
+            ionBeamEnergy = 275;
+          } else {
+            warning() << "Ion beam energy " << E << " not a standard setting." << endmsg;
+            ionBeamEnergy = E;
+          }
+          break;
         }
-        break;
       }
-    }
-    if (ionBeamEnergy == 0) {
-      warning() << "No incoming ion beam; using 100 GeV ion beam energy." << endmsg;
-      ionBeamEnergy = 100;
+      if (ionBeamEnergy == 0) {
+        warning() << "No incoming ion beam; using 100 GeV ion beam energy." << endmsg;
+        ionBeamEnergy = 100;
+      }
     }
 
     std::vector<std::vector<RecData>> rc_parts;
