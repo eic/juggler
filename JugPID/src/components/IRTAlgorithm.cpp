@@ -179,6 +179,7 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
     unsigned zbins = 0;
     float qmrad = -1.;
     float ri = -1.;
+    float attenuation = -1.;
     
     for(auto rptr: radiators) {
       // parse radiator specification string; FIXME: expected format could be more consistent, e.g. each token is `this=that`
@@ -197,6 +198,8 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
 	  zbins = std::stoul(std::regex_replace(rptrTok,rmEq,""));
 	else if(rptrTok.find("rindex")!=std::string::npos) 
 	  ri = std::stof(std::regex_replace(rptrTok,rmEq,""));
+	else if(rptrTok.find("attenuation[mm]")!=std::string::npos) 
+	  attenuation = std::stof(std::regex_replace(rptrTok,rmEq,""));
 	else if(rptrTok.find("smearing")!=std::string::npos) 
 	  mode = std::regex_replace(rptrTok,rmEq,"");
 	else if(rptrTok.find("mrad")!=std::string::npos) 
@@ -205,7 +208,7 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
       }
       //printf("@@@ %s %s %d %7.1f\n", name.c_str(), mode.c_str(), zbins, qmrad);
       
-      if (!zbins || qmrad<0.0 || ri<0.0 || name.compare("")==0 || mode.compare("")==0) {
+      if (!zbins || qmrad<0.0 || ri<0.0 || /*attenuation<0.0 ||*/ name.compare("")==0 || mode.compare("")==0) {
 	error() << "Parsed radiator parameters do not pass a sanity check." << endmsg;
 	return StatusCode::FAILURE;
       } //if
@@ -218,6 +221,8 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
 	// FIXME: this looks awkward;
 	radiator->m_AverageRefractiveIndex = ri;//radiator->n();
 	radiator->SetReferenceRefractiveIndex(ri);
+	if (attenuation > 0.0)
+	  radiator->SetReferenceAttenuationLength(attenuation);
 
 	if (qmrad) {
 	  // Well, want them readable in the config file, but pass in [rad] to the IRT algorithm;
@@ -351,6 +356,13 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       const auto &vs = phtrack.vs();
       TVector3 vtx(vs.x, vs.y, vs.z);
       //printf("@@@ %f %f %f\n", vs.x, vs.y, vs.z);
+      {
+	//const auto &ps = phtrack.ps();
+	//double phi = TVector3(ps.x, ps.y, ps.z).Phi();
+	//printf("%7.2f\n", phi);
+	//if (fabs(phi - M_PI/2) > M_PI/4 && fabs(phi + M_PI/2) > M_PI/4) continue;
+      }
+      //if (vs.z < 2500 || vs.z > 2700) continue;
       
       // FIXME: this is in general correct, but needs refinement;
       TVector3 ip(0,0,0);
@@ -377,10 +389,13 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	// needed if ACTS trajectory parameterization is used;
 	particle->FindRadiatorHistory(radiator)->AddStepBufferPoint(phtrack.time(), vtx);
 
+	//printf("Here-2A\n");
 	continue;
       } //if
-      //printf("Here-2\n");
+      //printf("Here-2B\n");
 
+      //if (vs.z < 2500 || vs.z > 2700) continue;
+      //if (vs.z < 2200 || vs.z > 2400) continue;
       useful_photons_found = true;
 
       // Photon accepted; add it to the internal event structure;
@@ -570,6 +585,8 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	  unsigned npe = 0;
 	  double theta = 0.0;
 	  double ri = 0.0;
+	  double wl = 0.0;
+	  double wtsum = 0.0;
 	  eic::CherenkovThetaAngleMeasurement rdata;
 
 	  rdata.radiator = ir;
@@ -585,16 +602,26 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 		break;
 	      } //if
 
+	    //double phi = photon->m_Phi[radiator];
+	    //printf("%f\n", phi);
 	    if (selected) {
+	      //if (selected &&
+	      //(fabs(phi - M_PI/2) < M_PI/4 || fabs(phi + M_PI/2) < M_PI/4)) {
 	      npe++;
-	      theta += photon->_m_PDF[radiator].GetAverage();
-	      ri    += photon->GetVertexRefractiveIndex();
+	      double wt = 1.0;//fabs(sin(photon->m_Phi[radiator]));
+	      wtsum += wt;
+	      theta += wt*photon->_m_PDF[radiator].GetAverage();
+	      ri    +=    photon->GetVertexRefractiveIndex();
+	      // FIXME: hardcoded;
+	      wl    +=    1239.8/(1E9*photon->GetVertexMomentum().Mag());
 	    } //if
 	  } //for photon
 
-	  rdata.npe    = npe;
-	  rdata.theta  = npe ? theta / npe : 0.0;
-	  rdata.rindex = npe ? ri    / npe : 0.0;
+	  rdata.npe        = npe;
+	  //rdata.theta  = npe ? theta / npe : 0.0;
+	  rdata.theta      = wtsum ? theta / wtsum : 0.0;
+	  rdata.rindex     = npe   ? ri    / npe   : 0.0;
+	  rdata.wavelength = npe   ? wl    / npe   : 0.0;
 	  //printf("@@@ %7.2f\n", 1000*rdata.theta);
 	  cbuffer.addangles(rdata);
 	}
