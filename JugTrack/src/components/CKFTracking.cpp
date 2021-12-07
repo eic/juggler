@@ -120,10 +120,25 @@ namespace Jug::Reco {
     Acts::PropagatorPlainOptions pOptions;
     pOptions.maxSteps = 10000;
 
+    MeasurementCalibrator calibrator{*measurements};
+    Acts::GainMatrixUpdater kfUpdater;
+    Acts::GainMatrixSmoother kfSmoother;
+    Acts::MeasurementSelector measSel{m_sourcelinkSelectorCfg};
+
+    Acts::CombinatorialKalmanFilterExtensions extensions;
+    extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
+    extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
+    extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
+        &kfSmoother);
+    extensions.measurementSelector.connect<&Acts::MeasurementSelector::select>(
+        &measSel);
+
     // Set the CombinatorialKalmanFilter options
     CKFTracking::TrackFinderOptions options(
-        m_geoctx, m_fieldctx, m_calibctx, IndexSourceLinkAccessor(), MeasurementCalibrator(*measurements),
-        Acts::MeasurementSelector(m_sourcelinkSelectorCfg), Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
+        m_geoctx, m_fieldctx, m_calibctx,
+        IndexSourceLinkAccessor(), extensions,
+        Acts::LoggerWrapper{logger()},
+        pOptions, &(*pSurface));
 
     auto results = m_trackFinderFunc(*src_links, *init_trk_params, options);
 

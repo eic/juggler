@@ -18,9 +18,9 @@ namespace {
   using Smoother         = Acts::GainMatrixSmoother;
   using Stepper          = Acts::EigenStepper<>;
   using Propagator       = Acts::Propagator<Stepper, Acts::Navigator>;
-  using Fitter           = Acts::KalmanFitter<Propagator, Updater, Smoother>;
+  using Fitter           = Acts::KalmanFitter<Propagator>;
   using DirectPropagator = Acts::Propagator<Stepper, Acts::DirectNavigator>;
-  using DirectFitter     = Acts::KalmanFitter<DirectPropagator, Updater, Smoother>;
+  using DirectFitter     = Acts::KalmanFitter<DirectPropagator>;
 
 
   /** Fitter implmentation .
@@ -38,36 +38,22 @@ namespace {
                const Jug::TrackParameters&                                 initialParameters,
                const Jug::Reco::TrackFittingAlgorithm::TrackFitterOptions& options) const
     {
-      return trackFitter.fit(sourceLinks, initialParameters, options);
+      return trackFitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters, options);
     }
 
-    //TrackFittingAlgorithm::TrackFitterResult
-    //operator()(const std::vector<SourceLink>&              sourceLinks,
-    //           const TrackParameters&                           initialParameters,
-    //           const TrackFittingAlgorithm::TrackFitterOptions& options) const
-    //{
-    //  return trackFitter.fit(sourceLinks, initialParameters, options);
-    //};
   };
 
 }  // namespace
 
 namespace Jug::Reco {
 
-  //using InputMagneticField = typename std::decay_t<decltype(inputField)>::element_type;
-  //using MagneticField      = Acts::SharedBField<InputMagneticField>;
-  //using Stepper            = Acts::EigenStepper<MagneticField>;
-  //using Navigator          = Acts::Navigator;
-  //using Propagator         = Acts::Propagator<Stepper, Navigator>;
-  //using Fitter             = Acts::KalmanFitter<Propagator, Updater, Smoother>;
-
   using Updater          = Acts::GainMatrixUpdater;
   using Smoother         = Acts::GainMatrixSmoother;
   using Stepper          = Acts::EigenStepper<>;
   using Propagator       = Acts::Propagator<Stepper, Acts::Navigator>;
-  using Fitter           = Acts::KalmanFitter<Propagator, Updater, Smoother>;
+  using Fitter           = Acts::KalmanFitter<Propagator>;
   using DirectPropagator = Acts::Propagator<Stepper, Acts::DirectNavigator>;
-  using DirectFitter     = Acts::KalmanFitter<DirectPropagator, Updater, Smoother>;
+  using DirectFitter     = Acts::KalmanFitter<DirectPropagator>;
 
   TrackFittingAlgorithm::FitterFunction TrackFittingAlgorithm::makeTrackFittingFunction(
       std::shared_ptr<const Acts::TrackingGeometry>      trackingGeometry,

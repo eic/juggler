@@ -11,6 +11,10 @@
 #include "JugTrack/GeometryContainers.hpp"
 #include "JugTrack/Index.hpp"
 
+#if Acts_VERSION_MAJOR >= 15
+#include "Acts/EventData/SourceLink.hpp"
+#endif
+
 #include <cassert>
 
 namespace Jug {
@@ -24,14 +28,14 @@ namespace Jug {
   /// Using an index instead of e.g. a pointer, means source link and
   /// measurement are decoupled and the measurement represenation can be
   /// easily changed without having to also change the source link.
-  class IndexSourceLink final {
+  class IndexSourceLink final : public Acts::SourceLink {
   public:
     /// Construct from geometry identifier and index.
-    constexpr IndexSourceLink(Acts::GeometryIdentifier gid, Index idx) : m_geometryId(gid), m_index(idx) {}
+    constexpr IndexSourceLink(Acts::GeometryIdentifier gid, Index idx) : SourceLink(gid), m_index(idx) {}
 
     // Construct an invalid source link. Must be default constructible to
     /// satisfy SourceLinkConcept.
-    IndexSourceLink()                       = default;
+    IndexSourceLink() : SourceLink{Acts::GeometryIdentifier{}} {}
     IndexSourceLink(const IndexSourceLink&) = default;
     IndexSourceLink(IndexSourceLink&&)      = default;
     IndexSourceLink& operator=(const IndexSourceLink&) = default;
@@ -57,12 +61,14 @@ namespace Jug {
   ///
   /// Since the source links provide a `.geometryId()` accessor, they can be
   /// stored in an ordered geometry container.
-  using IndexSourceLinkContainer = GeometryIdMultiset<IndexSourceLink>;
+  using IndexSourceLinkContainer =
+    GeometryIdMultiset<std::reference_wrapper<const IndexSourceLink>>;
 
   /// Accessor for the above source link container
   ///
   /// It wraps up a few lookup methods to be used in the Combinatorial Kalman
   /// Filter
-  using IndexSourceLinkAccessor = GeometryIdMultisetAccessor<IndexSourceLink>;
+  using IndexSourceLinkAccessor =
+    GeometryIdMultisetAccessor<std::reference_wrapper<const IndexSourceLink>>;
 
 } // namespace Jug

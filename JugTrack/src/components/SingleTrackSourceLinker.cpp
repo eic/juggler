@@ -1,5 +1,3 @@
-#include "JugTrack/GeometryContainers.hpp"
-
 // Gaudi
 #include "Gaudi/Property.h"
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -27,6 +25,7 @@
 #include "JugTrack/IndexSourceLink.hpp"
 #include "JugTrack/Measurement.hpp"
 #include "JugTrack/ProtoTrack.hpp"
+#include "JugTrack/GeometryContainers.hpp"
 
 #include "eicd/TrackerHitCollection.h"
 
@@ -40,10 +39,11 @@ namespace Jug::Reco {
    */
   class SingleTrackSourceLinker : public GaudiAlgorithm {
   public:
-    DataHandle<eic::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-    DataHandle<IndexSourceLinkContainer>  m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};
-    DataHandle<MeasurementContainer>      m_outputMeasurements{"outputMeasurements", Gaudi::DataHandle::Writer, this};
-    DataHandle<ProtoTrackContainer>       m_outputProtoTracks{"outputProtoTracks", Gaudi::DataHandle::Writer, this};
+    DataHandle<eic::TrackerHitCollection>  m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+    DataHandle<std::list<IndexSourceLink>> m_sourceLinkStorage{"sourceLinkStorage", Gaudi::DataHandle::Writer, this};
+    DataHandle<IndexSourceLinkContainer>   m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};
+    DataHandle<MeasurementContainer>       m_outputMeasurements{"outputMeasurements", Gaudi::DataHandle::Writer, this};
+    DataHandle<ProtoTrackContainer>        m_outputProtoTracks{"outputProtoTracks", Gaudi::DataHandle::Writer, this};
     /// Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
 
@@ -51,6 +51,7 @@ namespace Jug::Reco {
     SingleTrackSourceLinker(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc)
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
+      declareProperty("sourceLinkStorage", m_sourceLinkStorage, "");
       declareProperty("outputSourceLinks", m_outputSourceLinks, "");
       declareProperty("outputMeasurements", m_outputMeasurements, "");
       declareProperty("outputProtoTracks", m_outputProtoTracks, "");
@@ -74,6 +75,7 @@ namespace Jug::Reco {
       // input collection
       const eic::TrackerHitCollection* hits = m_inputHitCollection.get();
       // Create output collections
+      auto linkStorage  = m_sourceLinkStorage.createAndPut();
       auto sourceLinks  = m_outputSourceLinks.createAndPut();
       auto measurements = m_outputMeasurements.createAndPut();
       auto protoTracks  = m_outputProtoTracks.createAndPut();
@@ -146,7 +148,8 @@ namespace Jug::Reco {
         // cov << 0.05, 0., 0., 0., 0.05, 0., 0., 0., 900. * Acts::UnitConstants::ps * Acts::UnitConstants::ps;
         // Acts::Vector3 par(localX, localY, simHit.time());
 
-        IndexSourceLink sourceLink(surface->geometryId(), ihit);
+        linkStorage->emplace_back(surface->geometryId(), ihit);
+        IndexSourceLink& sourceLink = linkStorage->back();
         auto            meas =
             Acts::makeMeasurement(sourceLink, pos, cov, Acts::eBoundLoc0, Acts::eBoundLoc1); //, Acts::eBoundTime);
 
@@ -174,7 +177,7 @@ namespace Jug::Reco {
 
         // add to output containers. since the input is already geometry-order,
         // new elements in geometry containers can just be appended at the end.
-        sourceLinks->emplace_hint(sourceLinks->end(), std::move(sourceLink));
+        sourceLinks->emplace_hint(sourceLinks->end(), sourceLink);
         measurements->emplace_back(std::move(meas));
 
         ihit++;

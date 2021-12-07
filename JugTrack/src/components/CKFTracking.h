@@ -37,8 +37,8 @@ class CKFTracking : public GaudiAlgorithm {
 public:
   /// Track finder function that takes input measurements, initial trackstate
   /// and track finder options and returns some track-finder-specific result.
-  using TrackFinderOptions  = Acts::CombinatorialKalmanFilterOptions<IndexSourceLinkAccessor, MeasurementCalibrator, Acts::MeasurementSelector>;
-  using TrackFinderResult   = std::vector<Acts::Result<Acts::CombinatorialKalmanFilterResult<IndexSourceLink>>>;
+  using TrackFinderOptions  = Acts::CombinatorialKalmanFilterOptions<IndexSourceLinkAccessor>;
+  using TrackFinderResult   = std::vector<Acts::Result<Acts::CombinatorialKalmanFilterResult>>;
   using CKFTrackingFunction = std::function<TrackFinderResult(
       const IndexSourceLinkContainer&, const TrackParametersContainer&, const TrackFinderOptions&)>;
 

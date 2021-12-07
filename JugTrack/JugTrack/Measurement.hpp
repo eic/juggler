@@ -2,6 +2,10 @@
 #define JugTrack_Measurement_HH
 
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#if Acts_VERSION_MAJOR >= 15
+#include "Acts/EventData/SourceLink.hpp"
+#endif
 #include "JugTrack/IndexSourceLink.hpp"
 
 #include <cassert>
@@ -10,7 +14,7 @@
 namespace Jug {
 
   /// Variable measurement type that can contain all possible combinations.
-  using Measurement = ::Acts::BoundVariantMeasurement<IndexSourceLink>;
+  using Measurement = ::Acts::BoundVariantMeasurement;
   /// Container of measurements.
   ///
   /// In contrast to the source links, the measurements themself must not be
@@ -29,14 +33,15 @@ namespace Jug {
     /// Find the measurement corresponding to the source link.
     ///
     /// @tparam parameters_t Track parameters type
-    /// @param sourceLink Input source link
-    /// @param parameters Input track parameters (unused)
-    template <typename parameters_t>
-    const Measurement& operator()(const IndexSourceLink& sourceLink, const parameters_t& /* parameters */) const
-    {
-      assert(m_measurements and "Undefined measurement container in DigitizedCalibrator");
-      assert((sourceLink.index() < m_measurements->size()) and "Source link index is outside the container bounds");
-      return (*m_measurements)[sourceLink.m_index];
+    /// @param gctx The geometry context (unused)
+    /// @param trackState The track state to calibrate
+    void calibrate(const Acts::GeometryContext& /*gctx*/,
+                   Acts::MultiTrajectory::TrackStateProxy trackState) const {
+      const auto& sourceLink =
+          static_cast<const IndexSourceLink&>(trackState.uncalibrated());
+      std::visit(
+          [&trackState](const auto& meas) { trackState.setCalibrated(meas); },
+          (*m_measurements)[sourceLink.index()]);
     }
 
   private:

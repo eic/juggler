@@ -28,7 +28,7 @@ namespace {
   using Stepper    = Acts::EigenStepper<>;
   using Navigator  = Acts::Navigator;
   using Propagator = Acts::Propagator<Stepper, Navigator>;
-  using CKF        = Acts::CombinatorialKalmanFilter<Propagator, Updater, Smoother>;
+  using CKF        = Acts::CombinatorialKalmanFilter<Propagator>;
 
   /** Finder implmentation .
    *
