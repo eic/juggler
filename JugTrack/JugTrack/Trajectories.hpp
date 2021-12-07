@@ -21,11 +21,7 @@ namespace Jug {
 struct Trajectories final {
  public:
   /// (Reconstructed) trajectory with multiple states.
-  #if Acts_VERSION_MAJOR < 15
-  using MultiTrajectory = ::Acts::MultiTrajectory<IndexSourceLink>;
-  #else
   using MultiTrajectory = ::Acts::MultiTrajectory;
-  #endif
   /// Fitted parameters identified by indices in the multi trajectory.
   using IndexedParameters = std::unordered_map<size_t, TrackParameters>;
 

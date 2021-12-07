@@ -11,9 +11,7 @@
 #include "JugTrack/GeometryContainers.hpp"
 #include "JugTrack/Index.hpp"
 
-#if Acts_VERSION_MAJOR >= 15
 #include "Acts/EventData/SourceLink.hpp"
-#endif
 
 #include <cassert>
 

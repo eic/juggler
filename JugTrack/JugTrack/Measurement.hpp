@@ -3,9 +3,7 @@
 
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#if Acts_VERSION_MAJOR >= 15
 #include "Acts/EventData/SourceLink.hpp"
-#endif
 #include "JugTrack/IndexSourceLink.hpp"
 
 #include <cassert>
