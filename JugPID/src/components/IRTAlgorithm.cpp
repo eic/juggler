@@ -378,7 +378,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       double eVenergy = 1E9*hit.energy();
       //printf("%f\n", eVenergy);
       if (!QE_pass(eVenergy, m_rngUni()) || 
-	  m_rngUni() > m_GeometricEfficiency.value()*m_SafetyFactor.value()) {
+	  m_rngUni() > /*m_GeometricEfficiency.value()**/m_SafetyFactor.value()) {
 
 	// Prefer to create the stepping history in a clean way, namely use only those 
 	// photons which were rejected; FIXME: optionally include all; anyway, now 
@@ -396,20 +396,45 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 
       //if (vs.z < 2500 || vs.z > 2700) continue;
       //if (vs.z < 2200 || vs.z > 2400) continue;
+
+      // Hit location after pixelization;
+      TVector3 lxyPixel;
+      // FIXME: '0' - for now assume a single photon detector type for the whole ERICH (DRICH),
+      // which must be a reasonable assumption; eventually may want to generalize;
+      const auto pd = m_IrtDet->m_PhotonDetectors[0];
+      uint64_t vcopy = hit.cellID() & m_ReadoutCellMask;
+      {
+	const auto irt = pd->GetIRT(vcopy);
+	auto sensor = dynamic_cast<const FlatSurface*>(irt->tail()->GetSurface());
+
+	double pitch = m_SensorPixelPitch.value(), sens = m_SensorPixelSize.value();//pitch - gap;
+	const auto &x = hit.position();
+	TVector3 lpt(x.x, x.y, x.z);
+	double lxy[2] = {sensor->GetLocalX(lpt), sensor->GetLocalY(lpt)}, lxyPixels[2] = {0.0};
+	//printf("%7.2f %7.2f\n", lxy[0], lxy[1]);
+	int ixy[2];
+	for(unsigned iq=0; iq<2; iq++) {
+	  ixy[iq] = (int)floor(lxy[iq]/pitch);//m_SensorPixelPitch.value());
+	  
+	  // "+0.5" assumes even number of pixels in each projection;
+	  lxyPixels[iq] = pitch*(ixy[iq] + 0.5);
+	} //for iq
+
+	// Well, just ignore this small fraction of unlucky photons (do not even use them for track pinning);
+	if (fabs(lxy[0] - lxyPixels[0]) > sens/2 || fabs(lxy[1] - lxyPixels[1]) > sens/2) continue;
+
+	lxyPixel = sensor->GetSpacePoint(lxyPixels[0], lxyPixels[1]);
+      }     
+
       useful_photons_found = true;
 
       // Photon accepted; add it to the internal event structure;
       auto photon = new OpticalPhoton();
-      
-      // FIXME: '0' - for now assume a single photon detector type for the whole ERICH (DRICH),
-      // which must be a reasonable assumption; eventually may want to generalize;
-      const auto pd = m_IrtDet->m_PhotonDetectors[0];
+      photon->SetVolumeCopy(vcopy);
+      photon->SetDetectionPosition(lxyPixel);
       photon->SetPhotonDetector(pd);
+
       {
-	uint64_t vcopy = hit.cellID() & m_ReadoutCellMask;
-
-	photon->SetVolumeCopy(vcopy);
-
 	// Start vertex and momentum; 
 	photon->SetVertexPosition(vtx);
 	{
@@ -427,15 +452,6 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	  photon->SetVertexRefractiveIndex(ri);
 	}
       }
-
-      // Hit location;
-      {
-	// FIXME: take sensor plane orientation into account, and also use floor()
-	// rather than gaussian smearing;
-	double sigma = 3.4/sqrt(12.0);
-	const auto &x = hit.position();
-	photon->SetDetectionPosition(TVector3(x.x + sigma*m_rngUni(), x.y + sigma*m_rngUni(), x.z));
-      }     
       
       // At this point all of the CherenkovPhoton class internal variables are actually 
       // set the same way as in a standalone G4 code, except for the parent momentum at vertex;
@@ -486,6 +502,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       if (b1 && b2) {
 	const unsigned zbins = radiator->GetTrajectoryBinCount();
 	TVector3 nn = (to - from).Unit();
+	// FIXME: hardcoded;
 	from += (0.010)*nn;
 	to   -= (0.010)*nn;
 	
