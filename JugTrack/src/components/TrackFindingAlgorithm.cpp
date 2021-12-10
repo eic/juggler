@@ -145,7 +145,7 @@ namespace Jug::Reco {
         Acts::LoggerWrapper{logger()},
         pOptions, &(*pSurface));
 
-    auto results = m_trackFinderFunc(*src_links, *init_trk_params, options);
+    auto results = (*m_trackFinderFunc)(*src_links, *init_trk_params, options);
 
     for (std::size_t iseed = 0; iseed < init_trk_params->size(); ++iseed) {
 
