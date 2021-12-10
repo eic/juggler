@@ -88,9 +88,13 @@ namespace Jug::Reco {
       debug() << "B(z=" << z << " mm) = " << b.transpose()  << " T"   << endmsg;
     }
 
-    // chi2 and #sourclinks per surface cutoffs
+    // eta bins, chi2 and #sourclinks per surface cutoffs
     m_sourcelinkSelectorCfg = {
-        {Acts::GeometryIdentifier(), {m_chi2CutOff, m_numMeasurementsCutOff}},
+        {Acts::GeometryIdentifier(),
+            {m_etaBins, m_chi2CutOff,
+                {m_numMeasurementsCutOff.begin(), m_numMeasurementsCutOff.end()}
+            }
+        },
     };
     m_trackFinderFunc = CKFTracking::makeCKFTrackingFunction(m_geoSvc->trackingGeometry(), m_BField);
     auto im = _msgMap.find(msgLevel());

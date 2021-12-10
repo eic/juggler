@@ -55,8 +55,9 @@ public:
                                                                      Gaudi::DataHandle::Reader, this};
   DataHandle<TrajectoriesContainer> m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
 
-  Gaudi::Property<double> m_chi2CutOff{this, "chi2CutOff", 15.};
-  Gaudi::Property<size_t> m_numMeasurementsCutOff{this, "numMeasurementsCutOff", 10};
+  Gaudi::Property<std::vector<double>> m_etaBins{this, "etaBins", {}};
+  Gaudi::Property<std::vector<double>> m_chi2CutOff{this, "chi2CutOff", {15.}};
+  Gaudi::Property<std::vector<size_t>> m_numMeasurementsCutOff{this, "numMeasurementsCutOff", {10}};
 
   TrackFinderFunction m_trackFinderFunc;
   SmartIF<IGeoSvc> m_geoSvc;
