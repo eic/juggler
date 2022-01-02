@@ -13,6 +13,9 @@
 
 #include "eicd/VectorXYZT.h"
 
+#include "TLorentzVector.h"
+#include "TVector3.h"
+
 // Event Model related classes
 #include "dd4pod/Geant4ParticleCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
@@ -62,7 +65,46 @@ public:
     m_neutron = m_pidSvc->particle(2112).mass;
     m_electron = m_pidSvc->particle(11).mass;
 
+
     return StatusCode::SUCCESS;
+  }
+
+  TLorentzVector apply_boost(eic::VectorXYZT ei_eicv, eic::VectorXYZT pi_eicv, TLorentzVector part){
+
+    //Step 1: Find the needed boosts and rotations from the incoming lepton and hadron beams 
+    //(note, this will give you a perfect boost, in principle you will not know the beam momenta exactly and should use an average)
+  
+    // Define the Boost to make beams back-to-back
+    TLorentzVector ei(ei_eicv.x,ei_eicv.y,ei_eicv.z,ei_eicv.t);
+    TLorentzVector pi(pi_eicv.x,pi_eicv.y,pi_eicv.z,pi_eicv.t);
+
+    TLorentzVector cmBoost = (1./ei.E())*ei + (1./pi.E())*pi;
+
+    TLorentzVector boost(-cmBoost.Px(),-cmBoost.Py(),-cmBoost.Pz(),cmBoost.E());
+    TVector3 b;
+    b = boost.BoostVector();
+
+    TLorentzVector boostBack(0.0,0.0,cmBoost.Pz(),cmBoost.E());
+    TVector3 bb;
+    bb = boostBack.BoostVector(); // This will boost beams from a center of momentum frame back to (nearly) their original energies
+
+    // Boost and rotate the incoming beams to find the proper rotations TLorentzVector
+    pi.Boost(b); // Boost to COM frame
+    ei.Boost(b);
+    double rotAboutY = -1.0*TMath::ATan2(pi.Px(),pi.Pz()); // Rotate to remove x component of beams
+    double rotAboutX = 1.0*TMath::ATan2(pi.Py(),pi.Pz()); // Rotate to remove y component of beams
+
+    //Step 2: Apply boosts and rotations to any particle 4-vector 
+    //(here too, choices will have to be made as to what the 4-vector is for reconstructed particles)
+  
+    //Boost and rotate particle 4-momenta into the headon frame
+    part.Boost(b);
+    part.RotateY(rotAboutY);
+    part.RotateX(rotAboutX);
+    part.Boost(bb);
+
+    return part;
+
   }
 
   StatusCode execute() override {
@@ -146,17 +188,17 @@ public:
       }
       return StatusCode::SUCCESS;
     }
-    if (found_proton == false) {
-      if (msgLevel(MSG::DEBUG)) {
-        debug() << "No initial proton found" << endmsg;
-      }
-      return StatusCode::SUCCESS;
-    }
     if (mcscatID == -1) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "No truth scattered electron found" << endmsg;
       }
       return StatusCode::SUCCESS;      
+    }
+    if (found_proton == false) {
+      if (msgLevel(MSG::DEBUG)) {
+        debug() << "No initial proton found" << endmsg;
+      }
+      return StatusCode::SUCCESS;
     }
 
     // Loop over reconstructed particles to get all outgoing particles other than the scattered electron
@@ -188,16 +230,16 @@ public:
       }
       //Sum over all particles other than scattered electron
       else{
-        //Boost to colinear frame using first-order matrix
-        double px_boosted = (-m_crossingAngle)/2.*p.energy() + p.p().x + (-m_crossingAngle)/2.*p.p().z;
-        double py_boosted = p.p().y;
-        double pz_boosted = (m_crossingAngle)/2.*p.p().x + p.p().z;
-        double E_boosted = p.energy() + (-m_crossingAngle)/2.*p.p().x;
 
-        pxsum += px_boosted;
-        pysum += py_boosted;
-        pzsum += pz_boosted;
-        Esum += E_boosted;
+        //Lorentz vector in lab frame
+        TLorentzVector hf_lab(p.p().x,p.p().y,p.p().z,p.energy());
+
+        //Boost to colinear frame
+        TLorentzVector hf_boosted = apply_boost(ei,pi,hf_lab);
+        pxsum += hf_boosted.Px();
+        pysum += hf_boosted.Py();
+        pzsum += hf_boosted.Pz();
+        Esum += hf_boosted.E();
       }
     }
 

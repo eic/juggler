@@ -27,6 +27,8 @@ gaudi_add_module(JugRecoPlugins
   src/components/InclusiveKinematicsElectron.cpp
   src/components/InclusiveKinematicsJB.cpp
   src/components/InclusiveKinematicsDA.cpp
+  src/components/InclusiveKinematicsSigma.cpp
+  src/components/InclusiveKinematicseSigma.cpp
   src/components/PhotoMultiplierReco.cpp
   LINK
   Gaudi::GaudiAlgLib Gaudi::GaudiKernel

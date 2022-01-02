@@ -23,7 +23,7 @@
 
 namespace Jug::Reco {
 
-class InclusiveKinematicsDA : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
+class InclusiveKinematicsSigma : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
 public:
   DataHandle<dd4pod::Geant4ParticleCollection> m_inputMCParticleCollection{
     "inputMCParticles",
@@ -34,7 +34,7 @@ public:
     Gaudi::DataHandle::Reader,
     this};
   DataHandle<eic::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{
-    "InclusiveKinematicsDA",
+    "InclusiveKinematicsSigma",
     Gaudi::DataHandle::Writer,
     this};
 
@@ -43,11 +43,11 @@ public:
   SmartIF<IParticleSvc> m_pidSvc;
   double m_proton, m_neutron, m_electron;
 
-  InclusiveKinematicsDA(const std::string& name, ISvcLocator* svcLoc)
+  InclusiveKinematicsSigma(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
     declareProperty("inputMCParticles", m_inputMCParticleCollection, "mcparticles");
     declareProperty("inputParticles", m_inputParticleCollection, "ReconstructedParticles");
-    declareProperty("outputData", m_outputInclusiveKinematicsCollection, "InclusiveKinematicsDA");
+    declareProperty("outputData", m_outputInclusiveKinematicsCollection, "InclusiveKinematicsSigma");
   }
 
   StatusCode initialize() override {
@@ -222,7 +222,9 @@ public:
     double pysum = 0;
     double pzsum = 0;
     double Esum = 0;
-    double theta_e = 0;
+
+    double pt_e = 0;
+    double sigma_e = 0;
 
     for(const auto& p : parts){
         //Get the scattered electron index and angle
@@ -232,7 +234,8 @@ public:
           TLorentzVector e_boosted = apply_boost(ei,pi,e_lab);
           
           scatID = p.ID();
-          theta_e = e_boosted.Theta();
+          pt_e = e_boosted.Pt();
+          sigma_e = e_boosted.E() - e_boosted.Pz();
         }
         //Sum over all particles other than scattered electron
         else{
@@ -251,23 +254,22 @@ public:
 
     // DIS kinematics calculations
     auto sigma_h = Esum - pzsum;
-    auto ptsum = sqrt(pxsum*pxsum + pysum*pysum);
-    auto theta_h = 2.*atan(sigma_h/ptsum);
+    auto sigma_tot = sigma_e + sigma_h;
 
     if (scatID && sigma_h>0) {
 
-      auto y_da = tan(theta_h/2.) / ( tan(theta_e/2.) + tan(theta_h/2.) );
-      auto Q2_da = 4.*ei.energy()*ei.energy() * ( 1. / tan(theta_e/2.) ) * ( 1. / (tan(theta_e/2.) + tan(theta_h/2.)) );
-      auto x_da = Q2_da / (4.*ei.energy()*pi.energy()*y_da);
-      auto nu_da = Q2_da / (2.*m_proton*x_da);
-      auto W_da = sqrt ( m_proton*m_proton + 2*m_proton*nu_da - Q2_da );      
+      auto y_sig = sigma_h / sigma_tot;
+      auto Q2_sig = (pt_e*pt_e) / (1. - y_sig);
+      auto x_sig = Q2_sig / (4.*ei.energy()*pi.energy()*y_sig);
+      auto nu_sig = Q2_sig / (2.*m_proton*x_sig);
+      auto W_sig = sqrt ( m_proton*m_proton + 2*m_proton*nu_sig - Q2_sig );      
 
       auto kin = out_kinematics.create();
-      kin.Q2(Q2_da);
-      kin.y(y_da);
-      kin.nu(nu_da);
-      kin.x(x_da);
-      kin.W(W_da);
+      kin.Q2(Q2_sig);
+      kin.y(y_sig);
+      kin.nu(nu_sig);
+      kin.x(x_sig);
+      kin.W(W_sig);
     
       kin.scatID(scatID); //MC index of scattered electron
 
@@ -289,6 +291,6 @@ public:
   }
 };
 
-DECLARE_COMPONENT(InclusiveKinematicsDA)
+DECLARE_COMPONENT(InclusiveKinematicsSigma)
 
 } // namespace Jug::Reco
