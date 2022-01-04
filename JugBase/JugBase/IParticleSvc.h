@@ -1,8 +1,8 @@
 #ifndef IParticleSvc_H
 #define IParticleSvc_H
 
-#include "GaudiKernel/IService.h"
-#include  <unordered_map>
+#include <GaudiKernel/IService.h>
+#include <unordered_map>
 
 namespace Jug::Base {
 

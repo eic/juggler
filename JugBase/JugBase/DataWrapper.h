@@ -4,8 +4,8 @@
 #include <type_traits>
 
 // Include files
-#include "GaudiKernel/DataObject.h"
-#include "podio/CollectionBase.h"
+#include <GaudiKernel/DataObject.h>
+#include <podio/CollectionBase.h>
 
 /** Data wrapper.
  *

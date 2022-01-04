@@ -4,14 +4,14 @@
 #include "JugBase/DataWrapper.h"
 #include "JugBase/PodioDataSvc.h"
 
-#include "GaudiKernel/AlgTool.h"
-#include "GaudiKernel/Algorithm.h"
+#include <GaudiKernel/AlgTool.h>
+#include <GaudiKernel/Algorithm.h>
 #include <GaudiKernel/DataObjectHandle.h>
 #include <GaudiKernel/GaudiException.h>
 #include <Gaudi/Property.h>
 #include <GaudiKernel/ServiceLocatorHelper.h>
 
-#include "TTree.h"
+#include <TTree.h>
 
 #include <type_traits>
 

@@ -1,8 +1,8 @@
 #ifndef IGEOSVC_H
 #define IGEOSVC_H
 
-#include "GaudiKernel/IService.h"
-#include  <unordered_map>
+#include <GaudiKernel/IService.h>
+#include <unordered_map>
 
 namespace dd4hep {
   class Detector;

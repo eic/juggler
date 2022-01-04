@@ -1,13 +1,13 @@
 #ifndef JUGBASE_PODIODATASVC_H
 #define JUGBASE_PODIODATASVC_H
 
-#include "GaudiKernel/DataSvc.h"
-#include "GaudiKernel/IConversionSvc.h"
+#include <GaudiKernel/DataSvc.h>
+#include <GaudiKernel/IConversionSvc.h>
 // PODIO
-#include "podio/CollectionBase.h"
-#include "podio/CollectionIDTable.h"
-#include "podio/EventStore.h"
-#include "podio/ROOTReader.h"
+#include <podio/CollectionBase.h>
+#include <podio/CollectionIDTable.h>
+#include <podio/EventStore.h>
+#include <podio/ROOTReader.h>
 
 #include <utility>
 // Forward declarations

@@ -5,7 +5,7 @@
 ROOT_GENERATE_DICTIONARY(G__JugBase
   JugBase/DataHandle.h
   LINKDEF JugBaseLinkDef.h
-  OPTIONS -I${Gaudi_INCLUDE_DIR}
+  OPTIONS -I${Gaudi_INCLUDE_DIR} -I${podio_INCLUDE_DIR}
 )
 
 gaudi_add_library(JugBase

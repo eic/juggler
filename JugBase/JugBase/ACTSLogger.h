@@ -1,12 +1,10 @@
-
-
 #ifndef RECTRACKER_ACTSLOGGER_H
 #define RECTRACKER_ACTSLOGGER_H
 
-#include "Acts/Utilities/Logger.hpp"
-#include "GaudiKernel/ServiceHandle.h"
-#include "GaudiKernel/IMessageSvc.h"
-#include "GaudiKernel/MsgStream.h"
+#include <Acts/Utilities/Logger.hpp>
+#include <GaudiKernel/ServiceHandle.h>
+#include <GaudiKernel/IMessageSvc.h>
+#include <GaudiKernel/MsgStream.h>
 
 /** Filter
  *
