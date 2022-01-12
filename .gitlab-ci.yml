@@ -41,6 +41,7 @@ stages:
   - config
   - docker    ## build new version of juggler
   - deploy    ## repo-local singularity image for development work
+  - analysis
   - finalize
 
 workflow:
@@ -70,6 +71,21 @@ juggler:local:
     - |
       cmake -Bbuild -S.
       cmake --build build -j20
+  artifacts:
+    paths:
+      - build/
+
+analysis:clang-tidy:
+  image: eicweb.phy.anl.gov:4567/eic/juggler/juggler:latest
+  stage: analysis
+  needs: 
+    - juggler:local
+  script:
+    - |
+      run-clang-tidy-13 -p build -j20 -export-fixes clang_tidy_fixes.yml
+  artifacts:
+    paths:
+      - clang_tidy_fixes.yml
 
 version:
   stage: config 
