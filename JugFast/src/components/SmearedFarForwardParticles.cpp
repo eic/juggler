@@ -39,7 +39,7 @@ public:
   Gaudi::Property<bool> m_enableOMD{this, "enableOMD", true};
 
   // Beam energy, only used to determine the RP/OMD momentum ranges
-  Gaudi::Property<double> m_ionBeamEnergy{this, "ionBeamEnergy", 100.};
+  Gaudi::Property<double> m_ionBeamEnergy{this, "ionBeamEnergy", 0.};
   // RP default to 10-on-100 setting
   // Pz > 60% of beam energy (60% x 100GeV = 60GeV)
   // theta from 0.2mrad -> 5mrad
@@ -94,18 +94,44 @@ public:
     const auto& mc = *(m_inputParticles.get());
     auto& rc       = *(m_outputParticles.createAndPut());
 
+    double ionBeamEnergy = 0;
+    if (m_ionBeamEnergy > 0) {
+      ionBeamEnergy = m_ionBeamEnergy;
+    } else {
+      for (const auto& part: mc) {
+        if (part.genStatus() == 4 && part.pdgID() == 2212) {
+          auto E = std::hypot(part.ps().mag(), part.mass());
+          if (33 < E && E < 50) {
+            ionBeamEnergy = 41;
+          } else if (80 < E && E < 120) {
+            ionBeamEnergy = 100;
+          } else if (220 < E && E < 330) {
+            ionBeamEnergy = 275;
+          } else {
+            warning() << "Ion beam energy " << E << " not a standard setting." << endmsg;
+            ionBeamEnergy = E;
+          }
+          break;
+        }
+      }
+      if (ionBeamEnergy == 0) {
+        warning() << "No incoming ion beam; using 100 GeV ion beam energy." << endmsg;
+        ionBeamEnergy = 100;
+      }
+    }
+
     std::vector<std::vector<RecData>> rc_parts;
     if (m_enableZDC) {
-      rc_parts.push_back(zdc(mc));
+      rc_parts.push_back(zdc(mc, ionBeamEnergy));
     }
     if (m_enableRP) {
-      rc_parts.push_back(rp(mc));
+      rc_parts.push_back(rp(mc, ionBeamEnergy));
     }
     if (m_enableB0) {
-      rc_parts.push_back(b0(mc));
+      rc_parts.push_back(b0(mc, ionBeamEnergy));
     }
     if (m_enableOMD) {
-      rc_parts.push_back(omd(mc));
+      rc_parts.push_back(omd(mc, ionBeamEnergy));
     }
     for (const auto& det : rc_parts) {
       for (const auto& part : det) {
@@ -118,7 +144,7 @@ public:
 private:
   // ZDC smearing as in eic_smear
   // https://github.com/eic/eicsmeardetectors/blob/9a1831dd97bf517b80a06043b9ee4bfb96b483d8/SmearMatrixDetector_0_1_FF.cxx#L224
-  std::vector<RecData> zdc(const dd4pod::Geant4ParticleCollection& mc) {
+  std::vector<RecData> zdc(const dd4pod::Geant4ParticleCollection& mc, const double ionBeamEnergy) {
     std::vector<RecData> rc;
     for (const auto& part : mc) {
       if (part.genStatus() > 1) {
@@ -191,7 +217,7 @@ private:
   }
   // Fast B0 as in
   // https://github.com/eic/eicsmeardetectors/blob/9a1831dd97bf517b80a06043b9ee4bfb96b483d8/SmearMatrixDetector_0_1_FF.cxx#L254
-  std::vector<RecData> b0(const dd4pod::Geant4ParticleCollection& mc) {
+  std::vector<RecData> b0(const dd4pod::Geant4ParticleCollection& mc, const double ionBeamEnergy) {
     std::vector<RecData> rc;
     for (const auto& part : mc) {
       if (part.genStatus() > 1) {
@@ -231,7 +257,7 @@ private:
     return rc;
   }
 
-  std::vector<RecData> rp(const dd4pod::Geant4ParticleCollection& mc) {
+  std::vector<RecData> rp(const dd4pod::Geant4ParticleCollection& mc, const double ionBeamEnergy) {
     std::vector<RecData> rc;
     for (const auto& part : mc) {
       if (part.genStatus() > 1) {
@@ -246,7 +272,7 @@ private:
       }
       const auto mom_ion = removeCrossingAngle(part.ps()); //rotateLabToIonDirection(part.ps());
       if (mom_ion.theta() < m_thetaMinRP || mom_ion.theta() > m_thetaMaxRP ||
-          mom_ion.z < m_pMinRigidityRP * m_ionBeamEnergy) {
+          mom_ion.z < m_pMinRigidityRP * ionBeamEnergy) {
         continue;
       }
       auto rc_part = smearMomentum(part);
@@ -264,7 +290,7 @@ private:
     return rc;
   }
 
-  std::vector<RecData> omd(const dd4pod::Geant4ParticleCollection& mc) {
+  std::vector<RecData> omd(const dd4pod::Geant4ParticleCollection& mc, const double ionBeamEnergy) {
     std::vector<RecData> rc;
     for (const auto& part : mc) {
       if (part.genStatus() > 1) {
@@ -278,7 +304,7 @@ private:
         continue;
       }
       const auto mom_ion = removeCrossingAngle(part.ps()); //rotateLabToIonDirection(part.ps());
-      if (mom_ion.z < m_pMinRigidityOMD * m_ionBeamEnergy || mom_ion.z > m_pMaxRigidityOMD * m_ionBeamEnergy) {
+      if (mom_ion.z < m_pMinRigidityOMD * ionBeamEnergy || mom_ion.z > m_pMaxRigidityOMD * ionBeamEnergy) {
         continue;
       }
       // angle cut
