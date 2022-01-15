@@ -39,18 +39,15 @@ namespace Jug {
     IndexSourceLink& operator=(const IndexSourceLink&) = default;
     IndexSourceLink& operator=(IndexSourceLink&&) = default;
 
-    /// Access the geometry identifier.
-    constexpr Acts::GeometryIdentifier geometryId() const { return m_geometryId; }
     /// Access the index.
     constexpr Index index() const { return m_index; }
 
   public:
-    Acts::GeometryIdentifier m_geometryId;
     Index                    m_index;
 
     friend constexpr bool operator==(const IndexSourceLink& lhs, const IndexSourceLink& rhs)
     {
-      return (lhs.m_geometryId == rhs.m_geometryId) and (lhs.m_index == rhs.m_index);
+      return (lhs.geometryId() == rhs.geometryId()) and (lhs.m_index == rhs.m_index);
     }
     friend constexpr bool operator!=(const IndexSourceLink& lhs, const IndexSourceLink& rhs) { return not(lhs == rhs); }
   };
