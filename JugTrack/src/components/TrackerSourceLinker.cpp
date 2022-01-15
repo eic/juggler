@@ -43,6 +43,7 @@ namespace Jug::Reco {
   class TrackerSourceLinker : public GaudiAlgorithm {
   public:
     DataHandle<eic::TrackerHitCollection>    m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+    DataHandle<std::list<IndexSourceLink>>   m_sourceLinkStorage{"sourceLinkStorage", Gaudi::DataHandle::Writer, this};
     DataHandle<IndexSourceLinkContainer>     m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};
     DataHandle<MeasurementContainer>         m_outputMeasurements{"outputMeasurements", Gaudi::DataHandle::Writer, this};
     /// Pointer to the geometry service
@@ -52,7 +53,8 @@ namespace Jug::Reco {
     TrackerSourceLinker(const std::string& name, ISvcLocator* svcLoc)
         : GaudiAlgorithm(name, svcLoc) {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
-      declareProperty("outputSourceLinks", m_outputSourceLinks, "");
+      declareProperty("sourceLinkStorage",  m_sourceLinkStorage, "");
+      declareProperty("outputSourceLinks",  m_outputSourceLinks, "");
       declareProperty("outputMeasurements", m_outputMeasurements, "");
     }
 
@@ -77,7 +79,8 @@ namespace Jug::Reco {
       // input collection
       const eic::TrackerHitCollection* hits = m_inputHitCollection.get();
       // Create output collections
-      auto sourceLinks = m_outputSourceLinks.createAndPut();
+      auto linkStorage  = m_sourceLinkStorage.createAndPut();
+      auto sourceLinks  = m_outputSourceLinks.createAndPut();
       auto measurements = m_outputMeasurements.createAndPut();
       sourceLinks->reserve(hits->size());
       measurements->reserve(hits->size());
@@ -135,12 +138,13 @@ namespace Jug::Reco {
         //
         // variable hitIdx not used anywhere
         //Index hitIdx = measurements->size();
-        IndexSourceLink sourceLink(surface->geometryId(), ihit);
+        linkStorage->emplace_back(surface->geometryId(), ihit);
+        IndexSourceLink& sourceLink = linkStorage->back();
         auto meas = Acts::makeMeasurement(sourceLink, loc, cov, Acts::eBoundLoc0, Acts::eBoundLoc1);
 
         // add to output containers. since the input is already geometry-order,
         // new elements in geometry containers can just be appended at the end.
-        sourceLinks->emplace_hint(sourceLinks->end(), std::move(sourceLink));
+        sourceLinks->emplace_hint(sourceLinks->end(), sourceLink);
         measurements->emplace_back(std::move(meas));
 
         ihit++;

@@ -28,13 +28,14 @@ namespace {
   using Stepper    = Acts::EigenStepper<>;
   using Navigator  = Acts::Navigator;
   using Propagator = Acts::Propagator<Stepper, Navigator>;
-  using CKF        = Acts::CombinatorialKalmanFilter<Propagator, Updater, Smoother>;
+  using CKF        = Acts::CombinatorialKalmanFilter<Propagator>;
 
   /** Finder implmentation .
    *
    * \ingroup track
    */
-  struct CKFTrackingFunctionImpl {
+  struct CKFTrackingFunctionImpl
+    : public Jug::Reco::CKFTracking::CKFTrackingFunction {
     CKF trackFinder;
 
     CKFTrackingFunctionImpl(CKF&& f) : trackFinder(std::move(f)) {}
@@ -42,7 +43,8 @@ namespace {
     Jug::Reco::CKFTracking::TrackFinderResult
     operator()(const Jug::IndexSourceLinkContainer&                        sourcelinks,
                const Jug::TrackParametersContainer&                        initialParameters,
-               const Jug::Reco::CKFTracking::TrackFinderOptions& options) const
+               const Jug::Reco::CKFTracking::TrackFinderOptions& options)
+               const override
     {
       return trackFinder.findTracks(sourcelinks, initialParameters, options);
     };
@@ -52,7 +54,8 @@ namespace {
 
 namespace Jug::Reco {
 
-  CKFTracking::CKFTrackingFunction CKFTracking::makeCKFTrackingFunction(
+  std::shared_ptr<CKFTracking::CKFTrackingFunction>
+  CKFTracking::makeCKFTrackingFunction(
       std::shared_ptr<const Acts::TrackingGeometry>      trackingGeometry,
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField)
   {
@@ -67,7 +70,7 @@ namespace Jug::Reco {
     CKF        trackFinder(std::move(propagator));
 
     // build the track finder functions. onws the track finder object.
-    return CKFTrackingFunctionImpl(std::move(trackFinder));
+    return std::make_shared<CKFTrackingFunctionImpl>(std::move(trackFinder));
   }
 
 } // namespace Jug::Reco

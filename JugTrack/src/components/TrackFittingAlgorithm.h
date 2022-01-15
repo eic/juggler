@@ -43,20 +43,11 @@ namespace Jug::Reco {
   public:
     /// Track fitter function that takes input measurements, initial trackstate
     /// and fitter options and returns some track-fitter-specific result.
-    #if Acts_VERSION_MAJOR < 14
     using TrackFitterOptions =
-        Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder>;
-    #else
-    using TrackFitterOptions =
-        Acts::KalmanFitterOptions<
-            MeasurementCalibrator,
-            Acts::VoidOutlierFinder,
-            Acts::VoidReverseFilteringLogic
-        >;
-    #endif
+        Acts::KalmanFitterOptions;
 
     //using TrackFinderResult = Acts::Result<Acts::CombinatorialKalmanFilterResult<SourceLink>>;
-    using FitterResult = Acts::Result<Acts::KalmanFitterResult<IndexSourceLink>>;
+    using FitterResult = Acts::Result<Acts::KalmanFitterResult>;
 
     /// Fit function that takes input measurements, initial trackstate and fitter
     using FitterFunction = std::function<FitterResult(

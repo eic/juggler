@@ -104,16 +104,19 @@ namespace Jug::Reco {
     // kfOptions.multipleScattering = m_cfg.multipleScattering;
     // kfOptions.energyLoss         = m_cfg.energyLoss;
 
-    #if Acts_VERSION_MAJOR < 14
-    Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder> kfOptions(
-        m_geoctx, m_fieldctx, m_calibctx, MeasurementCalibrator(*measurements),
-        Acts::VoidOutlierFinder(), Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
-    #else
-    Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder, Acts::VoidReverseFilteringLogic> kfOptions(
-        m_geoctx, m_fieldctx, m_calibctx, MeasurementCalibrator(*measurements),
-        Acts::VoidOutlierFinder(), Acts::VoidReverseFilteringLogic(),
-        Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
-    #endif
+    Acts::KalmanFitterExtensions extensions;
+    MeasurementCalibrator calibrator{*measurements};
+    extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
+    Acts::GainMatrixUpdater kfUpdater;
+    Acts::GainMatrixSmoother kfSmoother;
+    extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
+    extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
+        &kfSmoother);
+
+    Acts::KalmanFitterOptions kfOptions(
+        m_geoctx, m_fieldctx, m_calibctx, extensions,
+        Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(),
+        &(*pSurface));
 
     // used for processing the data
     std::vector<IndexSourceLink>      trackSourceLinks;
@@ -142,18 +145,16 @@ namespace Jug::Reco {
       trackSourceLinks.reserve(protoTrack.size());
 
       for (auto hitIndex : protoTrack) {
-        if (msgLevel(MSG::DEBUG)) {
-          debug() << " hit  index = " << hitIndex << endmsg;
-        }
-        auto sourceLink = sourceLinks->nth(hitIndex);
-        auto geoId      = sourceLink->geometryId();
-        if (sourceLink == sourceLinks->end()) {
-          ACTS_FATAL("Proto track " << itrack << " contains invalid hit index "
+        if (auto it = sourceLinks->nth(hitIndex); it != sourceLinks->end()) {
+          const IndexSourceLink& sourceLink = *it;
+          auto geoId = sourceLink.geometryId();
+          trackSourceLinks.push_back(std::cref(sourceLink));
+          //surfSequence.push_back(m_cfg.trackingGeometry->findSurface(geoId));
+        } else {
+          ACTS_FATAL("Proto track " << itrack << " contains invalid hit index"
                                     << hitIndex);
           return StatusCode::FAILURE;
         }
-        trackSourceLinks.push_back(*sourceLink);
-        //surfSequence.push_back(m_cfg.trackingGeometry->findSurface(geoId));
       }
 
       if (msgLevel(MSG::DEBUG)) {

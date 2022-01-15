@@ -89,9 +89,13 @@ namespace Jug::Reco {
       debug() << "B(z=" << z << " mm) = " << b.transpose()  << " T"   << endmsg;
     }
 
-    // chi2 and #sourclinks per surface cutoffs
+    // eta bins, chi2 and #sourclinks per surface cutoffs
     m_sourcelinkSelectorCfg = {
-        {Acts::GeometryIdentifier(), {m_chi2CutOff, m_numMeasurementsCutOff}},
+        {Acts::GeometryIdentifier(),
+            {m_etaBins, m_chi2CutOff,
+                {m_numMeasurementsCutOff.begin(), m_numMeasurementsCutOff.end()}
+            }
+        },
     };
     m_trackFinderFunc = TrackFindingAlgorithm::makeTrackFinderFunction(m_geoSvc->trackingGeometry(), m_BField);
     auto im = _msgMap.find(msgLevel());
@@ -121,12 +125,27 @@ namespace Jug::Reco {
     Acts::PropagatorPlainOptions pOptions;
     pOptions.maxSteps = 10000;
 
+    MeasurementCalibrator calibrator{*measurements};
+    Acts::GainMatrixUpdater kfUpdater;
+    Acts::GainMatrixSmoother kfSmoother;
+    Acts::MeasurementSelector measSel{m_sourcelinkSelectorCfg};
+
+    Acts::CombinatorialKalmanFilterExtensions extensions;
+    extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
+    extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
+    extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
+        &kfSmoother);
+    extensions.measurementSelector.connect<&Acts::MeasurementSelector::select>(
+        &measSel);
+
     // Set the CombinatorialKalmanFilter options
     TrackFindingAlgorithm::TrackFinderOptions options(
-        m_geoctx, m_fieldctx, m_calibctx, IndexSourceLinkAccessor(), MeasurementCalibrator(*measurements),
-        Acts::MeasurementSelector(m_sourcelinkSelectorCfg), Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
+        m_geoctx, m_fieldctx, m_calibctx,
+        IndexSourceLinkAccessor(), extensions,
+        Acts::LoggerWrapper{logger()},
+        pOptions, &(*pSurface));
 
-    auto results = m_trackFinderFunc(*src_links, *init_trk_params, options);
+    auto results = (*m_trackFinderFunc)(*src_links, *init_trk_params, options);
 
     for (std::size_t iseed = 0; iseed < init_trk_params->size(); ++iseed) {
 
