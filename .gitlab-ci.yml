@@ -65,7 +65,7 @@ default:
 ##  - MR          --> unstable-mr-XXX (on eicweb only, untag at end of pipeline)
 
 juggler:local:
-  image: eicweb.phy.anl.gov:4567/eic/juggler/juggler:latest
+  image: eicweb.phy.anl.gov:4567/containers/eic_container/jug_xl:nightly
   stage: build
   script:
     - |
@@ -76,7 +76,7 @@ juggler:local:
       - build/
 
 analysis:clang-tidy:
-  image: eicweb.phy.anl.gov:4567/eic/juggler/juggler:latest
+  image: eicweb.phy.anl.gov:4567/containers/eic_container/jug_xl:nightly
   stage: analysis
   needs: 
     - juggler:local
