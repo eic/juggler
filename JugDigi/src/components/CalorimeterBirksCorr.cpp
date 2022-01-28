@@ -64,7 +64,7 @@ namespace Jug::Digi {
 
       m_pidSvc = service("ParticleSvc");
       if (!m_pidSvc) {
-        error() << "Unable to locate Particle Service. "
+        error() << "Unable to locate Particle Service! "
                 << "Make sure you have ParticleSvc in the configuration."
                 << endmsg;
         return StatusCode::FAILURE;
