@@ -204,7 +204,7 @@ public:
         hitx.push_back(pos0.x());// - local_x_offset_station_2);
       } // use station 2 for both offsets since it is used for the reference orbit
       else {
-        hitx.push_back(pos0.x); // - local_x_offset_station_2);
+        hitx.push_back(pos0.x()); // - local_x_offset_station_2);
       }
 
       hity.push_back(pos0.y());
