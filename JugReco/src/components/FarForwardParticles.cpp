@@ -36,6 +36,21 @@ class FarForwardParticles : public GaudiAlgorithm, AlgorithmIDMixin<> {
   Gaudi::Property<double> crossingAngle{this, "crossingAngle", -0.025};
   Gaudi::Property<double> nomMomentum{this, "beamMomentum", 275.0};
 
+  Gaudi::Property<std::string> m_geoSvcName{this, "geoServiceName", "GeoSvc"};
+  Gaudi::Property<std::string> m_readout{this, "readoutClass", ""};
+  Gaudi::Property<std::string> m_layerField{this, "layerField", ""};
+  Gaudi::Property<std::string> m_sectorField{this, "sectorField", ""};
+  SmartIF<IGeoSvc>             m_geoSvc;
+  dd4hep::BitFieldCoder*       id_dec = nullptr;
+  size_t                       sector_idx, layer_idx;
+
+  Gaudi::Property<std::string>              m_localDetElement{this, "localDetElement", ""};
+  Gaudi::Property<std::vector<std::string>> u_localDetFields{this, "localDetFields", {}};
+  dd4hep::DetElement                        local;
+  size_t                                    local_mask = ~0;
+
+
+
   const double aXRP[2][2] = {{2.102403743, 29.11067626}, {0.186640381, 0.192604619}};
   const double aYRP[2][2] = {{0.0000159900, 3.94082098}, {0.0000079946, -0.1402995}};
 
