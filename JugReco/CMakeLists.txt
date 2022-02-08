@@ -15,6 +15,7 @@ gaudi_add_module(JugRecoPlugins
   src/components/CalorimeterHitsEtaPhiProjector.cpp 
   src/components/CalorimeterHitsMerger.cpp 
   src/components/CalorimeterIslandCluster.cpp 
+  src/components/ClusterIdentification.cpp
   src/components/EnergyPositionClusterMerger.cpp
   src/components/ClusterRecoCoG.cpp 
   src/components/ParticleCollector.cpp
@@ -31,6 +32,7 @@ gaudi_add_module(JugRecoPlugins
   src/components/InclusiveKinematicseSigma.cpp
   src/components/PhotoMultiplierReco.cpp
   LINK
+  ${tflite}
   Gaudi::GaudiAlgLib Gaudi::GaudiKernel
   JugBase
   ROOT::Core ROOT::RIO ROOT::Tree

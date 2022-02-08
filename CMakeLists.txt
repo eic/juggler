@@ -22,6 +22,15 @@ if(ENABLE_CLANG_TIDY)
   endif()
 endif()
 
+find_library(tflite_library tensorflow-lite /opt/local/lib REQUIRED)
+find_file(tflite_interpreter tensorflow/lite/interpreter.h /opt/local/include REQUIRED)
+get_filename_component(tflite ${tflite_library} NAME)
+get_filename_component(tflite_LIBRARY_DIR ${tflite_library} DIRECTORY)
+link_directories(${tflite_LIBRARY_DIR})
+get_filename_component(tflite_INCLUDE_DIR ${tflite_interpreter} DIRECTORY)
+include_directories(${tflite_INCLUDE_DIR}/../..)
+message(STATUS "tensorflow-lite: ${tflite} ${tflite_LIBRARY_DIR} ${tflite_INCLUDE_DIR}")
+
 find_package(EICD REQUIRED)
 find_package(NPDet REQUIRED)
 
