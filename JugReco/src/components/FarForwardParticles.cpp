@@ -72,64 +72,64 @@ public:
   //include the Eigen libraries, used in ACTS, for the linear algebra.
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure())
+    if (GaudiAlgorithm::initialize().isFailure()){
       return StatusCode::FAILURE;
+    }
+    m_geoSvc = service(m_geoSvcName);
+    if (!m_geoSvc) {
+      error() << "Unable to locate Geometry Service. "
+              << "Make sure you have GeoSvc and SimSvc in the right order in the configuration."
+              << endmsg;
+      return StatusCode::FAILURE;
+    }
 
-      m_geoSvc = service(m_geoSvcName);
-      if (!m_geoSvc) {
-        error() << "Unable to locate Geometry Service. "
-                << "Make sure you have GeoSvc and SimSvc in the right order in the configuration."
-                << endmsg;
-        return StatusCode::FAILURE;
+    // do not get the layer/sector ID if no readout class provided
+    if (m_readout.value().empty()) {
+      return StatusCode::SUCCESS;
+    }
+
+    auto id_spec = m_geoSvc->detector()->readout(m_readout).idSpec();
+    try {
+      id_dec = id_spec.decoder();
+      if (m_sectorField.value().size()) {
+        sector_idx = id_dec->index(m_sectorField);
+        info() << "Find sector field " << m_sectorField.value() << ", index = " << sector_idx << endmsg;
       }
-
-      // do not get the layer/sector ID if no readout class provided
-      if (m_readout.value().empty()) {
-        return StatusCode::SUCCESS;
+      if (m_layerField.value().size()) {
+        layer_idx = id_dec->index(m_layerField);
+        info() << "Find layer field " << m_layerField.value() << ", index = " << sector_idx << endmsg;
       }
+    } catch (...) {
+      error() << "Failed to load ID decoder for " << m_readout << endmsg;
+      return StatusCode::FAILURE;
+    }
 
-      auto id_spec = m_geoSvc->detector()->readout(m_readout).idSpec();
+    // local detector name has higher priority
+    if (m_localDetElement.value().size()) {
       try {
-        id_dec = id_spec.decoder();
-        if (m_sectorField.value().size()) {
-          sector_idx = id_dec->index(m_sectorField);
-          info() << "Find sector field " << m_sectorField.value() << ", index = " << sector_idx << endmsg;
-        }
-        if (m_layerField.value().size()) {
-          layer_idx = id_dec->index(m_layerField);
-          info() << "Find layer field " << m_layerField.value() << ", index = " << sector_idx << endmsg;
-        }
+        local = m_geoSvc->detector()->detector(m_localDetElement.value());
+        info() << "Local coordinate system from DetElement " << m_localDetElement.value()
+                << endmsg;
       } catch (...) {
-        error() << "Failed to load ID decoder for " << m_readout << endmsg;
+        error() << "Failed to locate local coordinate system from DetElement "
+                << m_localDetElement.value() << endmsg;
         return StatusCode::FAILURE;
       }
-
-      // local detector name has higher priority
-      if (m_localDetElement.value().size()) {
-        try {
-          local = m_geoSvc->detector()->detector(m_localDetElement.value());
-          info() << "Local coordinate system from DetElement " << m_localDetElement.value()
-                 << endmsg;
-        } catch (...) {
-          error() << "Failed to locate local coordinate system from DetElement "
-                  << m_localDetElement.value() << endmsg;
-          return StatusCode::FAILURE;
-        }
-      // or get from fields
-      } else {
-        std::vector<std::pair<std::string, int>> fields;
-        for (auto& f : u_localDetFields.value()) {
-          fields.push_back({f, 0});
-        }
-        local_mask = id_spec.get_mask(fields);
-        // use all fields if nothing provided
-        if (fields.empty()) {
-          local_mask = ~0;
-        }
-        info() << fmt::format("Local DetElement mask {:#064b} from fields [{}]", local_mask,
-                              fmt::join(fields, ", "))
-               << endmsg;
+    // or get from fields
+    } else {
+      std::vector<std::pair<std::string, int>> fields;
+      for (auto& f : u_localDetFields.value()) {
+        fields.push_back({f, 0});
       }
+      local_mask = id_spec.get_mask(fields);
+      // use all fields if nothing provided
+      if (fields.empty()) {
+        local_mask = ~0;
+      }
+      info() << fmt::format("Local DetElement mask {:#064b} from fields [{}]", local_mask,
+                            fmt::join(fields, ", "))
+              << endmsg;
+    }
       
     double det = aXRP[0][0] * aXRP[1][1] - aXRP[0][1] * aXRP[1][0];
 
@@ -201,14 +201,14 @@ public:
       }
 
       if (eventReset < 2) {
-        hitx.push_back(pos0.x);// - local_x_offset_station_2);
+        hitx.push_back(pos0.x());// - local_x_offset_station_2);
       } // use station 2 for both offsets since it is used for the reference orbit
       else {
         hitx.push_back(pos0.x); // - local_x_offset_station_2);
       }
 
-      hity.push_back(pos0.y);
-      hitz.push_back(pos0.z);
+      hity.push_back(pos0.y());
+      hitz.push_back(pos0.z());
 
       eventReset++;
     }
