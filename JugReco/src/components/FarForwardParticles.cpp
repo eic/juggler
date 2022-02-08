@@ -8,7 +8,12 @@
 #include "GaudiAlg/Transformer.h"
 #include "GaudiKernel/RndmGenerators.h"
 
+#include "DDRec/CellIDPositionConverter.h"
+#include "DDRec/Surface.h"
+#include "DDRec/SurfaceManager.h"
+
 #include "JugBase/DataHandle.h"
+#include "JugBase/IGeoSvc.h"
 #include "JugBase/UniqueID.h"
 
 // Event Model related classes
@@ -44,10 +49,73 @@ public:
     declareProperty("outputCollection", m_outputParticles, "ReconstructedParticles");
   }
 
+  // See Wouter's example to extract local coordinates CalorimeterHitReco.cpp
+  //includes DDRec/CellIDPositionConverter.here
+  //See tutorial
+  // auto converter = m_GeoSvc ....
+  //https://eicweb.phy.anl.gov/EIC/juggler/-/blob/master/JugReco/src/components/CalorimeterHitReco.cpp - line 200
+  //include the Eigen libraries, used in ACTS, for the linear algebra.
+
   StatusCode initialize() override {
     if (GaudiAlgorithm::initialize().isFailure())
       return StatusCode::FAILURE;
 
+      m_geoSvc = service(m_geoSvcName);
+      if (!m_geoSvc) {
+        error() << "Unable to locate Geometry Service. "
+                << "Make sure you have GeoSvc and SimSvc in the right order in the configuration."
+                << endmsg;
+        return StatusCode::FAILURE;
+      }
+
+      // do not get the layer/sector ID if no readout class provided
+      if (m_readout.value().empty()) {
+        return StatusCode::SUCCESS;
+      }
+
+      auto id_spec = m_geoSvc->detector()->readout(m_readout).idSpec();
+      try {
+        id_dec = id_spec.decoder();
+        if (m_sectorField.value().size()) {
+          sector_idx = id_dec->index(m_sectorField);
+          info() << "Find sector field " << m_sectorField.value() << ", index = " << sector_idx << endmsg;
+        }
+        if (m_layerField.value().size()) {
+          layer_idx = id_dec->index(m_layerField);
+          info() << "Find layer field " << m_layerField.value() << ", index = " << sector_idx << endmsg;
+        }
+      } catch (...) {
+        error() << "Failed to load ID decoder for " << m_readout << endmsg;
+        return StatusCode::FAILURE;
+      }
+
+      // local detector name has higher priority
+      if (m_localDetElement.value().size()) {
+        try {
+          local = m_geoSvc->detector()->detector(m_localDetElement.value());
+          info() << "Local coordinate system from DetElement " << m_localDetElement.value()
+                 << endmsg;
+        } catch (...) {
+          error() << "Failed to locate local coordinate system from DetElement "
+                  << m_localDetElement.value() << endmsg;
+          return StatusCode::FAILURE;
+        }
+      // or get from fields
+      } else {
+        std::vector<std::pair<std::string, int>> fields;
+        for (auto& f : u_localDetFields.value()) {
+          fields.push_back({f, 0});
+        }
+        local_mask = id_spec.get_mask(fields);
+        // use all fields if nothing provided
+        if (fields.empty()) {
+          local_mask = ~0;
+        }
+        info() << fmt::format("Local DetElement mask {:#064b} from fields [{}]", local_mask,
+                              fmt::join(fields, ", "))
+               << endmsg;
+      }
+      
     double det = aXRP[0][0] * aXRP[1][1] - aXRP[0][1] * aXRP[1][0];
 
     if (det == 0) {
@@ -74,6 +142,8 @@ public:
     const eic::TrackerHitCollection* rawhits = m_inputHitCollection.get();
     auto& rc                                 = *(m_outputParticles.createAndPut());
 
+    auto converter = m_geoSvc->cellIDPositionConverter();
+
     // for (const auto& part : mc) {
     //    if (part.genStatus() > 1) {
     //        if (msgLevel(MSG::DEBUG)) {
@@ -92,21 +162,34 @@ public:
     int32_t idx = 0;
     for (const auto& h : *rawhits) {
 
-      // The actual hit position:
-      auto pos0 = h.position();
+      auto  cellID   = h.cellID();
+      // The actual hit position in Global Coordinates
+      //auto pos0 = h.position();
+  
+      auto gpos = converter->position(cellID);
+        // local positions
+        if (m_localDetElement.value().empty()) {
+          auto volman = m_geoSvc->detector()->volumeManager();
+          local       = volman.lookupDetElement(cellID & local_mask);
+        }
+        auto pos0 = local.nominal().worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z())); //hit position in local coordinates
+
+  
       // auto mom0 = h.momentum;
       // auto pidCode = h.g4ID;
       auto eDep = h.edep();
+
+
 
       if (eDep < 0.00001) {
         continue;
       }
 
       if (eventReset < 2) {
-        hitx.push_back(pos0.x - local_x_offset_station_2);
+        hitx.push_back(pos0.x);// - local_x_offset_station_2);
       } // use station 2 for both offsets since it is used for the reference orbit
       else {
-        hitx.push_back(pos0.x - local_x_offset_station_2);
+        hitx.push_back(pos0.x); // - local_x_offset_station_2);
       }
 
       hity.push_back(pos0.y);
