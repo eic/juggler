@@ -126,9 +126,9 @@ public:
       if (fields.empty()) {
         local_mask = ~0;
       }
-      info() << fmt::format("Local DetElement mask {:#064b} from fields [{}]", local_mask,
-                            fmt::join(fields, ", "))
-              << endmsg;
+      //info() << fmt::format("Local DetElement mask {:#064b} from fields [{}]", local_mask,
+      //                      fmt::join(fields, ", "))
+      //        << endmsg;
     }
       
     double det = aXRP[0][0] * aXRP[1][1] - aXRP[0][1] * aXRP[1][0];
