@@ -185,7 +185,7 @@ public:
         // local positions
         if (m_localDetElement.value().empty()) {
           auto volman = m_geoSvc->detector()->volumeManager();
-          local       = volman.lookupDetElement(cellID & local_mask);
+          local       = volman.lookupDetElement(cellID);
         }
         auto pos0 = local.nominal().worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z())); //hit position in local coordinates
 
