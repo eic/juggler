@@ -61,7 +61,7 @@ public:
     int ID = 0;
     for (const auto& trk : tracks) {
       const eic::VectorXYZ mom =
-          eic::VectorPolar(1.0 / std::abs(trk.qOverP()), trk.direction().theta, trk.direction().phi);
+          eic::VectorPolar(1.0 / std::abs(trk.qOverP()), trk.theta(), trk.phi());
       const auto charge_rec = std::copysign(1., trk.qOverP());
       // utility variables for matching
       int best_match    = -1;
@@ -121,7 +121,7 @@ public:
       if (msgLevel(MSG::DEBUG)) {
         if (best_match > 0) {
           const auto& mcpart = mc[best_match];
-          debug() << fmt::format("Matched track {} with MC particle {}\n", trk.ID().value, best_match) << endmsg;
+          debug() << fmt::format("Matched track {} with MC particle {}\n", ID, best_match) << endmsg;
           debug() << fmt::format("  - Track: (mom: {}, theta: {}, phi: {}, charge: {})", mom.mag(), mom.theta(),
                                  mom.phi(), charge_rec)
                   << endmsg;
@@ -130,7 +130,7 @@ public:
                                  mcpart.pdgID())
                   << endmsg;
         } else {
-          debug() << fmt::format("Did not find a good match for track {} \n", trk.ID().value) << endmsg;
+          debug() << fmt::format("Did not find a good match for track {} \n", ID) << endmsg;
           debug() << fmt::format("  - Track: (mom: {}, theta: {}, phi: {}, charge: {})", mom.mag(), mom.theta(),
                                  mom.phi(), charge_rec)
                   << endmsg;
