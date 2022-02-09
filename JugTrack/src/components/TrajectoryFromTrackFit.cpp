@@ -1,5 +1,7 @@
 #include <algorithm>
 
+// FIXME needs renaming (TrackProjector) and updating to fix and remove hardcoded numbers
+
 // Gaudi
 #include "GaudiAlg/GaudiAlgorithm.h"
 #include "GaudiKernel/ToolHandle.h"
