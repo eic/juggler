@@ -39,7 +39,7 @@ namespace Jug::Reco {
    *
    * \ingroup tracking
    */
-   class ParticlesFromTrackFit : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
+   class ParticlesFromTrackFit : public GaudiAlgorithm {
    public:
     //DataHandle<eic::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<TrajectoriesContainer>     m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
@@ -49,11 +49,10 @@ namespace Jug::Reco {
    public:
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     ParticlesFromTrackFit(const std::string& name, ISvcLocator* svcLoc)
-        : GaudiAlgorithm(name, svcLoc)
-        , AlgorithmIDMixin(name, info()) {
+        : GaudiAlgorithm(name, svcLoc) {
           declareProperty("inputTrajectories", m_inputTrajectories,"");
           declareProperty("outputParticles", m_outputParticles, "");
-          declareProperty("outputTrackParameters", m_outputTrackParameters, "ACTS Track Parameters");
+          declareProperty("outputTrackParameters", m_outputTrackParameters, "Acts Track Parameters");
         }
 
     StatusCode initialize() override {
@@ -98,7 +97,6 @@ namespace Jug::Reco {
           // Get the fitted track parameter
           //
           bool hasFittedParams = false;
-          int ID = 0;
           if (traj.hasTrackParameters(trackTip)) {
             hasFittedParams      = true;
             const auto& boundParam = traj.trackParameters(trackTip);
@@ -119,20 +117,29 @@ namespace Jug::Reco {
               debug() << " chi2 = " << trajState.chi2Sum << endmsg;
             }
 
-            const float boundQoverP = parameter[Acts::eBoundQOverP];
-            eic::TrackParameters pars{
-              {ID++, algorithmID()},
-              {parameter[Acts::eBoundLoc0], parameter[Acts::eBoundLoc1]},
-              {sqrt(static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0))),
-               sqrt(static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)))},
-              {parameter[Acts::eBoundTheta], parameter[Acts::eBoundPhi]},
-              {sqrt(static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundTheta))),
-               sqrt(static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundPhi)))},
-              boundQoverP,
-              sqrt(static_cast<float>(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP))),
-              static_cast<float>(parameter[Acts::eBoundTime]),
-              sqrt(static_cast<float>(covariance(Acts::eBoundTime, Acts::eBoundTime))),
-              static_cast<float>(std::copysign(1., boundQoverP))}; // charge
+            const eic::CovXYZ covMomentum {
+              static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundTheta)),
+              static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundPhi)),
+              static_cast<float>(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)),
+              static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundPhi)),
+              static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundQOverP)),
+              static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundQOverP))};
+            const eic::CovXY covPos {
+              static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
+              static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)),
+              static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc1))};
+            const float timeError{sqrt(static_cast<float>(covariance(Acts::eBoundTime, Acts::eBoundTime)))};
+
+                eic::TrackParameters pars{0, // type: track head --> 0
+                                          {parameter[Acts::eBoundLoc0], parameter[Acts::eBoundLoc1]},
+                                          covPos,
+                                          static_cast<float>(parameter[Acts::eBoundTheta]),
+                                          static_cast<float>(parameter[Acts::eBoundPhi]),
+                                          static_cast<float>(parameter[Acts::eBoundQOverP]),
+                                          covMomentum,
+                                          static_cast<float>(parameter[Acts::eBoundTime]),
+                                          timeError,
+                                          boundParam.charge()};
             track_pars->push_back(pars);
           }
 
@@ -177,7 +184,7 @@ namespace Jug::Reco {
 
       // set our IDs
       for (size_t i = 0; i < rec_parts->size(); ++i) {
-        (*rec_parts)[i].ID({static_cast<int32_t>(i), algorithmID()});
+        (*rec_parts)[i].ID({static_cast<int32_t>(i), 0});
       }
       
       return StatusCode::SUCCESS;

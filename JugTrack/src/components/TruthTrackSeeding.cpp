@@ -67,7 +67,6 @@ namespace Jug::Reco {
       const dd4pod::Geant4ParticleCollection* mcparts = m_inputMCParticles.get();
       // Create output collections
       auto init_trk_params = m_outputTrackParameters.createAndPut();
-      int ID               = 0;
 
       for(const auto& part : *mcparts) {
 
@@ -86,13 +85,18 @@ namespace Jug::Reco {
           continue;
         }
 
-        float q_over_p = charge / p;
+        const float q_over_p = charge / p;
 
-        // TrackParameters params(ID, loc, eic::FloatPair locError, eic::Direction direction, eic::Direction
-        // directionError, float qOverP, float qOverPError, float time, float timeError);
-        eic::TrackParameters params(eic::Index(ID++), {float(0.0), float(0.0)}, {float(0.1), float(0.1)},
-                                    {float(part.ps().phi()), float(part.ps().theta())}, {float(0.1), float(0.1)},
-                                    q_over_p, float(q_over_p * 0.05), float(part.time()), float(1.0), float(charge));
+        eic::TrackParameters params{-1,               // type --> seed (-1)
+                                   {0.0f, 0.0f},      // location on surface
+                                   {0.1, 0.1, 0.1},   // Covariance on location
+                                   part.ps().theta(), // theta (rad)
+                                   part.ps().phi(),   // phi  (rad)
+                                   q_over_p * .05f,   // Q/P (e/GeV)
+                                   {0.1, 0.1, 0.1},   // Covariance on theta/phi/Q/P
+                                   part.time(),       // Time (ns)
+                                   0.1,               // Error on time
+                                   charge};           // Charge
 
         ////// Construct a perigee surface as the target surface
         //auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
