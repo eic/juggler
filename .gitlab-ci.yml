@@ -68,6 +68,13 @@ juggler:local:
   image: eicweb.phy.anl.gov:4567/containers/eic_container/jug_xl:nightly
   stage: build
   script:
+    ## first install EICD to ensure the latest version, then build juggler
+    - |
+      git clone https://eicweb.phy.anl.gov/eic/eicd.git /tmp/eicd
+      cd /tmp/eicd && git checkout $JUGGLER_EICD_VERSION && cd -
+      cmake -B /tmp/build -S /tmp/eicd -DCMAKE_INSTALL_PREFIX=/usr/local
+      cmake --build /tmp/build -j40 -- install
+      rm -f /tmp/build /tmp/eicd
     - |
       cmake -Bbuild -S.
       cmake --build build -j20
