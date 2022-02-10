@@ -86,16 +86,17 @@ namespace Jug::Reco {
         }
 
         const float q_over_p = charge / p;
-        std::array<float, 21> covMatrix;
-        covMatrix.fill(0.1);
 
-        eic::TrackParameters params(-1,               // type --> seed (-1)
+        eic::TrackParameters params{-1,               // type --> seed (-1)
                                    {0.0f, 0.0f},      // location on surface
+                                   {0.1, 0.1, 0.1},   // Covariance on location
                                    part.ps().theta(), // theta (rad)
                                    part.ps().phi(),   // phi  (rad)
                                    q_over_p * .05f,   // Q/P (e/GeV)
+                                   {0.1, 0.1, 0.1},   // Covariance on theta/phi/Q/P
                                    part.time(),       // Time (ns)
-                                   covMatrix);        // 15 element diagonal covariance matrix
+                                   0.1,               // Error on time
+                                   charge};           // Charge
 
         ////// Construct a perigee surface as the target surface
         //auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(

@@ -117,36 +117,29 @@ namespace Jug::Reco {
               debug() << " chi2 = " << trajState.chi2Sum << endmsg;
             }
 
-            const std::array<float, 21> covMatrix {
-              static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
-              static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)),
+            const eic::CovXYZ covMomentum {
               static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundTheta)),
               static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundPhi)),
               static_cast<float>(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)),
-              static_cast<float>(covariance(Acts::eBoundTime, Acts::eBoundTime)),
-              static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc1)),
-              static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundTheta)),
-              static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundPhi)),
-              static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundQOverP)),
-              static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundTime)),
-              static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundTheta)),
-              static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundPhi)),
-              static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundQOverP)),
-              static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundTime)),
               static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundPhi)),
               static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundQOverP)),
-              static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundTime)),
-              static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundQOverP)),
-              static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundTime)),
-              static_cast<float>(covariance(Acts::eBoundQOverP, Acts::eBoundTime))};
+              static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundQOverP))};
+            const eic::CovXY covPos {
+              static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
+              static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)),
+              static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc1))};
+            const float timeError{sqrt(static_cast<float>(covariance(Acts::eBoundTime, Acts::eBoundTime)))};
 
-            eic::TrackParameters pars{0, // type: track head --> 0
-                                      {parameter[Acts::eBoundLoc0], parameter[Acts::eBoundLoc1]},
-                                      static_cast<float>(parameter[Acts::eBoundTheta]),
-                                      static_cast<float>(parameter[Acts::eBoundPhi]),
-                                      static_cast<float>(parameter[Acts::eBoundQOverP]),
-                                      static_cast<float>(parameter[Acts::eBoundTime]),
-                                      covMatrix};
+                eic::TrackParameters pars{0, // type: track head --> 0
+                                          {parameter[Acts::eBoundLoc0], parameter[Acts::eBoundLoc1]},
+                                          covPos,
+                                          static_cast<float>(parameter[Acts::eBoundTheta]),
+                                          static_cast<float>(parameter[Acts::eBoundPhi]),
+                                          static_cast<float>(parameter[Acts::eBoundQOverP]),
+                                          covMomentum,
+                                          static_cast<float>(parameter[Acts::eBoundTime]),
+                                          timeError,
+                                          boundParam.charge()};
             track_pars->push_back(pars);
           }
 
