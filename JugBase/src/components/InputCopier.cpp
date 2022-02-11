@@ -14,7 +14,6 @@
 #include "dd4pod/Geant4ParticleCollection.h"
 #include "dd4pod/CalorimeterHitCollection.h"
 #include "dd4pod/TrackerHitCollection.h"
-#include "dd4pod/PhotoMultiplierHitCollection.h"
 
 
 namespace Jug {
@@ -68,9 +67,6 @@ namespace Jug {
 
     using MCCopier = InputCopier<dd4pod::Geant4ParticleCollection, dd4pod::Geant4ParticleCollection>;
     DECLARE_COMPONENT(MCCopier)
-
-    using PMTColCopier = InputCopier<dd4pod::PhotoMultiplierHitCollection, dd4pod::PhotoMultiplierHitCollection>;
-    DECLARE_COMPONENT(PMTColCopier)
 
 
     //class MCCopier : public GaudiAlgorithm {
