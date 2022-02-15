@@ -137,9 +137,9 @@ namespace Jug::Reco {
         // construct the covariance matrix
         Acts::SymMatrix2 cov = Acts::SymMatrix2::Zero();
         cov(0, 0) =
-            ahit.covMatrix().xx * Acts::UnitConstants::mm * ahit.covMatrix().xx * Acts::UnitConstants::mm;
-        cov(1, 1) =
-            ahit.covMatrix().yy * Acts::UnitConstants::mm * ahit.covMatrix().yy * Acts::UnitConstants::mm;
+            ahit.positionError().xx * Acts::UnitConstants::mm * Acts::UnitConstants::mm;
+        cov(1, 1)=
+            ahit.positionError().yy * Acts::UnitConstants::mm * Acts::UnitConstants::mm;
 
         // Above we only consider the two position coordinates the comment below shows how to add time
         // which we will probably want to try later.

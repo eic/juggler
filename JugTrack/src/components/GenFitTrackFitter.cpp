@@ -208,8 +208,8 @@ namespace Jug::Reco {
 
         TMatrixDSym hitCov(2);
         hitCov.UnitMatrix();
-        hitCov(0, 0) = ahit.covMatrix().xx / (100.0); // go from mm^2 to  cm^2
-        hitCov(1, 1) = ahit.covMatrix().yy / (100.0); // go from mm^2 to  cm^2
+        hitCov(0, 0) = ahit.positionError().xx / (100.0); // go from mm^2 to  cm^2
+        hitCov(1, 1) = ahit.positionError().yy / (100.0); // go from mm^2 to  cm^2
 
 
         if (msgLevel(MSG::DEBUG)) {

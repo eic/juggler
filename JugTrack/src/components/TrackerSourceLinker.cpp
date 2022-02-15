@@ -92,8 +92,8 @@ namespace Jug::Reco {
       for(const auto& ahit : *hits) {
 
         Acts::SymMatrix2 cov = Acts::SymMatrix2::Zero();
-        cov(0,0) = ahit.covMatrix().xx*mm_acts*mm_acts; // note mm = 1 (Acts)
-        cov(1,1) = ahit.covMatrix().yy*mm_acts*mm_acts;
+        cov(0, 0)            = ahit.positionError().xx * mm_acts * mm_acts; // note mm = 1 (Acts)
+        cov(1, 1)            = ahit.positionError().yy * mm_acts * mm_acts;
         if (msgLevel(MSG::DEBUG)) {
           debug() << "cov matrix:\n" << cov << endmsg;
         }

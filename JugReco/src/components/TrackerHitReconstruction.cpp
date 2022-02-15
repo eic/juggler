@@ -44,12 +44,13 @@ namespace Jug {
      */
     class TrackerHitReconstruction : public GaudiAlgorithm, AlgorithmIDMixin<> {
     public:
-      Gaudi::Property<double>                  m_timeResolution{this, "timeResolution", 10};
-      Rndm::Numbers                            m_gaussDist;
+      Gaudi::Property<float>                  m_timeResolution{this, "timeResolution", 10}; // in ns
       DataHandle<eic::RawTrackerHitCollection> m_inputHitCollection{
           "inputHitCollection", Gaudi::DataHandle::Reader, this};
       DataHandle<eic::TrackerHitCollection> m_outputHitCollection{"outputHitCollection",
                                                                   Gaudi::DataHandle::Writer, this};
+
+
       /// Pointer to the geometry service
       SmartIF<IGeoSvc> m_geoSvc;
 
@@ -72,11 +73,6 @@ namespace Jug {
           error() << "Unable to locate Geometry Service. "
                   << "Make sure you have GeoSvc and SimSvc in the right order in the configuration."
                   << endmsg;
-          return StatusCode::FAILURE;
-        }
-        IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
-        StatusCode sc = m_gaussDist.initialize(randSvc, Rndm::Gauss(0.0, m_timeResolution.value()));
-        if (!sc.isSuccess()) {
           return StatusCode::FAILURE;
         }
         return StatusCode::SUCCESS;
@@ -115,11 +111,13 @@ namespace Jug {
           //      - XYZ segmentation: xx -> sigma_x, yy-> sigma_y, zz -> sigma_z, tt -> 0
           //    This is properly in line with how we get the local coordinates for the hit
           //    in the TrackerSourceLinker.
-          eic::TrackerHit hit{{ahit.ID().value, algorithmID()}, // Hit ID
-                              ahit.cellID(),                    // Raw DD4hep cell ID
-                              {pos.x() / mm, pos.y() / mm, pos.z() / mm, (float)ahit.time() / 1000}, // mm, ns
+          eic::TrackerHit hit{{ahit.ID().value, algorithmID()},                      // Hit ID
+                              ahit.cellID(),                                         // Raw DD4hep cell ID
+                              {pos.x() / mm, pos.y() / mm, pos.z() / mm},            // mm
                               {get_variance(dim[0] / mm), get_variance(dim[1] / mm), // variance (see note above)
-                               std::size(dim) > 2 ? get_variance(dim[2] / mm) : 0., 0},
+                               std::size(dim) > 2 ? get_variance(dim[2] / mm) : 0.},
+                              (float)ahit.time() / 1000,                 // ns
+                              m_timeResolution,                          // in ns
                               static_cast<float>(ahit.charge() / 1.0e6), // Collected energy (GeV)
                               0.0f};                                     // Error on the energy
           rec_hits->push_back(hit);
