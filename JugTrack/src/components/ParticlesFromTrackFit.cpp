@@ -29,7 +29,7 @@
 
 #include "Acts/Utilities/Helpers.hpp"
 
-#include "eicd/VectorPolar.h"
+#include "eicd/VectorXYZ.h"
 
 #include <cmath>
 
@@ -168,16 +168,16 @@ namespace Jug::Reco {
 
             eic::BasicParticle p{
                 {-1, 0},
-                eic::VectorPolar(   // 3-momentum vector
-                  {1.0/std::abs(params[Acts::eBoundQOverP]),    
-                   params[Acts::eBoundTheta], params[Acts::eBoundPhi]}),
-                {0., 0., 0.},       // vectex 3-vector
-                0.,                 // time
-                0,                  // PDG particle code
-                0,                  // status
+                eic::VectorXYZ::fromSpherical(1.0 / std::abs(params[Acts::eBoundQOverP]), 
+                                              params[Acts::eBoundTheta],
+                                              params[Acts::eBoundPhi]),
+                {0., 0., 0.},                                                        // vectex 3-vector
+                0.,                                                                  // time
+                0,                                                                   // PDG particle code
+                0,                                                                   // status
                 static_cast<int16_t>(std::copysign(1., params[Acts::eBoundQOverP])), // charge
-                1.                  // weight
-            }; // charge
+                1.                                                                   // weight
+            };                                                                       // charge
             rec_parts->push_back(p);
           });
       }

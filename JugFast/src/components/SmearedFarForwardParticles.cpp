@@ -9,12 +9,11 @@
 #include "GaudiKernel/RndmGenerators.h"
 
 #include "JugBase/DataHandle.h"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
-#include "eicd/VectorPolar.h"
+#include "eicd/VectorXYZ.h"
 
 namespace {
   enum DetectorTags {
@@ -27,7 +26,7 @@ namespace {
 
 namespace Jug::Fast {
 
-class SmearedFarForwardParticles : public GaudiAlgorithm, AlgorithmIDMixin<> {
+class SmearedFarForwardParticles : public GaudiAlgorithm {
 public:
   DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader, this};
   DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"SmearedFarForwardParticles", Gaudi::DataHandle::Writer,
@@ -65,15 +64,12 @@ public:
 
   Rndm::Numbers m_gaussDist;
 
-  // Monte Carlo particle source identifier
-  const int32_t m_kMonteCarloSource{uniqueID<int32_t>("MCParticles")};
-
   private:
   using RecData = eic::ReconstructedParticle;
 
   public:
   SmearedFarForwardParticles(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
+      : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputMCParticles, "MCParticles");
     declareProperty("outputParticles", m_outputParticles, "ReconstructedParticles");
   }
@@ -209,10 +205,12 @@ private:
       rec_part.status(kTagZDC);
       rec_part.charge(static_cast<int16_t>(part.getCharge()));
       rec_part.weight(1.);
-      rec_part.direction({mom3s_theta, mom3s_phi});
+      rec_part.theta(mom3s_theta);
+      rec_part.phi(mom3s_phi);
       rec_part.momentum(static_cast<float>(moms));
       rec_part.energy(static_cast<float>(Es));
       rec_part.mass(static_cast<float>(part.getMass()));
+      //rec_part.mcID();
       rc.push_back(rec_part);
 
       if (msgLevel(MSG::DEBUG)) {
@@ -387,7 +385,7 @@ private:
     const auto psmear_phi = std::atan2(psmear.x, psmear.y);
     const auto psmear_theta = std::atan2(std::hypot(psmear.x, psmear.y), psmear.z);
     eic::ReconstructedParticle rec_part;
-    rec_part.ID({part.id(), algorithmID()});
+    rec_part.ID(part.id());
     rec_part.p({psmear.x, psmear.y, psmear.z});
     rec_part.v({part.getVertex().x, part.getVertex().y, part.getVertex().z});
     rec_part.time(static_cast<float>(part.getTime()));
@@ -395,10 +393,12 @@ private:
     rec_part.status(0);
     rec_part.charge(static_cast<int16_t>(part.getCharge()));
     rec_part.weight(1.);
-    rec_part.direction({psmear_theta, psmear_phi});
+    rec_part.theta(psmear_theta);
+    rec_part.phi(psmear_phi);
     rec_part.momentum(static_cast<float>(ps));
     rec_part.energy(std::hypot(ps, part.getMass()));
     rec_part.mass(static_cast<float>(part.getMass()));
+    //rec_part.mcID(part.ID());
     return rec_part;
   }
 

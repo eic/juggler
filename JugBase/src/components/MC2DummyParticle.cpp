@@ -86,7 +86,8 @@ namespace Jug::Base {
           rec_part.status(p.getGeneratorStatus());
           rec_part.charge(p.getCharge());
           rec_part.weight(1.);
-          rec_part.direction({p_theta, p_phi});
+          rec_part.theta(p_theta);
+          rec_part.phi(p_phi);
           rec_part.momentum(momentum);
           rec_part.energy(energy);
           rec_part.mass(p.getMass());

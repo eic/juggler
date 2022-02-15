@@ -14,7 +14,6 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "edm4hep/MCParticle.h"
@@ -32,17 +31,14 @@ namespace Jug::Fast {
  *
  * \ingroup reco
  */
-class TruthClustering : public GaudiAlgorithm, AlgorithmIDMixin<> {
+class TruthClustering : public GaudiAlgorithm {
 public:
   DataHandle<eic::CalorimeterHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
   DataHandle<edm4hep::SimCalorimeterHitCollection> m_mcHits{"mcHits", Gaudi::DataHandle::Reader, this};
   DataHandle<eic::ProtoClusterCollection> m_outputProtoClusters{"outputProtoClusters", Gaudi::DataHandle::Writer, this};
 
-  // Monte Carlo particle source identifier
-  const int32_t kMonteCarloSource{uniqueID<int32_t>("MCParticles")};
-
   TruthClustering(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin<>(name, info()) {
+      : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputHits", m_inputHits, "Input calorimeter reco hits");
     declareProperty("mcHits", m_mcHits, "Input truth hits");
     declareProperty("outputProtoClusters", m_outputProtoClusters, "Output proto clusters");
@@ -66,19 +62,17 @@ public:
     std::map<int32_t, int32_t> protoIndex;
 
     // Loop over al calorimeter hits and sort per mcparticle
-    int32_t clusterID = 0;
     for (uint32_t i = 0; i < hits.size(); ++i) {
       const auto& hit       = hits[i];
-      const auto& mcHit     = mc[hit.ID().value];
+      const auto& mcHit     = mc[hit.getOjectID().index];
       const auto& trackID   = mcHit.getContributions(0).getParticle().id();
       // Create a new protocluster if we don't have one for this trackID
       if (!protoIndex.count(trackID)) {
         auto pcl = proto.create();
-        pcl.ID({clusterID++, algorithmID()});
         protoIndex[trackID] = proto.size() - 1;
       }
       // Add hit to the appropriate protocluster
-      proto[protoIndex[trackID]].addhits({hit.ID(), i, 1.});
+      proto[protoIndex[trackID]].addhits(hit);
     }
     return StatusCode::SUCCESS;
   }
