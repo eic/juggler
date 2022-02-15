@@ -9,7 +9,6 @@
 #include "GaudiKernel/RndmGenerators.h"
 
 #include "JugBase/DataHandle.h"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "eicd/ReconstructedParticleCollection.h"
@@ -17,7 +16,7 @@
 
 namespace Jug::Reco {
 
-class FarForwardParticlesOMD : public GaudiAlgorithm, AlgorithmIDMixin<> {
+class FarForwardParticlesOMD : public GaudiAlgorithm {
   DataHandle<eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHits", Gaudi::DataHandle::Reader, this};
   DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
                                                                      this};
@@ -39,7 +38,7 @@ class FarForwardParticlesOMD : public GaudiAlgorithm, AlgorithmIDMixin<> {
 
 public:
   FarForwardParticlesOMD(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
+      : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputCollection", m_inputHitCollection, "FarForwardTrackerHits");
     declareProperty("outputCollection", m_outputParticles, "ReconstructedParticles");
   }
@@ -89,7 +88,6 @@ public:
     std::vector<double> hity;
     std::vector<double> hitz;
 
-    int32_t idx = 0;
     for (const auto& h : *rawhits) {
 
       // The actual hit position:
@@ -167,7 +165,6 @@ public:
 
       eic::VectorXYZ recoMom(prec[0], prec[1], prec[2]);
       eic::VectorXYZ primVtx(0, 0, 0);
-      eic::Direction thetaPhi(recoMom.theta(), recoMom.phi());
       eic::Weight wgt(1);
 
       // ReconstructedParticle (eic::Index ID, eic::VectorXYZ p, eic::VectorXYZ v, float time, std::int32_t pid,
@@ -188,7 +185,6 @@ public:
       // static_cast<float>(part.mass())};
 
       eic::ReconstructedParticle rpTrack;
-      rpTrack.ID({idx++, algorithmID()});
       rpTrack.p(recoMom);
       rpTrack.v(primVtx);
       rpTrack.time(0);
@@ -196,7 +192,8 @@ public:
       rpTrack.status(0);
       rpTrack.charge(1);
       rpTrack.weight(1.);
-      rpTrack.direction({recoMom.theta(), recoMom.phi()});
+      rpTrack.theta(recoMom.theta());
+      rpTrack.phi(recoMom.phi());
       rpTrack.momentum(p_reco);
       rpTrack.energy(std::hypot(p_reco, .938272));
       rpTrack.mass(.938272);

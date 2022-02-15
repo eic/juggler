@@ -142,13 +142,12 @@ namespace Jug::Reco {
           debug() << " cluster size " << cluster_hits.size() << endmsg;
         }
         auto cl = clusters.create();
-        cl.ID({static_cast<decltype(cl.ID().value)>(clusters.size()), algorithmID()});
         cl.nhits(cluster_hits.size());
-        auto pcl = proto.create(cl.ID());
+        auto pcl = proto.create();
         for (const auto& [idx, h] : cluster_hits) {
           cl.energy(cl.energy() + h.energy());
           cl.position(cl.position().add(h.position().scale(h.energy()/total_energy)));
-          pcl.addhits({h.ID(), idx, 1.});
+          pcl.addhits(h);
         }
         // Optionally store the MC truth associated with the first hit in this cluster
         // FIXME no connection between cluster and truth in edm4hep

@@ -21,7 +21,6 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "eicd/CalorimeterHitCollection.h"
@@ -37,7 +36,7 @@ namespace Jug::Reco {
    * Reconstruct digitized outputs, paired with Jug::Digi::CalorimeterHitDigi
    * \ingroup reco
    */
-  class CalorimeterHitReco : public GaudiAlgorithm, AlgorithmIDMixin<> {
+  class CalorimeterHitReco : public GaudiAlgorithm {
   public:
 
     // length unit from dd4hep, should be fixed
@@ -85,7 +84,6 @@ namespace Jug::Reco {
 
     CalorimeterHitReco(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin<>(name, info())
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -183,14 +181,8 @@ namespace Jug::Reco {
         // convert ADC -> energy
         float energy = (rh.amplitude() - m_pedMeanADC) / static_cast<float>(m_capADC.value()) * dyRangeADC / m_sampFrac;
 
-        float time = rh.time() / stepTDC; 
+        float time = rh.timeStamp() / stepTDC; 
         auto  cellID   = rh.cellID();
-        int   lid  = ((id_dec != nullptr) && m_layerField.value().size())
-                      ? static_cast<int>(id_dec->get(cellID, layer_idx))
-                      : -1;
-        int   sid  = ((id_dec != nullptr) && m_sectorField.value().size())
-                      ? static_cast<int>(id_dec->get(cellID, sector_idx))
-                      : -1;
         // global positions
         auto gpos = converter->position(cellID);
         // local positions
@@ -221,13 +213,11 @@ namespace Jug::Reco {
         //         m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().volIDs().str()
         //         << endmsg;
         hits.push_back({
-            {rh.ID(), algorithmID()}, // ID
             rh.cellID(),    // cellID
-            lid,            // layer
-            sid,            // sector
             energy,         // energy
             0,              // @TODO: energy error
             time,           // time
+            0,              // time error FIXME should be configurable
             {gpos.x() / m_lUnit, gpos.y() / m_lUnit, gpos.z() / m_lUnit}, // global pos
             {pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit},    // local pos
             {dim[0], dim[1], dim[2]}
