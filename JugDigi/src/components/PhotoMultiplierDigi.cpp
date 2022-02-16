@@ -91,7 +91,7 @@ public:
         // calculate signal
         for(const auto& ahit : sim) {
             // quantum efficiency
-            if (!qe_pass(ahit.energy(), m_rngUni())) {
+            if (!qe_pass(ahit.energyDeposit(), m_rngUni())) {
                 continue;
             }
             // cell id, time, signal amplitude
