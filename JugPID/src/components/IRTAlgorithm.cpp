@@ -375,7 +375,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       // Simulate QE & geometric sensor efficiency; FIXME: hit.energy() is numerically 
       // in GeV units, but Gaudi::Units::GeV = 1000; prefer to convert photon energies 
       // to [eV] in all places by hand;
-      double eVenergy = 1E9*hit.energy();
+      double eVenergy = 1E9*hit.energyDeposit();
       //printf("%f\n", eVenergy);
       if (!QE_pass(eVenergy, m_rngUni()) || 
 	  m_rngUni() > /*m_GeometricEfficiency.value()**/m_SafetyFactor.value()) {
