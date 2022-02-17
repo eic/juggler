@@ -164,10 +164,10 @@ private:
       if (mom_ion_theta > 4.5 / 1000.) {
         continue;
       }
-      auto E = part.getEnergy();
-      decltype(E) conTerm = 0.05; //default 5%
-      decltype(E) stoTerm = 0.5;  //default 50%
-      decltype(E) angTerm = 0.003; //3mrad
+      const auto E = part.getEnergy();
+      float conTerm = 0.05; //default 5%
+      float stoTerm = 0.5;  //default 50%
+      float angTerm = 0.003; //3mrad
 
       if(part.getPDG() == 2112){
         conTerm = 0.05; //default 5%
