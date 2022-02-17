@@ -13,7 +13,7 @@ from Configurables import Jug__Reco__CrystalEndcapsReco as CrystalEndcapsReco
 from Configurables import Jug__Reco__CalorimeterIslandCluster as IslandCluster
 from Configurables import Jug__Reco__ClusterRecoCoG as RecoCoG
 
-podioinput = PodioInput("PodioReader", collections=["mcparticles","EcalHits"], OutputLevel=DEBUG)
+podioinput = PodioInput("PodioReader", collections=["MCParticles","EcalHits"], OutputLevel=DEBUG)
 emcaldigi = CrystalEndcapsDigi(inputHitCollection="EcalHits", outputHitCollection="RawDigiEcalHits")
 emcalreco = CrystalEndcapsReco(inputHitCollection="RawDigiEcalHits", outputHitCollection="RecoEcalHits",
                                minModuleEdep=1.0*units.MeV)

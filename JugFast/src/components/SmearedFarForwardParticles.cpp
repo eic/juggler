@@ -12,7 +12,7 @@
 #include "JugBase/UniqueID.h"
 
 // Event Model related classes
-#include "dd4pod/Geant4ParticleCollection.h"
+#include "edm4hep/MCParticleCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
 #include "eicd/VectorPolar.h"
 
@@ -29,7 +29,7 @@ namespace Jug::Fast {
 
 class SmearedFarForwardParticles : public GaudiAlgorithm, AlgorithmIDMixin<> {
 public:
-  DataHandle<dd4pod::Geant4ParticleCollection> m_inputParticles{"inputMCParticles", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader, this};
   DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"SmearedFarForwardParticles", Gaudi::DataHandle::Writer,
                                                                      this};
 
@@ -66,7 +66,7 @@ public:
   Rndm::Numbers m_gaussDist;
 
   // Monte Carlo particle source identifier
-  const int32_t m_kMonteCarloSource{uniqueID<int32_t>("mcparticles")};
+  const int32_t m_kMonteCarloSource{uniqueID<int32_t>("MCParticles")};
 
   private:
   using RecData = eic::ReconstructedParticle;
@@ -74,7 +74,7 @@ public:
   public:
   SmearedFarForwardParticles(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
-    declareProperty("inputMCParticles", m_inputParticles, "mcparticles");
+    declareProperty("inputMCParticles", m_inputMCParticles, "MCParticles");
     declareProperty("outputParticles", m_outputParticles, "ReconstructedParticles");
   }
   StatusCode initialize() override {
@@ -91,7 +91,7 @@ public:
     return StatusCode::SUCCESS;
   }
   StatusCode execute() override {
-    const auto& mc = *(m_inputParticles.get());
+    const auto& mc = *(m_inputMCParticles.get());
     auto& rc       = *(m_outputParticles.createAndPut());
 
     double ionBeamEnergy = 0;
@@ -99,8 +99,8 @@ public:
       ionBeamEnergy = m_ionBeamEnergy;
     } else {
       for (const auto& part: mc) {
-        if (part.genStatus() == 4 && part.pdgID() == 2212) {
-          auto E = std::hypot(part.ps().mag(), part.mass());
+        if (part.getGeneratorStatus() == 4 && part.getPDG() == 2212) {
+          auto E = part.getEnergy();
           if (33 < E && E < 50) {
             ionBeamEnergy = 41;
           } else if (80 < E && E < 120) {
@@ -144,17 +144,17 @@ public:
 private:
   // ZDC smearing as in eic_smear
   // https://github.com/eic/eicsmeardetectors/blob/9a1831dd97bf517b80a06043b9ee4bfb96b483d8/SmearMatrixDetector_0_1_FF.cxx#L224
-  std::vector<RecData> zdc(const dd4pod::Geant4ParticleCollection& mc, const double ionBeamEnergy) {
+  std::vector<RecData> zdc(const edm4hep::MCParticleCollection& mc, const double ionBeamEnergy) {
     std::vector<RecData> rc;
     for (const auto& part : mc) {
-      if (part.genStatus() > 1) {
+      if (part.getGeneratorStatus() > 1) {
         if (msgLevel(MSG::DEBUG)) {
-          debug() << "ignoring particle with genStatus = " << part.genStatus() << endmsg;
+          debug() << "ignoring particle with getGeneratorStatus = " << part.getGeneratorStatus() << endmsg;
         }
         continue;
       }
       // only detect neutrons and photons
-      const auto mom_ion = rotateLabToIonDirection(part.ps());
+      const auto mom_ion = rotateLabToIonDirection(part.getMomentum());
       if (part.pdgID() != 2112 && part.pdgID() != 22) {
         continue;
       }
@@ -162,7 +162,7 @@ private:
       if (mom_ion.theta() > 4.5 / 1000.) {
         continue;
       }
-      const double E    = std::hypot(part.ps().mag(), part.mass());
+      const double E    = std::hypot(part.getMomentum().mag(), part.mass());
       double conTerm = 0.05; //default 5%
       double stoTerm = 0.5;  //default 50%
       double angTerm = 0.003; //3mrad
@@ -209,7 +209,7 @@ private:
         debug()
             << fmt::format(
                    "Found ZDC particle: {}, Etrue: {}, Emeas: {}, ptrue: {}, pmeas: {}, theta_true: {}, theta_meas: {}",
-                   part.pdgID(), E, rec_part.energy(), part.ps().mag(), rec_part.p().mag(), th, rec_part.p().theta())
+                   part.pdgID(), E, rec_part.energy(), part.getMomentum().mag(), rec_part.p().mag(), th, rec_part.p().theta())
             << endmsg;
       }
     }
@@ -217,12 +217,12 @@ private:
   }
   // Fast B0 as in
   // https://github.com/eic/eicsmeardetectors/blob/9a1831dd97bf517b80a06043b9ee4bfb96b483d8/SmearMatrixDetector_0_1_FF.cxx#L254
-  std::vector<RecData> b0(const dd4pod::Geant4ParticleCollection& mc, const double ionBeamEnergy) {
+  std::vector<RecData> b0(const edm4hep::MCParticleCollection& mc, const double ionBeamEnergy) {
     std::vector<RecData> rc;
     for (const auto& part : mc) {
-      if (part.genStatus() > 1) {
+      if (part.getGeneratorStatus() > 1) {
         if (msgLevel(MSG::DEBUG)) {
-          debug() << "ignoring particle with genStatus = " << part.genStatus() << endmsg;
+          debug() << "ignoring particle with getGeneratorStatus = " << part.getGeneratorStatus() << endmsg;
         }
         continue;
       }
@@ -232,7 +232,7 @@ private:
         continue;
       }
       // only 6-->20 mrad
-      const auto mom_ion = removeCrossingAngle(part.ps()); //rotateLabToIonDirection(part.ps());
+      const auto mom_ion = removeCrossingAngle(part.getMomentum()); //rotateLabToIonDirection(part.getMomentum());
       if (mom_ion.theta() < m_thetaMinB0 || mom_ion.theta() > m_thetaMaxB0) {
         continue;
       }
@@ -248,8 +248,8 @@ private:
         auto& rec_part = rc.back();
         debug() << fmt::format("Found B0 particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
-                               part.pdgID(), part.ps().mag(), rec_part.momentum(), std::hypot(part.ps().x, part.ps().y),
-                               std::hypot(rec_part.p().x, rec_part.p().y), part.ps().theta(), rec_part.p().theta())
+                               part.pdgID(), part.getMomentum().mag(), rec_part.momentum(), std::hypot(part.getMomentum().x, part.getMomentum().y),
+                               std::hypot(rec_part.p().x, rec_part.p().y), part.getMomentum().theta(), rec_part.p().theta())
                 << endmsg;
       }
     }
@@ -257,12 +257,12 @@ private:
     return rc;
   }
 
-  std::vector<RecData> rp(const dd4pod::Geant4ParticleCollection& mc, const double ionBeamEnergy) {
+  std::vector<RecData> rp(const edm4hep::MCParticleCollection& mc, const double ionBeamEnergy) {
     std::vector<RecData> rc;
     for (const auto& part : mc) {
-      if (part.genStatus() > 1) {
+      if (part.getGeneratorStatus() > 1) {
         if (msgLevel(MSG::DEBUG)) {
-          debug() << "ignoring particle with genStatus = " << part.genStatus() << endmsg;
+          debug() << "ignoring particle with getGeneratorStatus = " << part.getGeneratorStatus() << endmsg;
         }
         continue;
       }
@@ -270,7 +270,7 @@ private:
       if (part.pdgID() != 2212) {
         continue;
       }
-      const auto mom_ion = removeCrossingAngle(part.ps()); //rotateLabToIonDirection(part.ps());
+      const auto mom_ion = removeCrossingAngle(part.getMomentum()); //rotateLabToIonDirection(part.getMomentum());
       if (mom_ion.theta() < m_thetaMinRP || mom_ion.theta() > m_thetaMaxRP ||
           mom_ion.z < m_pMinRigidityRP * ionBeamEnergy) {
         continue;
@@ -282,20 +282,20 @@ private:
         auto& rec_part = rc.back();
         debug() << fmt::format("Found RP particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
-                               part.pdgID(), part.ps().mag(), rec_part.momentum(), std::hypot(part.ps().x, part.ps().y),
-                               std::hypot(rec_part.p().x, rec_part.p().y), part.ps().theta(), rec_part.p().theta())
+                               part.pdgID(), part.getMomentum().mag(), rec_part.momentum(), std::hypot(part.getMomentum().x, part.getMomentum().y),
+                               std::hypot(rec_part.p().x, rec_part.p().y), part.getMomentum().theta(), rec_part.p().theta())
                 << endmsg;
       }
     }
     return rc;
   }
 
-  std::vector<RecData> omd(const dd4pod::Geant4ParticleCollection& mc, const double ionBeamEnergy) {
+  std::vector<RecData> omd(const edm4hep::MCParticleCollection& mc, const double ionBeamEnergy) {
     std::vector<RecData> rc;
     for (const auto& part : mc) {
-      if (part.genStatus() > 1) {
+      if (part.getGeneratorStatus() > 1) {
         if (msgLevel(MSG::DEBUG)) {
-          debug() << "ignoring particle with genStatus = " << part.genStatus() << endmsg;
+          debug() << "ignoring particle with getGeneratorStatus = " << part.getGeneratorStatus() << endmsg;
         }
         continue;
       }
@@ -303,7 +303,7 @@ private:
       if (part.pdgID() != 2212) {
         continue;
       }
-      const auto mom_ion = removeCrossingAngle(part.ps()); //rotateLabToIonDirection(part.ps());
+      const auto mom_ion = removeCrossingAngle(part.getMomentum()); //rotateLabToIonDirection(part.getMomentum());
       if (mom_ion.z < m_pMinRigidityOMD * ionBeamEnergy || mom_ion.z > m_pMaxRigidityOMD * ionBeamEnergy) {
         continue;
       }
@@ -321,8 +321,8 @@ private:
         auto& rec_part = rc.back();
         debug() << fmt::format("Found OMD particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
-                               part.pdgID(), part.ps().mag(), rec_part.momentum(), std::hypot(part.ps().x, part.ps().y),
-                               std::hypot(rec_part.p().x, rec_part.p().y), part.ps().theta(), rec_part.p().theta())
+                               part.pdgID(), part.getMomentum().mag(), rec_part.momentum(), std::hypot(part.getMomentum().x, part.getMomentum().y),
+                               std::hypot(rec_part.p().x, rec_part.p().y), part.getMomentum().theta(), rec_part.p().theta())
                 << endmsg;
       }
     }
@@ -331,8 +331,8 @@ private:
 
   // all momentum smearing in EIC-smear for the far-forward region uses
   // the same 2 relations for P and Pt smearing (B0, RP, OMD)
-  RecData smearMomentum(const dd4pod::ConstGeant4Particle& part) {
-    const auto mom_ion = rotateLabToIonDirection(part.ps());
+  RecData smearMomentum(const edm4hep::ConstGeant4Particle& part) {
+    const auto mom_ion = rotateLabToIonDirection(part.getMomentum());
     const double p     = mom_ion.mag();
     const double dp    = (0.025 * p) * m_gaussDist();
     const double ps    = p + dp;
@@ -375,7 +375,7 @@ private:
     const double cth = cos(-m_crossingAngle);
     return {cth * vec.x + sth * vec.z, vec.y, -sth * vec.x + cth * vec.z};
   }
-  eic::VectorXYZ rotateLabToIonDirection(const dd4pod::VectorXYZ& vec) const {
+  eic::VectorXYZ rotateLabToIonDirection(const edm4hep::VectorXYZ& vec) const {
     return rotateLabToIonDirection(eic::VectorXYZ{vec.x, vec.y, vec.z});
   }
 
@@ -384,10 +384,10 @@ private:
     const double cth = cos(m_crossingAngle);
     return {cth * vec.x + sth * vec.z, vec.y, -sth * vec.x + cth * vec.z};
   }
-  eic::VectorXYZ rotateIonToLabDirection(const dd4pod::VectorXYZ& vec) const {
+  eic::VectorXYZ rotateIonToLabDirection(const edm4hep::VectorXYZ& vec) const {
     return rotateIonToLabDirection(eic::VectorXYZ{vec.x, vec.y, vec.z});
   }
-  eic::VectorXYZ removeCrossingAngle(const dd4pod::VectorXYZ& vec) const {
+  eic::VectorXYZ removeCrossingAngle(const edm4hep::VectorXYZ& vec) const {
 
     Double_t px = vec.x;
     Double_t py = vec.y;

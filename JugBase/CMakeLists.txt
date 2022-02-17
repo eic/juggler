@@ -42,7 +42,7 @@ gaudi_add_module(JugBasePlugins
   Gaudi::GaudiKernel Gaudi::GaudiAlgLib
   ROOT::Core ROOT::RIO ROOT::Tree
   JugBase
-  NPDet::DD4podIO
+  EDM4HEP::edm4hep
   DD4hep::DDRec
   ActsCore ActsPluginDD4hep ActsPluginJson
   EICD::eicd

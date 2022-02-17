@@ -16,7 +16,7 @@ gaudi_add_module(JugFastPlugins
   Gaudi::GaudiAlgLib Gaudi::GaudiKernel
   JugBase
   ROOT::Core ROOT::RIO ROOT::Tree
-  NPDet::DD4podIO
+  EDM4HEP::edm4hep
   EICD::eicd
 )
 

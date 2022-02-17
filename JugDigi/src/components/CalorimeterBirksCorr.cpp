@@ -1,5 +1,5 @@
 // Apply Birks Law to correct the energy deposit
-// It uses the contributions member in dd4pod::CalorimeterHit, so simulation must enable storeCalorimeterContributions
+// It uses the contributions member in edm4hep::CalorimeterHit, so simulation must enable storeCalorimeterContributions
 //
 // Author: Chao Peng
 // Date: 09/29/2021
@@ -18,7 +18,7 @@
 #include "JugBase/IParticleSvc.h"
 
 // Event Model related classes
-#include "dd4pod/CalorimeterHitCollection.h"
+#include "edm4hep/CalorimeterHitCollection.h"
 #include "eicd/RawCalorimeterHitCollection.h"
 #include "eicd/RawCalorimeterHitData.h"
 
@@ -38,9 +38,9 @@ namespace Jug::Digi {
     // digitization settings
     Gaudi::Property<double> m_birksConstant{this, "birksConstant", 0.126*mm/MeV};
 
-    DataHandle<dd4pod::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+    DataHandle<edm4hep::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                       this};
-    DataHandle<dd4pod::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+    DataHandle<edm4hep::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                        this};
 
     SmartIF<IParticleSvc> m_pidSvc;

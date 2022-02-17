@@ -22,7 +22,7 @@
 
 // Event Model related classes
 #include "eicd/RawPMTHitCollection.h"
-#include "dd4pod/TrackerHitCollection.h"
+#include "edm4hep/TrackerHitCollection.h"
 
 
 using namespace Gaudi::Units;
@@ -36,7 +36,7 @@ namespace Jug::Digi {
 class PhotoMultiplierDigi : public GaudiAlgorithm, AlgorithmIDMixin<>
 {
 public:
-    DataHandle<dd4pod::TrackerHitCollection>
+    DataHandle<edm4hep::TrackerHitCollection>
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::RawPMTHitCollection>
         m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};

@@ -13,7 +13,7 @@
 #include "JugBase/UniqueID.h"
 
 // Event Model related classes
-#include "dd4pod/Geant4ParticleCollection.h"
+#include "edm4hep/MCParticleCollection.h"
 #include "eicd/ClusterCollection.h"
 #include "eicd/MergedClusterRelationsCollection.h"
 
@@ -32,7 +32,7 @@ namespace Jug::Fast {
 class TruthEnergyPositionClusterMerger : public GaudiAlgorithm, public AlgorithmIDMixin<> {
 public:
   // Input
-  DataHandle<dd4pod::Geant4ParticleCollection> m_inputMCParticles{"mcparticles", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
   DataHandle<eic::ClusterCollection> m_energyClusters{"EnergyClusters", Gaudi::DataHandle::Reader, this};
   DataHandle<eic::ClusterCollection> m_positionClusters{"PositionClusters", Gaudi::DataHandle::Reader, this};
   // Output
@@ -42,7 +42,7 @@ public:
 public:
   TruthEnergyPositionClusterMerger(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
-    declareProperty("inputMCParticles", m_inputMCParticles, "mcparticles");
+    declareProperty("inputMCParticles", m_inputMCParticles, "MCParticles");
     declareProperty("inputEnergyClusters", m_energyClusters, "Cluster collection with good energy precision");
     declareProperty("inputPositionClusters", m_positionClusters, "Cluster collection with good position precision");
     declareProperty("outputClusters", m_outputClusters, "Cluster collection with good energy precision");
@@ -130,6 +130,8 @@ public:
     if (msgLevel(MSG::DEBUG)) {
       debug() << "Step 2/2: Collecting remaining energy clusters..." << endmsg;
     }
+    auto phi = [](const edm4hep::Vector3f v) { return atan2(v.y,v.x); };
+    auto theta = [](const edm4hep::Vector3f v) { return atan2(std::hypot(v.x,v.y),v.z); };
     for (const auto& [mcID, eclus] : energyMap) {
       const auto& mc = mcparticles[mcID.value];
       auto new_clus  = merged.create();
@@ -139,7 +141,7 @@ public:
       new_clus.time(eclus.time());
       new_clus.nhits(eclus.nhits());
       // use nominal radius of 110cm, and use start vertex theta and phi
-      new_clus.position(eic::VectorPolar{110, mc.ps().theta(), mc.ps().phi()});
+      new_clus.position(eic::VectorPolar{110, theta(mc.getMomentum()), phi(mc.getMomentum())});
       new_clus.radius(eclus.radius());
       new_clus.skewness(eclus.skewness());
       new_clus.mcID(mcID);

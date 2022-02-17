@@ -17,7 +17,7 @@
 #include "JugBase/UniqueID.h"
 
 // Event Model related classes
-#include "dd4pod/CalorimeterHitCollection.h"
+#include "edm4hep/CalorimeterHitCollection.h"
 #include "eicd/CalorimeterHitCollection.h"
 #include "eicd/ClusterCollection.h"
 #include "eicd/ProtoClusterCollection.h"
@@ -35,14 +35,14 @@ class TruthClustering : public GaudiAlgorithm, AlgorithmIDMixin<> {
 public:
   using RecHits       = eic::CalorimeterHitCollection;
   using ProtoClusters = eic::ProtoClusterCollection;
-  using TruthHits     = dd4pod::CalorimeterHitCollection;
+  using TruthHits     = edm4hep::CalorimeterHitCollection;
 
   DataHandle<RecHits> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
   DataHandle<TruthHits> m_mcHits{"mcHits", Gaudi::DataHandle::Reader, this};
   DataHandle<ProtoClusters> m_outputProtoClusters{"outputProtoClusters", Gaudi::DataHandle::Writer, this};
 
   // Monte Carlo particle source identifier
-  const int32_t kMonteCarloSource{uniqueID<int32_t>("mcparticles")};
+  const int32_t kMonteCarloSource{uniqueID<int32_t>("MCParticles")};
 
   TruthClustering(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin<>(name, info()) {

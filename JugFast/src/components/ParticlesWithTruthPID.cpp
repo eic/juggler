@@ -13,7 +13,7 @@
 #include "JugBase/UniqueID.h"
 
 // Event Model related classes
-#include "dd4pod/Geant4ParticleCollection.h"
+#include "edm4hep/MCParticleCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
 #include "eicd/TrackParametersCollection.h"
 #include "eicd/VectorPolar.h"
@@ -22,7 +22,7 @@ namespace Jug::Fast {
 
 class ParticlesWithTruthPID : public GaudiAlgorithm, AlgorithmIDMixin<> {
 public:
-  DataHandle<dd4pod::Geant4ParticleCollection> m_inputTruthCollection{"inputMCParticles", Gaudi::DataHandle::Reader,
+  DataHandle<edm4hep::MCParticleCollection> m_inputTruthCollection{"inputMCParticles", Gaudi::DataHandle::Reader,
                                                                       this};
   DataHandle<eic::TrackParametersCollection> m_inputTrackCollection{"inputTrackParameters", Gaudi::DataHandle::Reader,
                                                                     this};
@@ -36,11 +36,11 @@ public:
   // Matchin eta tolerance of 0.1
   Gaudi::Property<double> m_etaTolerance{this, "etaTolerance", {0.2}};
 
-  const int32_t m_kMonteCarloSource{uniqueID<int32_t>("mcparticles")};
+  const int32_t m_kMonteCarloSource{uniqueID<int32_t>("MCParticles")};
 
   ParticlesWithTruthPID(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
-    declareProperty("inputMCParticles", m_inputTruthCollection, "mcparticles");
+    declareProperty("inputMCParticles", m_inputTruthCollection, "MCParticles");
     declareProperty("inputTrackParameters", m_inputTrackCollection, "outputTrackParameters");
     declareProperty("outputParticles", m_outputParticleCollection, "ReconstructedParticles");
   }
@@ -68,17 +68,17 @@ public:
       double best_delta = std::numeric_limits<double>::max();
       for (size_t ip = 0; ip < mc.size(); ++ip) {
         const auto& mcpart = mc[ip];
-        if (consumed[ip] || mcpart.genStatus() > 1 || mcpart.charge() == 0 || mcpart.charge() * charge_rec < 0) {
+        if (consumed[ip] || mcpart.getGeneratorStatus() > 1 || mcpart.charge() == 0 || mcpart.charge() * charge_rec < 0) {
           if (msgLevel(MSG::DEBUG)) {
             debug() << "ignoring non-primary/neutral/opposite charge particle" << endmsg;
           }
           continue;
         }
-        const double dp_rel = std::abs((mom.mag() - mcpart.ps().mag()) / mcpart.ps().mag());
+        const double dp_rel = std::abs((mom.mag() - mcpart.getMomentum().mag()) / mcpart.getMomentum().mag());
         // check the tolerance for sin(dphi/2) to avoid the hemisphere problem and allow
         // for phi rollovers
-        const double dsphi = std::abs(sin(0.5 * (mom.phi() - mcpart.ps().phi())));
-        const double deta  = std::abs((mom.eta() - mcpart.ps().eta()));
+        const double dsphi = std::abs(sin(0.5 * (mom.phi() - mcpart.getMomentum().phi())));
+        const double deta  = std::abs((mom.eta() - mcpart.getMomentum().eta()));
 
         if (dp_rel < m_pRelativeTolerance && deta < m_etaTolerance && dsphi < sinPhiOver2Tolerance) {
           const double delta =
@@ -126,7 +126,7 @@ public:
                                  mom.phi(), charge_rec)
                   << endmsg;
           debug() << fmt::format("  - MC particle: (mom: {}, theta: {}, phi: {}, charge: {}, type: {}",
-                                 mcpart.ps().mag(), mcpart.ps().theta(), mcpart.ps().phi(), mcpart.charge(),
+                                 mcpart.getMomentum().mag(), mcpart.getMomentum().theta(), mcpart.getMomentum().phi(), mcpart.charge(),
                                  mcpart.pdgID())
                   << endmsg;
         } else {

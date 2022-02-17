@@ -17,7 +17,7 @@
 #include "JugBase/UniqueID.h"
 
 // Event Model related classes
-#include "dd4pod/CalorimeterHitCollection.h"
+#include "edm4hep/CalorimeterHitCollection.h"
 #include "eicd/CalorimeterHitCollection.h"
 #include "eicd/ClusterCollection.h"
 #include "eicd/ProtoClusterCollection.h"
@@ -50,9 +50,9 @@ namespace Jug::Reco {
     SmartIF<IGeoSvc> m_geoSvc;
 
     // Monte Carlo particle source identifier
-    const int32_t m_kMonteCarloSource{uniqueID<int32_t>("mcparticles")};
+    const int32_t m_kMonteCarloSource{uniqueID<int32_t>("MCParticles")};
     // Optional handle to MC hits
-    std::unique_ptr<DataHandle<dd4pod::CalorimeterHitCollection>> m_inputMC;
+    std::unique_ptr<DataHandle<edm4hep::CalorimeterHitCollection>> m_inputMC;
 
     SimpleClustering(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
@@ -70,7 +70,7 @@ namespace Jug::Reco {
       // Initialize the MC input hit collection if requested
       if (m_mcHits != "") {
         m_inputMC =
-            std::make_unique<DataHandle<dd4pod::CalorimeterHitCollection>>(m_mcHits, Gaudi::DataHandle::Reader, this);
+            std::make_unique<DataHandle<edm4hep::CalorimeterHitCollection>>(m_mcHits, Gaudi::DataHandle::Reader, this);
       }
       m_geoSvc = service("GeoSvc");
       if (!m_geoSvc) {
@@ -89,7 +89,7 @@ namespace Jug::Reco {
       auto& proto = *m_outputProtoClusters.createAndPut();
       auto& clusters = *m_outputClusters.createAndPut();
       // Optional MC data
-      const dd4pod::CalorimeterHitCollection* mcHits = nullptr;
+      const edm4hep::CalorimeterHitCollection* mcHits = nullptr;
       if (m_inputMC) {
         mcHits = m_inputMC->get();
       }

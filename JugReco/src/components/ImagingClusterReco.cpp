@@ -26,7 +26,7 @@
 #include "JugBase/Utilities/Utils.hpp"
 
 // Event Model related classes
-#include "dd4pod/CalorimeterHitCollection.h"
+#include "edm4hep/CalorimeterHitCollection.h"
 #include "eicd/CalorimeterHitCollection.h"
 #include "eicd/ClusterCollection.h"
 #include "eicd/ClusterLayerCollection.h"
@@ -62,9 +62,9 @@ public:
   // Collection for MC hits when running on MC
   Gaudi::Property<std::string> m_mcHits{this, "mcHits", ""};
   // Monte Carlo particle source identifier
-  const int32_t m_kMonteCarloSource{uniqueID<int32_t>("mcparticles")};
+  const int32_t m_kMonteCarloSource{uniqueID<int32_t>("MCParticles")};
   // Optional handle to MC hits
-  std::unique_ptr<DataHandle<dd4pod::CalorimeterHitCollection>> m_inputMC;
+  std::unique_ptr<DataHandle<edm4hep::CalorimeterHitCollection>> m_inputMC;
 
   ImagingClusterReco(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
@@ -82,7 +82,7 @@ public:
     // Initialize the MC input hit collection if requested
     if (m_mcHits != "") {
       m_inputMC =
-          std::make_unique<DataHandle<dd4pod::CalorimeterHitCollection>>(m_mcHits, Gaudi::DataHandle::Reader, this);
+          std::make_unique<DataHandle<edm4hep::CalorimeterHitCollection>>(m_mcHits, Gaudi::DataHandle::Reader, this);
     }
 
     return StatusCode::SUCCESS;
@@ -96,7 +96,7 @@ public:
     auto& layers   = *m_outputLayerCollection.createAndPut();
     auto& clusters = *m_outputClusterCollection.createAndPut();
     // Optional MC data
-    const dd4pod::CalorimeterHitCollection* mcHits = nullptr;
+    const edm4hep::CalorimeterHitCollection* mcHits = nullptr;
     if (m_inputMC) {
       mcHits = m_inputMC->get();
     }
@@ -182,7 +182,7 @@ private:
   }
 
   eic::Cluster reconstruct_cluster(const eic::ConstProtoCluster& pcl, const eic::CalorimeterHitCollection& hits,
-                                   const dd4pod::CalorimeterHitCollection* mcHits) {
+                                   const edm4hep::CalorimeterHitCollection* mcHits) {
     eic::Cluster cluster;
     cluster.ID({pcl.ID(), algorithmID()});
     // eta, phi center, weighted by energy

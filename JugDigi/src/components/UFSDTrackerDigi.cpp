@@ -13,8 +13,8 @@
 // Event Model related classes
 //#include "GaudiExamples/MyTrack.h"
 //
-// dd4pod's tracker hit is the input collectiopn
-#include "dd4pod/TrackerHitCollection.h"
+// edm4hep's tracker hit is the input collectiopn
+#include "edm4hep/TrackerHitCollection.h"
 // eicd's RawTrackerHit is the output
 #include "eicd/RawTrackerHitCollection.h"
 
@@ -29,7 +29,7 @@ namespace Jug::Digi {
     Gaudi::Property<double>                  m_timeResolution{this, "timeResolution", 10.};
     Gaudi::Property<double>                  m_threshold{this, "threshold", 0. * Gaudi::Units::keV};
     Rndm::Numbers                            m_gaussDist;
-    DataHandle<dd4pod::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+    DataHandle<edm4hep::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                   this};
     DataHandle<eic::RawTrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                    this};
@@ -57,7 +57,7 @@ namespace Jug::Digi {
     StatusCode execute() override
     {
       // input collection
-      const dd4pod::TrackerHitCollection* simhits = m_inputHitCollection.get();
+      const edm4hep::TrackerHitCollection* simhits = m_inputHitCollection.get();
       // Create output collections
       auto rawhits = m_outputHitCollection.createAndPut();
       // eic::RawTrackerHitCollection* rawHitCollection = new eic::RawTrackerHitCollection();

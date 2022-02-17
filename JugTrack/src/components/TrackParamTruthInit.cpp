@@ -16,7 +16,7 @@
 #include "Acts/Definitions/Common.hpp"
 
 #include "eicd/TrackerHitCollection.h"
-#include "dd4pod/Geant4ParticleCollection.h"
+#include "edm4hep/MCParticleCollection.h"
 #include "Math/Vector3D.h"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
@@ -42,7 +42,7 @@ namespace Jug::Reco {
    */
   class TrackParamTruthInit : public GaudiAlgorithm {
   public:
-    DataHandle<dd4pod::Geant4ParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader,
+    DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader,
                                                                     this};
     DataHandle<TrackParametersContainer>         m_outputInitialTrackParameters{"outputInitialTrackParameters",
                                                                         Gaudi::DataHandle::Writer, this};
@@ -84,42 +84,46 @@ namespace Jug::Reco {
 
     StatusCode execute() override {
       // input collection
-      const dd4pod::Geant4ParticleCollection* mcparts = m_inputMCParticles.get();
+      const edm4hep::MCParticleCollection* mcparts = m_inputMCParticles.get();
       // Create output collections
       auto init_trk_params = m_outputInitialTrackParameters.createAndPut();
 
       for(const auto& part : *mcparts) {
 
-        // genStatus = 1 means thrown G4Primary, but dd4gun uses genStatus == 0
-        if (part.genStatus() > 1 ) {
+        // getGeneratorStatus = 1 means thrown G4Primary, but dd4gun uses getGeneratorStatus == 0
+        if (part.getGeneratorStatus() > 1 ) {
           if (msgLevel(MSG::DEBUG)) {
-            debug() << "ignoring particle with genStatus = " << part.genStatus() << endmsg;
+            debug() << "ignoring particle with getGeneratorStatus = " << part.getGeneratorStatus() << endmsg;
           }
           continue;
         }
 
         // require close to interaction vertex
-        if (abs(part.vs().x) * Gaudi::Units::mm > m_maxVertexX
-         || abs(part.vs().y) * Gaudi::Units::mm > m_maxVertexY
-         || abs(part.vs().z) * Gaudi::Units::mm > m_maxVertexZ) {
+        if (abs(part.getVertex().x) * Gaudi::Units::mm > m_maxVertexX
+         || abs(part.getVertex().y) * Gaudi::Units::mm > m_maxVertexY
+         || abs(part.getVertex().z) * Gaudi::Units::mm > m_maxVertexZ) {
           if (msgLevel(MSG::DEBUG)) {
-            debug() << "ignoring particle with vs = " << part.vs() << " mm" << endmsg;
+            debug() << "ignoring particle with vs = " << part.getVertex() << " mm" << endmsg;
           }
           continue;
         }
 
         // require minimum momentum
-        if (part.ps().mag() * Gaudi::Units::GeV < m_minMomentum) {
+        auto p = part.getMomentum();
+	auto pmag = std::hypot(p.x, p.y, p.z);
+        if (pmag * Gaudi::Units::GeV < m_minMomentum) {
           if (msgLevel(MSG::DEBUG)) {
-            debug() << "ignoring particle with p = " << part.ps().mag() << " GeV" << endmsg;
+            debug() << "ignoring particle with p = " << pmag << " GeV" << endmsg;
           }
           continue;
         }
 
         // require minimum pseudorapidity
-        if (part.ps().eta() > m_maxEtaForward || part.ps().eta() < -std::abs(m_maxEtaBackward)) {
+        auto theta = atan2(std::hypot(p.x, p.y), p.z);
+        auto eta = -log(tan(theta/2));
+        if (eta > m_maxEtaForward || eta < -std::abs(m_maxEtaBackward)) {
           if (msgLevel(MSG::DEBUG)) {
-            debug() << "ignoring particle with Eta = " << part.ps().eta() << endmsg;
+            debug() << "ignoring particle with Eta = " << eta << endmsg;
           }
           continue;
         }
@@ -127,7 +131,7 @@ namespace Jug::Reco {
         // get the particle charge
         // note that we cannot trust the mcparticles charge, as DD4hep
         // sets this value to zero! let's lookup by PDGID instead
-        const double charge = m_pidSvc->particle(part.pdgID()).charge;
+        const double charge = m_pidSvc->particle(part.getPDG()).charge;
         if (abs(charge) < std::numeric_limits<double>::epsilon()) {
           if (msgLevel(MSG::DEBUG)) {
             debug() << "ignoring neutral particle" << endmsg;
@@ -141,7 +145,8 @@ namespace Jug::Reco {
         using Acts::UnitConstants::um;
         using Acts::UnitConstants::ns;
 
-        const double p = part.ps().mag() * GeV;
+        const auto pvec = part.getMomentum();
+        const auto pt = std::hypot(pvec.x, pvec.y);
 
         // build some track cov matrix
         Acts::BoundSymMatrix cov                    = Acts::BoundSymMatrix::Zero();
@@ -155,23 +160,23 @@ namespace Jug::Reco {
         Acts::BoundVector  params;
         params(Acts::eBoundLoc0)   = 0.0 * mm ;  // cylinder radius
         params(Acts::eBoundLoc1)   = 0.0 * mm ; // cylinder length
-        params(Acts::eBoundPhi)    = part.ps().phi();
-        params(Acts::eBoundTheta)  = part.ps().theta();
-        params(Acts::eBoundQOverP) = charge / p;
-        params(Acts::eBoundTime)   = part.time() * ns;
+        params(Acts::eBoundPhi)    = atan2(pvec.y, pvec.x);
+        params(Acts::eBoundTheta)  = atan2(pt, pvec.z);
+        params(Acts::eBoundQOverP) = charge / (pmag * GeV);
+        params(Acts::eBoundTime)   = part.getTime() * ns;
 
         //// Construct a perigee surface as the target surface
         auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
-            Acts::Vector3{part.vs().x * mm, part.vs().y * mm, part.vs().z * mm});
+            Acts::Vector3{part.getVertex().x * mm, part.getVertex().y * mm, part.getVertex().z * mm});
 
         //params(Acts::eBoundQOverP) = charge/p;
         init_trk_params->push_back({pSurface, params, charge,cov});
         // std::make_optional(std::move(cov))
 
         if (msgLevel(MSG::DEBUG)) {
-          debug() << "Invoke track finding seeded by truth particle with p = " << p / GeV << " GeV" << endmsg;
+          debug() << "Invoke track finding seeded by truth particle with p = " << pmag << " GeV" << endmsg;
           debug() << "                                              charge = " << charge << endmsg;
-          debug() << "                                                 q/p = " << charge / p << endmsg;
+          debug() << "                                                 q/p = " << charge / pmag << endmsg;
         }
         //Acts::BoundMatrix cov           = Acts::BoundMatrix::Zero();
         //cov(Acts::eLOC_0, Acts::eLOC_0) = ahit.covMatrix(0)*ahit.covMatrix(0);

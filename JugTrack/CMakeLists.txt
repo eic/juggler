@@ -29,7 +29,7 @@ gaudi_add_module(JugTrackPlugins
   Gaudi::GaudiAlgLib Gaudi::GaudiKernel
   JugBase
   ROOT::Core ROOT::RIO ROOT::Tree
-  NPDet::DD4podIO
+  EDM4HEP::edm4hep
   EICD::eicd
   DD4hep::DDRec
   ActsCore

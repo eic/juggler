@@ -3,7 +3,7 @@ from Configurables import ApplicationMgr, EICDataSvc, PodioOutput
 
 podioevent   = EICDataSvc("EventDataSvc", inputs=["derp.root"], OutputLevel=DEBUG)
 
-from Configurables import Jug__Base__InputCopier_dd4pod__Geant4ParticleCollection_dd4pod__Geant4ParticleCollection_ as MCCopier
+from Configurables import Jug__Base__InputCopier_edm4hep__MCParticleCollection_edm4hep__MCParticleCollection_ as MCCopier
 from Configurables import PodioInput, ReadTestConsumer
 podioinput = PodioInput("PodioReader", collections=["mcparticles"], OutputLevel=DEBUG)
 checker = ReadTestConsumer()
