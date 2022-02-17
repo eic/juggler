@@ -81,21 +81,21 @@ namespace Jug::Digi {
       auto& ohits = *m_outputHitCollection.createAndPut();
       for (const auto& hit : *m_inputHitCollection.get()) {
         double lightyield = 0.;
-        for (auto &truth : hit.contributions()) {
-          const double charge = m_pidSvc->particle(truth.pdgID).charge;
+        for (auto &truth : hit.getContributions()) {
+          const double charge = m_pidSvc->particle(truth.getPDG()).charge;
           // some tolerance for precision
           if (std::abs(charge) > 1e-5) {
             lightyield += truth.deposit / (1. + truth.deposit / truth.length * birksConstant);
           }
         }
         auto ohit = ohits->create();
-        ohit.cellID(hit.cellID());
+        ohit.setCellID(hit.getCellID());
         ohit.flag(hit.flag());
         ohit.g4ID(hit.g4ID());
         ohit.position(hit.position());
         ohit.truth(hit.truth());
         // replace energy deposit with Birks Law corrected value
-        ohit.energyDeposit(lightyield);
+        ohit.setEnergyDeposit(lightyield);
       }
       return StatusCode::SUCCESS;
     }
