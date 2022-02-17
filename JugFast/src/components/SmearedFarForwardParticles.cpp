@@ -164,10 +164,10 @@ private:
       if (mom_ion_theta > 4.5 / 1000.) {
         continue;
       }
-      const double E = part.getEnergy();
-      double conTerm = 0.05; //default 5%
-      double stoTerm = 0.5;  //default 50%
-      double angTerm = 0.003; //3mrad
+      const auto E = part.getEnergy();
+      decltype(E) conTerm = 0.05; //default 5%
+      decltype(E) stoTerm = 0.5;  //default 50%
+      decltype(E) angTerm = 0.003; //3mrad
 
       if(part.getPDG() == 2112){
         conTerm = 0.05; //default 5%
@@ -180,15 +180,15 @@ private:
         angTerm = 0.001; //1mrad is the detault for the block size
       }
 
-      const double dE   = sqrt((conTerm * E) * (conTerm * E) + stoTerm * stoTerm * E) * m_gaussDist(); //50%/SqrtE + 5%
-      const double Es   = E + dE;
-      const double th   = mom_ion_theta;
-      const double dth  = (angTerm / sqrt(E)) * m_gaussDist();
-      const double ths  = th + dth;
-      const double phi  = mom_ion_phi;
-      const double dphi = 0;
-      const double phis = phi + dphi;
-      const double moms = sqrt(Es * Es - part.getMass() * part.getMass());
+      const auto dE   = sqrt((conTerm * E) * (conTerm * E) + stoTerm * stoTerm * E) * m_gaussDist(); //50%/SqrtE + 5%
+      const auto Es   = E + dE;
+      const auto th   = mom_ion_theta;
+      const auto dth  = (angTerm / sqrt(E)) * m_gaussDist();
+      const auto ths  = th + dth;
+      const auto phi  = mom_ion_phi;
+      const auto dphi = 0;
+      const auto phis = phi + dphi;
+      const auto moms = sqrt(Es * Es - part.getMass() * part.getMass());
       const edm4hep::Vector3f mom3s_ion{moms*sin(ths)*cos(phis), moms*sin(ths)*sin(phis), moms*cos(ths)};
       const auto mom3s = rotateIonToLabDirection(mom3s_ion);
       const auto mom3s_phi = std::atan2(mom3s.y, mom3s.x);
