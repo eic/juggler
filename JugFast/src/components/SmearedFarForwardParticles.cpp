@@ -164,7 +164,7 @@ private:
       if (mom_ion_theta > 4.5 / 1000.) {
         continue;
       }
-      const auto E = part.getEnergy();
+
       float conTerm = 0.05; //default 5%
       float stoTerm = 0.5;  //default 50%
       float angTerm = 0.003; //3mrad
@@ -180,17 +180,18 @@ private:
         angTerm = 0.001; //1mrad is the detault for the block size
       }
 
-      // we static cast the gaussian from double to float for compatibility
-      // with float data members without narrowing warnings
-      const auto dE   = sqrt((conTerm * E) * (conTerm * E) + stoTerm * stoTerm * E) * static_cast<float>(m_gaussDist()); //50%/SqrtE + 5%
-      const auto Es   = E + dE;
-      const auto th   = mom_ion_theta;
-      const auto dth  = (angTerm / sqrt(E)) * static_cast<float>(m_gaussDist());
-      const auto ths  = th + dth;
-      const auto phi  = mom_ion_phi;
-      const auto dphi = 0;
-      const auto phis = phi + dphi;
-      const auto moms = sqrt(Es * Es - part.getMass() * part.getMass());
+      // explicit double precision due to E*E - m*m
+      const double E = part.getEnergy();
+      const double dE   = sqrt((conTerm * E) * (conTerm * E) + stoTerm * stoTerm * E) * m_gaussDist(); //50%/SqrtE + 5%
+      const double Es   = E + dE;
+      const double th   = mom_ion_theta;
+      const double dth  = (angTerm / sqrt(E)) * static_cast<float>(m_gaussDist());
+      const double ths  = th + dth;
+      const double phi  = mom_ion_phi;
+      const double dphi = 0;
+      const double phis = phi + dphi;
+      // now cast back into float
+      const float moms = static_cast<float>(sqrt(Es * Es - part.getMass() * part.getMass()));
       const edm4hep::Vector3f mom3s_ion{moms*sin(ths)*cos(phis), moms*sin(ths)*sin(phis), moms*cos(ths)};
       const auto mom3s = rotateIonToLabDirection(mom3s_ion);
       const auto mom3s_phi = std::atan2(mom3s.y, mom3s.x);
