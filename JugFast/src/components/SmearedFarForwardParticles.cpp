@@ -144,7 +144,7 @@ public:
 private:
   // ZDC smearing as in eic_smear
   // https://github.com/eic/eicsmeardetectors/blob/9a1831dd97bf517b80a06043b9ee4bfb96b483d8/SmearMatrixDetector_0_1_FF.cxx#L224
-  std::vector<RecData> zdc(const edm4hep::MCParticleCollection& mc, const double ionBeamEnergy) {
+  std::vector<RecData> zdc(const edm4hep::MCParticleCollection& mc, const double /* ionBeamEnergy */) {
     std::vector<RecData> rc;
     for (const auto& part : mc) {
       if (part.getGeneratorStatus() > 1) {
@@ -201,7 +201,7 @@ private:
       const auto mom3s_phi = std::atan2(mom3s.y, mom3s.x);
       const auto mom3s_theta = std::atan2(std::hypot(mom3s.y, mom3s.x), mom3s.z);
       eic::ReconstructedParticle rec_part;
-      rec_part.ID({part.id(), algorithmID()});
+      //rec_part.ID({part.id(), algorithmID()});
       rec_part.p({mom3s.x, mom3s.y, mom3s.z});
       rec_part.v({part.getVertex().x, part.getVertex().y, part.getVertex().z});
       rec_part.time(static_cast<float>(part.getTime()));
@@ -229,7 +229,7 @@ private:
   }
   // Fast B0 as in
   // https://github.com/eic/eicsmeardetectors/blob/9a1831dd97bf517b80a06043b9ee4bfb96b483d8/SmearMatrixDetector_0_1_FF.cxx#L254
-  std::vector<RecData> b0(const edm4hep::MCParticleCollection& mc, const double ionBeamEnergy) {
+  std::vector<RecData> b0(const edm4hep::MCParticleCollection& mc, const double /* ionBeamEnergy */) {
     std::vector<RecData> rc;
     for (const auto& part : mc) {
       if (part.getGeneratorStatus() > 1) {
