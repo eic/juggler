@@ -54,7 +54,7 @@ namespace Jug::Base {
         for (const auto& p : *parts) {
           if (p.getGeneratorStatus() > 1) {
             if (msgLevel(MSG::DEBUG)) {
-              debug() << "ignoring particle with getGeneratorStatus = " << p.getGeneratorStatus() << endmsg;
+              debug() << "ignoring particle with generatorStatus = " << p.getGeneratorStatus() << endmsg;
             }
             continue;
           }

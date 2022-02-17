@@ -93,7 +93,7 @@ namespace Jug::Reco {
         // getGeneratorStatus = 1 means thrown G4Primary, but dd4gun uses getGeneratorStatus == 0
         if (part.getGeneratorStatus() > 1 ) {
           if (msgLevel(MSG::DEBUG)) {
-            debug() << "ignoring particle with getGeneratorStatus = " << part.getGeneratorStatus() << endmsg;
+            debug() << "ignoring particle with generatorStatus = " << part.getGeneratorStatus() << endmsg;
           }
           continue;
         }

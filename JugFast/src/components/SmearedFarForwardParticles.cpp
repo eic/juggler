@@ -149,7 +149,7 @@ private:
     for (const auto& part : mc) {
       if (part.getGeneratorStatus() > 1) {
         if (msgLevel(MSG::DEBUG)) {
-          debug() << "ignoring particle with getGeneratorStatus = " << part.getGeneratorStatus() << endmsg;
+          debug() << "ignoring particle with generatorStatus = " << part.getGeneratorStatus() << endmsg;
         }
         continue;
       }
