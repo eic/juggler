@@ -179,7 +179,7 @@ namespace Jug::Reco {
     }
 
     eic::Cluster reconstruct(const eic::ConstProtoCluster& pcl, const eic::CalorimeterHitCollection& hits,
-                             const edm4hep::SimCalorimeterHitCollection* mcHits) const {
+                             const edm4hep::SimCalorimeterHitCollection* /* mcHits */) const {
       eic::Cluster cl;
       cl.ID({pcl.ID(), algorithmID()});
       cl.nhits(pcl.hits_size());
@@ -277,10 +277,11 @@ namespace Jug::Reco {
       }
 
       // Optionally store the MC truth associated with the first hit in this cluster
-      if (mcHits) {
-        const auto& mc_hit    = (*mcHits)[pcl.hits(0).ID.value];
-        cl.mcID({mc_hit.truth().trackID, m_kMonteCarloSource});
-      }
+      // FIXME no connection between cluster and truth in edm4hep
+      //if (mcHits) {
+      //  const auto& mc_hit    = (*mcHits)[pcl.hits(0).ID.value];
+      //  cl.mcID({mc_hit.truth().trackID, m_kMonteCarloSource});
+      //}
 
       return cl;
     }

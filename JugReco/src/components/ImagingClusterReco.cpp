@@ -26,6 +26,7 @@
 #include "JugBase/Utilities/Utils.hpp"
 
 // Event Model related classes
+#include "edm4hep/MCParticleCollection.h"
 #include "edm4hep/SimCalorimeterHitCollection.h"
 #include "eicd/CalorimeterHitCollection.h"
 #include "eicd/ClusterCollection.h"
@@ -182,7 +183,7 @@ private:
   }
 
   eic::Cluster reconstruct_cluster(const eic::ConstProtoCluster& pcl, const eic::CalorimeterHitCollection& hits,
-                                   const edm4hep::SimCalorimeterHitCollection* mcHits) {
+                                   const edm4hep::SimCalorimeterHitCollection* /* mcHits */) {
     eic::Cluster cluster;
     cluster.ID({pcl.ID(), algorithmID()});
     // eta, phi center, weighted by energy
@@ -215,11 +216,12 @@ private:
     cluster.radius(radius / cluster.nhits());
 
     // Optionally store the MC truth associated with the first hit in this cluster
-    if (mcHits) {
-      const auto& mc_hit    = (*mcHits)[pcl.hits(0).ID.value];
-      cluster.mcID({mc_hit.truth().trackID, m_kMonteCarloSource});
-    }
-    
+    // FIXME no connection between cluster and truth in edm4hep
+    //if (mcHits) {
+    //  const auto& mc_hit    = (*mcHits)[pcl.hits(0).ID.value];
+    //  cluster.mcID({mc_hit.truth().trackID, m_kMonteCarloSource});
+    //}
+
     // fill additional info fields;
     cluster.polar(cluster.position());
     cluster.eta(cluster.position().eta());

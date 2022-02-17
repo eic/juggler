@@ -17,7 +17,7 @@ namespace Jug::Fast {
 
 class MC2SmearedParticle : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
 public:
-  DataHandle<edm4hep::MCParticleCollection> m_inputParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
   DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"SmearedReconstructedParticles",
                                                                          Gaudi::DataHandle::Writer, this};
   Rndm::Numbers m_gaussDist;
@@ -27,7 +27,7 @@ public:
 
   MC2SmearedParticle(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
-    declareProperty("inputParticles", m_inputParticles, "MCParticles");
+    declareProperty("inputParticles", m_inputMCParticles, "MCParticles");
     declareProperty("outputParticles", m_outputParticles, "SmearedReconstructedParticles");
   }
   StatusCode initialize() override {
@@ -43,7 +43,7 @@ public:
   }
   StatusCode execute() override {
     // input collection
-    const edm4hep::MCParticleCollection* parts = m_inputParticles.get();
+    auto parts = m_inputMCParticles.get();
     // output collection
     auto& out_parts = *(m_outputParticles.createAndPut());
     int ID         = 0;
@@ -58,16 +58,17 @@ public:
       // for now just use total momentum smearing as this is the largest effect,
       // ideally we should also smear the angles but this should be good enough
       // for now.
-      const double pgen    = p.getMomentum().mag();
+      const auto pvec      = p.getMomentum();
+      const double pgen    = std::hypot(pvec.x, pvec.y, pvec.z);
       const float momentum = pgen * m_gaussDist();
-      const float energy   = p.energy();
+      const float energy   = p.getEnergy();
       const float px       = p.getMomentum().x * momentum / pgen;
       const float py       = p.getMomentum().y * momentum / pgen;
       const float pz       = p.getMomentum().z * momentum / pgen;
       // @TODO: vertex smearing
-      const float vx = p.vs().x;
-      const float vy = p.vs().y;
-      const float vz = p.vs().z;
+      const float vx = p.getVertex().x;
+      const float vy = p.getVertex().y;
+      const float vz = p.getVertex().z;
 
       eic::VectorXYZ psmear{px, py, pz};
 
@@ -75,16 +76,16 @@ public:
       rec_part.ID({ID++, algorithmID()});
       rec_part.p(psmear);
       rec_part.v({vx, vy, vz});
-      rec_part.time(static_cast<float>(p.time()));
-      rec_part.pid(p.pdgID());
+      rec_part.time(static_cast<float>(p.getTime()));
+      rec_part.pid(p.getPDG());
       rec_part.status(p.getGeneratorStatus());
-      rec_part.charge(p.charge());
+      rec_part.charge(p.getCharge());
       rec_part.weight(1.);
       rec_part.direction({psmear.theta(), psmear.phi()});
       rec_part.momentum(momentum);
       rec_part.energy(energy);
-      rec_part.mass(p.mass());
-      rec_part.mcID({p.ID(), kMonteCarloSource});
+      rec_part.mass(p.getMass());
+      rec_part.mcID({p.id(), kMonteCarloSource});
     }
     return StatusCode::SUCCESS;
   }

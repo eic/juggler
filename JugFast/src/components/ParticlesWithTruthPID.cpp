@@ -68,17 +68,21 @@ public:
       double best_delta = std::numeric_limits<double>::max();
       for (size_t ip = 0; ip < mc.size(); ++ip) {
         const auto& mcpart = mc[ip];
-        if (consumed[ip] || mcpart.getGeneratorStatus() > 1 || mcpart.charge() == 0 || mcpart.charge() * charge_rec < 0) {
+        if (consumed[ip] || mcpart.getGeneratorStatus() > 1 || mcpart.getCharge() == 0 || mcpart.getCharge() * charge_rec < 0) {
           if (msgLevel(MSG::DEBUG)) {
             debug() << "ignoring non-primary/neutral/opposite charge particle" << endmsg;
           }
           continue;
         }
-        const double dp_rel = std::abs((mom.mag() - mcpart.getMomentum().mag()) / mcpart.getMomentum().mag());
+        const auto& p = mcpart.getMomentum();
+        const auto p_mag = std::hypot(p.x, p.y, p.z);
+        const auto p_phi = std::atan2(p.y, p.x);
+        const auto p_eta = std::atanh(p.z / p_mag);
+        const double dp_rel = std::abs((mom.mag() - p_mag) / p_mag);
         // check the tolerance for sin(dphi/2) to avoid the hemisphere problem and allow
         // for phi rollovers
-        const double dsphi = std::abs(sin(0.5 * (mom.phi() - mcpart.getMomentum().phi())));
-        const double deta  = std::abs((mom.eta() - mcpart.getMomentum().eta()));
+        const double dsphi = std::abs(sin(0.5 * (mom.phi() - p_phi)));
+        const double deta  = std::abs((mom.eta() - p_eta));
 
         if (dp_rel < m_pRelativeTolerance && deta < m_etaTolerance && dsphi < sinPhiOver2Tolerance) {
           const double delta =
@@ -97,11 +101,10 @@ public:
       if (best_match >= 0) {
         consumed[best_match] = true;
         const auto& mcpart   = mc[best_match];
-        best_pid             = mcpart.pdgID();
-        vertex               = {mcpart.vs().x, mcpart.vs().y, mcpart.vs().z};
-        time                 = mcpart.time();
-        mass                 = mcpart.mass();
-        mcID                 = {mcpart.ID(), m_kMonteCarloSource};
+        best_pid             = mcpart.getPDG();
+        vertex               = {mcpart.getVertex().x, mcpart.getVertex().y, mcpart.getVertex().z};
+        time                 = mcpart.getTime();
+        mass                 = mcpart.getMass();
       }
       auto rec_part = part.create();
       rec_part.ID({ID++, algorithmID()});
@@ -125,9 +128,12 @@ public:
           debug() << fmt::format("  - Track: (mom: {}, theta: {}, phi: {}, charge: {})", mom.mag(), mom.theta(),
                                  mom.phi(), charge_rec)
                   << endmsg;
+          const auto& p = mcpart.getMomentum();
+          const auto p_mag = std::hypot(p.x, p.y, p.z);
+          const auto p_phi = std::atan2(p.y, p.x);
+          const auto p_theta = std::atan2(std::hypot(p.x, p.y), p.z);
           debug() << fmt::format("  - MC particle: (mom: {}, theta: {}, phi: {}, charge: {}, type: {}",
-                                 mcpart.getMomentum().mag(), mcpart.getMomentum().theta(), mcpart.getMomentum().phi(), mcpart.charge(),
-                                 mcpart.pdgID())
+                                 p_mag, p_theta, p_phi, mcpart.getCharge(), mcpart.getPDG())
                   << endmsg;
         } else {
           debug() << fmt::format("Did not find a good match for track {} \n", ID) << endmsg;

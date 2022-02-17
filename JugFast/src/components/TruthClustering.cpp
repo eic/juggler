@@ -17,6 +17,7 @@
 #include "JugBase/UniqueID.h"
 
 // Event Model related classes
+#include "edm4hep/MCParticle.h"
 #include "edm4hep/SimCalorimeterHitCollection.h"
 #include "eicd/CalorimeterHitCollection.h"
 #include "eicd/ClusterCollection.h"
@@ -33,13 +34,9 @@ namespace Jug::Fast {
  */
 class TruthClustering : public GaudiAlgorithm, AlgorithmIDMixin<> {
 public:
-  using RecHits       = eic::CalorimeterHitCollection;
-  using ProtoClusters = eic::ProtoClusterCollection;
-  using TruthHits     = edm4hep::SimCalorimeterHitCollection;
-
-  DataHandle<RecHits> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
-  DataHandle<TruthHits> m_mcHits{"mcHits", Gaudi::DataHandle::Reader, this};
-  DataHandle<ProtoClusters> m_outputProtoClusters{"outputProtoClusters", Gaudi::DataHandle::Writer, this};
+  DataHandle<eic::CalorimeterHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4hep::SimCalorimeterHitCollection> m_mcHits{"mcHits", Gaudi::DataHandle::Reader, this};
+  DataHandle<eic::ProtoClusterCollection> m_outputProtoClusters{"outputProtoClusters", Gaudi::DataHandle::Writer, this};
 
   // Monte Carlo particle source identifier
   const int32_t kMonteCarloSource{uniqueID<int32_t>("MCParticles")};
@@ -65,9 +62,6 @@ public:
     // Create output collections
     auto& proto = *m_outputProtoClusters.createAndPut();
 
-    std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>> the_hits;
-    std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>> remaining_hits;
-
     // Map mc track ID to protoCluster index
     std::map<int32_t, int32_t> protoIndex;
 
@@ -76,7 +70,7 @@ public:
     for (uint32_t i = 0; i < hits.size(); ++i) {
       const auto& hit       = hits[i];
       const auto& mcHit     = mc[hit.ID().value];
-      const int32_t trackID = mcHit.truth().trackID;
+      const auto& trackID   = mcHit.getContributions(0).getParticle().id();
       // Create a new protocluster if we don't have one for this trackID
       if (!protoIndex.count(trackID)) {
         auto pcl = proto.create();

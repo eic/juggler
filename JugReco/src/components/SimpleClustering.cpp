@@ -88,11 +88,13 @@ namespace Jug::Reco {
       // Create output collections
       auto& proto = *m_outputProtoClusters.createAndPut();
       auto& clusters = *m_outputClusters.createAndPut();
+
       // Optional MC data
-      const edm4hep::SimCalorimeterHitCollection* mcHits = nullptr;
-      if (m_inputMC) {
-        mcHits = m_inputMC->get();
-      }
+      // FIXME no connection between cluster and truth in edm4hep
+      //const edm4hep::SimCalorimeterHitCollection* mcHits = nullptr;
+      //if (m_inputMC) {
+      //  mcHits = m_inputMC->get();
+      //}
 
       std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>> the_hits;
       std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>> remaining_hits;
@@ -149,10 +151,11 @@ namespace Jug::Reco {
           pcl.addhits({h.ID(), idx, 1.});
         }
         // Optionally store the MC truth associated with the first hit in this cluster
-        if (mcHits) {
-          const auto& mc_hit = (*mcHits)[ref_hit.ID().value];
-          cl.mcID({mc_hit.truth().trackID, m_kMonteCarloSource});
-        }
+        // FIXME no connection between cluster and truth in edm4hep
+        //if (mcHits) {
+        //  const auto& mc_hit = (*mcHits)[ref_hit.ID().value];
+        //  cl.mcID({mc_hit.truth().trackID, m_kMonteCarloSource});
+        //}
 
         have_ref = false;
         if ((remaining_hits.size() > 5) && (clusters.size() < 10)) {

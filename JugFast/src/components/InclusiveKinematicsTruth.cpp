@@ -73,38 +73,38 @@ public:
   
     for (const auto& p : parts) {
 
-      if (p.getGeneratorStatus() == 4 && p.pdgID() == 11) { // Incoming electron
+      if (p.getGeneratorStatus() == 4 && p.getPDG() == 11) { // Incoming electron
         ei.setPx(p.getMomentum().x);
         ei.setPy(p.getMomentum().y);
         ei.setPz(p.getMomentum().z);
-        ei.setE(p.energy());
+        ei.setE(p.getEnergy());
         ebeam_found = true;
       }
-      else if (p.getGeneratorStatus() == 4 && p.pdgID() == 2212) { // Incoming proton
+      else if (p.getGeneratorStatus() == 4 && p.getPDG() == 2212) { // Incoming proton
         pi.setPx(p.getMomentum().x);
         pi.setPy(p.getMomentum().y);
         pi.setPz(p.getMomentum().z);
-        pi.setE(p.energy());
+        pi.setE(p.getEnergy());
         pbeam_found = true;
       }
-      else if (p.getGeneratorStatus() == 4 && p.pdgID() == 2112) { // Incoming neutron
+      else if (p.getGeneratorStatus() == 4 && p.getPDG() == 2112) { // Incoming neutron
         pi.setPx(p.getMomentum().x);
         pi.setPy(p.getMomentum().y);
         pi.setPz(p.getMomentum().z);
-        pi.setE(p.energy());
+        pi.setE(p.getEnergy());
         pbeam_found = true;
       }
       // Scattered electron. Currently taken as first status==1 electron in HEPMC record,
       // which seems to be correct based on a cursory glance at the Pythia8 output. In the future,
       // it may be better to trace back each final-state electron and see which one originates from
       // the beam.
-      else if (p.getGeneratorStatus() == 1 && p.pdgID() == 11 && mcscatID == -1) {
+      else if (p.getGeneratorStatus() == 1 && p.getPDG() == 11 && mcscatID == -1) {
         ef.setPx(p.getMomentum().x);
         ef.setPy(p.getMomentum().y);
         ef.setPz(p.getMomentum().z);
-        ef.setE(p.energy());
+        ef.setE(p.getEnergy());
 
-        mcscatID = p.ID();
+        mcscatID = p.id();
       }
       if (ebeam_found && pbeam_found && mcscatID != -1) {
         // all done!

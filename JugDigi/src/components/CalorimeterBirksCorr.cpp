@@ -80,22 +80,21 @@ namespace Jug::Digi {
     {
       auto& ohits = *m_outputHitCollection.createAndPut();
       for (const auto& hit : *m_inputHitCollection.get()) {
-        double lightyield = 0.;
-        for (auto &truth : hit.getContributions()) {
-          const double charge = m_pidSvc->particle(truth.getPDG()).charge;
+        auto ohit = ohits->create(hit.getCellID(), hit.getEnergy(), hit.getPosition());
+        double energy = 0.;
+        for (const auto &c: hit.getContributions()) {
+          ohit.addToContributions(c);
+          const double charge = m_pidSvc->particle(c.getPDG()).charge;
           // some tolerance for precision
           if (std::abs(charge) > 1e-5) {
-            lightyield += truth.deposit / (1. + truth.deposit / truth.length * birksConstant);
+            // FIXME
+            //energy += c.getEnergy() / (1. + c.getEnergy() / c.length * birksConstant);
+            error() << "edm4hep::CaloHitContribution has no length field for Birks correction." << endmsg;
+            return StatusCode::FAILURE;
           }
         }
-        auto ohit = ohits->create();
-        ohit.setCellID(hit.getCellID());
-        ohit.flag(hit.flag());
-        ohit.g4ID(hit.g4ID());
-        ohit.position(hit.position());
-        ohit.truth(hit.truth());
         // replace energy deposit with Birks Law corrected value
-        ohit.setEnergyDeposit(lightyield);
+        ohit.setEnergy(energy);
       }
       return StatusCode::SUCCESS;
     }
