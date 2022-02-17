@@ -366,7 +366,7 @@ private:
     const double ps    = p + dp;
 
     const double pt  = std::hypot(mom_ion.x, mom_ion.y);
-    const double dpt = (0.03 * pt) * m_gaussDist();
+    //const double dpt = (0.03 * pt) * m_gaussDist();
     // just apply relative smearing on px and py
     const double dpxs = (0.03 * mom_ion.x) * m_gaussDist(); //+ (1 + dpt / pt);
     const double dpys = (0.03 * mom_ion.y) * m_gaussDist(); //+ (1 + dpt / pt);
