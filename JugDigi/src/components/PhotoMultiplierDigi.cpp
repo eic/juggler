@@ -22,7 +22,7 @@
 
 // Event Model related classes
 #include "eicd/RawPMTHitCollection.h"
-#include "edm4hep/TrackerHitCollection.h"
+#include "edm4hep/SimTrackerHitCollection.h"
 
 
 using namespace Gaudi::Units;

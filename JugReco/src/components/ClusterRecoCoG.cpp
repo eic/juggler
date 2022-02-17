@@ -30,7 +30,7 @@
 #include "JugBase/UniqueID.h"
 
 // Event Model related classes
-#include "edm4hep/CalorimeterHitCollection.h"
+#include "edm4hep/SimCalorimeterHitCollection.h"
 #include "eicd/CalorimeterHitCollection.h"
 #include "eicd/ProtoClusterCollection.h"
 #include "eicd/ClusterCollection.h"

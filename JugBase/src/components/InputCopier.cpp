@@ -11,8 +11,8 @@
 
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
-#include "edm4hep/CalorimeterHitCollection.h"
-#include "edm4hep/TrackerHitCollection.h"
+#include "edm4hep/SimCalorimeterHitCollection.h"
+#include "edm4hep/SimTrackerHitCollection.h"
 
 
 namespace Jug {

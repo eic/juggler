@@ -14,7 +14,7 @@
 //#include "GaudiExamples/MyTrack.h"
 //
 // edm4hep's tracker hit is the input collectiopn
-#include "edm4hep/TrackerHitCollection.h"
+#include "edm4hep/SimTrackerHitCollection.h"
 // eicd's RawTrackerHit is the output
 #include "eicd/RawTrackerHitCollection.h"
 

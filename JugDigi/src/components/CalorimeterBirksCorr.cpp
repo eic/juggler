@@ -18,7 +18,7 @@
 #include "JugBase/IParticleSvc.h"
 
 // Event Model related classes
-#include "edm4hep/CalorimeterHitCollection.h"
+#include "edm4hep/SimCalorimeterHitCollection.h"
 #include "eicd/RawCalorimeterHitCollection.h"
 #include "eicd/RawCalorimeterHitData.h"
 
