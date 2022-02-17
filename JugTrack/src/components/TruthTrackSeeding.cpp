@@ -75,27 +75,26 @@ namespace Jug::Reco {
           continue;
         }
 
-        const auto pvec = part.getMomentum();
-        const double p = std::hypot(pvec.x, pvec.y, pvec.z);
+        const auto& pvec = part.getMomentum();
+        const auto p = std::hypot(pvec.x, pvec.y, pvec.z);
+        const auto phi = std::atan2(pvec.x, pvec.y);
+        const auto theta = std::atan2(std::hypot(pvec.x, pvec.y), pvec.z);
 
         // get the particle charge
         // note that we cannot trust the mcparticles charge, as DD4hep
         // sets this value to zero! let's lookup by PDGID instead
-        const double charge = m_pidSvc->particle(part.getPDG()).charge;
+        const auto charge = m_pidSvc->particle(part.getPDG()).charge;
         if (abs(charge) < std::numeric_limits<double>::epsilon()) {
           continue;
         }
 
-        const float q_over_p = charge / p;
+        const auto q_over_p = charge / p;
 
-        const auto& part_p = part.getMomentum();
-        const auto part_phi = std::atan2(part_p.x, part_p.y);
-        const auto part_theta = std::atan2(std::hypot(part_p.x, part_p.y), part_p.z);
         eic::TrackParameters params{-1,               // type --> seed (-1)
                                    {0.0f, 0.0f},      // location on surface
                                    {0.1, 0.1, 0.1},   // Covariance on location
-                                   part_theta,        // theta (rad)
-                                   part_phi,          // phi  (rad)
+                                   theta,             // theta (rad)
+                                   phi,               // phi  (rad)
                                    q_over_p * .05f,   // Q/P (e/GeV)
                                    {0.1, 0.1, 0.1},   // Covariance on theta/phi/Q/P
                                    part.getTime(),    // Time (ns)
