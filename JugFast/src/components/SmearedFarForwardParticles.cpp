@@ -180,10 +180,12 @@ private:
         angTerm = 0.001; //1mrad is the detault for the block size
       }
 
-      const auto dE   = sqrt((conTerm * E) * (conTerm * E) + stoTerm * stoTerm * E) * m_gaussDist(); //50%/SqrtE + 5%
+      // we static cast the gaussian from double to float for compatibility
+      // with float data members without narrowing warnings
+      const auto dE   = sqrt((conTerm * E) * (conTerm * E) + stoTerm * stoTerm * E) * static_cast<float>(m_gaussDist()); //50%/SqrtE + 5%
       const auto Es   = E + dE;
       const auto th   = mom_ion_theta;
-      const auto dth  = (angTerm / sqrt(E)) * m_gaussDist();
+      const auto dth  = (angTerm / sqrt(E)) * static_cast<float>(m_gaussDist());
       const auto ths  = th + dth;
       const auto phi  = mom_ion_phi;
       const auto dphi = 0;
