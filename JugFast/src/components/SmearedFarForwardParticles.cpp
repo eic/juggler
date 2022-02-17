@@ -378,7 +378,11 @@ private:
     const double pzs = sqrt(ps * ps - pxs * pxs - pys * pys);
 
     // And build our 3-vector
-    const edm4hep::Vector3f psmear_ion = {pxs, pys, pzs};
+    const edm4hep::Vector3f psmear_ion{
+      static_cast<float>(pxs),
+      static_cast<float>(pys),
+      static_cast<float>(pzs)
+    };
     const auto psmear = rotateIonToLabDirection(psmear_ion);
     const auto psmear_phi = std::atan2(psmear.x, psmear.y);
     const auto psmear_theta = std::atan2(std::hypot(psmear.x, psmear.y), psmear.z);
