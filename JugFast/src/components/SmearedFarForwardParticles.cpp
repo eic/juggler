@@ -186,13 +186,17 @@ private:
       const double Es   = E + dE;
       const double th   = mom_ion_theta;
       const double dth  = (angTerm / sqrt(E)) * m_gaussDist();
+      const double ths  = th + dth;
       const double phi  = mom_ion_phi;
       const double dphi = 0;
+      const double phis = phi + dphi;
+      const double moms = sqrt(Es * Es - part.getMass() * part.getMass());
       // now cast back into float
-      const float ths  = static_cast<float>(th + dth);
-      const float phis = static_cast<float>(phi + dphi);
-      const float moms = static_cast<float>(sqrt(Es * Es - part.getMass() * part.getMass()));
-      const edm4hep::Vector3f mom3s_ion{moms*sin(ths)*cos(phis), moms*sin(ths)*sin(phis), moms*cos(ths)};
+      const edm4hep::Vector3f mom3s_ion{
+        static_cast<float>(moms*sin(ths)*cos(phis)),
+        static_cast<float>(moms*sin(ths)*sin(phis)),
+        static_cast<float>(moms*cos(ths))
+      };
       const auto mom3s = rotateIonToLabDirection(mom3s_ion);
       const auto mom3s_phi = std::atan2(mom3s.y, mom3s.x);
       const auto mom3s_theta = std::atan2(std::hypot(mom3s.y, mom3s.x), mom3s.z);
