@@ -74,20 +74,19 @@ namespace Jug::Base {
           const float vy       = p.getVertex().y;
           const float vz       = p.getVertex().z;
 
-          edm4hep::Vector3f psmear{px, py, pz};
-          const auto psmear_phi = std::atan2(py, px);
-          const auto psmear_theta = std::atan2(std::hypot(px, py), pz);
+          const auto p_phi = std::atan2(py, px);
+          const auto p_theta = std::atan2(std::hypot(px, py), pz);
 
           auto rec_part = out_parts.create();
           rec_part.ID({ID++, algorithmID()});
-          rec_part.p(psmear);
+          rec_part.p({px, py, pz});
           rec_part.v({vx, vy, vz});
           rec_part.time(p.getTime());
           rec_part.pid(p.getPDG());
           rec_part.status(p.getGeneratorStatus());
           rec_part.charge(p.getCharge());
           rec_part.weight(1.);
-          rec_part.direction({psmear_theta, psmear_phi});
+          rec_part.direction({p_theta, p_phi});
           rec_part.momentum(momentum);
           rec_part.energy(energy);
           rec_part.mass(p.getMass());
