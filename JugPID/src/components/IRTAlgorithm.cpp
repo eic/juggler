@@ -161,7 +161,7 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
 	  
     // Input hit collection;
     m_inputHitCollection =
-      std::make_unique<DataHandle<dd4pod::PhotoMultiplierHitCollection>>((dname + "Hits").c_str(), 
+      std::make_unique<DataHandle<dd4pod::TrackerHitCollection>>((dname + "Hits").c_str(), 
 									 Gaudi::DataHandle::Reader, this);
     // Output PID info collection;
     m_outputCherenkovPID =

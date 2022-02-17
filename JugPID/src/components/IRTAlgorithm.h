@@ -13,7 +13,7 @@
 #include "JugBase/UniqueID.h"
 
 #include "dd4pod/Geant4ParticleCollection.h"
-#include "dd4pod/PhotoMultiplierHitCollection.h"
+#include "dd4pod/TrackerHitCollection.h"
 
 #include "eicd/TrajectoryCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
@@ -63,7 +63,7 @@ namespace Jug::PID {
     StatusCode finalize( void ) override;
 
     // Input collections;
-    std::unique_ptr<DataHandle<dd4pod::PhotoMultiplierHitCollection>> m_inputHitCollection;
+    std::unique_ptr<DataHandle<dd4pod::TrackerHitCollection>> m_inputHitCollection;
     DataHandle<dd4pod::Geant4ParticleCollection> m_inputMCParticles {
       "inputMCParticles", 
 	Gaudi::DataHandle::Reader, 
