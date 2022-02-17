@@ -58,10 +58,10 @@ namespace Jug {
       DataHandle<T_OUT> m_outputHitCollection{"genparticles", Gaudi::DataHandle::Writer, this};
     };
 
-    using CalorimeterColCopier = InputCopier<edm4hep::CalorimeterHitCollection, edm4hep::CalorimeterHitCollection>;
+    using CalorimeterColCopier = InputCopier<edm4hep::SimCalorimeterHitCollection, edm4hep::SimCalorimeterHitCollection>;
     DECLARE_COMPONENT(CalorimeterColCopier)
 
-    using TrackerColCopier = InputCopier<edm4hep::TrackerHitCollection, edm4hep::TrackerHitCollection>;
+    using TrackerColCopier = InputCopier<edm4hep::SimTrackerHitCollection, edm4hep::SimTrackerHitCollection>;
     DECLARE_COMPONENT(TrackerColCopier)
 
     using MCCopier = InputCopier<edm4hep::MCParticleCollection, edm4hep::MCParticleCollection>;

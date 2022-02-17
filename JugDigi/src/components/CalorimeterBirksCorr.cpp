@@ -38,9 +38,9 @@ namespace Jug::Digi {
     // digitization settings
     Gaudi::Property<double> m_birksConstant{this, "birksConstant", 0.126*mm/MeV};
 
-    DataHandle<edm4hep::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+    DataHandle<edm4hep::SimCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                       this};
-    DataHandle<edm4hep::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+    DataHandle<edm4hep::SimCalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                        this};
 
     SmartIF<IParticleSvc> m_pidSvc;

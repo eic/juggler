@@ -36,7 +36,7 @@ namespace Jug::Digi {
 class PhotoMultiplierDigi : public GaudiAlgorithm, AlgorithmIDMixin<>
 {
 public:
-    DataHandle<edm4hep::TrackerHitCollection>
+    DataHandle<edm4hep::SimTrackerHitCollection>
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::RawPMTHitCollection>
         m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};

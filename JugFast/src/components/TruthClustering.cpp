@@ -35,7 +35,7 @@ class TruthClustering : public GaudiAlgorithm, AlgorithmIDMixin<> {
 public:
   using RecHits       = eic::CalorimeterHitCollection;
   using ProtoClusters = eic::ProtoClusterCollection;
-  using TruthHits     = edm4hep::CalorimeterHitCollection;
+  using TruthHits     = edm4hep::SimCalorimeterHitCollection;
 
   DataHandle<RecHits> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
   DataHandle<TruthHits> m_mcHits{"mcHits", Gaudi::DataHandle::Reader, this};

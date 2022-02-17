@@ -87,7 +87,7 @@ namespace Jug::Reco {
     // Monte Carlo particle source identifier
     const int32_t m_kMonteCarloSource{uniqueID<int32_t>("MCParticles")};
     // Optional handle to MC hits
-    std::unique_ptr<DataHandle<edm4hep::CalorimeterHitCollection>> m_inputMC;
+    std::unique_ptr<DataHandle<edm4hep::SimCalorimeterHitCollection>> m_inputMC;
 
     // Pointer to the geometry service
     SmartIF<IGeoSvc>                                   m_geoSvc;
@@ -111,7 +111,7 @@ namespace Jug::Reco {
       // Initialize the MC input hit collection if requested
       if (m_mcHits != "") {
         m_inputMC =
-            std::make_unique<DataHandle<edm4hep::CalorimeterHitCollection>>(m_mcHits, Gaudi::DataHandle::Reader, this);
+            std::make_unique<DataHandle<edm4hep::SimCalorimeterHitCollection>>(m_mcHits, Gaudi::DataHandle::Reader, this);
       }
       //
       //
@@ -152,7 +152,7 @@ namespace Jug::Reco {
       const auto& proto  = *m_inputProto.get();
       auto& clusters     = *m_outputClusters.createAndPut();
       // Optional MC data
-      const edm4hep::CalorimeterHitCollection* mcHits = nullptr;
+      const edm4hep::SimCalorimeterHitCollection* mcHits = nullptr;
       if (m_inputMC) {
         mcHits = m_inputMC->get();
       }
@@ -179,7 +179,7 @@ namespace Jug::Reco {
     }
 
     eic::Cluster reconstruct(const eic::ConstProtoCluster& pcl, const eic::CalorimeterHitCollection& hits,
-                             const edm4hep::CalorimeterHitCollection* mcHits) const {
+                             const edm4hep::SimCalorimeterHitCollection* mcHits) const {
       eic::Cluster cl;
       cl.ID({pcl.ID(), algorithmID()});
       cl.nhits(pcl.hits_size());

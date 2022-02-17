@@ -64,7 +64,7 @@ public:
   // Monte Carlo particle source identifier
   const int32_t m_kMonteCarloSource{uniqueID<int32_t>("MCParticles")};
   // Optional handle to MC hits
-  std::unique_ptr<DataHandle<edm4hep::CalorimeterHitCollection>> m_inputMC;
+  std::unique_ptr<DataHandle<edm4hep::SimCalorimeterHitCollection>> m_inputMC;
 
   ImagingClusterReco(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
@@ -82,7 +82,7 @@ public:
     // Initialize the MC input hit collection if requested
     if (m_mcHits != "") {
       m_inputMC =
-          std::make_unique<DataHandle<edm4hep::CalorimeterHitCollection>>(m_mcHits, Gaudi::DataHandle::Reader, this);
+          std::make_unique<DataHandle<edm4hep::SimCalorimeterHitCollection>>(m_mcHits, Gaudi::DataHandle::Reader, this);
     }
 
     return StatusCode::SUCCESS;
@@ -96,7 +96,7 @@ public:
     auto& layers   = *m_outputLayerCollection.createAndPut();
     auto& clusters = *m_outputClusterCollection.createAndPut();
     // Optional MC data
-    const edm4hep::CalorimeterHitCollection* mcHits = nullptr;
+    const edm4hep::SimCalorimeterHitCollection* mcHits = nullptr;
     if (m_inputMC) {
       mcHits = m_inputMC->get();
     }
@@ -182,7 +182,7 @@ private:
   }
 
   eic::Cluster reconstruct_cluster(const eic::ConstProtoCluster& pcl, const eic::CalorimeterHitCollection& hits,
-                                   const edm4hep::CalorimeterHitCollection* mcHits) {
+                                   const edm4hep::SimCalorimeterHitCollection* mcHits) {
     eic::Cluster cluster;
     cluster.ID({pcl.ID(), algorithmID()});
     // eta, phi center, weighted by energy

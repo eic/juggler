@@ -27,7 +27,7 @@ namespace Jug::Digi {
     Gaudi::Property<double>                  m_timeResolution{this, "timeResolution", 10}; // todo : add units
     Gaudi::Property<double>                  m_threshold{this, "threshold", 0. * Gaudi::Units::keV};
     Rndm::Numbers                            m_gaussDist;
-    DataHandle<edm4hep::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+    DataHandle<edm4hep::SimTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                   this};
     DataHandle<eic::RawTrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                    this};
@@ -55,7 +55,7 @@ namespace Jug::Digi {
     StatusCode execute() override
     {
       // input collection
-      const edm4hep::TrackerHitCollection* simhits = m_inputHitCollection.get();
+      const edm4hep::SimTrackerHitCollection* simhits = m_inputHitCollection.get();
       // Create output collections
       auto rawhits = m_outputHitCollection.createAndPut();
       // eic::RawTrackerHitCollection* rawHitCollection = new eic::RawTrackerHitCollection();
