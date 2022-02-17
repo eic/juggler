@@ -365,7 +365,7 @@ private:
     const double dp    = (0.025 * p) * m_gaussDist();
     const double ps    = p + dp;
 
-    const double pt  = std::hypot(mom_ion.x, mom_ion.y);
+    //const double pt  = std::hypot(mom_ion.x, mom_ion.y);
     //const double dpt = (0.03 * pt) * m_gaussDist();
     // just apply relative smearing on px and py
     const double dpxs = (0.03 * mom_ion.x) * m_gaussDist(); //+ (1 + dpt / pt);
@@ -406,19 +406,31 @@ private:
   edm4hep::Vector3f rotateLabToIonDirection(const edm4hep::Vector3f& vec) const {
     const auto sth = sin(-m_crossingAngle);
     const auto cth = cos(-m_crossingAngle);
-    return {cth * vec.x + sth * vec.z, vec.y, -sth * vec.x + cth * vec.z};
+    return {
+      static_cast<float>(cth * vec.x + sth * vec.z),
+      static_cast<float>(vec.y),
+      static_cast<float>(-sth * vec.x + cth * vec.z)
+    };
   }
 
   edm4hep::Vector3f rotateIonToLabDirection(const edm4hep::Vector3f& vec) const {
     const auto sth = sin(m_crossingAngle);
     const auto cth = cos(m_crossingAngle);
-    return {cth * vec.x + sth * vec.z, vec.y, -sth * vec.x + cth * vec.z};
+    return {
+      static_cast<float>(cth * vec.x + sth * vec.z),
+      static_cast<float>(vec.y),
+      static_cast<float>(-sth * vec.x + cth * vec.z)
+    };
   }
 
   edm4hep::Vector3f removeCrossingAngle(const edm4hep::Vector3f& vec) const {
     const auto sth = std::sin(-m_crossingAngle);
     const auto cth = std::cos(-m_crossingAngle);
-    return {cth * vec.x + sth * vec.z, vec.y, -sth * vec.x + cth * vec.z};
+    return {
+      static_cast<float>(cth * vec.x + sth * vec.z),
+      static_cast<float>(vec.y),
+      static_cast<float>(-sth * vec.x + cth * vec.z)
+    };
   }
 
 }; 
