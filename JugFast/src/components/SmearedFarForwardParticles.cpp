@@ -255,7 +255,6 @@ private:
         const auto& part_p = part.getMomentum();
         const auto part_p_pt = std::hypot(part_p.x, part_p.y);
         const auto part_p_mag = std::hypot(part_p.x, part_p.y, part_p.z);
-        const auto part_p_phi = std::atan2(part_p.x, part_p.y);
         const auto part_p_theta = std::atan2(std::hypot(part_p.x, part_p.y), part_p.z);
         debug() << fmt::format("Found B0 particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
@@ -295,7 +294,6 @@ private:
         const auto& part_p = part.getMomentum();
         const auto part_p_pt = std::hypot(part_p.x, part_p.y);
         const auto part_p_mag = std::hypot(part_p.x, part_p.y, part_p.z);
-        const auto part_p_phi = std::atan2(part_p.x, part_p.y);
         const auto part_p_theta = std::atan2(std::hypot(part_p.x, part_p.y), part_p.z);
         debug() << fmt::format("Found RP particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
@@ -341,7 +339,6 @@ private:
         const auto& part_p = part.getMomentum();
         const auto part_p_pt = std::hypot(part_p.x, part_p.y);
         const auto part_p_mag = std::hypot(part_p.x, part_p.y, part_p.z);
-        const auto part_p_phi = std::atan2(part_p.x, part_p.y);
         const auto part_p_theta = std::atan2(std::hypot(part_p.x, part_p.y), part_p.z);
         debug() << fmt::format("Found OMD particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
