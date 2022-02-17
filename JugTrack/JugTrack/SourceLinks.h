@@ -6,7 +6,6 @@
 
 #include <stdexcept>
 #include <string>
-#include "edm4hep/Geant4Particle.h"
 
 #include "eicd/TrackerHitCollection.h"
 

@@ -59,7 +59,7 @@ public:
       // ideally we should also smear the angles but this should be good enough
       // for now.
       const auto pvec      = p.getMomentum();
-      const double pgen    = std::hypot(pvec.x, pvec.y, pvec.z);
+      const auto pgen      = std::hypot(pvec.x, pvec.y, pvec.z);
       const float momentum = pgen * m_gaussDist();
       const float energy   = p.getEnergy();
       const float px       = p.getMomentum().x * momentum / pgen;

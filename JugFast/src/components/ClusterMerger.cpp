@@ -13,7 +13,6 @@
 #include "JugBase/UniqueID.h"
 
 // Event Model related classes
-#include "edm4hep/MCParticleCollection.h"
 #include "eicd/ClusterCollection.h"
 #include "eicd/MergedClusterRelationsCollection.h"
 
