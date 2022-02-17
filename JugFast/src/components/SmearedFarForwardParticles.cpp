@@ -238,7 +238,6 @@ private:
       }
       // only 6-->20 mrad
       const auto mom_ion = removeCrossingAngle(part.getMomentum()); //rotateLabToIonDirection(part.getMomentum());
-      const auto mom_ion_phi = std::atan2(mom_ion.x, mom_ion.y);
       const auto mom_ion_theta = std::atan2(std::hypot(mom_ion.x, mom_ion.y), mom_ion.z);
       if (mom_ion_theta < m_thetaMinB0 || mom_ion_theta > m_thetaMaxB0) {
         continue;
@@ -283,7 +282,6 @@ private:
         continue;
       }
       const auto mom_ion = removeCrossingAngle(part.getMomentum()); //rotateLabToIonDirection(part.getMomentum());
-      const auto mom_ion_phi = std::atan2(mom_ion.x, mom_ion.y);
       const auto mom_ion_theta = std::atan2(std::hypot(mom_ion.x, mom_ion.y), mom_ion.z);
       if (mom_ion_theta < m_thetaMinRP || mom_ion_theta > m_thetaMaxRP ||
           mom_ion.z < m_pMinRigidityRP * ionBeamEnergy) {
@@ -323,7 +321,7 @@ private:
         continue;
       }
       const auto mom_ion = removeCrossingAngle(part.getMomentum()); //rotateLabToIonDirection(part.getMomentum());
-      const auto mom_ion_phi = std::atan2(mom_ion.x, mom_ion.y);
+      //const auto mom_ion_phi = std::atan2(mom_ion.x, mom_ion.y);
       const auto mom_ion_theta = std::atan2(std::hypot(mom_ion.x, mom_ion.y), mom_ion.z);
       if (mom_ion.z < m_pMinRigidityOMD * ionBeamEnergy || mom_ion.z > m_pMaxRigidityOMD * ionBeamEnergy) {
         continue;
