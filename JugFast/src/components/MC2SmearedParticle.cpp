@@ -74,9 +74,9 @@ public:
 
       auto rec_part = out_parts.create();
       rec_part.ID({ID++, algorithmID()});
-      rec_part.p(psmear);
+      rec_part.p({px, py, pz});
       rec_part.v({vx, vy, vz});
-      rec_part.time(static_cast<float>(p.getTime()));
+      rec_part.time(p.getTime());
       rec_part.pid(p.getPDG());
       rec_part.status(p.getGeneratorStatus());
       rec_part.charge(p.getCharge());

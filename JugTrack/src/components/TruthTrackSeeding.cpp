@@ -88,13 +88,14 @@ namespace Jug::Reco {
 
         const float q_over_p = charge / p;
 
-        auto phi = [](const edm4hep::Vector3f& v) { return atan2(v.x, v.y); };
-        auto theta = [](const edm4hep::Vector3f& v) { return atan2(std::hypot(v.x, v.y), v.z); };
+        const auto& part_p = part.getMomentum();
+        const auto part_phi = std::atan2(part_p.x, part_p.y);
+        const auto part_theta = std::atan2(std::hypot(part_p.x, part_p.y), part_p.z);
         eic::TrackParameters params{-1,               // type --> seed (-1)
                                    {0.0f, 0.0f},      // location on surface
                                    {0.1, 0.1, 0.1},   // Covariance on location
-                                   theta(part.getMomentum()), // theta (rad)
-                                   phi(part.getMomentum()),   // phi  (rad)
+                                   part_theta,        // theta (rad)
+                                   part_phi,          // phi  (rad)
                                    q_over_p * .05f,   // Q/P (e/GeV)
                                    {0.1, 0.1, 0.1},   // Covariance on theta/phi/Q/P
                                    part.getTime(),    // Time (ns)
