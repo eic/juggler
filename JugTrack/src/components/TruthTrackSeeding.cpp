@@ -83,7 +83,7 @@ namespace Jug::Reco {
         // get the particle charge
         // note that we cannot trust the mcparticles charge, as DD4hep
         // sets this value to zero! let's lookup by PDGID instead
-        const auto charge = m_pidSvc->particle(part.getPDG()).charge;
+        const auto charge = static_cast<float>(m_pidSvc->particle(part.getPDG()).charge);
         if (abs(charge) < std::numeric_limits<double>::epsilon()) {
           continue;
         }
