@@ -62,17 +62,17 @@ namespace Jug::Base {
           // for now just use total momentum smearing as this is the largest effect,
           // ideally we should also smear the angles but this should be good enough
           // for now.
-          const auto pvec      = p.getMomentum();
-          const double pgen    = std::hypot(pvec.x, pvec.y, pvec.z);
-          const float momentum = pgen * m_gaussDist();
-          const float energy   = p.getEnergy();
-          const float px       = p.getMomentum().x * momentum / pgen;
-          const float py       = p.getMomentum().y * momentum / pgen;
-          const float pz       = p.getMomentum().z * momentum / pgen;
+          const auto pvec     = p.getMomentum();
+          const auto pgen     = std::hypot(pvec.x, pvec.y, pvec.z);
+          const auto momentum = pgen * m_gaussDist();
+          const auto energy   = p.getEnergy();
+          const auto px       = p.getMomentum().x * momentum / pgen;
+          const auto py       = p.getMomentum().y * momentum / pgen;
+          const auto pz       = p.getMomentum().z * momentum / pgen;
           // @TODO: vertex smearing
-          const float vx       = p.getVertex().x;
-          const float vy       = p.getVertex().y;
-          const float vz       = p.getVertex().z;
+          const auto vx       = p.getVertex().x;
+          const auto vy       = p.getVertex().y;
+          const auto vz       = p.getVertex().z;
 
           const auto p_phi = std::atan2(py, px);
           const auto p_theta = std::atan2(std::hypot(px, py), pz);

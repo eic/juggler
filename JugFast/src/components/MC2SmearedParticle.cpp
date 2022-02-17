@@ -85,7 +85,8 @@ public:
       rec_part.momentum(momentum);
       rec_part.energy(energy);
       rec_part.mass(p.getMass());
-      rec_part.mcID({p.id(), kMonteCarloSource});
+      // FIXME disabled mcID link
+      //rec_part.mcID({p.id(), kMonteCarloSource});
     }
     return StatusCode::SUCCESS;
   }
