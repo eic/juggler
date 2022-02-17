@@ -185,12 +185,12 @@ private:
       const double dE   = sqrt((conTerm * E) * (conTerm * E) + stoTerm * stoTerm * E) * m_gaussDist(); //50%/SqrtE + 5%
       const double Es   = E + dE;
       const double th   = mom_ion_theta;
-      const double dth  = (angTerm / sqrt(E)) * static_cast<float>(m_gaussDist());
-      const double ths  = th + dth;
+      const double dth  = (angTerm / sqrt(E)) * m_gaussDist();
       const double phi  = mom_ion_phi;
       const double dphi = 0;
-      const double phis = phi + dphi;
       // now cast back into float
+      const float ths  = static_cast<float>(th + dth);
+      const float phis = static_cast<float>(phi + dphi);
       const float moms = static_cast<float>(sqrt(Es * Es - part.getMass() * part.getMass()));
       const edm4hep::Vector3f mom3s_ion{moms*sin(ths)*cos(phis), moms*sin(ths)*sin(phis), moms*cos(ths)};
       const auto mom3s = rotateIonToLabDirection(mom3s_ion);
