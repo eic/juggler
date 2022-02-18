@@ -38,13 +38,8 @@ public:
 
 public:
   TruthEnergyPositionClusterMerger(const std::string& name, ISvcLocator* svcLoc)
-<<<<<<< HEAD
-      : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
-    declareProperty("inputMCParticles", m_inputMCParticles, "MCParticles");
-=======
       : GaudiAlgorithm(name, svcLoc) {
-    declareProperty("inputMCParticles", m_inputMCParticles, "mcparticles");
->>>>>>> Update for new EICD changes, with major changes to calorimetry
+    declareProperty("inputMCParticles", m_inputMCParticles, "MCParticles");
     declareProperty("inputEnergyClusters", m_energyClusters, "Cluster collection with good energy precision");
     declareProperty("inputPositionClusters", m_positionClusters, "Cluster collection with good position precision");
     declareProperty("outputClusters", m_outputClusters, "Cluster collection with good energy precision");
@@ -140,7 +135,7 @@ public:
       new_clus.time(eclus.time());
       new_clus.nhits(eclus.nhits());
       // use nominal radius of 110cm, and use start vertex theta and phi
-      new_clus.position(eic::VectorXYZ::fromSpherical(110, mc.ps().theta(), mc.ps().phi()));
+      new_clus.position(eic::VectorXYZ::fromSpherical(110, theta, phi));
       new_clus.mcID(mcID);
       new_clus.addclusters(eclus);
       if (msgLevel(MSG::DEBUG)) {

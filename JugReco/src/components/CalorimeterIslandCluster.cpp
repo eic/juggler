@@ -2,7 +2,6 @@
  *  Island Clustering Algorithm for Calorimeter Blocks
  *  1. group all the adjacent modules
  *  2. split the groups between their local maxima with the energy deposit above <minClusterCenterEdep>
- *  Output hits collection with clusterID
  *
  *  Author: Chao Peng (ANL), 09/27/2020
  *  References:
@@ -29,7 +28,6 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "eicd/CalorimeterHitCollection.h"
@@ -79,7 +77,6 @@ namespace Jug::Reco {
    *
    *  1. group all the adjacent modules
    *  2. split the groups between their local maxima with the energy deposit above <minClusterCenterEdep>
-   *  3. Output hits collection with clusterID
    *
    *  References:
    *      https://cds.cern.ch/record/687345/files/note01_034.pdf
@@ -87,7 +84,7 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class CalorimeterIslandCluster : public GaudiAlgorithm, AlgorithmIDMixin<> {
+  class CalorimeterIslandCluster : public GaudiAlgorithm {
   public:
     Gaudi::Property<bool>                       m_splitCluster{this, "splitCluster", true};
     Gaudi::Property<double>                     m_minClusterHitEdep{this, "minClusterHitEdep", 0.};
@@ -114,7 +111,6 @@ namespace Jug::Reco {
 
     CalorimeterIslandCluster(const std::string& name, ISvcLocator* svcLoc)
         : GaudiAlgorithm(name, svcLoc)
-        , AlgorithmIDMixin(name, info())
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputProtoClusterCollection", m_outputProtoCollection, "");
@@ -186,10 +182,9 @@ namespace Jug::Reco {
       for (size_t i = 0; i < hits.size(); ++i) {
         if (msgLevel(MSG::DEBUG)) {
           debug() << fmt::format("hit {:d}: energy = {:.4f} MeV, local = ({:.4f}, {:.4f}) mm, "
-                                 "global=({:.4f}, {:.4f}, {:.4f}) mm, layer = {:d}, sector = {:d}.",
+                                 "global=({:.4f}, {:.4f}, {:.4f}) mm",
                                  i, hits[i].energy() * 1000., hits[i].local().x, hits[i].local().y,
-                                 hits[i].position().x, hits[i].position().y, hits[i].position().z, hits[i].layer(),
-                                 hits[i].sector())
+                                 hits[i].position().x, hits[i].position().y, hits[i].position().z))
                   << endmsg;
         }
         // already in a group
@@ -201,17 +196,15 @@ namespace Jug::Reco {
         dfs_group(groups.back(), i, hits, visits);
       }
 
-      size_t clusterID = 0;
       for (auto& group : groups) {
         if (group.empty()) {
           continue;
         }
         auto maxima = find_maxima(group, !m_splitCluster.value());
-        split_group(group, maxima, clusterID, proto);
+        split_group(group, maxima, proto);
         if (msgLevel(MSG::DEBUG)) {
           debug() << "hits in a group: " << group.size() << ", "
                   << "local maxima: " << maxima.size() << endmsg;
-          debug() << "total number of clusters so far: " << clusterID << ", " << endmsg;
         }
       }
 
@@ -313,7 +306,7 @@ namespace Jug::Reco {
 
     // split a group of hits according to the local maxima
     void split_group(std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>>& group,
-                     const std::vector<eic::ConstCalorimeterHit>& maxima, size_t& clusterID,
+                     const std::vector<eic::ConstCalorimeterHit>& maxima, 
                      eic::ProtoClusterCollection& proto) const {
       // special cases
       if (maxima.size() == 0) {
@@ -322,12 +315,11 @@ namespace Jug::Reco {
         }
         return;
       } else if (maxima.size() == 1) {
-        eic::ProtoCluster pcl{{static_cast<int32_t>(clusterID), algorithmID()}};
+        eic::ProtoCluster pcl;
         for (auto& [idx, hit] : group) {
-          pcl.addhits({hit.ID(), idx, 1.});
+          pcl.addhits(hit);
         }
         proto.push_back(pcl);
-        clusterID += 1;
         if (msgLevel(MSG::VERBOSE)) {
           verbose() << "A single maximum found, added one ProtoCluster" << endmsg;
         }
@@ -338,9 +330,8 @@ namespace Jug::Reco {
       // TODO, here we can implement iterations with profile, or even ML for better splits
       std::vector<double> weights(maxima.size(), 1.);
       std::vector<eic::ProtoCluster> pcls;
-      const size_t n_clus = clusterID + 1;
       for (size_t k = 0; k < maxima.size(); ++k) {
-        pcls.push_back({{static_cast<int32_t>(n_clus + k), algorithmID()}});
+        pcls.push_back({});
       }
 
       size_t i      = 0;
@@ -372,7 +363,7 @@ namespace Jug::Reco {
           if (weight <= 1e-6) {
             continue;
           }
-          pcls[k].addhits({hit.ID(), idx, weight});
+          pcls[k].addhits(hit.ID());
         }
         i += 1;
       }

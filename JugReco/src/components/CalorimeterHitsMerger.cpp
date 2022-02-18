@@ -27,7 +27,6 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "eicd/CalorimeterHitCollection.h"
@@ -43,7 +42,7 @@ namespace Jug::Reco {
    *
    *  \ingroup reco
    */
-  class CalorimeterHitsMerger : public GaudiAlgorithm, AlgorithmIDMixin<> {
+  class CalorimeterHitsMerger : public GaudiAlgorithm {
   public:
     Gaudi::Property<std::string> m_geoSvcName{this, "geoServiceName", "GeoSvc"};
     Gaudi::Property<std::string> m_readout{this, "readoutClass", ""};
@@ -61,7 +60,6 @@ namespace Jug::Reco {
 
     CalorimeterHitsMerger(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin<>(name, info())
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -135,7 +133,7 @@ namespace Jug::Reco {
 
       for (auto &[id, hits] : merge_map) {
         // reference fields id
-        int64_t ref_id = id | ref_mask;
+        uint64_t ref_id = id | ref_mask;
         // global positions
         auto gpos = poscon->position(ref_id);
         // local positions
@@ -145,23 +143,29 @@ namespace Jug::Reco {
         //         << volman.lookupDetector(ref_id).path() << endmsg;
         // sum energy
         float energy = 0.;
+        float energyError = 0.;
+        float time = 0;
+        float timeError = 0;
         for (auto &hit : hits) {
           energy += hit.energy();
-          // debug() << fmt::format("{:#064b} - {:#064b}, ref: {:#064b}", hit.cellID(), id, ref_id)
-          //         << endmsg;
+          energyError += hit.energyError() * hit.energyError();
+          time += hit.time();
+          timeError += hit.timeError() + hit.timeError();
         }
+        energyError = sqrt(energyError);
+        time /= hits.size();
+        timeError = sqrt(timeError) / hits.size();
+
         const auto &href = hits.front();
         outputs.push_back(eic::CalorimeterHit{
-                          {hits.front().ID(), algorithmID()},
                           ref_id,
-                          href.layer(),
-                          href.sector(),
                           energy,
-                          0, //@TODO: energy uncertainty
-                          href.time(),
+                          energyError,
+                          time,
+                          timeError, 
                           {gpos.x() / dd4hep::mm, gpos.y() / dd4hep::mm, gpos.z() / dd4hep::mm},
                           {pos.x() / dd4hep::mm, pos.y() / dd4hep::mm, pos.z() / dd4hep::mm},
-                          href.dimension()});
+                          href.dimension()}); // Can do better here? Right now position is mapped on the central hit
       }
 
       if (msgLevel(MSG::DEBUG)) {
