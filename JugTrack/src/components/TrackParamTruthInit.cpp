@@ -174,7 +174,7 @@ namespace Jug::Reco {
         if (msgLevel(MSG::DEBUG)) {
           debug() << "Invoke track finding seeded by truth particle with p = " << pmag << " GeV" << endmsg;
           debug() << "                                              charge = " << charge << endmsg;
-          debug() << "                                                 q/p = " << charge / pmag << endmsg;
+          debug() << "                                                 q/p = " << charge / pmag << " e/GeV" << endmsg;
         }
         //Acts::BoundMatrix cov           = Acts::BoundMatrix::Zero();
         //cov(Acts::eLOC_0, Acts::eLOC_0) = ahit.covMatrix(0)*ahit.covMatrix(0);
