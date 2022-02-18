@@ -2,12 +2,6 @@
 # Package: JugBase
 ################################################################################
 
-ROOT_GENERATE_DICTIONARY(G__JugBase
-  JugBase/DataHandle.h
-  LINKDEF JugBaseLinkDef.h
-  OPTIONS -I${Gaudi_INCLUDE_DIR} -I${podio_INCLUDE_DIR}
-)
-
 gaudi_add_library(JugBase
   SOURCES
   src/ACTSLogger.cpp
@@ -16,7 +10,6 @@ gaudi_add_library(JugBase
   src/Utilities/Helpers.cpp
   src/Utilities/Paths.cpp
   src/Plugins/DD4hepBField.cpp
-  G__JugBase.cxx
   LINK
   Gaudi::GaudiKernel Gaudi::GaudiAlgLib
   podio::podioRootIO
@@ -25,10 +18,6 @@ gaudi_add_library(JugBase
   ActsCore ActsPluginDD4hep
   ${genfit2}
 )
-
-add_custom_target(JugBase_ROOTDICTS DEPENDS G__JugBase.cxx )
-add_dependencies(JugBase JugBase_ROOTDICTS)
-
 
 target_include_directories(JugBase PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
@@ -73,13 +62,6 @@ install(TARGETS JugBase JugBasePlugins
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT bin
   LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shlib
   COMPONENT dev)
-
-install(
-   FILES  
-   ${CMAKE_CURRENT_BINARY_DIR}/libJugBase_rdict.pcm 
-   ${CMAKE_CURRENT_BINARY_DIR}/libJugBase.rootmap
-   DESTINATION lib )
- 
 
 if(BUILD_TESTING)
   enable_testing()
