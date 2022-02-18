@@ -183,7 +183,7 @@ namespace Jug::Digi {
         const long long adc = std::llround(ped +  m_corrMeanScale * eDep * (1. + eResRel) / dyRangeADC * m_capADC);
 
         double time = std::numeric_limits<double>::max();
-        for (auto c = ahit.contributions_begin(); c != ahit.contributions_end(); c++)
+        for (const auto& c : ahit.getContributions())
           if (c->getTime() <= time)
             time = c->getTime();
         const long long tdc = std::llround((time + m_normDist() * tRes) * stepTDC);
@@ -219,14 +219,14 @@ namespace Jug::Digi {
       int nhits = 0;
       for (auto &[id, hits] : merge_map) {
         double edep     = hits[0].getEnergy();
-        double time     = hits[0].contributions_begin()->getTime();
+        double time     = hits[0].getContributions(0).getTime();
         double max_edep = hits[0].getEnergy();
         // sum energy, take time from the most energetic hit
         for (size_t i = 1; i < hits.size(); ++i) {
           edep += hits[i].getEnergy();
           if (hits[i].getEnergy() > max_edep) {
             max_edep = hits[i].getEnergy();
-            for (auto c = hits[i].contributions_begin(); c != hits[i].contributions_end(); c++)
+            for (const auto& c : hits[i].getContributions())
               if (c->getTime() <= time)
                 time = c->getTime();
           }
