@@ -39,29 +39,29 @@ public:
   Gaudi::Property<bool> m_enableOMD{this, "enableOMD", true};
 
   // Beam energy, only used to determine the RP/OMD momentum ranges
-  Gaudi::Property<float> m_ionBeamEnergy{this, "ionBeamEnergy", 0.};
+  Gaudi::Property<double> m_ionBeamEnergy{this, "ionBeamEnergy", 0.};
   // RP default to 10-on-100 setting
   // Pz > 60% of beam energy (60% x 100GeV = 60GeV)
   // theta from 0.2mrad -> 5mrad
-  Gaudi::Property<float> m_thetaMinRP{this, "thetaMinRP", 0.2e-3};
-  Gaudi::Property<float> m_thetaMaxRP{this, "thetaMaxRP", 5e-3};
-  Gaudi::Property<float> m_pMinRigidityRP{this, "pMinRigidityRP", 0.60};
+  Gaudi::Property<double> m_thetaMinRP{this, "thetaMinRP", 0.2e-3};
+  Gaudi::Property<double> m_thetaMaxRP{this, "thetaMaxRP", 5e-3};
+  Gaudi::Property<double> m_pMinRigidityRP{this, "pMinRigidityRP", 0.60};
   // B0
-  Gaudi::Property<float> m_thetaMinB0{this, "thetaMinB0", 6.0e-3};
-  Gaudi::Property<float> m_thetaMaxB0{this, "thetaMaxB0", 20.0e-3};
+  Gaudi::Property<double> m_thetaMinB0{this, "thetaMinB0", 6.0e-3};
+  Gaudi::Property<double> m_thetaMaxB0{this, "thetaMaxB0", 20.0e-3};
   // OMD default to 10-on-100 setting
   // 25% < P/Ebeam < 60% of beam energy (25% x 100GeV = 25GeV and 60% x 100GeV = 60GeV)
   // Angles both given for the small angle full-acceptance part,
   // and for the larger angle part where we only measure |phi| > rad
-  Gaudi::Property<float> m_thetaMinFullOMD{this, "thetaMinFullOMD", 0.};
-  Gaudi::Property<float> m_thetaMaxFullOMD{this, "thetaMaxFullOMD", 2e-3};
-  Gaudi::Property<float> m_thetaMinPartialOMD{this, "thetaMinPartialOMD", 2.0e-3};
-  Gaudi::Property<float> m_thetaMaxPartialOMD{this, "thetaMaxPartialOMD", 5.0e-3};
-  Gaudi::Property<float> m_pMinRigidityOMD{this, "pMinRigidityOMD", 0.25};
-  Gaudi::Property<float> m_pMaxRigidityOMD{this, "pMaxRigidityOMD", 0.60};
+  Gaudi::Property<double> m_thetaMinFullOMD{this, "thetaMinFullOMD", 0.};
+  Gaudi::Property<double> m_thetaMaxFullOMD{this, "thetaMaxFullOMD", 2e-3};
+  Gaudi::Property<double> m_thetaMinPartialOMD{this, "thetaMinPartialOMD", 2.0e-3};
+  Gaudi::Property<double> m_thetaMaxPartialOMD{this, "thetaMaxPartialOMD", 5.0e-3};
+  Gaudi::Property<double> m_pMinRigidityOMD{this, "pMinRigidityOMD", 0.25};
+  Gaudi::Property<double> m_pMaxRigidityOMD{this, "pMaxRigidityOMD", 0.60};
 
   // Crossing angle, set to -25mrad
-  Gaudi::Property<float> m_crossingAngle{this, "crossingAngle", -0.025}; //-0.025}; -- causes double rotation with afterburner
+  Gaudi::Property<double> m_crossingAngle{this, "crossingAngle", -0.025}; //-0.025}; -- causes double rotation with afterburner
 
   Rndm::Numbers m_gaussDist;
 
@@ -159,15 +159,15 @@ private:
         continue;
       }
       // only 0-->4.5 mrad
-      const auto mom_ion_phi = std::atan2(mom_ion.x, mom_ion.y);
-      const auto mom_ion_theta = std::atan2(std::hypot(mom_ion.x, mom_ion.y), mom_ion.z);
+      const double mom_ion_phi = std::atan2(mom_ion.x, mom_ion.y);
+      const double mom_ion_theta = std::atan2(std::hypot(mom_ion.x, mom_ion.y), mom_ion.z);
       if (mom_ion_theta > 4.5 / 1000.) {
         continue;
       }
 
-      float conTerm = 0.05; //default 5%
-      float stoTerm = 0.5;  //default 50%
-      float angTerm = 0.003; //3mrad
+      double conTerm = 0.05; //default 5%
+      double stoTerm = 0.5;  //default 50%
+      double angTerm = 0.003; //3mrad
 
       if(part.getPDG() == 2112){
         conTerm = 0.05; //default 5%
