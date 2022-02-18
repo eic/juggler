@@ -139,7 +139,7 @@ namespace Jug::Reco {
                                           covMomentum,
                                           static_cast<float>(parameter[Acts::eBoundTime]),
                                           timeError,
-                                          boundParam.charge()};
+                                          static_cast<float>(boundParam.charge())};
             track_pars->push_back(pars);
           }
 

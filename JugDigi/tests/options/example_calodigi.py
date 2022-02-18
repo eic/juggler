@@ -11,7 +11,7 @@ from Configurables import Jug__Digi__ExampleCaloDigi as ExampleCaloDigi
 #from Configurables import Jug__Digi__ExampleCaloDigiFunc as ExampleCaloDigiFunc
 from Configurables import Jug__Digi__UFSDTrackerDigi as UFSDTrackerDigi
 from Configurables import Jug__Reco__TrackerHitReconstruction as TrackerHitReconstruction
-podioinput = PodioInput("PodioReader", collections=["mcparticles","LAEC_PrShHits","LAEC_ShHits","FAEC_PrShHits","FAEC_ShHits","GEMTrackerHits"], OutputLevel=DEBUG)
+podioinput = PodioInput("PodioReader", collections=["MCParticles","LAEC_PrShHits","LAEC_ShHits","FAEC_PrShHits","FAEC_ShHits","GEMTrackerHits"], OutputLevel=DEBUG)
 caldigi = ExampleCaloDigi(inputHitCollection="FAEC_ShHits",outputHitCollection="RawFAECShowerHits")
 ufsd_digi = UFSDTrackerDigi(inputHitCollection="GEMTrackerHits",outputHitCollection="GEMRawHits")
 #caldigifunc = ExampleCaloDigiFunc(InputData="FAEC_ShHits",OutputData="DERP")

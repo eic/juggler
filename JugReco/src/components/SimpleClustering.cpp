@@ -17,7 +17,7 @@
 #include "JugBase/UniqueID.h"
 
 // Event Model related classes
-#include "dd4pod/CalorimeterHitCollection.h"
+#include "edm4hep/SimCalorimeterHitCollection.h"
 #include "eicd/CalorimeterHitCollection.h"
 #include "eicd/ClusterCollection.h"
 #include "eicd/ProtoClusterCollection.h"
@@ -50,9 +50,9 @@ namespace Jug::Reco {
     SmartIF<IGeoSvc> m_geoSvc;
 
     // Monte Carlo particle source identifier
-    const int32_t m_kMonteCarloSource{uniqueID<int32_t>("mcparticles")};
+    const int32_t m_kMonteCarloSource{uniqueID<int32_t>("MCParticles")};
     // Optional handle to MC hits
-    std::unique_ptr<DataHandle<dd4pod::CalorimeterHitCollection>> m_inputMC;
+    std::unique_ptr<DataHandle<edm4hep::SimCalorimeterHitCollection>> m_inputMC;
 
     SimpleClustering(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
@@ -70,7 +70,7 @@ namespace Jug::Reco {
       // Initialize the MC input hit collection if requested
       if (m_mcHits != "") {
         m_inputMC =
-            std::make_unique<DataHandle<dd4pod::CalorimeterHitCollection>>(m_mcHits, Gaudi::DataHandle::Reader, this);
+            std::make_unique<DataHandle<edm4hep::SimCalorimeterHitCollection>>(m_mcHits, Gaudi::DataHandle::Reader, this);
       }
       m_geoSvc = service("GeoSvc");
       if (!m_geoSvc) {
@@ -88,11 +88,13 @@ namespace Jug::Reco {
       // Create output collections
       auto& proto = *m_outputProtoClusters.createAndPut();
       auto& clusters = *m_outputClusters.createAndPut();
+
       // Optional MC data
-      const dd4pod::CalorimeterHitCollection* mcHits = nullptr;
-      if (m_inputMC) {
-        mcHits = m_inputMC->get();
-      }
+      // FIXME no connection between cluster and truth in edm4hep
+      //const edm4hep::SimCalorimeterHitCollection* mcHits = nullptr;
+      //if (m_inputMC) {
+      //  mcHits = m_inputMC->get();
+      //}
 
       std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>> the_hits;
       std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>> remaining_hits;
@@ -149,10 +151,11 @@ namespace Jug::Reco {
           pcl.addhits({h.ID(), idx, 1.});
         }
         // Optionally store the MC truth associated with the first hit in this cluster
-        if (mcHits) {
-          const auto& mc_hit = (*mcHits)[ref_hit.ID().value];
-          cl.mcID({mc_hit.truth().trackID, m_kMonteCarloSource});
-        }
+        // FIXME no connection between cluster and truth in edm4hep
+        //if (mcHits) {
+        //  const auto& mc_hit = (*mcHits)[ref_hit.ID().value];
+        //  cl.mcID({mc_hit.truth().trackID, m_kMonteCarloSource});
+        //}
 
         have_ref = false;
         if ((remaining_hits.size() > 5) && (clusters.size() < 10)) {

@@ -2,13 +2,13 @@
 
 #include "JugBase/DataHandle.h"
 
-#include "dd4pod/Geant4ParticleCollection.h"
+#include "edm4hep/MCParticleCollection.h"
 
 class ReadTestConsumer : public GaudiAlgorithm {
 
 public:
   ReadTestConsumer(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc), m_genParticles("mcparticles", Gaudi::DataHandle::Reader, this) {
+      : GaudiAlgorithm(name, svcLoc), m_genParticles("MCParticles", Gaudi::DataHandle::Reader, this) {
     declareProperty("genParticles", m_genParticles, "mc particles to read");
   }
 
@@ -20,7 +20,7 @@ public:
 
   StatusCode execute() {
     // Read the input
-    const dd4pod::Geant4ParticleCollection* mcparticles = m_genParticles.get();
+    const edm4hep::MCParticleCollection* mcparticles = m_genParticles.get();
 
     // Does the reading work?
     debug() << mcparticles << endmsg;
@@ -40,6 +40,6 @@ public:
 
 private:
   /// Particles to read
-  DataHandle<dd4pod::Geant4ParticleCollection> m_genParticles;
+  DataHandle<edm4hep::MCParticleCollection> m_genParticles;
 };
 DECLARE_COMPONENT(ReadTestConsumer)

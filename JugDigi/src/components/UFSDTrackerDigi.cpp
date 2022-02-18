@@ -11,10 +11,9 @@
 #include "JugBase/UniqueID.h"
 
 // Event Model related classes
-//#include "GaudiExamples/MyTrack.h"
-//
-// dd4pod's tracker hit is the input collectiopn
-#include "dd4pod/TrackerHitCollection.h"
+// edm4hep's tracker hit is the input collectiopn
+#include "edm4hep/MCParticle.h"
+#include "edm4hep/SimTrackerHitCollection.h"
 // eicd's RawTrackerHit is the output
 #include "eicd/RawTrackerHitCollection.h"
 
@@ -29,7 +28,7 @@ namespace Jug::Digi {
     Gaudi::Property<double>                  m_timeResolution{this, "timeResolution", 10.};
     Gaudi::Property<double>                  m_threshold{this, "threshold", 0. * Gaudi::Units::keV};
     Rndm::Numbers                            m_gaussDist;
-    DataHandle<dd4pod::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+    DataHandle<edm4hep::SimTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                   this};
     DataHandle<eic::RawTrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                    this};
@@ -57,7 +56,7 @@ namespace Jug::Digi {
     StatusCode execute() override
     {
       // input collection
-      const dd4pod::TrackerHitCollection* simhits = m_inputHitCollection.get();
+      auto simhits = m_inputHitCollection.get();
       // Create output collections
       auto rawhits = m_outputHitCollection.createAndPut();
       // eic::RawTrackerHitCollection* rawHitCollection = new eic::RawTrackerHitCollection();
@@ -65,35 +64,35 @@ namespace Jug::Digi {
       int ID = 0;
       for (const auto& ahit : *simhits) {
         if (msgLevel(MSG::DEBUG)) {
-          debug() << "--------------------" << ahit.cellID() << endmsg;
-          debug() << "Hit in cellID = " << ahit.cellID() << endmsg;
-          debug() << "     position = (" << ahit.position().x  << "," << ahit.position().y <<","<< ahit.position().z << ")" << endmsg;
-          debug() << "    xy_radius = " << std::hypot(ahit.position().x  , ahit.position().y ) << endmsg;
-          debug() << "     momentum = (" << ahit.momentum().x  << "," << ahit.momentum().y <<","<< ahit.momentum().z << ")" << endmsg;
+          debug() << "--------------------" << ahit.getCellID() << endmsg;
+          debug() << "Hit in cellID = " << ahit.getCellID() << endmsg;
+          debug() << "     position = (" << ahit.getPosition().x  << "," << ahit.getPosition().y <<","<< ahit.getPosition().z << ")" << endmsg;
+          debug() << "    xy_radius = " << std::hypot(ahit.getPosition().x  , ahit.getPosition().y ) << endmsg;
+          debug() << "     momentum = (" << ahit.getMomentum().x  << "," << ahit.getMomentum().y <<","<< ahit.getMomentum().z << ")" << endmsg;
         }
-        if (ahit.energyDeposit() * Gaudi::Units::keV < m_threshold) {
+        if (ahit.getEDep() * Gaudi::Units::keV < m_threshold) {
           if (msgLevel(MSG::DEBUG)) {
-            debug() << "         edep = " << ahit.energyDeposit() << " (below threshold of " << m_threshold / Gaudi::Units::keV << " keV)" << endmsg;
+            debug() << "         edep = " << ahit.getEDep() << " (below threshold of " << m_threshold / Gaudi::Units::keV << " keV)" << endmsg;
           }          
           continue;
         } else {
           if (msgLevel(MSG::DEBUG)) {
-            debug() << "         edep = " << ahit.energyDeposit() << endmsg;
+            debug() << "         edep = " << ahit.getEDep() << endmsg;
           }
         }
         // std::cout << ahit << "\n";
-        if (cell_hit_map.count(ahit.cellID()) == 0) {
-          cell_hit_map[ahit.cellID()] = rawhits->size();
+        if (cell_hit_map.count(ahit.getCellID()) == 0) {
+          cell_hit_map[ahit.getCellID()] = rawhits->size();
           eic::RawTrackerHit rawhit({ID++, algorithmID()},
-                                    (int64_t)ahit.cellID(),
-                                    ahit.truth().time * 1e6 + m_gaussDist() * 1e3, // ns->fs
-                                    std::llround(ahit.energyDeposit() * 1e6));
+                                    (int64_t)ahit.getCellID(),
+                                    ahit.getMCParticle().getTime() * 1e6 + m_gaussDist() * 1e3, // ns->fs
+                                    std::llround(ahit.getEDep() * 1e6));
           rawhits->push_back(rawhit);
         } else {
-          auto hit = (*rawhits)[cell_hit_map[ahit.cellID()]];
-          hit.time(ahit.truth().time * 1e6 + m_gaussDist() * 1e3);
+          auto hit = (*rawhits)[cell_hit_map[ahit.getCellID()]];
+          hit.time(ahit.getMCParticle().getTime() * 1e6 + m_gaussDist() * 1e3);
           auto ch = hit.charge();
-          hit.charge(ch + std::llround(ahit.energyDeposit() * 1e6));
+          hit.charge(ch + std::llround(ahit.getEDep() * 1e6));
         }
       }
       return StatusCode::SUCCESS;

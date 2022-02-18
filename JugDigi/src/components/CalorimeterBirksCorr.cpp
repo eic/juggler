@@ -1,5 +1,5 @@
 // Apply Birks Law to correct the energy deposit
-// It uses the contributions member in dd4pod::CalorimeterHit, so simulation must enable storeCalorimeterContributions
+// It uses the contributions member in edm4hep::CalorimeterHit, so simulation must enable storeCalorimeterContributions
 //
 // Author: Chao Peng
 // Date: 09/29/2021
@@ -18,7 +18,7 @@
 #include "JugBase/IParticleSvc.h"
 
 // Event Model related classes
-#include "dd4pod/CalorimeterHitCollection.h"
+#include "edm4hep/SimCalorimeterHitCollection.h"
 #include "eicd/RawCalorimeterHitCollection.h"
 #include "eicd/RawCalorimeterHitData.h"
 
@@ -38,9 +38,9 @@ namespace Jug::Digi {
     // digitization settings
     Gaudi::Property<double> m_birksConstant{this, "birksConstant", 0.126*mm/MeV};
 
-    DataHandle<dd4pod::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+    DataHandle<edm4hep::SimCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                       this};
-    DataHandle<dd4pod::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+    DataHandle<edm4hep::SimCalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                        this};
 
     SmartIF<IParticleSvc> m_pidSvc;
@@ -80,22 +80,21 @@ namespace Jug::Digi {
     {
       auto& ohits = *m_outputHitCollection.createAndPut();
       for (const auto& hit : *m_inputHitCollection.get()) {
-        double lightyield = 0.;
-        for (auto &truth : hit.contributions()) {
-          const double charge = m_pidSvc->particle(truth.pdgID).charge;
+        auto ohit = ohits->create(hit.getCellID(), hit.getEnergy(), hit.getPosition());
+        double energy = 0.;
+        for (const auto &c: hit.getContributions()) {
+          ohit.addToContributions(c);
+          const double charge = m_pidSvc->particle(c.getPDG()).charge;
           // some tolerance for precision
           if (std::abs(charge) > 1e-5) {
-            lightyield += truth.deposit / (1. + truth.deposit / truth.length * birksConstant);
+            // FIXME
+            //energy += c.getEnergy() / (1. + c.getEnergy() / c.length * birksConstant);
+            error() << "edm4hep::CaloHitContribution has no length field for Birks correction." << endmsg;
+            return StatusCode::FAILURE;
           }
         }
-        auto ohit = ohits->create();
-        ohit.cellID(hit.cellID());
-        ohit.flag(hit.flag());
-        ohit.g4ID(hit.g4ID());
-        ohit.position(hit.position());
-        ohit.truth(hit.truth());
         // replace energy deposit with Birks Law corrected value
-        ohit.energyDeposit(lightyield);
+        ohit.setEnergy(energy);
       }
       return StatusCode::SUCCESS;
     }

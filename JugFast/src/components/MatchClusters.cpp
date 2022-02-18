@@ -17,7 +17,7 @@
 #include "JugBase/UniqueID.h"
 
 // Event Model related classes
-#include "dd4pod/Geant4ParticleCollection.h"
+#include "edm4hep/MCParticleCollection.h"
 #include "eicd/ClusterCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
 #include "eicd/TrackParametersCollection.h"
@@ -28,7 +28,7 @@ namespace Jug::Fast {
 class MatchClusters : public GaudiAlgorithm, AlgorithmIDMixin<> {
 public:
   // input data
-  DataHandle<dd4pod::Geant4ParticleCollection> m_inputMCParticles{"mcparticles", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
   DataHandle<eic::ReconstructedParticleCollection> m_inputParticles{"ReconstructedChargedParticles",
                                                                     Gaudi::DataHandle::Reader, this};
   Gaudi::Property<std::vector<std::string>> m_inputEcalClusters{
@@ -44,7 +44,7 @@ public:
 
   MatchClusters(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
-    declareProperty("inputMCParticles", m_inputMCParticles, "mcparticles");
+    declareProperty("inputMCParticles", m_inputMCParticles, "MCParticles");
     declareProperty("inputParticles", m_inputParticles, "ReconstructedChargedParticles");
     declareProperty("outputParticles", m_outputParticles, "ReconstructedParticles");
   }
@@ -121,14 +121,14 @@ public:
 
       // get mass/PID from mcparticles, 0 (unidentified) in case the matched particle is charged.
       const auto& mc    = mcparticles[mcID.value];
-      const double mass = (!mc.charge()) ? mc.mass() : 0;
-      const int32_t pid = (!mc.charge()) ? mc.pdgID() : 0;
+      const double mass = (!mc.getCharge()) ? mc.getMass() : 0;
+      const int32_t pid = (!mc.getCharge()) ? mc.getPDG() : 0;
       if (msgLevel(MSG::DEBUG)) {
-        if (mc.charge()) {
-          debug() << "   --> associated mcparticle is not a neutral (PID: " << mc.pdgID()
+        if (mc.getCharge()) {
+          debug() << "   --> associated mcparticle is not a neutral (PID: " << mc.getPDG()
                   << "), setting the reconstructed particle ID to 0 (unidentified)" << endmsg;
         }
-        debug() << "   --> found matching associated mcparticle with PID: " << pid << ", energy: " << mc.energy()
+        debug() << "   --> found matching associated mcparticle with PID: " << pid << ", energy: " << mc.getEnergy()
                 << endmsg;
       }
       // Do we also have any other matching clusters we need to add energy from (just

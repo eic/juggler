@@ -28,7 +28,7 @@
 #include "fmt/ranges.h"
 
 // Event Model related classes
-#include "dd4pod/CalorimeterHitCollection.h"
+#include "edm4hep/SimCalorimeterHitCollection.h"
 #include "eicd/RawCalorimeterHitCollection.h"
 #include "eicd/RawCalorimeterHitData.h"
 
@@ -76,7 +76,7 @@ namespace Jug::Digi {
     SmartIF<IGeoSvc> m_geoSvc;
     uint64_t         id_mask, ref_mask;
 
-    DataHandle<dd4pod::CalorimeterHitCollection> m_inputHitCollection{
+    DataHandle<edm4hep::SimCalorimeterHitCollection> m_inputHitCollection{
       "inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::RawCalorimeterHitCollection> m_outputHitCollection{
       "outputHitCollection", Gaudi::DataHandle::Writer, this};
@@ -171,7 +171,7 @@ namespace Jug::Digi {
       int nhits = 0;
       for (const auto& ahit : *simhits) {
         // Note: juggler internal unit of energy is GeV
-        const double eDep    = ahit.energyDeposit();
+        const double eDep    = ahit.getEnergy();
 
         // apply additional calorimeter noise to corrected energy deposit
         const double eResRel = (eDep > 1e-6)
@@ -181,11 +181,16 @@ namespace Jug::Digi {
 
         const double ped    = m_pedMeanADC + m_normDist() * m_pedSigmaADC;
         const long long adc = std::llround(ped +  m_corrMeanScale * eDep * (1. + eResRel) / dyRangeADC * m_capADC);
-        const long long tdc = std::llround((ahit.truth().time + m_normDist() * tRes) * stepTDC);
+
+        double time = std::numeric_limits<double>::max();
+        for (const auto& c : ahit.getContributions())
+          if (c.getTime() <= time)
+            time = c.getTime();
+        const long long tdc = std::llround((time + m_normDist() * tRes) * stepTDC);
 
         eic::RawCalorimeterHit rawhit(
           {nhits++, algorithmID()},
-          (long long)ahit.cellID(),
+          (long long)ahit.getCellID(),
           (adc > m_capADC.value() ? m_capADC.value() : adc),
           tdc
         );
@@ -198,9 +203,9 @@ namespace Jug::Digi {
       auto rawhits = m_outputHitCollection.createAndPut();
 
       // find the hits that belong to the same group (for merging)
-      std::unordered_map<long long, std::vector<dd4pod::ConstCalorimeterHit>> merge_map;
+      std::unordered_map<long long, std::vector<edm4hep::ConstSimCalorimeterHit>> merge_map;
       for (const auto &ahit : *simhits) {
-        int64_t hid = (ahit.cellID() & id_mask) | ref_mask;
+        int64_t hid = (ahit.getCellID() & id_mask) | ref_mask;
         auto    it  = merge_map.find(hid);
 
         if (it == merge_map.end()) {
@@ -213,15 +218,17 @@ namespace Jug::Digi {
       // signal sum
       int nhits = 0;
       for (auto &[id, hits] : merge_map) {
-        double edep     = hits[0].energyDeposit();
-        double time     = hits[0].truth().time;
-        double max_edep = hits[0].energyDeposit();
+        double edep     = hits[0].getEnergy();
+        double time     = hits[0].getContributions(0).getTime();
+        double max_edep = hits[0].getEnergy();
         // sum energy, take time from the most energetic hit
         for (size_t i = 1; i < hits.size(); ++i) {
-          edep += hits[i].energyDeposit();
-          if (hits[i].energyDeposit() > max_edep) {
-            max_edep = hits[i].energyDeposit();
-            time     = hits[i].truth().time;
+          edep += hits[i].getEnergy();
+          if (hits[i].getEnergy() > max_edep) {
+            max_edep = hits[i].getEnergy();
+            for (const auto& c : hits[i].getContributions())
+              if (c.getTime() <= time)
+                time = c.getTime();
           }
         }
 

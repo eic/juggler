@@ -16,7 +16,7 @@
 //#include "Acts/Definitions/Common.hpp"
 //#include "Acts/EventData/Charge.hpp"
 
-#include "dd4pod/Geant4ParticleCollection.h"
+#include "edm4hep/MCParticleCollection.h"
 #include "eicd/TrackParametersCollection.h"
 #include "Math/Vector3D.h"
 
@@ -32,7 +32,7 @@ namespace Jug::Reco {
    */
   class TruthTrackSeeding : public GaudiAlgorithm {
   public:
-    DataHandle<dd4pod::Geant4ParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader,
+    DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader,
                                                                     this};
     DataHandle<eic::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters",
                                                                        Gaudi::DataHandle::Writer, this};
@@ -64,43 +64,46 @@ namespace Jug::Reco {
 
     StatusCode execute() override {
       // input collection
-      const dd4pod::Geant4ParticleCollection* mcparts = m_inputMCParticles.get();
+      const edm4hep::MCParticleCollection* mcparts = m_inputMCParticles.get();
       // Create output collections
       auto init_trk_params = m_outputTrackParameters.createAndPut();
 
       for(const auto& part : *mcparts) {
 
-        // genStatus = 1 means thrown G4Primary 
-        if(part.genStatus() != 1 ) {
+        // getGeneratorStatus = 1 means thrown G4Primary 
+        if(part.getGeneratorStatus() != 1 ) {
           continue;
         }
 
-        const double p = part.ps().mag();
+        const auto& pvec = part.getMomentum();
+        const auto p = std::hypot(pvec.x, pvec.y, pvec.z);
+        const auto phi = std::atan2(pvec.x, pvec.y);
+        const auto theta = std::atan2(std::hypot(pvec.x, pvec.y), pvec.z);
 
         // get the particle charge
         // note that we cannot trust the mcparticles charge, as DD4hep
         // sets this value to zero! let's lookup by PDGID instead
-        const double charge = m_pidSvc->particle(part.pdgID()).charge;
+        const auto charge = static_cast<float>(m_pidSvc->particle(part.getPDG()).charge);
         if (abs(charge) < std::numeric_limits<double>::epsilon()) {
           continue;
         }
 
-        const float q_over_p = charge / p;
+        const auto q_over_p = charge / p;
 
         eic::TrackParameters params{-1,               // type --> seed (-1)
                                    {0.0f, 0.0f},      // location on surface
                                    {0.1, 0.1, 0.1},   // Covariance on location
-                                   part.ps().theta(), // theta (rad)
-                                   part.ps().phi(),   // phi  (rad)
+                                   theta,             // theta (rad)
+                                   phi,               // phi  (rad)
                                    q_over_p * .05f,   // Q/P (e/GeV)
                                    {0.1, 0.1, 0.1},   // Covariance on theta/phi/Q/P
-                                   part.time(),       // Time (ns)
+                                   part.getTime(),    // Time (ns)
                                    0.1,               // Error on time
                                    charge};           // Charge
 
         ////// Construct a perigee surface as the target surface
         //auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
-        //    Acts::Vector3{part.vs().x * mm, part.vs().y * mm, part.vs().z * mm});
+        //    Acts::Vector3{part.getVertex().x * mm, part.getVertex().y * mm, part.getVertex().z * mm});
 
         init_trk_params->push_back(params);
 

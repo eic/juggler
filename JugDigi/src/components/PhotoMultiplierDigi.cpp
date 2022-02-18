@@ -22,7 +22,8 @@
 
 // Event Model related classes
 #include "eicd/RawPMTHitCollection.h"
-#include "dd4pod/TrackerHitCollection.h"
+#include "edm4hep/MCParticleCollection.h"
+#include "edm4hep/SimTrackerHitCollection.h"
 
 
 using namespace Gaudi::Units;
@@ -36,7 +37,7 @@ namespace Jug::Digi {
 class PhotoMultiplierDigi : public GaudiAlgorithm, AlgorithmIDMixin<>
 {
 public:
-    DataHandle<dd4pod::TrackerHitCollection>
+    DataHandle<edm4hep::SimTrackerHitCollection>
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::RawPMTHitCollection>
         m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
@@ -91,12 +92,12 @@ public:
         // calculate signal
         for(const auto& ahit : sim) {
             // quantum efficiency
-            if (!qe_pass(ahit.energyDeposit(), m_rngUni())) {
+            if (!qe_pass(ahit.getEDep(), m_rngUni())) {
                 continue;
             }
             // cell id, time, signal amplitude
-            long long id = ahit.cellID();
-            double time = ahit.truth().time;
+            long long id = ahit.getCellID();
+            double time = ahit.getMCParticle().getTime();
             double amp = m_speMean + m_rngNorm()*m_speError;
 
             // group hits

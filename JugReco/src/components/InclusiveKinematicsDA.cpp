@@ -17,7 +17,7 @@
 #include "TVector3.h"
 
 // Event Model related classes
-#include "dd4pod/Geant4ParticleCollection.h"
+#include "edm4hep/MCParticleCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
 #include "eicd/InclusiveKinematicsCollection.h"
 
@@ -25,8 +25,8 @@ namespace Jug::Reco {
 
 class InclusiveKinematicsDA : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
 public:
-  DataHandle<dd4pod::Geant4ParticleCollection> m_inputMCParticleCollection{
-    "inputMCParticles",
+  DataHandle<edm4hep::MCParticleCollection> m_inputMCParticleCollection{
+    "MCParticles",
     Gaudi::DataHandle::Reader,
     this};
   DataHandle<eic::ReconstructedParticleCollection> m_inputParticleCollection{
@@ -45,7 +45,7 @@ public:
 
   InclusiveKinematicsDA(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
-    declareProperty("inputMCParticles", m_inputMCParticleCollection, "mcparticles");
+    declareProperty("inputMCParticles", m_inputMCParticleCollection, "MCParticles");
     declareProperty("inputParticles", m_inputParticleCollection, "ReconstructedParticles");
     declareProperty("outputData", m_outputInclusiveKinematicsCollection, "InclusiveKinematicsDA");
   }
@@ -108,7 +108,7 @@ public:
 
   StatusCode execute() override {
     // input collections
-    const dd4pod::Geant4ParticleCollection& mcparts = *(m_inputMCParticleCollection.get());
+    const edm4hep::MCParticleCollection& mcparts = *(m_inputMCParticleCollection.get());
     const eic::ReconstructedParticleCollection& parts = *(m_inputParticleCollection.get());
     // output collection
     auto& out_kinematics = *(m_outputInclusiveKinematicsCollection.createAndPut());
@@ -121,12 +121,12 @@ public:
     //over final-state particles for the JB reconstruction
     int32_t mcscatID = -1;
     for (const auto& p : mcparts) {
-      if (p.genStatus() == 4 && p.pdgID() == 11) {
+      if (p.getGeneratorStatus() == 4 && p.getPDG() == 11) {
         // Incoming electron
-        ei.x = p.ps().x;
-        ei.y = p.ps().y;
-        ei.z = p.ps().z;
-        ei.t = p.energy();
+        ei.x = p.getMomentum().x;
+        ei.y = p.getMomentum().y;
+        ei.z = p.getMomentum().z;
+        ei.t = p.getEnergy();
 
         //Should not include true event-by-event smearing of beam particles for reconstruction
         //Find a better way to do this...
@@ -144,12 +144,12 @@ public:
 
         found_electron = true;
       }
-      if (p.genStatus() == 4 && (p.pdgID() == 2212 || p.pdgID() == 2112)) {
+      if (p.getGeneratorStatus() == 4 && (p.getPDG() == 2212 || p.getPDG() == 2112)) {
         // Incoming proton
-        pi.x = p.ps().x;
-        pi.y = p.ps().y;
-        pi.z = p.ps().z;
-        pi.t = p.energy();
+        pi.x = p.getMomentum().x;
+        pi.y = p.getMomentum().y;
+        pi.z = p.getMomentum().z;
+        pi.t = p.getEnergy();
 
         //Should not include true event-by-event smearing of beam particles for reconstruction
         //Find a better way to do this...
@@ -168,13 +168,13 @@ public:
           pi.z = 275.0*cos(m_crossingAngle);
         }
 
-        pi.t = std::hypot(pi.x, pi.z, (p.pdgID() == 2212) ? m_proton : m_neutron);
+        pi.t = std::hypot(pi.x, pi.z, (p.getPDG() == 2212) ? m_proton : m_neutron);
 
         found_proton = true;
       }
       // Index of true Scattered electron. Currently taken as first status==1 electron in HEPMC record.
-      if (p.genStatus() == 1 && p.pdgID() == 11 && mcscatID == -1) {
-        mcscatID = p.ID();
+      if (p.getGeneratorStatus() == 1 && p.getPDG() == 11 && mcscatID == -1) {
+        mcscatID = p.id();
       }
 
       if (found_electron && found_proton && mcscatID != -1) {

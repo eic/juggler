@@ -13,14 +13,14 @@
 #include <CLHEP/Vector/LorentzVector.h>
 
 // Event Model related classes
-#include "dd4pod/Geant4ParticleCollection.h"
+#include "edm4hep/MCParticleCollection.h"
 #include "eicd/InclusiveKinematicsCollection.h"
 
 namespace Jug::Fast {
 
 class InclusiveKinematicsTruth : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
 public:
-  DataHandle<dd4pod::Geant4ParticleCollection> m_inputParticleCollection{"mcparticles", Gaudi::DataHandle::Reader,
+  DataHandle<edm4hep::MCParticleCollection> m_inputParticleCollection{"MCParticles", Gaudi::DataHandle::Reader,
                                                                          this};
   DataHandle<eic::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{"InclusiveKinematicsTruth",
                                                                                        Gaudi::DataHandle::Writer, this};
@@ -31,7 +31,7 @@ public:
 
   InclusiveKinematicsTruth(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
-    declareProperty("inputMCParticles", m_inputParticleCollection, "mcparticles");
+    declareProperty("inputMCParticles", m_inputParticleCollection, "MCParticles");
     declareProperty("outputData", m_outputInclusiveKinematicsCollection, "InclusiveKinematicsTruth");
   }
 
@@ -54,7 +54,7 @@ public:
 
   StatusCode execute() override {
     // input collection
-    const dd4pod::Geant4ParticleCollection& parts = *(m_inputParticleCollection.get());
+    const edm4hep::MCParticleCollection& parts = *(m_inputParticleCollection.get());
     // output collection
     auto& out_kinematics = *(m_outputInclusiveKinematicsCollection.createAndPut());
 
@@ -73,38 +73,38 @@ public:
   
     for (const auto& p : parts) {
 
-      if (p.genStatus() == 4 && p.pdgID() == 11) { // Incoming electron
-        ei.setPx(p.ps().x);
-        ei.setPy(p.ps().y);
-        ei.setPz(p.ps().z);
-        ei.setE(p.energy());
+      if (p.getGeneratorStatus() == 4 && p.getPDG() == 11) { // Incoming electron
+        ei.setPx(p.getMomentum().x);
+        ei.setPy(p.getMomentum().y);
+        ei.setPz(p.getMomentum().z);
+        ei.setE(p.getEnergy());
         ebeam_found = true;
       }
-      else if (p.genStatus() == 4 && p.pdgID() == 2212) { // Incoming proton
-        pi.setPx(p.ps().x);
-        pi.setPy(p.ps().y);
-        pi.setPz(p.ps().z);
-        pi.setE(p.energy());
+      else if (p.getGeneratorStatus() == 4 && p.getPDG() == 2212) { // Incoming proton
+        pi.setPx(p.getMomentum().x);
+        pi.setPy(p.getMomentum().y);
+        pi.setPz(p.getMomentum().z);
+        pi.setE(p.getEnergy());
         pbeam_found = true;
       }
-      else if (p.genStatus() == 4 && p.pdgID() == 2112) { // Incoming neutron
-        pi.setPx(p.ps().x);
-        pi.setPy(p.ps().y);
-        pi.setPz(p.ps().z);
-        pi.setE(p.energy());
+      else if (p.getGeneratorStatus() == 4 && p.getPDG() == 2112) { // Incoming neutron
+        pi.setPx(p.getMomentum().x);
+        pi.setPy(p.getMomentum().y);
+        pi.setPz(p.getMomentum().z);
+        pi.setE(p.getEnergy());
         pbeam_found = true;
       }
       // Scattered electron. Currently taken as first status==1 electron in HEPMC record,
       // which seems to be correct based on a cursory glance at the Pythia8 output. In the future,
       // it may be better to trace back each final-state electron and see which one originates from
       // the beam.
-      else if (p.genStatus() == 1 && p.pdgID() == 11 && mcscatID == -1) {
-        ef.setPx(p.ps().x);
-        ef.setPy(p.ps().y);
-        ef.setPz(p.ps().z);
-        ef.setE(p.energy());
+      else if (p.getGeneratorStatus() == 1 && p.getPDG() == 11 && mcscatID == -1) {
+        ef.setPx(p.getMomentum().x);
+        ef.setPy(p.getMomentum().y);
+        ef.setPz(p.getMomentum().z);
+        ef.setE(p.getEnergy());
 
-        mcscatID = p.ID();
+        mcscatID = p.id();
       }
       if (ebeam_found && pbeam_found && mcscatID != -1) {
         // all done!

@@ -23,7 +23,7 @@ if(ENABLE_CLANG_TIDY)
 endif()
 
 find_package(EICD REQUIRED)
-find_package(NPDet REQUIRED)
+find_package(EDM4HEP REQUIRED)
 
 find_package(podio 0.11...0.14 REQUIRED)
 add_definitions("-Dpodio_VERSION_MAJOR=${podio_VERSION_MAJOR}")
