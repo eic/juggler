@@ -109,8 +109,8 @@ namespace Jug::Reco {
         }
 
         // require minimum momentum
-        auto p = part.getMomentum();
-	auto pmag = std::hypot(p.x, p.y, p.z);
+        const auto& p = part.getMomentum();
+        const auto pmag = std::hypot(p.x, p.y, p.z);
         if (pmag * Gaudi::Units::GeV < m_minMomentum) {
           if (msgLevel(MSG::DEBUG)) {
             debug() << "ignoring particle with p = " << pmag << " GeV" << endmsg;
@@ -119,8 +119,9 @@ namespace Jug::Reco {
         }
 
         // require minimum pseudorapidity
-        auto theta = atan2(std::hypot(p.x, p.y), p.z);
-        auto eta = -log(tan(theta/2));
+        const auto phi   = std::atan2(p.y, p.x);
+        const auto theta = std::atan2(std::hypot(p.x, p.y), p.z);
+        const auto eta   = -std::log(std::tan(theta/2));
         if (eta > m_maxEtaForward || eta < -std::abs(m_maxEtaBackward)) {
           if (msgLevel(MSG::DEBUG)) {
             debug() << "ignoring particle with Eta = " << eta << endmsg;
@@ -145,9 +146,6 @@ namespace Jug::Reco {
         using Acts::UnitConstants::um;
         using Acts::UnitConstants::ns;
 
-        const auto pvec = part.getMomentum();
-        const auto pt = std::hypot(pvec.x, pvec.y);
-
         // build some track cov matrix
         Acts::BoundSymMatrix cov                    = Acts::BoundSymMatrix::Zero();
         cov(Acts::eBoundLoc0, Acts::eBoundLoc0)     = 1000*um*1000*um;
@@ -160,8 +158,8 @@ namespace Jug::Reco {
         Acts::BoundVector  params;
         params(Acts::eBoundLoc0)   = 0.0 * mm ;  // cylinder radius
         params(Acts::eBoundLoc1)   = 0.0 * mm ; // cylinder length
-        params(Acts::eBoundPhi)    = atan2(pvec.y, pvec.x);
-        params(Acts::eBoundTheta)  = atan2(pt, pvec.z);
+        params(Acts::eBoundPhi)    = phi;
+        params(Acts::eBoundTheta)  = theta;
         params(Acts::eBoundQOverP) = charge / (pmag * GeV);
         params(Acts::eBoundTime)   = part.getTime() * ns;
 
