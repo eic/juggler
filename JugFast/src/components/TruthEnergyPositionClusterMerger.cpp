@@ -130,8 +130,9 @@ public:
     if (msgLevel(MSG::DEBUG)) {
       debug() << "Step 2/2: Collecting remaining energy clusters..." << endmsg;
     }
-    auto phi = [](const edm4hep::Vector3f v) { return atan2(v.y,v.x); };
-    auto theta = [](const edm4hep::Vector3f v) { return atan2(std::hypot(v.x,v.y),v.z); };
+    const auto& p = mc.getMomentum();
+    const auto phi = std::atan2(p.y, p.x);
+    const auto theta = std::atan2(std::hypot(p.x, p.y), p.z);
     for (const auto& [mcID, eclus] : energyMap) {
       const auto& mc = mcparticles[mcID.value];
       auto new_clus  = merged.create();
@@ -141,7 +142,7 @@ public:
       new_clus.time(eclus.time());
       new_clus.nhits(eclus.nhits());
       // use nominal radius of 110cm, and use start vertex theta and phi
-      new_clus.position(eic::VectorPolar{110, theta(mc.getMomentum()), phi(mc.getMomentum())});
+      new_clus.position(eic::VectorPolar{110, theta, phi});
       new_clus.radius(eclus.radius());
       new_clus.skewness(eclus.skewness());
       new_clus.mcID(mcID);
