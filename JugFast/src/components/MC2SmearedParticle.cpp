@@ -58,19 +58,20 @@ public:
       // for now just use total momentum smearing as this is the largest effect,
       // ideally we should also smear the angles but this should be good enough
       // for now.
-      const auto pvec      = p.getMomentum();
-      const auto pgen      = std::hypot(pvec.x, pvec.y, pvec.z);
-      const float momentum = pgen * m_gaussDist();
-      const float energy   = p.getEnergy();
-      const float px       = p.getMomentum().x * momentum / pgen;
-      const float py       = p.getMomentum().y * momentum / pgen;
-      const float pz       = p.getMomentum().z * momentum / pgen;
+      const auto& pvec    = p.getMomentum();
+      const auto pgen     = std::hypot(pvec.x, pvec.y, pvec.z);
+      const auto momentum = pgen * m_gaussDist();
+      const auto energy   = p.getEnergy();
+      // momentum smearing
+      const auto px       = p.getMomentum().x * momentum / pgen;
+      const auto py       = p.getMomentum().y * momentum / pgen;
+      const auto pz       = p.getMomentum().z * momentum / pgen;
+      const auto phi      = std::atan2(py, px);
+      const auto theta    = std::atan2(std::hypot(px, py), pz);
       // @TODO: vertex smearing
-      const float vx = p.getVertex().x;
-      const float vy = p.getVertex().y;
-      const float vz = p.getVertex().z;
-
-      eic::VectorXYZ psmear{px, py, pz};
+      const auto vx       = p.getVertex().x;
+      const auto vy       = p.getVertex().y;
+      const auto vz       = p.getVertex().z;
 
       auto rec_part = out_parts.create();
       rec_part.ID({ID++, algorithmID()});
