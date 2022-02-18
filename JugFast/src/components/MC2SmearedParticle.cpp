@@ -82,7 +82,7 @@ public:
       rec_part.status(p.getGeneratorStatus());
       rec_part.charge(p.getCharge());
       rec_part.weight(1.);
-      rec_part.direction({psmear.theta(), psmear.phi()});
+      rec_part.direction({theta, phi});
       rec_part.momentum(momentum);
       rec_part.energy(energy);
       rec_part.mass(p.getMass());
