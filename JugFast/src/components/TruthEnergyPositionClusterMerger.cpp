@@ -130,11 +130,11 @@ public:
     if (msgLevel(MSG::DEBUG)) {
       debug() << "Step 2/2: Collecting remaining energy clusters..." << endmsg;
     }
-    const auto& p = mc.getMomentum();
-    const auto phi = std::atan2(p.y, p.x);
-    const auto theta = std::atan2(std::hypot(p.x, p.y), p.z);
     for (const auto& [mcID, eclus] : energyMap) {
       const auto& mc = mcparticles[mcID.value];
+      const auto& p = mc.getMomentum();
+      const auto phi = std::atan2(p.y, p.x);
+      const auto theta = std::atan2(std::hypot(p.x, p.y), p.z);
       auto new_clus  = merged.create();
       new_clus.ID({idx++, algorithmID()});
       new_clus.energy(eclus.energy());
