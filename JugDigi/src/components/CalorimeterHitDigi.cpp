@@ -184,8 +184,8 @@ namespace Jug::Digi {
 
         double time = std::numeric_limits<double>::max();
         for (const auto& c : ahit.getContributions())
-          if (c->getTime() <= time)
-            time = c->getTime();
+          if (c.getTime() <= time)
+            time = c.getTime();
         const long long tdc = std::llround((time + m_normDist() * tRes) * stepTDC);
 
         eic::RawCalorimeterHit rawhit(
@@ -227,8 +227,8 @@ namespace Jug::Digi {
           if (hits[i].getEnergy() > max_edep) {
             max_edep = hits[i].getEnergy();
             for (const auto& c : hits[i].getContributions())
-              if (c->getTime() <= time)
-                time = c->getTime();
+              if (c.getTime() <= time)
+                time = c.getTime();
           }
         }
 
