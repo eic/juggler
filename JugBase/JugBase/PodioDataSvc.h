@@ -1,13 +1,13 @@
 #ifndef JUGBASE_PODIODATASVC_H
 #define JUGBASE_PODIODATASVC_H
 
-#include <GaudiKernel/DataSvc.h>
-#include <GaudiKernel/IConversionSvc.h>
+#include "GaudiKernel/DataSvc.h"
+#include "GaudiKernel/IConversionSvc.h"
 // PODIO
-#include <podio/CollectionBase.h>
-#include <podio/CollectionIDTable.h>
-#include <podio/EventStore.h>
-#include <podio/ROOTReader.h>
+#include "podio/CollectionBase.h"
+#include "podio/CollectionIDTable.h"
+#include "podio/EventStore.h"
+#include "podio/ROOTReader.h"
 
 #include <utility>
 // Forward declarations
@@ -24,10 +24,6 @@ class PodioDataSvc : public DataSvc {
 public:
   typedef std::vector<std::pair<std::string, podio::CollectionBase*>> CollRegistry;
 
-  /** Initialize the service.
-   *  - attaches data loader
-   *  - registers input filenames  
-   */
   virtual StatusCode initialize() override;
   virtual StatusCode reinitialize() override;
   virtual StatusCode finalize() override;
@@ -50,7 +46,6 @@ public:
   StatusCode readCollection(const std::string& collectionName, int collectionID);
 
   virtual const CollRegistry& getCollections() const { return m_collections; }
-  virtual const CollRegistry& getReadCollections() const { return m_readCollections; }
   podio::EventStore& getProvider() { return m_provider; }
   virtual podio::CollectionIDTable* getCollectionIDs() { return m_collectionIDs; }
 
@@ -81,7 +76,6 @@ private:
 
   // special members for podio handling
   std::vector<std::pair<std::string, podio::CollectionBase*>> m_collections;
-  std::vector<std::pair<std::string, podio::CollectionBase*>> m_readCollections;
   podio::CollectionIDTable* m_collectionIDs;
 
 protected:
@@ -92,4 +86,4 @@ protected:
   /// This option is helpful when we want to debug an event in the middle of a file
   unsigned m_1stEvtEntry{0};
 };
-#endif  
+#endif  // JUGBASE_PODIODATASVC_H
