@@ -38,7 +38,7 @@ private:
   Gaudi::Property<std::vector<std::string>> m_outputCommands{
       this, "outputCommands", {"keep *"}, "A set of commands to declare which collections to keep or drop."};
   Gaudi::Property<std::string> m_filenameRemote{
-      this, "filenameRemote", "", "An optional file path to copy the outputfile to."};
+      this, "remoteFilename", "", "An optional file path to copy the outputfile to."};
   /// Switch for keeping or dropping outputs
   KeepDropSwitch m_switch;
   /// Needed for collection ID table
@@ -49,6 +49,10 @@ private:
   TTree* m_datatree;
   /// The tree to be filled with meta data
   TTree* m_metadatatree;
+  TTree* m_runMDtree;
+  TTree* m_evtMDtree;
+  TTree* m_colMDtree;
+
   /// The stored collections
   std::vector<podio::CollectionBase*> m_storedCollections;
 };

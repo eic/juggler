@@ -1,7 +1,6 @@
 #ifndef PODIO_ROOT_UTILS_H
 #define PODIO_ROOT_UTILS_H
 
-#include "podio/podioVersion.h"
 #include "podio/CollectionBase.h"
 #include "podio/CollectionBranches.h"
 
@@ -29,30 +28,21 @@ inline std::string vecBranch(const std::string& name, size_t index) {
 
 
 inline void setCollectionAddresses(podio::CollectionBase* collection, const CollectionBranches& branches) {
-  #if podio_VERSION_MAJOR == 0 && (podio_VERSION_MINOR < 13 || (podio_VERSION_MINOR == 13 && podio_VERSION_PATCH < 2))
-  auto data = collection->getBufferAddress();
-  auto references = collection->referenceCollections();
-  auto vecmembers = collection->vectorMembers();
-  #else
-  auto buffers = collection->getBuffers();
-  auto data = buffers.data;
-  auto references = buffers.references;
-  auto vecmembers = buffers.vectorMembers;
-  #endif
+  const auto collBuffers = collection->getBuffers();
 
-  if (data) {
-    branches.data->SetAddress(data);
+  if (auto buffer = collBuffers.data) {
+    branches.data->SetAddress(buffer);
   }
 
-  if (references) {
-    for (size_t i = 0; i < references->size(); ++i) {
-      branches.refs[i]->SetAddress(&(*references)[i]);
+  if (auto refCollections = collBuffers.references) {
+    for (size_t i = 0; i < refCollections->size(); ++i) {
+      branches.refs[i]->SetAddress(&(*refCollections)[i]);
     }
   }
 
-  if (vecmembers) {
-    for (size_t i = 0; i < vecmembers->size(); ++i) {
-      branches.vecs[i]->SetAddress((*vecmembers)[i].second);
+  if (auto vecMembers = collBuffers.vectorMembers) {
+    for (size_t i = 0; i < vecMembers->size(); ++i) {
+      branches.vecs[i]->SetAddress((*vecMembers)[i].second);
     }
   }
 }
@@ -60,4 +50,3 @@ inline void setCollectionAddresses(podio::CollectionBase* collection, const Coll
 }
 
 #endif
-
