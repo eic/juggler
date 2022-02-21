@@ -30,7 +30,7 @@
 #include "JugBase/IGeoSvc.h"
 
 // Event Model related classes
-#include "eicd/CalorimeterHitGeoCollection.h"
+#include "eicd/CalorimeterHitCollection.h"
 #include "eicd/ClusterCollection.h"
 #include "eicd/ProtoClusterCollection.h"
 #include "eicd/VectorXY.h"
@@ -41,8 +41,8 @@ using namespace Gaudi::Units;
 
 namespace {
 
-using CaloHit = eic::ConstCalorimeterHitGeo;
-using CaloHitCollection = eic::CalorimeterHitGeoCollection;
+using CaloHit = eic::ConstCalorimeterHit;
+using CaloHitCollection = eic::CalorimeterHitCollection;
 
 // helper functions to get distance between hits
 static eic::VectorXY localDistXY(const CaloHit& h1, const CaloHit& h2) {
@@ -329,7 +329,7 @@ private:
     } else if (maxima.size() == 1) {
       eic::ProtoCluster pcl;
       for (auto& [idx, hit] : group) {
-        pcl.addhits(hit.hit());
+        pcl.addhits(hit);
         pcl.addweights(1.);
       }
       proto.push_back(pcl);
@@ -352,8 +352,8 @@ private:
       size_t j = 0;
       // calculate weights for local maxima
       for (const auto& chit : maxima) {
-        double dist_ref = chit.hit().dimension().x;
-        double energy   = chit.hit().energy();
+        double dist_ref = chit.dimension().x;
+        double energy   = chit.energy();
         double dist     = hitsDist(chit, hit).mag();
         weights[j]      = std::exp(-dist / dist_ref) * energy;
         j += 1;
@@ -376,7 +376,7 @@ private:
         if (weight <= 1e-6) {
           continue;
         }
-        pcls[k].addhits(hit.hit());
+        pcls[k].addhits(hit);
         pcls[k].addweights(weight);
       }
       i += 1;

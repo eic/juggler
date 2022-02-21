@@ -18,7 +18,6 @@
 #include "GaudiKernel/PhysicalConstants.h"
 
 #include "JugBase/DataHandle.h"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "eicd/RawPMTHitCollection.h"
@@ -34,7 +33,7 @@ namespace Jug::Digi {
  *
  * \ingroup digi
  */
-class PhotoMultiplierDigi : public GaudiAlgorithm, AlgorithmIDMixin<>
+class PhotoMultiplierDigi : public GaudiAlgorithm
 {
 public:
     DataHandle<edm4hep::SimTrackerHitCollection>
@@ -54,7 +53,6 @@ public:
     // constructor
     PhotoMultiplierDigi(const std::string& name, ISvcLocator* svcLoc)
         : GaudiAlgorithm(name, svcLoc)
-        , AlgorithmIDMixin(name, info())
     {
         declareProperty("inputHitCollection", m_inputHitCollection,"");
         declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -87,7 +85,7 @@ public:
         auto &raw = *m_outputHitCollection.createAndPut();
 
         struct HitData { int npe; double signal; double time; };
-        std::unordered_map<long long, std::vector<HitData>> hit_groups;
+        std::unordered_map<uint64_t, std::vector<HitData>> hit_groups;
         // collect the photon hit in the same cell
         // calculate signal
         for(const auto& ahit : sim) {
@@ -96,7 +94,7 @@ public:
                 continue;
             }
             // cell id, time, signal amplitude
-            long long id = ahit.getCellID();
+            uint64_t id = ahit.getCellID();
             double time = ahit.getMCParticle().getTime();
             double amp = m_speMean + m_rngNorm()*m_speError;
 
@@ -121,11 +119,10 @@ public:
         }
 
         // build hit
-        int ID = 0;
         for (auto &it : hit_groups) {
             for (auto &data : it.second) {
                 eic::RawPMTHit hit{
-                  {ID++, algorithmID()},
+                  0 /* Old ID TBDeleted */,
                   it.first,
                   static_cast<uint32_t>(data.signal), 
                   static_cast<uint32_t>(data.time/(m_timeStep/ns))};

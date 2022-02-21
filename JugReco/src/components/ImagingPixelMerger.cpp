@@ -26,7 +26,6 @@
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/Utilities/Utils.hpp"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "eicd/CalorimeterHitCollection.h"
@@ -53,16 +52,15 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class ImagingPixelMerger : public GaudiAlgorithm, AlgorithmIDMixin<> {
+  class ImagingPixelMerger : public GaudiAlgorithm {
   public:
     Gaudi::Property<float>                  m_etaSize{this, "etaSize", 0.001};
     Gaudi::Property<float>                  m_phiSize{this, "phiSize", 0.001};
-    DataHandle<eic::CalorimeterHitGeoCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
+    DataHandle<eic::CalorimeterHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::CalorimeterHitCollection> m_outputHits{"outputHits", Gaudi::DataHandle::Writer, this};
 
     ImagingPixelMerger(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin<>(name, info())
     {
       declareProperty("inputHits", m_inputHits, "");
       declareProperty("outputHits", m_outputHits, "");

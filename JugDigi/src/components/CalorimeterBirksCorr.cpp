@@ -14,7 +14,6 @@
 #include "GaudiKernel/RndmGenerators.h"
 
 #include "JugBase/DataHandle.h"
-#include "JugBase/UniqueID.h"
 #include "JugBase/IParticleSvc.h"
 
 // Event Model related classes
@@ -32,7 +31,7 @@ namespace Jug::Digi {
    * \ingroup digi
    * \ingroup calorimetry
    */
-  class CalorimeterBirksCorr : public GaudiAlgorithm, AlgorithmIDMixin<> {
+  class CalorimeterBirksCorr : public GaudiAlgorithm {
   public:
 
     // digitization settings
@@ -50,7 +49,6 @@ namespace Jug::Digi {
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     CalorimeterBirksCorr(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin{name, info()}
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");

@@ -7,7 +7,6 @@
 #include <cmath>
 
 #include "JugBase/DataHandle.h"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
@@ -15,7 +14,7 @@
 
 namespace Jug::Base {
 
-    class MC2DummyParticle : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
+    class MC2DummyParticle : public GaudiAlgorithm {
     public:
       DataHandle<edm4hep::MCParticleCollection> m_inputParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
       DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"DummyReconstructedParticles",
@@ -23,11 +22,8 @@ namespace Jug::Base {
       Rndm::Numbers                                    m_gaussDist;
       Gaudi::Property<double>                          m_smearing{this, "smearing", 0.01 /* 1 percent*/};
 
-      const int32_t kMonteCarloSource{uniqueID<int32_t>("MCParticles")};
-
       MC2DummyParticle(const std::string& name, ISvcLocator* svcLoc) 
         : GaudiAlgorithm(name, svcLoc)
-        , AlgorithmIDMixin(name, info())
       {
         declareProperty("inputCollection", m_inputParticles, "MCParticles");
         declareProperty("outputCollection", m_outputParticles, "DummyReconstructedParticles");
@@ -50,7 +46,6 @@ namespace Jug::Base {
         const edm4hep::MCParticleCollection* parts = m_inputParticles.get();
         // output collection
         auto& out_parts = *(m_outputParticles.createAndPut());
-        int ID = 0;
         for (const auto& p : *parts) {
           if (p.getGeneratorStatus() > 1) {
             if (msgLevel(MSG::DEBUG)) {
@@ -78,7 +73,6 @@ namespace Jug::Base {
           const auto p_theta = std::atan2(std::hypot(px, py), pz);
 
           auto rec_part = out_parts.create();
-          rec_part.ID({ID++, algorithmID()});
           rec_part.p({px, py, pz});
           rec_part.v({vx, vy, vz});
           rec_part.time(p.getTime());

@@ -22,7 +22,6 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugBase/UniqueID.h"
 #include "JugBase/Utilities/Utils.hpp"
 
 // Event Model related classes
@@ -30,7 +29,6 @@
 #include "edm4hep/SimCalorimeterHitCollection.h"
 #include "eicd/CalorimeterHitCollection.h"
 #include "eicd/ClusterCollection.h"
-#include "eicd/ClusterLayerCollection.h"
 #include "eicd/ProtoClusterCollection.h"
 #include "eicd/VectorPolar.h"
 #include "eicd/VectorXYZ.h"
@@ -47,75 +45,73 @@ namespace Jug::Reco {
  *
  *  \ingroup reco
  */
-class ImagingClusterReco : public GaudiAlgorithm, AlgorithmIDMixin<> {
+class ImagingClusterReco : public GaudiAlgorithm {
 public:
-  Gaudi::Property<double> m_sampFrac{this, "samplingFraction", 1.0};
   Gaudi::Property<int> m_trackStopLayer{this, "trackStopLayer", 9};
 
-  DataHandle<eic::ProtoClusterCollection> m_inputProtoClusterCollection{"inputProtoClusterCollection",
-                                                                        Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::ClusterLayerCollection> m_outputLayerCollection{"outputLayerCollection", Gaudi::DataHandle::Writer,
-                                                                  this};
-  DataHandle<eic::ClusterCollection> m_outputClusterCollection{"outputClusterCollection", Gaudi::DataHandle::Reader,
-                                                               this};
+  DataHandle<eic::ProtoClusterCollection> m_inputProtoClusterCollection{"inputProtoClusters", Gaudi::DataHandle::Reader,
+                                                                        this};
+  DataHandle<eic::ClusterCollection> m_outputLayerCollection{"outputLayers", Gaudi::DataHandle::Writer, this};
+  DataHandle<eic::ClusterCollection> m_outputClusterCollection{"outputClusters", Gaudi::DataHandle::Reader, this};
 
   // Collection for MC hits when running on MC
   Gaudi::Property<std::string> m_mcHits{this, "mcHits", ""};
-  // Monte Carlo particle source identifier
-  const int32_t m_kMonteCarloSource{uniqueID<int32_t>("MCParticles")};
   // Optional handle to MC hits
   std::unique_ptr<DataHandle<edm4hep::SimCalorimeterHitCollection>> m_inputMC;
 
-  ImagingClusterReco(const std::string& name, ISvcLocator* svcLoc) 
-      : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin<>(name, info()) {
-    declareProperty("inputProtoClusterCollection", m_inputProtoClusterCollection, "");
-    declareProperty("inputHitCollection", m_inputHitCollection, "");
-    declareProperty("outputLayerCollection", m_outputLayerCollection, "");
-    declareProperty("outputClusterCollection", m_outputClusterCollection, "");
+  ImagingClusterReco(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+    declareProperty("inputProtoClusters", m_inputProtoClusters, "");
+    declareProperty("outputLayers", m_outputLayers, "");
+    declareProperty("outputClusters", m_outputClusters, "");
   }
 
   StatusCode initialize() override {
     if (GaudiAlgorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
+    // TODO move to own algo
     // Initialize the MC input hit collection if requested
-    if (m_mcHits != "") {
-      m_inputMC =
-          std::make_unique<DataHandle<edm4hep::SimCalorimeterHitCollection>>(m_mcHits, Gaudi::DataHandle::Reader, this);
-    }
+    // if (m_mcHits != "") {
+    //  m_inputMC =
+    //      std::make_unique<DataHandle<edm4hep::SimCalorimeterHitCollection>>(m_mcHits, Gaudi::DataHandle::Reader,
+    //      this);
+    //}
 
     return StatusCode::SUCCESS;
   }
 
   StatusCode execute() override {
     // input collections
-    const auto& proto = *m_inputProtoClusterCollection.get();
-    const auto& hits  = *m_inputHitCollection.get();
+    const auto& proto = *m_inputProtoClusters.get();
     // output collections
-    auto& layers   = *m_outputLayerCollection.createAndPut();
-    auto& clusters = *m_outputClusterCollection.createAndPut();
+    auto& layers   = *m_outputLayers.createAndPut();
+    auto& clusters = *m_outputClusters.createAndPut();
     // Optional MC data
-    const edm4hep::SimCalorimeterHitCollection* mcHits = nullptr;
-    if (m_inputMC) {
-      mcHits = m_inputMC->get();
-    }
+    // TODO remove to other algo
+    // const edm4hep::SimCalorimeterHitCollection* mcHits = nullptr;
+    // if (m_inputMC) {
+    //  mcHits = m_inputMC->get();
+    //}
 
     for (const auto& pcl : proto) {
+      if (!pcl.hits().isValid()) {
+        warning() << "Protocluster hit relation is invalid, skipping protocluster" << endmsg;
+        continue;
+      }
       // get cluster and associated layers
-      auto cl        = reconstruct_cluster(pcl, hits, mcHits);
-      auto cl_layers = reconstruct_cluster_layers(pcl, hits);
+      auto cl        = reconstruct_cluster(pcl);
+      auto cl_layers = reconstruct_cluster_layers(pcl);
 
       // Get cluster direction from the layer profile
-      cl.direction(fit_track(cl_layers, m_trackStopLayer));
+      auto [theta, phi] = fit_track(cl_layers);
+      cl.intrinsicTheta(theta);
+      cl.intrinsicPhi(phi);
+      // no error on the intrinsic direction TODO
 
       // store layer and clusters on the datastore
       for (auto& layer : cl_layers) {
-        // unique ID for this clusterlayer, starting at the last
-        // cluster ID value to guarantee uniqueness
-        layer.ID({static_cast<int32_t>(proto.size() + layers.size()), algorithmID()});
         layers.push_back(layer);
+        cl.addclusters(layer);
       }
       clusters.push_back(cl);
     }
@@ -123,8 +119,8 @@ public:
     // debug output
     if (msgLevel(MSG::DEBUG)) {
       for (const auto& cl : clusters) {
-        debug() << fmt::format("Cluster {:d}: Edep = {:.3f} MeV, Dir = ({:.3f}, {:.3f}) deg", cl.ID().value,
-                               cl.energy() * 1000., cl.direction().theta / M_PI * 180., cl.direction().phi / M_PI * 180.)
+        debug() << fmt::format("Cluster {:d}: Edep = {:.3f} MeV, Dir = ({:.3f}, {:.3f}) deg", cl.id(),
+                               cl.energy() * 1000., cl.intrinsicTheta() / M_PI * 180., cl.intrinsicPhi() / M_PI * 180.)
                 << endmsg;
       }
     }
@@ -135,110 +131,131 @@ public:
 private:
   template <typename T> static inline T pow2(const T& x) { return x * x; }
 
-  std::vector<eic::ClusterLayer> reconstruct_cluster_layers(const eic::ConstProtoCluster& pcl,
-                                                            const eic::CalorimeterHitCollection& hits) const {
+  std::vector<eic::ClusterLayer> reconstruct_cluster_layers(const eic::ConstProtoCluster& pcl) const {
+    const auto& hits    = pcl.hits();
+    const auto& weights = pcl.weights();
     // using map to have hits sorted by layer
     std::map<int, std::vector<std::pair<eic::ConstCalorimeterHit, eic::Weight>>> layer_map;
-    for (const auto& clhit : pcl.hits()) {
-      const auto hit = hits[clhit.index];
-      auto lid = hit.layer();
+    for (unsigned i = 0; i < hits; ++i) {
+      const auto hit = hits[i];
+      auto lid       = hit.layer();
       if (!layer_map.count(lid)) {
         layer_map[lid] = {};
       }
-      layer_map[lid].push_back({hit, clhit.weight});
+      layer_map[lid].push_back({hit, weights[i]});
     }
 
     // create layers
     std::vector<eic::ClusterLayer> cl_layers;
     for (const auto& [lid, layer_hits] : layer_map) {
-      auto layer = reconstruct_layer(pcl.ID().value, lid, layer_hits);
+      auto layer = reconstruct_layer(layer_hits);
       cl_layers.push_back(layer);
     }
     return cl_layers;
   }
 
-  eic::ClusterLayer reconstruct_layer(const int cid, const int lid,
-                                      const std::vector<std::pair<eic::ConstCalorimeterHit, eic::Weight>>& hits) const {
-    // use full members initialization here so it could catch changes in eicd
-    eic::ClusterLayer layer{{}, {cid, algorithmID()}, lid, static_cast<uint32_t>(hits.size()), 0., 0., 0., 0., {}};
-
-    // mean position and total energy
+  eic::ClusterLayer reconstruct_layer(const std::vector<std::pair<eic::ConstCalorimeterHit, eic::Weight>>& hits) const {
+    eic::ClusterLayer layer;
+    layer.type(ClusterType::kClusterSlice);
+    // Calculate averages
+    double energy;
+    double energyError;
+    double time;
+    double timeError;
+    double sumOfWeights = 0;
     eic::VectorXYZ pos;
-    double energy = 0.;
     for (const auto& [hit, weight] : hits) {
-      pos   = pos.add(hit.position());
       energy += hit.energy() * weight;
+      energyError += std::pow(hit.energyError() * weight, 2);
+      time += hit.time() * weight;
+      timeError += std::pow(hit.timeError() * weight, 2);
+      pos = pos + hit.position() * weight;
+      sumOfWeights += weight;
+      layer.addhits(hit);
     }
-
-    pos = pos.scale(1 / layer.nhits());
-    layer.position(pos);
     layer.energy(energy);
+    layer.energyError(std::sqrt(energyError));
+    layer.time(time / sumOfWeights);
+    layer.timeError(std::sqrt(timeError) / sumOfWeights);
+    layer.nhits(hits.size());
+    layer.position(position / sumOfWeights);
+    // positionError not set
+    // Intrinsic direction meaningless in a cluster layer --> not set
 
+    // Calculate radius as the standard deviation of the hits versus the cluster center
     double radius = 0.;
     for (const auto& [hit, weight] : hits) {
-      radius += hit.position().subtract(layer.position()).mag();
+      radius += std::pow(eicd::magnitude(hit.position() - layer.position()), 2);
     }
-    layer.radius(radius / layer.nhits());
+    layer.addshapeParameters(std::sqrt(radius / layer.nhits()));
+    // TODO Skewedness
+
     return layer;
   }
 
-  eic::Cluster reconstruct_cluster(const eic::ConstProtoCluster& pcl, const eic::CalorimeterHitCollection& hits,
-                                   const edm4hep::SimCalorimeterHitCollection* /* mcHits */) {
+  eic::Cluster reconstruct_cluster(const eic::ConstProtoCluster& pcl) {
     eic::Cluster cluster;
-    cluster.ID({pcl.ID(), algorithmID()});
+
+    const auto& hits    = pcl.hits();
+    const auto& weights = pcl.weights();
+
+    cluster.type(ClusterType::kCluster3D);
     // eta, phi center, weighted by energy
-    double meta = 0.;
-    double mphi = 0.;
-    double energy = 0.;
-    float r     = 9999 * cm;
-    for (const auto& clhit : pcl.hits()) {
-      const auto& hit = hits[clhit.index];
-      meta += hit.position().eta() * hit.energy() * clhit.weight;
-      mphi += hit.position().phi() * hit.energy() * clhit.weight;
-      energy += hit.energy() * clhit.weight;
-      r = std::min(hit.position().r(), r);
+    double meta         = 0.;
+    double mphi         = 0.;
+    double energy       = 0.;
+    double energyError  = 0.;
+    double time         = 0.;
+    double timeError    = 0.;
+    double sumOfWeights = 0.;
+    float r             = 9999 * cm;
+    for (unsigned i = 0; i < hits; ++i) {
+      const auto& hit   = hits[i];
+      const auto weight = weights[i];
+      energy += hit.energy() * weight;
+      energyError += std::pow(hit.energyError() * weight, 2);
+      // energy weighting for the other variables
+      const double eWeight = hit.energy() * weight;
+      time += hit.time() * energyWeight;
+      timeError += std::pow(hit.timeError() * energyWeight);
+      meta += eicd::eta(hit.position) * energyWeight;
+      mphi += eicd::azimuthalAngle(hit.position()) * energyWeight;
+      r = std::min(eicd::magnitude(hit.position()), r);
+      cluster.addhits(hit);
     }
-    const double eta   = meta / energy;
-    const double phi   = mphi / energy;
-    const double theta = 2. * std::atan(std::exp(-eta));
-    cluster.nhits(pcl.hits_size());
-    cluster.energy(energy / m_sampFrac); // simple energy reconstruction //DEPRECATED
-    eic::VectorPolar polar{r, theta, phi > M_PI ? phi - M_PI : phi};
-    cluster.position(polar);
+    cluster.energy(energy);
+    cluster.energyError(std::sqrt(energyError));
+    cluster.time(time / energy);
+    cluster.timeError(std::sqrt(timeError) / energy);
+    cluster.nhits(hits.size());
+    cluster.position(eicd::sphericalToVector(r, eicd::etaToAngle(meta / energy), mphi / energy));
 
     // shower radius estimate (eta-phi plane)
     double radius = 0.;
     for (const auto& clhit : pcl.hits()) {
       const auto& hit = hits[clhit.index];
-      radius += std::sqrt(pow2(hit.position().eta() - cluster.position().eta()) +
-                          pow2(hit.position().phi() - cluster.position().phi()));
+      radius +=
+          pow2(hit.position().eta() - cluster.position().eta()) + pow2(hit.position().phi() - cluster.position().phi());
     }
-    cluster.radius(radius / cluster.nhits());
+    cluster.addshapeParameters(std::sqrt(radius / cluster.nhits()));
+    // Skewedness not calculated TODO
 
     // Optionally store the MC truth associated with the first hit in this cluster
     // FIXME no connection between cluster and truth in edm4hep
-    //if (mcHits) {
+    // if (mcHits) {
     //  const auto& mc_hit    = (*mcHits)[pcl.hits(0).ID.value];
     //  cluster.mcID({mc_hit.truth().trackID, m_kMonteCarloSource});
     //}
 
-    // fill additional info fields;
-    cluster.polar(cluster.position());
-    cluster.eta(cluster.position().eta());
-
     return cluster;
   }
 
-  eic::Direction fit_track(const std::vector<eic::ClusterLayer>& layers, const int stop_layer) const {
+  std::pair<double /* polar */, double /* azimuthal */> fit_track(const std::vector<eic::Cluster>& layers) const {
     int nrows = 0;
-    double mx = 0.;
-    double my = 0.;
-    double mz = 0.;
+    eic::VectorXYZ mean_pos{0, 0, 0};
     for (const auto& layer : layers) {
-      if ((layer.layer() <= stop_layer) && (layer.nhits() > 0)) {
-        mx += layer.position().x;
-        my += layer.position().y;
-        mz += layer.position().z;
+      if ((layer.layer() <= m_trackStopLayer) && (layer.nhits() > 0)) {
+        mean_pos = mean_pos + layer.position();
         nrows += 1;
       }
     }
@@ -247,24 +264,21 @@ private:
       return {};
     }
 
-    mx /= nrows;
-    my /= nrows;
-    mz /= nrows;
+    mean_pos = mean_pos / nrows;
     // fill position data
     MatrixXd pos(nrows, 3);
     int ir = 0;
     for (const auto& layer : layers) {
-      if ((layer.layer() <= stop_layer) && (layer.nhits() > 0)) {
-        pos(ir, 0) = layer.position().x - mx;
-        pos(ir, 1) = layer.position().y - my;
-        pos(ir, 2) = layer.position().z - mz;
+      if ((layer.layer() <= m_trackStopLayer) && (layer.nhits() > 0)) {
+        auto delta = layer.position - mean_pos;
+        pos(ir, 0) = delta.x;
+        pos(ir, 1) = delta.y;
+        pos(ir, 2) = delta.z;
         ir += 1;
       }
     }
 
     JacobiSVD<MatrixXd> svd(pos, ComputeThinU | ComputeThinV);
-    // debug() << pos << endmsg;
-    // debug() << svd.matrixV() << endmsg;
     const auto dir = svd.matrixV().col(0);
     // theta and phi
     return {std::acos(dir(2)), std::atan2(dir(1), dir(0))};

@@ -14,7 +14,6 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "edm4hep/SimCalorimeterHitCollection.h"
@@ -31,7 +30,7 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class SimpleClustering : public GaudiAlgorithm, AlgorithmIDMixin<> {
+  class SimpleClustering : public GaudiAlgorithm {
   public:
     using RecHits  = eic::CalorimeterHitCollection;
     using ProtoClusters = eic::ProtoClusterCollection;
@@ -49,14 +48,11 @@ namespace Jug::Reco {
     /// Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
 
-    // Monte Carlo particle source identifier
-    const int32_t m_kMonteCarloSource{uniqueID<int32_t>("MCParticles")};
     // Optional handle to MC hits
     std::unique_ptr<DataHandle<edm4hep::SimCalorimeterHitCollection>> m_inputMC;
 
     SimpleClustering(const std::string& name, ISvcLocator* svcLoc) 
-      : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin<>(name, info()) {
+      : GaudiAlgorithm(name, svcLoc) {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputProtoClusterCollection", m_outputClusters, "Output proto clusters");
       declareProperty("outputClusterCollection", m_outputClusters, "Output clusters");

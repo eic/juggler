@@ -22,11 +22,9 @@
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/Utilities/Utils.hpp"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
-#include "eicd/VectorPolar.h"
-#include "eicd/VectorXYZ.h"
+#include <eicd/vector_utils.h>
 #include "eicd/CalorimeterHit.h"
 #include "eicd/CalorimeterHitCollection.h"
 
@@ -43,7 +41,7 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class ImagingPixelDataSorter : public GaudiAlgorithm, AlgorithmIDMixin<> {
+  class ImagingPixelDataSorter : public GaudiAlgorithm {
   public:
     Gaudi::Property<int>                        m_nLayers{this, "numberOfLayers", 9};
     Gaudi::Property<int>                        m_nHits{this, "numberOfHits", 50};
@@ -54,7 +52,6 @@ namespace Jug::Reco {
 
     ImagingPixelDataSorter(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin<>(name, info())
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");

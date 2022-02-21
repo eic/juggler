@@ -8,7 +8,6 @@
 #include "Gaudi/Property.h"
 
 #include "JugBase/DataHandle.h"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 // edm4hep's tracker hit is the input collectiopn
@@ -23,7 +22,7 @@ namespace Jug::Digi {
    *
    * \ingroup digi
    */
-  class SiliconTrackerDigi : public GaudiAlgorithm, AlgorithmIDMixin<> {
+  class SiliconTrackerDigi : public GaudiAlgorithm {
   public:
     Gaudi::Property<double>                  m_timeResolution{this, "timeResolution", 10}; // todo : add units
     Gaudi::Property<double>                  m_threshold{this, "threshold", 0. * Gaudi::Units::keV};
@@ -37,7 +36,6 @@ namespace Jug::Digi {
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     SiliconTrackerDigi(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin(name, info())
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -61,7 +59,6 @@ namespace Jug::Digi {
       auto rawhits = m_outputHitCollection.createAndPut();
       // eic::RawTrackerHitCollection* rawHitCollection = new eic::RawTrackerHitCollection();
       std::map<long long, int> cell_hit_map;
-      int ID = 0;
       for (const auto& ahit : *simhits) {
         if (msgLevel(MSG::DEBUG)) {
           debug() << "--------------------" << ahit.getCellID() << endmsg;
@@ -82,8 +79,8 @@ namespace Jug::Digi {
         }
         if (cell_hit_map.count(ahit.getCellID()) == 0) {
           cell_hit_map[ahit.getCellID()] = rawhits->size();
-          eic::RawTrackerHit rawhit({ID++, algorithmID()},
-                                    (int64_t)ahit.getCellID(),
+          eic::RawTrackerHit rawhit(0 /* deleteme */,
+                                    ahit.getCellID(),
                                     ahit.getMCParticle().getTime() * 1e6 + m_gaussDist() * 1e3, // ns->fs
                                     std::llround(ahit.getEDep() * 1e6));
           rawhits->push_back(rawhit);

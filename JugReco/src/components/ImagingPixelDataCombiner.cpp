@@ -22,7 +22,6 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugBase/UniqueID.h"
 #include "JugBase/Utilities/Utils.hpp"
 
 // Event Model related classes
@@ -42,7 +41,7 @@ namespace Jug::Reco {
  *
  * \ingroup reco
  */
-class ImagingPixelDataCombiner : public GaudiAlgorithm, AlgorithmIDMixin<> {
+class ImagingPixelDataCombiner : public GaudiAlgorithm {
 public:
   Gaudi::Property<int> m_layerIncrement{this, "layerIncrement", 0};
   Gaudi::Property<std::string> m_rule{this, "rule", "concatenate"};
@@ -52,7 +51,7 @@ public:
   std::vector<std::string> supported_rules{"concatenate", "interlayer"};
 
   ImagingPixelDataCombiner(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin<>(name, info()) {
+      : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputHits1", m_inputHits1, "");
     declareProperty("inputHits2", m_inputHits2, "");
     declareProperty("outputHits", m_outputHits, "");
