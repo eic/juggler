@@ -1,3 +1,5 @@
+// TODO needs full rework to run off mc-cluster relations instead
+#if 0
 #include <limits>
 #include <numbers>
 
@@ -138,3 +140,4 @@ public:
 DECLARE_COMPONENT(ClusterMerger)
 
 } // namespace Jug::Fast
+#endif
