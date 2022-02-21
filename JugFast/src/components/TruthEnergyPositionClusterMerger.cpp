@@ -14,6 +14,7 @@
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
 #include "eicd/ClusterCollection.h"
+#include <eicd/vector_utils.h>
 
 using namespace Gaudi::Units;
 
@@ -135,7 +136,7 @@ public:
       new_clus.time(eclus.time());
       new_clus.nhits(eclus.nhits());
       // use nominal radius of 110cm, and use start vertex theta and phi
-      new_clus.position(eic::VectorXYZ::fromSpherical(110, theta, phi));
+      new_clus.position(eicd::sphericalToVector(110, theta, phi));
       new_clus.mcID(mcID);
       new_clus.addclusters(eclus);
       if (msgLevel(MSG::DEBUG)) {

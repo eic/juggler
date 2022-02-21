@@ -4,9 +4,9 @@
  *
  *  Author: Chao Peng (ANL), 03/31/2021
  */
-#include <tuple>
-#include <bitset>
 #include <algorithm>
+#include <bitset>
+#include <tuple>
 #include <unordered_map>
 
 #include "Gaudi/Property.h"
@@ -35,149 +35,143 @@ using namespace Gaudi::Units;
 
 namespace Jug::Reco {
 
-  /** Calorimeter hits merging algorithm.
-   *
-   *  An algorithm to group readout hits from a calorimeter
-   *  Energy is summed
-   *
-   *  \ingroup reco
-   */
-  class CalorimeterHitsMerger : public GaudiAlgorithm {
-  public:
-    Gaudi::Property<std::string> m_geoSvcName{this, "geoServiceName", "GeoSvc"};
-    Gaudi::Property<std::string> m_readout{this, "readoutClass", ""};
-    // field names to generate id mask, the hits will be grouped by masking the field
-    Gaudi::Property<std::vector<std::string>> u_fields{this, "fields", {"layer"}};
-    // reference field numbers to locate position for each merged hits group
-    Gaudi::Property<std::vector<int>>         u_refs{this, "fieldRefNumbers", {}};
-    DataHandle<eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection",
-                                                                   Gaudi::DataHandle::Reader, this};
-    DataHandle<eic::CalorimeterHitCollection> m_outputHitCollection{
-        "outputHitCollection", Gaudi::DataHandle::Writer, this};
+/** Calorimeter hits merging algorithm.
+ *
+ *  An algorithm to group readout hits from a calorimeter
+ *  Energy is summed
+ *
+ *  \ingroup reco
+ */
+class CalorimeterHitsMerger : public GaudiAlgorithm {
+public:
+  Gaudi::Property<std::string> m_geoSvcName{this, "geoServiceName", "GeoSvc"};
+  Gaudi::Property<std::string> m_readout{this, "readoutClass", ""};
+  // field names to generate id mask, the hits will be grouped by masking the field
+  Gaudi::Property<std::vector<std::string>> u_fields{this, "fields", {"layer"}};
+  // reference field numbers to locate position for each merged hits group
+  Gaudi::Property<std::vector<int>> u_refs{this, "fieldRefNumbers", {}};
+  DataHandle<eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  DataHandle<eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+                                                                  this};
 
-    SmartIF<IGeoSvc> m_geoSvc;
-    uint64_t         id_mask, ref_mask;
+  SmartIF<IGeoSvc> m_geoSvc;
+  uint64_t id_mask, ref_mask;
 
-    CalorimeterHitsMerger(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc)
-    {
-      declareProperty("inputHitCollection", m_inputHitCollection, "");
-      declareProperty("outputHitCollection", m_outputHitCollection, "");
+  CalorimeterHitsMerger(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+    declareProperty("inputHitCollection", m_inputHitCollection, "");
+    declareProperty("outputHitCollection", m_outputHitCollection, "");
+  }
+
+  StatusCode initialize() override {
+    if (GaudiAlgorithm::initialize().isFailure()) {
+      return StatusCode::FAILURE;
     }
 
-    StatusCode initialize() override
-    {
-      if (GaudiAlgorithm::initialize().isFailure()) {
-        return StatusCode::FAILURE;
-      }
-
-      m_geoSvc = service(m_geoSvcName);
-      if (!m_geoSvc) {
-        error() << "Unable to locate Geometry Service. "
-                << "Make sure you have GeoSvc and SimSvc in the right order in the configuration."
-                << endmsg;
-        return StatusCode::FAILURE;
-      }
-
-      if (m_readout.value().empty()) {
-        error() << "readoutClass is not provided, it is needed to know the fields in readout ids"
-                << endmsg;
-        return StatusCode::FAILURE;
-      }
-
-      try {
-        auto id_desc = m_geoSvc->detector()->readout(m_readout).idSpec();
-        id_mask      = 0;
-        std::vector<std::pair<std::string, int>> ref_fields;
-        for (size_t i = 0; i < u_fields.size(); ++i) {
-          id_mask |= id_desc.field(u_fields[i])->mask();
-          // use the provided id number to find ref cell, or use 0
-          int ref = i < u_refs.size() ? u_refs[i] : 0;
-          ref_fields.push_back({u_fields[i], ref});
-        }
-        ref_mask = id_desc.encode(ref_fields);
-        // debug() << fmt::format("Referece id mask for the fields {:#064b}", ref_mask) << endmsg;
-      } catch (...) {
-        error() << "Failed to load ID decoder for " << m_readout << endmsg;
-        return StatusCode::FAILURE;
-      }
-      id_mask = ~id_mask;
-      info() << fmt::format("ID mask in {:s}: {:#064b}", m_readout, id_mask) << endmsg;
-      return StatusCode::SUCCESS;
+    m_geoSvc = service(m_geoSvcName);
+    if (!m_geoSvc) {
+      error() << "Unable to locate Geometry Service. "
+              << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
+      return StatusCode::FAILURE;
     }
 
-    StatusCode execute() override
-    {
-      // input collections
-      const auto& inputs = *m_inputHitCollection.get();
-      // Create output collections
-      auto& outputs = *m_outputHitCollection.createAndPut();
-
-      // find the hits that belong to the same group (for merging)
-      std::unordered_map<long long, std::vector<eic::ConstCalorimeterHit>> merge_map;
-      for (const auto& h : inputs) {
-        int64_t id = h.cellID() & id_mask;
-        // use the reference field position
-        auto it = merge_map.find(id);
-        if (it == merge_map.end()) {
-          merge_map[id] = {h};
-        } else {
-          it->second.push_back(h);
-        }
-      }
-
-      // reconstruct info for merged hits
-      // dd4hep decoders
-      auto poscon = m_geoSvc->cellIDPositionConverter();
-      auto volman = m_geoSvc->detector()->volumeManager();
-
-      for (auto &[id, hits] : merge_map) {
-        // reference fields id
-        uint64_t ref_id = id | ref_mask;
-        // global positions
-        auto gpos = poscon->position(ref_id);
-        // local positions
-        auto alignment = volman.lookupDetElement(ref_id).nominal();
-        auto pos = alignment.worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
-        // debug() << volman.lookupDetElement(ref_id).path() << ", "
-        //         << volman.lookupDetector(ref_id).path() << endmsg;
-        // sum energy
-        float energy = 0.;
-        float energyError = 0.;
-        float time = 0;
-        float timeError = 0;
-        for (auto &hit : hits) {
-          energy += hit.energy();
-          energyError += hit.energyError() * hit.energyError();
-          time += hit.time();
-          timeError += hit.timeError() + hit.timeError();
-        }
-        energyError = sqrt(energyError);
-        time /= hits.size();
-        timeError = sqrt(timeError) / hits.size();
-
-        const auto &href = hits.front();
-        outputs.push_back(eic::CalorimeterHit{
-                          ref_id,
-                          energy,
-                          energyError,
-                          time,
-                          timeError, 
-                          {gpos.x() / dd4hep::mm, gpos.y() / dd4hep::mm, gpos.z() / dd4hep::mm},
-                          {pos.x() / dd4hep::mm, pos.y() / dd4hep::mm, pos.z() / dd4hep::mm},
-                          href.dimension()}); // Can do better here? Right now position is mapped on the central hit
-      }
-
-      if (msgLevel(MSG::DEBUG)) {
-        debug() << "Size before = " << inputs.size() << ", after = " << outputs.size() << endmsg;
-      }
-
-      return StatusCode::SUCCESS;
+    if (m_readout.value().empty()) {
+      error() << "readoutClass is not provided, it is needed to know the fields in readout ids" << endmsg;
+      return StatusCode::FAILURE;
     }
 
-  }; // class CalorimeterHitsMerger
+    try {
+      auto id_desc = m_geoSvc->detector()->readout(m_readout).idSpec();
+      id_mask      = 0;
+      std::vector<std::pair<std::string, int>> ref_fields;
+      for (size_t i = 0; i < u_fields.size(); ++i) {
+        id_mask |= id_desc.field(u_fields[i])->mask();
+        // use the provided id number to find ref cell, or use 0
+        int ref = i < u_refs.size() ? u_refs[i] : 0;
+        ref_fields.push_back({u_fields[i], ref});
+      }
+      ref_mask = id_desc.encode(ref_fields);
+      // debug() << fmt::format("Referece id mask for the fields {:#064b}", ref_mask) << endmsg;
+    } catch (...) {
+      error() << "Failed to load ID decoder for " << m_readout << endmsg;
+      return StatusCode::FAILURE;
+    }
+    id_mask = ~id_mask;
+    info() << fmt::format("ID mask in {:s}: {:#064b}", m_readout, id_mask) << endmsg;
+    return StatusCode::SUCCESS;
+  }
 
-  DECLARE_COMPONENT(CalorimeterHitsMerger)
+  StatusCode execute() override {
+    // input collections
+    const auto& inputs = *m_inputHitCollection.get();
+    // Create output collections
+    auto& outputs = *m_outputHitCollection.createAndPut();
+
+    // find the hits that belong to the same group (for merging)
+    std::unordered_map<long long, std::vector<eic::ConstCalorimeterHit>> merge_map;
+    for (const auto& h : inputs) {
+      int64_t id = h.cellID() & id_mask;
+      // use the reference field position
+      auto it = merge_map.find(id);
+      if (it == merge_map.end()) {
+        merge_map[id] = {h};
+      } else {
+        it->second.push_back(h);
+      }
+    }
+
+    // reconstruct info for merged hits
+    // dd4hep decoders
+    auto poscon = m_geoSvc->cellIDPositionConverter();
+    auto volman = m_geoSvc->detector()->volumeManager();
+
+    for (auto& [id, hits] : merge_map) {
+      // reference fields id
+      const uint64_t ref_id = id | ref_mask;
+      // global positions
+      const auto gpos = poscon->position(ref_id);
+      // local positions
+      auto alignment = volman.lookupDetElement(ref_id).nominal();
+      const auto pos = alignment.worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
+      debug() << volman.lookupDetElement(ref_id).path() << ", " << volman.lookupDetector(ref_id).path() << endmsg;
+      // sum energy
+      float energy      = 0.;
+      float energyError = 0.;
+      float time        = 0;
+      float timeError   = 0;
+      for (auto& hit : hits) {
+        energy += hit.energy();
+        energyError += hit.energyError() * hit.energyError();
+        time += hit.time();
+        timeError += hit.timeError() + hit.timeError();
+      }
+      energyError = sqrt(energyError);
+      time /= hits.size();
+      timeError = sqrt(timeError) / hits.size();
+
+      const auto& href = hits.front();
+      outputs.push_back(
+          eic::CalorimeterHit{ref_id,
+                              energy,
+                              energyError,
+                              time,
+                              timeError,
+                              {gpos.x() / dd4hep::mm, gpos.y() / dd4hep::mm, gpos.z() / dd4hep::mm},
+                              href.dimension(),
+                              href.sector(),
+                              href.layer(),
+                              {pos.x(), pos.y(), pos.z()}}); // Can do better here? Right now position is mapped on the central hit
+    }
+
+    if (msgLevel(MSG::DEBUG)) {
+      debug() << "Size before = " << inputs.size() << ", after = " << outputs.size() << endmsg;
+    }
+
+    return StatusCode::SUCCESS;
+  }
+
+}; // class CalorimeterHitsMerger
+
+DECLARE_COMPONENT(CalorimeterHitsMerger)
 
 } // namespace Jug::Reco
 

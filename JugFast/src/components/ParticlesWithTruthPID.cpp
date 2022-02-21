@@ -15,7 +15,7 @@
 #include "edm4hep/MCParticleCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
 #include "eicd/TrackParametersCollection.h"
-#include "eicd/VectorXYZ.h"
+#include "eicd/vector_utils.h"
 
 namespace Jug::Fast {
 
@@ -56,8 +56,7 @@ public:
     const double sinPhiOver2Tolerance = sin(0.5 * m_phiTolerance);
     std::vector<bool> consumed(mc.size(), false);
     for (const auto& trk : tracks) {
-      const eic::VectorXYZ mom =
-          eic::VectorXYZ::fromSpherical(1.0 / std::abs(trk.qOverP()), trk.theta(), trk.phi());
+      const eic::VectorXYZ mom = eicd::sphericalToVector(1.0 / std::abs(trk.qOverP()), trk.theta(), trk.phi());
       const auto charge_rec = std::copysign(1., trk.qOverP());
       // utility variables for matching
       int best_match    = -1;

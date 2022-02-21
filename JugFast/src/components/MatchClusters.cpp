@@ -20,7 +20,7 @@
 #include "eicd/ClusterCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
 #include "eicd/TrackParametersCollection.h"
-#include "eicd/VectorXYZ.h"
+#include "eicd/vector_utils.h"
 
 namespace Jug::Fast {
 
@@ -175,8 +175,8 @@ private:
   eic::ReconstructedParticle reconstruct_neutral(const eic::ConstCluster& clus, const double mass,
                                                  const int32_t pid) const {
     const float energy   = clus.energy();
-    const float momentum = energy < mass ? 0 : std::hypot(energy, mass);
-    const eic::VectorXYZ p = eic::VectorXYZ::fromSpherical(momentum, clus.position().theta(), clus.position().phi());
+    const float momentum = energy < mass ? 0 : std::sqrt(energy * energy - mass * mass);
+    const auto p = eicd::normalizeVector(clus.position(), momentum);
     // setup our particle
     eic::ReconstructedParticle part;
     part.p(p);

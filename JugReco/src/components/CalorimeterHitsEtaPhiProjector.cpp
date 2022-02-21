@@ -30,7 +30,7 @@
 
 // Event Model related classes
 #include "eicd/CalorimeterHitCollection.h"
-#include "eicd/VectorXYZ.h"
+#include "eicd/vector_utils.h"
 
 using namespace Gaudi::Units;
 typedef ROOT::Math::XYZPoint Point3D;
@@ -112,9 +112,7 @@ namespace Jug::Reco {
         double r = ref.position().mag();
         double eta = bin2pos(bins.first, gridSizes[0], 0.);
         double phi = bin2pos(bins.second, gridSizes[1], 1.);
-        double theta = std::atan(std::exp(-eta))*2.;
-        hit.local(ref.local());
-        hit.position(eic::VectorXYZ::fromSpherical(r, theta, phi));
+        hit.position(eicd::sphericalToVector(r, eicd::etaToAngle(eta), phi));
         hit.dimension({gridSizes[0], gridSizes[1], 0.});
         // merge energy
         hit.energy(0.);
