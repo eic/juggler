@@ -21,7 +21,6 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "FuzzyKClusters.h"
@@ -37,7 +36,7 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class PhotoRingClusters : public GaudiAlgorithm, AlgorithmIDMixin<> {
+  class PhotoRingClusters : public GaudiAlgorithm {
   public:
     DataHandle<eic::PMTHitCollection>      m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::RingImageCollection> m_outputClusterCollection{"outputClusterCollection",
@@ -55,7 +54,6 @@ namespace Jug::Reco {
     // ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     PhotoRingClusters(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin(name, info())
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputClusterCollection", m_outputClusterCollection, "");
@@ -101,7 +99,6 @@ namespace Jug::Reco {
       //        if those are in fact needed
       for (int i = 0; i < res.rows(); ++i) {
         auto cl = clusters.create();
-        cl.ID({i, algorithmID()});
         cl.position({res(i, 0), res(i, 1), 0});
         // @TODO: positionError() not set
         // @TODO: theta() not set

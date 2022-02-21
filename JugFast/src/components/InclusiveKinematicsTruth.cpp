@@ -8,7 +8,6 @@
 
 #include "JugBase/IParticleSvc.h"
 #include "JugBase/DataHandle.h"
-#include "JugBase/UniqueID.h"
 
 #include <CLHEP/Vector/LorentzVector.h>
 
@@ -18,7 +17,7 @@
 
 namespace Jug::Fast {
 
-class InclusiveKinematicsTruth : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
+class InclusiveKinematicsTruth : public GaudiAlgorithm {
 public:
   DataHandle<edm4hep::MCParticleCollection> m_inputParticleCollection{"MCParticles", Gaudi::DataHandle::Reader,
                                                                          this};
@@ -30,7 +29,7 @@ public:
   double m_neutron;
 
   InclusiveKinematicsTruth(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
+      : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputParticleCollection, "MCParticles");
     declareProperty("outputData", m_outputInclusiveKinematicsCollection, "InclusiveKinematicsTruth");
   }

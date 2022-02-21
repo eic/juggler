@@ -10,11 +10,9 @@
 #include "GaudiKernel/PhysicalConstants.h"
 
 #include "JugBase/DataHandle.h"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "eicd/ClusterCollection.h"
-#include "eicd/MergedClusterRelationsCollection.h"
 
 using namespace Gaudi::Units;
 
@@ -32,15 +30,13 @@ namespace Jug::Reco {
  *
  * \ingroup reco
  */
-class EnergyPositionClusterMerger : public GaudiAlgorithm, public AlgorithmIDMixin<> {
+class EnergyPositionClusterMerger : public GaudiAlgorithm {
 public:
   // Input
   DataHandle<eic::ClusterCollection> m_energyClusters{"energyClusters", Gaudi::DataHandle::Reader, this};
   DataHandle<eic::ClusterCollection> m_positionClusters{"positionClusters", Gaudi::DataHandle::Reader, this};
   // Output
   DataHandle<eic::ClusterCollection> m_outputClusters{"outputClusters", Gaudi::DataHandle::Writer, this};
-  DataHandle<eic::MergedClusterRelationsCollection> m_relations{"outputCluster", Gaudi::DataHandle::Writer,
-                                                                this}; // namespace Jug::Reco
   // Negative values mean the tolerance check is disabled
   Gaudi::Property<double> m_zToleranceUnits{this, "zTolerance", -1 * cm};
   Gaudi::Property<double> m_phiToleranceUnits{this, "phiTolerance", 20 * degree};
@@ -51,11 +47,10 @@ public:
 
 public:
   EnergyPositionClusterMerger(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
+      : GaudiAlgorithm(name, svcLoc) {
     declareProperty("energyClusters", m_energyClusters, "Cluster collection with good energy precision");
     declareProperty("positionClusters", m_positionClusters, "Cluster collection with good position precision");
     declareProperty("outputClusters", m_outputClusters, "");
-    declareProperty("outputCluster", m_relations, "");
   }
 
   StatusCode initialize() override {
@@ -70,11 +65,9 @@ public:
     const auto& pos_clus = *(m_positionClusters.get());
     // output
     auto& merged    = *(m_outputClusters.createAndPut());
-    auto& relations = *(m_relations.createAndPut());
 
     std::vector<bool> consumed(e_clus.size(), false);
 
-    int idx = 0; // merged cluster ID
     // use position clusters as starting point
     for (const auto& pc : pos_clus) {
       // check if we find a good match
@@ -111,24 +104,18 @@ public:
       if (best_match >= 0) {
         const auto& ec = e_clus[best_match];
         auto new_clus  = merged.create();
-        new_clus.ID({idx++, algorithmID()});
         new_clus.energy(ec.energy());
         new_clus.energyError(ec.energyError());
         new_clus.time(pc.time());
         new_clus.nhits(pc.nhits() + ec.nhits());
         new_clus.position(pc.position());
         new_clus.positionError(pc.positionError());
-        new_clus.radius(pc.radius());
-        new_clus.skewness(pc.skewness());
-        auto rel = relations.create();
-        rel.clusterID(new_clus.ID());
-        rel.size(2);
-        rel.parent()[0] = pc.ID();
-        rel.parent()[1] = ec.ID();
+        new_clus.addclusters(pc);
+        new_clus.addclusters(ec);
         // label our energy cluster as consumed
         consumed[best_match] = true;
         if (msgLevel(MSG::DEBUG)) {
-          debug() << fmt::format("Matched position cluster {} with energy cluster {}\n", pc.ID().value, ec.ID().value) << endmsg;
+          debug() << fmt::format("Matched position cluster {} with energy cluster {}\n", pc.id(), ec.id()) << endmsg;
           debug() << fmt::format("  - Position cluster: (E: {}, phi: {}, z: {})", pc.energy(), pc.position().phi(),
                                  pc.position().z)
                   << endmsg;

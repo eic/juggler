@@ -22,7 +22,6 @@
 
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/DataHandle.h"
-#include "JugBase/UniqueID.h"
 
 #include "fmt/format.h"
 #include "fmt/ranges.h"
@@ -42,7 +41,7 @@ namespace Jug::Digi {
    * \ingroup digi
    * \ingroup calorimetry
    */
-  class CalorimeterHitDigi : public GaudiAlgorithm, AlgorithmIDMixin<> {
+  class CalorimeterHitDigi : public GaudiAlgorithm {
   public:
     // additional smearing resolutions
     Gaudi::Property<std::vector<double>> u_eRes{this, "energyResolutions", {}}; // a/sqrt(E/GeV) + b + c/(E/GeV)
@@ -84,7 +83,6 @@ namespace Jug::Digi {
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     CalorimeterHitDigi(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin{name, info()}
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -168,7 +166,6 @@ namespace Jug::Digi {
       const auto simhits = m_inputHitCollection.get();
       // Create output collections
       auto rawhits = m_outputHitCollection.createAndPut();
-      int nhits = 0;
       for (const auto& ahit : *simhits) {
         // Note: juggler internal unit of energy is GeV
         const double eDep    = ahit.getEnergy();
@@ -189,8 +186,7 @@ namespace Jug::Digi {
         const long long tdc = std::llround((time + m_normDist() * tRes) * stepTDC);
 
         eic::RawCalorimeterHit rawhit(
-          {nhits++, algorithmID()},
-          (long long)ahit.getCellID(),
+          ahit.getCellID(),
           (adc > m_capADC.value() ? m_capADC.value() : adc),
           tdc
         );
@@ -244,7 +240,6 @@ namespace Jug::Digi {
         long long tdc     = std::llround((time + m_normDist() * tRes) * stepTDC);
 
         eic::RawCalorimeterHit rawhit(
-          {nhits++, algorithmID()},
           id,
           (adc > m_capADC.value() ? m_capADC.value() : adc),
           tdc

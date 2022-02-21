@@ -1,3 +1,5 @@
+// TODO needs full rework to run off list of mc-cluster relations instead
+#if 0
 // Takes a list of particles (presumed to be from tracking), and all available clusters.
 // 1. Match clusters to their tracks using the mcID field
 // 2. For unmatched clusters create neutrals and add to the particle list
@@ -14,36 +16,31 @@
 #include "GaudiKernel/RndmGenerators.h"
 
 #include "JugBase/DataHandle.h"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
 #include "eicd/ClusterCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
 #include "eicd/TrackParametersCollection.h"
-#include "eicd/VectorPolar.h"
+#include "eicd/vector_utils.h"
 
 namespace Jug::Fast {
 
-class MatchClusters : public GaudiAlgorithm, AlgorithmIDMixin<> {
+class MatchClusters : public GaudiAlgorithm {
 public:
   // input data
   DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
   DataHandle<eic::ReconstructedParticleCollection> m_inputParticles{"ReconstructedChargedParticles",
                                                                     Gaudi::DataHandle::Reader, this};
-  Gaudi::Property<std::vector<std::string>> m_inputEcalClusters{
-      this, "inputEcalClusters", {}, "Ecal clusters to be aggregated"};
-  Gaudi::Property<std::vector<std::string>> m_inputHcalClusters{
-      this, "inputHcalClusters", {}, "Hcal clusters to be aggregated"};
-  std::vector<DataHandle<eic::ClusterCollection>*> m_inputEcalClusterCollections;
-  std::vector<DataHandle<eic::ClusterCollection>*> m_inputHcalClusterCollections;
+  Gaudi::Property<std::vector<std::string>> m_inputClusters{this, "inputClusters", {}, "Clusters to be aggregated"};
+  std::vector<DataHandle<eic::ClusterCollection>*> m_inputClusterCollections;
 
   // output data
   DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"ReconstructedParticles",
                                                                      Gaudi::DataHandle::Writer, this};
 
   MatchClusters(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
+      : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputMCParticles, "MCParticles");
     declareProperty("inputParticles", m_inputParticles, "ReconstructedChargedParticles");
     declareProperty("outputParticles", m_outputParticles, "ReconstructedParticles");
@@ -53,8 +50,7 @@ public:
     if (GaudiAlgorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
-    m_inputEcalClusterCollections = getClusterCollections(m_inputEcalClusters);
-    m_inputHcalClusterCollections = getClusterCollections(m_inputHcalClusters);
+    m_inputClusterCollections = getClusterCollections(m_inputClusters);
     return StatusCode::SUCCESS;
   }
   StatusCode execute() override {
@@ -70,8 +66,7 @@ public:
       debug() << "Step 0/2: Getting indexed list of clusters..." << endmsg;
     }
     // get an indexed map of all clusters
-    auto ecalClusterMap = indexedClusters(m_inputEcalClusterCollections);
-    auto hcalClusterMap = indexedClusters(m_inputHcalClusterCollections);
+    auto clusterMap = indexedClusters(m_inputClusterCollections);
 
     // loop over all tracks and link matched clusters where applicable
     // (removing matched clusters from the cluster maps)
@@ -91,31 +86,22 @@ public:
         }
         continue;
       }
-      if (ecalClusterMap.count(part.mcID())) {
-        const auto& clus = ecalClusterMap[part.mcID()];
+      if (clusterMap.count(part.mcID())) {
+        const auto& clus = clusterMap[part.mcID()];
         if (msgLevel(MSG::DEBUG)) {
-          debug() << "    --> found matching Ecal cluster (" << clus.ID() << "), energy: " << clus.energy() << endmsg;
+          debug() << "    --> found matching cluster with energy: " << clus.energy() << endmsg;
         }
-        part.ecalID(clus.ID());
-        ecalClusterMap.erase(part.mcID());
-      }
-      if (hcalClusterMap.count(part.mcID())) {
-        const auto& clus = hcalClusterMap[part.mcID()];
-        if (msgLevel(MSG::DEBUG)) {
-          debug() << " --> found matching Hcal cluster (" << clus.ID() << "), energy: " << clus.energy() << endmsg;
-        }
-        part.hcalID(clus.ID());
-        hcalClusterMap.erase(part.mcID());
+        clusterMap.erase(part.mcID());
       }
     }
-    // Now loop over all remaining Ecal clusters and add neutrals. Also add in Hcal energy
+    // Now loop over all remaining clusters and add neutrals. Also add in Hcal energy
     // if a matching cluster is available
     if (msgLevel(MSG::DEBUG)) {
-      debug() << "Step 2/2: Creating neutrals for remaining Ecal clusters..." << endmsg;
+      debug() << "Step 2/2: Creating neutrals for remaining clusters..." << endmsg;
     }
-    for (const auto& [mcID, eclus] : ecalClusterMap) {
+    for (const auto& [mcID, clus] : clusterMap) {
       if (msgLevel(MSG::DEBUG)) {
-        debug() << " --> Processing unmatched ECAL cluster (" << eclus.ID() << "), energy: " << eclus.energy()
+        debug() << " --> Processing unmatched cluster with energy: " << clus.energy()
                 << endmsg;
       }
 
@@ -131,19 +117,8 @@ public:
         debug() << "   --> found matching associated mcparticle with PID: " << pid << ", energy: " << mc.getEnergy()
                 << endmsg;
       }
-      // Do we also have any other matching clusters we need to add energy from (just
-      // considering HCAL for now)
-      const eic::ConstCluster* optional_hclus = nullptr;
-      if (hcalClusterMap.count(mcID)) {
-        optional_hclus = &(hcalClusterMap[mcID]);
-        if (msgLevel(MSG::DEBUG)) {
-          debug() << "   --> found matching HCAL cluster (" << *optional_hclus
-                  << "), energy: " << optional_hclus->energy() << endmsg;
-        }
-      }
       // Reconstruct our neutrals and add them to the list
-      const auto part =
-          reconstruct_neutral(eclus, optional_hclus, mass, pid, {static_cast<int32_t>(outparts.size()), algorithmID()});
+      const auto part = reconstruct_neutral(clus, mass, pid);
       if (msgLevel(MSG::DEBUG)) {
         debug() << " --> Reconstructed neutral particle with PID: " << part.pid() << ", energy: " << part.energy()
                 << endmsg;
@@ -173,7 +148,7 @@ private:
       const auto& clusters = *(cluster_handle->get());
       for (const auto& cluster : clusters) {
         if (msgLevel(MSG::VERBOSE)) {
-          verbose() << " --> Found cluster: " << cluster.ID() << " with mcID " << cluster.mcID() << " and energy "
+          verbose() << " --> Found cluster with mcID " << cluster.mcID() << " and energy "
                     << cluster.energy() << endmsg;
         }
         if (!cluster.mcID()) {
@@ -199,29 +174,24 @@ private:
 
   // reconstruct a neutral cluster
   // (for now assuming the vertex is at (0,0,0))
-  eic::ReconstructedParticle reconstruct_neutral(const eic::ConstCluster& eclus,
-                                                 const eic::ConstCluster* optional_hclus, const double mass,
-                                                 const int32_t pid, const eic::Index& newID) const {
-    const float energy   = (optional_hclus) ? eclus.energy() + optional_hclus->energy() : eclus.energy();
-    const float momentum = energy < mass ? 0 : std::hypot(energy, mass);
-    const eic::VectorPolar p{momentum, eclus.position().theta(), eclus.position().phi()};
+  eic::ReconstructedParticle reconstruct_neutral(const eic::ConstCluster& clus, const double mass,
+                                                 const int32_t pid) const {
+    const float energy   = clus.energy();
+    const float momentum = energy < mass ? 0 : std::sqrt(energy * energy - mass * mass);
+    const auto p = eicd::normalizeVector(clus.position(), momentum);
     // setup our particle
     eic::ReconstructedParticle part;
-    part.ID(newID);
     part.p(p);
-    part.time(eclus.time());
+    part.time(clus.time());
     part.pid(pid);
     part.status(0);
     part.charge(0);
-    part.direction({p.theta, p.phi});
+    part.theta(p.theta());
+    part.phi(p.phi());
     part.momentum(momentum);
     part.energy(energy);
     part.mass(mass);
-    part.mcID(eclus.mcID());
-    part.ecalID(eclus.ID());
-    if (optional_hclus) {
-      part.hcalID(optional_hclus->ID());
-    }
+    part.mcID(clus.mcID());
     return part;
   }
 }; // namespace Jug::Fast
@@ -229,3 +199,4 @@ private:
 DECLARE_COMPONENT(MatchClusters)
 
 } // namespace Jug::Fast
+#endif

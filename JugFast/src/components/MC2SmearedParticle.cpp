@@ -7,7 +7,6 @@
 #include <cmath>
 
 #include "JugBase/DataHandle.h"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
@@ -15,7 +14,7 @@
 
 namespace Jug::Fast {
 
-class MC2SmearedParticle : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
+class MC2SmearedParticle : public GaudiAlgorithm {
 public:
   DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
   DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"SmearedReconstructedParticles",
@@ -23,10 +22,8 @@ public:
   Rndm::Numbers m_gaussDist;
   Gaudi::Property<double> m_smearing{this, "smearing", 0.01 /* 1 percent*/};
 
-  const int32_t kMonteCarloSource{uniqueID<int32_t>("MCParticles")};
-
   MC2SmearedParticle(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
+      : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputParticles", m_inputMCParticles, "MCParticles");
     declareProperty("outputParticles", m_outputParticles, "SmearedReconstructedParticles");
   }
@@ -46,7 +43,6 @@ public:
     auto parts = m_inputMCParticles.get();
     // output collection
     auto& out_parts = *(m_outputParticles.createAndPut());
-    int ID         = 0;
     for (const auto& p : *parts) {
       if (p.getGeneratorStatus() > 1) {
         if (msgLevel(MSG::DEBUG)) {
@@ -74,7 +70,6 @@ public:
       const auto vz       = p.getVertex().z;
 
       auto rec_part = out_parts.create();
-      rec_part.ID({ID++, algorithmID()});
       rec_part.p({px, py, pz});
       rec_part.v({vx, vy, vz});
       rec_part.time(p.getTime());
@@ -82,7 +77,8 @@ public:
       rec_part.status(p.getGeneratorStatus());
       rec_part.charge(p.getCharge());
       rec_part.weight(1.);
-      rec_part.direction({theta, phi});
+      rec_part.theta(theta);
+      rec_part.phi(phi);
       rec_part.momentum(momentum);
       rec_part.energy(energy);
       rec_part.mass(p.getMass());

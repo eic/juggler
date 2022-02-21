@@ -1,3 +1,5 @@
+// TODO needs full rework to run off mc-cluster relations instead
+#if 0
 #include <limits>
 #include <numbers>
 
@@ -10,11 +12,9 @@
 #include "GaudiKernel/PhysicalConstants.h"
 
 #include "JugBase/DataHandle.h"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "eicd/ClusterCollection.h"
-#include "eicd/MergedClusterRelationsCollection.h"
 
 using namespace Gaudi::Units;
 
@@ -25,20 +25,17 @@ namespace Jug::Fast {
  *
  * \ingroup fast
  */
-class ClusterMerger : public GaudiAlgorithm, public AlgorithmIDMixin<> {
+class ClusterMerger : public GaudiAlgorithm {
 public:
   // Input
   DataHandle<eic::ClusterCollection> m_inputClusters{"InputClusters", Gaudi::DataHandle::Reader, this};
   // Output
   DataHandle<eic::ClusterCollection> m_outputClusters{"OutputClusters", Gaudi::DataHandle::Writer, this};
-  DataHandle<eic::MergedClusterRelationsCollection> m_relations{"OutputClusterRelations", Gaudi::DataHandle::Writer,
-                                                                this}; // namespace Jug::Reco
 public:
   ClusterMerger(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
+      : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputClusters", m_inputClusters, "Input cluster collection");
     declareProperty("outputClusters", m_outputClusters, "Cluster collection with good energy precision");
-    declareProperty("outputRelations", m_relations, "Cluster collection with good position precision");
   }
 
   StatusCode initialize() override { return StatusCode::SUCCESS; }
@@ -51,7 +48,6 @@ public:
     const auto& split = *(m_inputClusters.get());
     // output
     auto& merged    = *(m_outputClusters.createAndPut());
-    auto& relations = *(m_relations.createAndPut());
 
     if (!split.size()) {
       if (msgLevel(MSG::DEBUG)) {
@@ -70,8 +66,6 @@ public:
     if (msgLevel(MSG::DEBUG)) {
       debug() << "Step 1/1: Merging clusters where needed" << endmsg;
     }
-    // index for newly created matched clusters
-    int32_t idx = 0;
     for (const auto& [mcID, clusters] : clusterMap) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << " --> Processing " << clusters.size() << " clusters for mcID " << mcID << endmsg;
@@ -79,54 +73,39 @@ public:
       if (clusters.size() == 1) {
         const auto& clus = clusters[0];
         if (msgLevel(MSG::DEBUG)) {
-          debug() << "   --> Only a single cluster " << clus.ID() << ", energy: " << clus.energy()
+          debug() << "   --> Only a single cluster, energy: " << clus.energy()
                   << " for this particle, copying" << endmsg;
         }
         merged.push_back(clus.clone());
-        auto rel = relations.create();
-        rel.clusterID(clus.ID());
-        rel.size(1);
-        rel.parent()[0] = clus.ID();
       } else {
         auto new_clus = merged.create();
-        new_clus.ID({idx++, algorithmID()});
-        auto rel = relations.create();
-        rel.clusterID(new_clus.ID());
-        rel.size(clusters.size());
         // calculate aggregate info
         float energy      = 0;
         float energyError = 0;
         float time        = 0;
         int nhits = 0;
         eic::VectorXYZ position;
-        float radius = 0;
-        float skewness = 0;
-        size_t cnt = 0;
         for (const auto& clus : clusters) {
           if (msgLevel(MSG::DEBUG)) {
-            debug() << "   --> Adding cluster " << clus.ID() << ", energy: " << clus.energy() << endmsg;
+            debug() << "   --> Adding cluster with energy: " << clus.energy() << endmsg;
           }
           energy += clus.energy();
           energyError += clus.energyError() * clus.energyError();
           time += clus.time() * clus.energy();
           nhits += clus.nhits();
           position = position.add(clus.position().scale(energy));
-          radius += clus.radius() * clus.radius(); // @TODO does this make sense?
-          skewness += 0;                            // @TODO
-          if (cnt < 4) {
-            rel.parent()[cnt] = clus.ID();
+          new_clus.addclusters(clus);
+          for (const auto& hit : clus.hits()) {
+            new_clus.addhits(hit);
           }
-          ++cnt;
         }
         new_clus.energy(energy);
         new_clus.energyError(sqrt(energyError));
         new_clus.time(time / energy);
         new_clus.nhits(nhits);
         new_clus.position(position.scale(1/energy));
-        new_clus.radius(sqrt(radius));
-        new_clus.skewness(skewness);
         if (msgLevel(MSG::DEBUG)) {
-          debug() << "   --> Merged cluster " << new_clus.ID() << ", energy: " << new_clus.energy() << endmsg;
+          debug() << "   --> Merged cluster with energy: " << new_clus.energy() << endmsg;
         }
       }
     }
@@ -141,7 +120,7 @@ public:
     std::map<eic::Index, std::vector<eic::ConstCluster>> matched = {};
     for (const auto& cluster : clusters) {
       if (msgLevel(MSG::VERBOSE)) {
-        verbose() << " --> Found cluster: " << cluster.ID() << " with mcID " << cluster.mcID() << " and energy "
+        verbose() << " --> Found cluster with mcID " << cluster.mcID() << " and energy "
                   << cluster.energy() << endmsg;
       }
       if (!cluster.mcID()) {
@@ -161,3 +140,4 @@ public:
 DECLARE_COMPONENT(ClusterMerger)
 
 } // namespace Jug::Fast
+#endif

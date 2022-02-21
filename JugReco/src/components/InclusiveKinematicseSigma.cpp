@@ -9,7 +9,6 @@
 
 #include "JugBase/IParticleSvc.h"
 #include "JugBase/DataHandle.h"
-#include "JugBase/UniqueID.h"
 
 #include "eicd/VectorXYZT.h"
 
@@ -23,7 +22,7 @@
 
 namespace Jug::Reco {
 
-class InclusiveKinematicseSigma : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
+class InclusiveKinematicseSigma : public GaudiAlgorithm {
 public:
   DataHandle<edm4hep::MCParticleCollection> m_inputMCParticleCollection{
     "inputMCParticles",
@@ -44,7 +43,7 @@ public:
   double m_proton, m_neutron, m_electron;
 
   InclusiveKinematicseSigma(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
+      : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputMCParticleCollection, "MCParticles");
     declareProperty("inputParticles", m_inputParticleCollection, "ReconstructedParticles");
     declareProperty("outputData", m_outputInclusiveKinematicsCollection, "InclusiveKinematicseSigma");

@@ -2,6 +2,10 @@
  *  A hits merger for ecal barrel to prepare dataset for machine learning
  *
  *  Author: Chao Peng (ANL), 05/04/2021
+ *
+ *  SJJ: @TODO: this should really be a clustering algorithm, as it doesn't give us
+ *              fully consistent hits anymore (e.g. cellID, local position) (meaning it's 
+ *              not generically useful as a reconstruction algorithm.
  */
 #include <algorithm>
 #include <bitset>
@@ -22,17 +26,14 @@
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/Utilities/Utils.hpp"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
-#include "eicd/VectorPolar.h"
-#include "eicd/VectorXYZ.h"
-#include "eicd/CalorimeterHit.h"
 #include "eicd/CalorimeterHitCollection.h"
+#include <eicd/vector_utils.h>
 
 using namespace Gaudi::Units;
 
-struct pair_hash {
+struct PairHashFunction {
   template <class T1, class T2>
   std::size_t operator()(const std::pair<T1, T2>& pair) const
   {
@@ -51,21 +52,18 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class ImagingPixelMerger : public GaudiAlgorithm, AlgorithmIDMixin<> {
+  class ImagingPixelMerger : public GaudiAlgorithm {
   public:
     Gaudi::Property<float>                  m_etaSize{this, "etaSize", 0.001};
     Gaudi::Property<float>                  m_phiSize{this, "phiSize", 0.001};
-    DataHandle<eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection",
-                                                                 Gaudi::DataHandle::Reader, this};
-    DataHandle<eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection",
-                                                                  Gaudi::DataHandle::Writer, this};
+    DataHandle<eic::CalorimeterHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
+    DataHandle<eic::CalorimeterHitCollection> m_outputHits{"outputHits", Gaudi::DataHandle::Writer, this};
 
     ImagingPixelMerger(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin<>(name, info())
     {
-      declareProperty("inputHitCollection", m_inputHitCollection, "");
-      declareProperty("outputHitCollection", m_outputHitCollection, "");
+      declareProperty("inputHits", m_inputHits, "");
+      declareProperty("outputHits", m_outputHits, "");
     }
 
     StatusCode initialize() override
@@ -80,66 +78,86 @@ namespace Jug::Reco {
     StatusCode execute() override
     {
       // input collections
-      const auto& hits = *m_inputHitCollection.get();
+      const auto& hits = *m_inputHits.get();
       // Create output collections
-      auto& mhits = *m_outputHitCollection.createAndPut();
+      auto& ohits = *m_outputHits.createAndPut();
 
       // @TODO: add timing information
       // group the hits by grid per layer
       struct GridData {
-        float rc, energy;
+        unsigned nHits;
+        float rc;
+        float energy;
+        float energyError;
+        float time;
+        float timeError;
+        int sector; // sector associated with one of the merged hits
       };
       // @TODO: remove this hard-coded value
       int max_nlayers = 50;
-      std::vector<std::unordered_map<std::pair<int, int>, GridData, pair_hash>> group_hits(max_nlayers);
+      std::vector<std::unordered_map<std::pair<int, int>, GridData, PairHashFunction>> group_hits(max_nlayers);
       for (const auto& h : hits) {
         auto k = h.layer();
         if ((int)k >= max_nlayers) {
           continue;
         }
         auto& layer = group_hits[k];
-        auto& pos = h.position();
+        const auto& pos = h.position();
 
         // cylindrical r
-        float rc  = std::sqrt(pos.x * pos.x + pos.y * pos.y);
-        float eta = pos.eta();
-        float phi = pos.phi();
+        const float rc  = eicd::magnitudeTransverse(pos);
+        const double eta = eicd::eta(pos);
+        const double phi = eicd::angleAzimuthal(pos);
 
-        auto  grid  = std::pair<int, int>{pos2grid(eta, m_etaSize), pos2grid(phi, m_phiSize)};
-        auto  it    = layer.find(grid);
+        const auto grid = std::pair<int, int>{pos2grid(eta, m_etaSize), pos2grid(phi, m_phiSize)};
+        auto it         = layer.find(grid);
         // merge energy
         if (it != layer.end()) {
-          it->second.energy += h.energy();
+          auto& data = it->second;
+          data.nHits += 1;
+          data.energy += h.energy();
+          data.energyError += h.energyError() * h.energyError();
+          data.time += h.time();
+          data.timeError += h.timeError() * h.timeError();
         } else {
-          layer[grid] = GridData{rc, h.energy()};
+          layer[grid] = GridData{
+              1,         rc, h.energy(), h.energyError() * h.energyError(), h.time(), h.timeError() * h.timeError(),
+              h.sector()};
         }
       }
 
       // convert grid data back to hits
-      int k = 0;
-      for (auto [i, layer] : Jug::Utils::Enumerate(group_hits)) {
-        for (auto [grid, data] : layer) {
-          float eta = grid2pos(grid.first, m_etaSize);
-          float phi = grid2pos(grid.second, m_phiSize);
-          float theta = std::atan(std::exp(-eta))*2.;
-          double z = cotan(theta)*data.rc;
-          float r = std::sqrt(data.rc*data.rc + z*z);
-
-          eic::VectorXYZ pos {eic::VectorPolar(r, theta, phi)};
-          auto h = mhits.create();
-          h.ID({k++, algorithmID()});
-          h.layer(i);
-          h.energy(data.energy);
-          h.position(pos);
+      for (const auto& [i, layer] : Jug::Utils::Enumerate(group_hits)) {
+        for (const auto& [grid, data] : layer) {
+          const double eta = grid2pos(grid.first, m_etaSize);
+          const double phi = grid2pos(grid.second, m_phiSize);
+          const double theta = eicd::etaToAngle(eta);
+          const double z   = cotan(theta) * data.rc;
+          const float r    = std::hypot(data.rc, z);
+          const auto pos = eicd::sphericalToVector(r, theta, phi);
+          auto oh = ohits.create();
+          oh.energy(data.energy);
+          oh.energyError(std::sqrt(data.energyError));
+          oh.time(data.time / data.nHits);
+          oh.timeError(std::sqrt(data.timeError));
+          oh.position(pos);
+          oh.layer(i);
+          oh.sector(data.sector);
         }
       }
       return StatusCode::SUCCESS;
     }
 
   private:
-    inline int pos2grid(float pos, float size, float offset = 0.) { return std::floor((pos - offset)/size); }
-    inline int grid2pos(float grid, float size, float offset = 0.) { return (grid + 0.5)*size + offset; }
-    inline float cotan(float theta) { if (std::abs(std::sin(theta)) < 1e-6) { return 0.; } else { return 1./std::tan(theta); } }
+    int pos2grid(float pos, float size, float offset = 0.) const { return std::floor((pos - offset) / size); }
+    int grid2pos(float grid, float size, float offset = 0.) const { return (grid + 0.5) * size + offset; }
+    float cotan(float theta) const {
+      if (std::abs(std::sin(theta)) < 1e-6) {
+        return 0.;
+      } else {
+        return 1. / std::tan(theta);
+      }
+    }
   }; // class ImagingPixelMerger
 
   DECLARE_COMPONENT(ImagingPixelMerger)

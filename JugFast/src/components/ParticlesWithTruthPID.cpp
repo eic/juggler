@@ -10,17 +10,16 @@
 #include "GaudiKernel/RndmGenerators.h"
 
 #include "JugBase/DataHandle.h"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
 #include "eicd/TrackParametersCollection.h"
-#include "eicd/VectorPolar.h"
+#include "eicd/vector_utils.h"
 
 namespace Jug::Fast {
 
-class ParticlesWithTruthPID : public GaudiAlgorithm, AlgorithmIDMixin<> {
+class ParticlesWithTruthPID : public GaudiAlgorithm {
 public:
   DataHandle<edm4hep::MCParticleCollection> m_inputTruthCollection{"inputMCParticles", Gaudi::DataHandle::Reader,
                                                                       this};
@@ -36,10 +35,8 @@ public:
   // Matchin eta tolerance of 0.1
   Gaudi::Property<double> m_etaTolerance{this, "etaTolerance", {0.2}};
 
-  const int32_t m_kMonteCarloSource{uniqueID<int32_t>("MCParticles")};
-
   ParticlesWithTruthPID(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
+      : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputTruthCollection, "MCParticles");
     declareProperty("inputTrackParameters", m_inputTrackCollection, "outputTrackParameters");
     declareProperty("outputParticles", m_outputParticleCollection, "ReconstructedParticles");
@@ -58,10 +55,8 @@ public:
 
     const double sinPhiOver2Tolerance = sin(0.5 * m_phiTolerance);
     std::vector<bool> consumed(mc.size(), false);
-    int ID = 0;
     for (const auto& trk : tracks) {
-      const eic::VectorXYZ mom =
-          eic::VectorPolar(1.0 / std::abs(trk.qOverP()), trk.theta(), trk.phi());
+      const eic::VectorXYZ mom = eicd::sphericalToVector(1.0 / std::abs(trk.qOverP()), trk.theta(), trk.phi());
       const auto charge_rec = std::copysign(1., trk.qOverP());
       // utility variables for matching
       int best_match    = -1;
@@ -105,9 +100,9 @@ public:
         vertex               = {mcpart.getVertex().x, mcpart.getVertex().y, mcpart.getVertex().z};
         time                 = mcpart.getTime();
         mass                 = mcpart.getMass();
+        //mcID                 = {mcpart.ID()};
       }
       auto rec_part = part.create();
-      rec_part.ID({ID++, algorithmID()});
       rec_part.p(mom);
       rec_part.v(vertex);
       rec_part.time(time);
@@ -115,7 +110,8 @@ public:
       rec_part.status(static_cast<int16_t>(best_match >= 0 ? 0 : -1));
       rec_part.charge(static_cast<int16_t>(charge_rec));
       rec_part.weight(1.);
-      rec_part.direction({mom.theta(), mom.phi()});
+      rec_part.theta(mom.theta());
+      rec_part.phi(mom.phi());
       rec_part.momentum(mom.mag());
       rec_part.energy(std::hypot(mom.mag(), mass));
       rec_part.mass(mass);
@@ -124,7 +120,7 @@ public:
       if (msgLevel(MSG::DEBUG)) {
         if (best_match > 0) {
           const auto& mcpart = mc[best_match];
-          debug() << fmt::format("Matched track {} with MC particle {}\n", ID, best_match) << endmsg;
+          debug() << fmt::format("Matched track with MC particle {}\n", best_match) << endmsg;
           debug() << fmt::format("  - Track: (mom: {}, theta: {}, phi: {}, charge: {})", mom.mag(), mom.theta(),
                                  mom.phi(), charge_rec)
                   << endmsg;
@@ -136,7 +132,7 @@ public:
                                  p_mag, p_theta, p_phi, mcpart.getCharge(), mcpart.getPDG())
                   << endmsg;
         } else {
-          debug() << fmt::format("Did not find a good match for track {} \n", ID) << endmsg;
+          debug() << fmt::format("Did not find a good match for track \n") << endmsg;
           debug() << fmt::format("  - Track: (mom: {}, theta: {}, phi: {}, charge: {})", mom.mag(), mom.theta(),
                                  mom.phi(), charge_rec)
                   << endmsg;

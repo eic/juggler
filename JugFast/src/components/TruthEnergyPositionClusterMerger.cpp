@@ -1,3 +1,5 @@
+// Needs full rework to run off MC-cluster relation instead
+#if 0
 #include <limits>
 #include <numbers>
 
@@ -10,12 +12,11 @@
 #include "GaudiKernel/PhysicalConstants.h"
 
 #include "JugBase/DataHandle.h"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
 #include "eicd/ClusterCollection.h"
-#include "eicd/MergedClusterRelationsCollection.h"
+#include <eicd/vector_utils.h>
 
 using namespace Gaudi::Units;
 
@@ -29,7 +30,7 @@ namespace Jug::Fast {
  *
  * \ingroup reco
  */
-class TruthEnergyPositionClusterMerger : public GaudiAlgorithm, public AlgorithmIDMixin<> {
+class TruthEnergyPositionClusterMerger : public GaudiAlgorithm {
 public:
   // Input
   DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
@@ -37,16 +38,14 @@ public:
   DataHandle<eic::ClusterCollection> m_positionClusters{"PositionClusters", Gaudi::DataHandle::Reader, this};
   // Output
   DataHandle<eic::ClusterCollection> m_outputClusters{"OutputClusters", Gaudi::DataHandle::Writer, this};
-  DataHandle<eic::MergedClusterRelationsCollection> m_relations{"OutputClusterRelations", Gaudi::DataHandle::Writer,
-                                                                this}; // namespace Jug::Reco
+
 public:
   TruthEnergyPositionClusterMerger(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()) {
+      : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputMCParticles, "MCParticles");
     declareProperty("inputEnergyClusters", m_energyClusters, "Cluster collection with good energy precision");
     declareProperty("inputPositionClusters", m_positionClusters, "Cluster collection with good position precision");
     declareProperty("outputClusters", m_outputClusters, "Cluster collection with good energy precision");
-    declareProperty("outputRelations", m_relations, "Cluster collection with good position precision");
   }
 
   StatusCode initialize() override { return StatusCode::SUCCESS; }
@@ -61,7 +60,6 @@ public:
     const auto& pos_clus    = *(m_positionClusters.get());
     // output
     auto& merged    = *(m_outputClusters.createAndPut());
-    auto& relations = *(m_relations.createAndPut());
 
     if (!energy_clus.size() && !pos_clus.size()) {
       if (msgLevel(MSG::DEBUG)) {
@@ -81,34 +79,36 @@ public:
     if (msgLevel(MSG::DEBUG)) {
       debug() << "Step 1/2: Matching all position clusters to the available energy clusters..." << endmsg;
     }
-    // index for newly created matched clusters
-    int32_t idx = 0;
     for (const auto& [mcID, pclus] : posMap) {
       if (msgLevel(MSG::DEBUG)) {
-        debug() << " --> Processing position cluster " << pclus.ID() << ", mcID: " << mcID << ", energy: " << pclus.energy()
+        debug() << " --> Processing position cluster " << pclus.id() << ", mcID: " << mcID << ", energy: " << pclus.energy()
                 << endmsg;
       }
       if (energyMap.count(mcID)) {
         const auto& eclus = energyMap[mcID];
         auto new_clus = merged.create();
-        new_clus.ID({idx++, algorithmID()});
         new_clus.energy(eclus.energy());
         new_clus.energyError(eclus.energyError());
         new_clus.time(pclus.time());
         new_clus.nhits(pclus.nhits() + eclus.nhits());
         new_clus.position(pclus.position());
         new_clus.positionError(pclus.positionError());
-        new_clus.radius(pclus.radius());
-        new_clus.skewness(pclus.skewness());
         new_clus.mcID(mcID);
-        auto rel = relations.create();
-        rel.clusterID(new_clus.ID());
-        rel.size(2);
-        rel.parent()[0] = pclus.ID();
-        rel.parent()[1] = eclus.ID();
+        new_clus.addclusters(pclus);
+        new_clus.addclusters(eclus);
+        for (const auto& cl : {pclus, eclus}) {
+          for (const auto& hit : cl.hits()) {
+            new_clus.addhits(hit);
+            new_clus.addhitContributions(hit.energy());
+          }
+          new_clus.addsubdetectorEnergies(cl.energy());
+        }
+        for (const auto& param : pclus.shapeParameters()) {
+          new_clus.addshapeParameters(param);
+        }
         if (msgLevel(MSG::DEBUG)) {
-          debug() << "   --> Found matching energy cluster " << eclus.ID() << ", energy: " << eclus.energy() << endmsg;
-          debug() << "   --> Created new combined cluster " << new_clus.ID() << ", energy: " << new_clus.energy() << endmsg;
+          debug() << "   --> Found matching energy cluster " << eclus.id() << ", energy: " << eclus.energy() << endmsg;
+          debug() << "   --> Created new combined cluster " << new_clus.id() << ", energy: " << new_clus.energy() << endmsg;
         }
         // erase the energy cluster from the map, so we can in the end account for all
         // remaining clusters
@@ -118,10 +118,7 @@ public:
           debug() << "   --> No matching energy cluster found, copying over position cluster" << endmsg;
         }
         merged.push_back(pclus.clone());
-        auto rel = relations.create();
-        rel.clusterID(pclus.ID());
-        rel.size(1);
-        rel.parent()[0] = pclus.ID();
+        merged[merged.size()-1].addclusters(pclus);
       }
     }
     // Collect remaining energy clusters. Use mc truth position for these clusters, as
@@ -136,24 +133,18 @@ public:
       const auto phi = std::atan2(p.y, p.x);
       const auto theta = std::atan2(std::hypot(p.x, p.y), p.z);
       auto new_clus  = merged.create();
-      new_clus.ID({idx++, algorithmID()});
       new_clus.energy(eclus.energy());
       new_clus.energyError(eclus.energyError());
       new_clus.time(eclus.time());
       new_clus.nhits(eclus.nhits());
       // use nominal radius of 110cm, and use start vertex theta and phi
-      new_clus.position(eic::VectorPolar{110, theta, phi});
-      new_clus.radius(eclus.radius());
-      new_clus.skewness(eclus.skewness());
+      new_clus.position(eicd::sphericalToVector(110, theta, phi));
       new_clus.mcID(mcID);
-      auto rel = relations.create();
-      rel.clusterID(new_clus.ID());
-      rel.size(1);
-      rel.parent()[0] = eclus.ID();
+      new_clus.addclusters(eclus);
       if (msgLevel(MSG::DEBUG)) {
-        debug() << " --> Processing energy cluster " << eclus.ID() << ", mcID: " << mcID << ", energy: " << eclus.energy()
+        debug() << " --> Processing energy cluster " << eclus.id() << ", mcID: " << mcID << ", energy: " << eclus.energy()
                 << endmsg;
-        debug() << "   --> Created new 'combined' cluster " << new_clus.ID() << ", energy: " << new_clus.energy() << endmsg;
+        debug() << "   --> Created new 'combined' cluster " << new_clus.id() << ", energy: " << new_clus.energy() << endmsg;
       }
     }
 
@@ -168,7 +159,7 @@ public:
     std::map<eic::Index, eic::ConstCluster> matched = {};
     for (const auto& cluster : clusters) {
       if (msgLevel(MSG::VERBOSE)) {
-        verbose() << " --> Found cluster: " << cluster.ID() << " with mcID " << cluster.mcID() << " and energy "
+        verbose() << " --> Found cluster: " << cluster.id() << " with mcID " << cluster.mcID() << " and energy "
                   << cluster.energy() << endmsg;
       }
       if (!cluster.mcID()) {
@@ -194,3 +185,4 @@ public:
 DECLARE_COMPONENT(TruthEnergyPositionClusterMerger)
 
 } // namespace Jug::Fast
+#endif

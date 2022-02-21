@@ -27,11 +27,10 @@
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/Utilities/Utils.hpp"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "eicd/CalorimeterHitCollection.h"
-#include "eicd/VectorPolar.h"
+#include "eicd/vector_utils.h"
 
 using namespace Gaudi::Units;
 typedef ROOT::Math::XYZPoint Point3D;
@@ -57,7 +56,7 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class CalorimeterHitsEtaPhiProjector : public GaudiAlgorithm, AlgorithmIDMixin<> {
+  class CalorimeterHitsEtaPhiProjector : public GaudiAlgorithm {
   public:
     Gaudi::Property<std::vector<double>>        u_gridSizes{this, "gridSizes", {0.001, 0.001*rad}};
     DataHandle<eic::CalorimeterHitCollection>   m_inputHitCollection{
@@ -69,7 +68,6 @@ namespace Jug::Reco {
 
     CalorimeterHitsEtaPhiProjector(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin<>(name, info())
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -108,18 +106,13 @@ namespace Jug::Reco {
       for (const auto &[bins, hits] : merged_hits) {
         const auto ref = hits.front();
         eic::CalorimeterHit hit;
-        hit.ID({ref.ID(), algorithmID()});
         hit.cellID(ref.cellID());
-        hit.sector(ref.sector());
-        hit.layer(ref.layer());
         // TODO, we can do timing cut to reject noises
         hit.time(ref.time());
         double r = ref.position().mag();
         double eta = bin2pos(bins.first, gridSizes[0], 0.);
         double phi = bin2pos(bins.second, gridSizes[1], 1.);
-        double theta = std::atan(std::exp(-eta))*2.;
-        hit.local(ref.local());
-        hit.position(eic::VectorPolar(r, theta, phi));
+        hit.position(eicd::sphericalToVector(r, eicd::etaToAngle(eta), phi));
         hit.dimension({gridSizes[0], gridSizes[1], 0.});
         // merge energy
         hit.energy(0.);
