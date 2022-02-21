@@ -23,6 +23,7 @@
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/Utilities/Utils.hpp"
+#include "JugReco/ClusterTypes.h"
 
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
@@ -30,8 +31,7 @@
 #include "eicd/CalorimeterHitCollection.h"
 #include "eicd/ClusterCollection.h"
 #include "eicd/ProtoClusterCollection.h"
-#include "eicd/VectorPolar.h"
-#include "eicd/VectorXYZ.h"
+#include "eicd/vector_utils.h"
 
 using namespace Gaudi::Units;
 using namespace Eigen;
@@ -49,10 +49,9 @@ class ImagingClusterReco : public GaudiAlgorithm {
 public:
   Gaudi::Property<int> m_trackStopLayer{this, "trackStopLayer", 9};
 
-  DataHandle<eic::ProtoClusterCollection> m_inputProtoClusterCollection{"inputProtoClusters", Gaudi::DataHandle::Reader,
-                                                                        this};
-  DataHandle<eic::ClusterCollection> m_outputLayerCollection{"outputLayers", Gaudi::DataHandle::Writer, this};
-  DataHandle<eic::ClusterCollection> m_outputClusterCollection{"outputClusters", Gaudi::DataHandle::Reader, this};
+  DataHandle<eic::ProtoClusterCollection> m_inputProtoClusters{"inputProtoClusters", Gaudi::DataHandle::Reader, this};
+  DataHandle<eic::ClusterCollection> m_outputLayers{"outputLayers", Gaudi::DataHandle::Writer, this};
+  DataHandle<eic::ClusterCollection> m_outputClusters{"outputClusters", Gaudi::DataHandle::Reader, this};
 
   // Collection for MC hits when running on MC
   Gaudi::Property<std::string> m_mcHits{this, "mcHits", ""};
@@ -94,7 +93,7 @@ public:
     //}
 
     for (const auto& pcl : proto) {
-      if (!pcl.hits().isValid()) {
+      if (!pcl.hits().empty() && !pcl.hits(0).isAvailable()) {
         warning() << "Protocluster hit relation is invalid, skipping protocluster" << endmsg;
         continue;
       }
@@ -131,12 +130,12 @@ public:
 private:
   template <typename T> static inline T pow2(const T& x) { return x * x; }
 
-  std::vector<eic::ClusterLayer> reconstruct_cluster_layers(const eic::ConstProtoCluster& pcl) const {
+  std::vector<eic::Cluster> reconstruct_cluster_layers(const eic::ConstProtoCluster& pcl) const {
     const auto& hits    = pcl.hits();
     const auto& weights = pcl.weights();
     // using map to have hits sorted by layer
     std::map<int, std::vector<std::pair<eic::ConstCalorimeterHit, eic::Weight>>> layer_map;
-    for (unsigned i = 0; i < hits; ++i) {
+    for (unsigned i = 0; i < hits.size(); ++i) {
       const auto hit = hits[i];
       auto lid       = hit.layer();
       if (!layer_map.count(lid)) {
@@ -146,7 +145,7 @@ private:
     }
 
     // create layers
-    std::vector<eic::ClusterLayer> cl_layers;
+    std::vector<eic::Cluster> cl_layers;
     for (const auto& [lid, layer_hits] : layer_map) {
       auto layer = reconstruct_layer(layer_hits);
       cl_layers.push_back(layer);
@@ -154,8 +153,8 @@ private:
     return cl_layers;
   }
 
-  eic::ClusterLayer reconstruct_layer(const std::vector<std::pair<eic::ConstCalorimeterHit, eic::Weight>>& hits) const {
-    eic::ClusterLayer layer;
+  eic::Cluster reconstruct_layer(const std::vector<std::pair<eic::ConstCalorimeterHit, eic::Weight>>& hits) const {
+    eic::Cluster layer;
     layer.type(ClusterType::kClusterSlice);
     // Calculate averages
     double energy;
@@ -178,7 +177,7 @@ private:
     layer.time(time / sumOfWeights);
     layer.timeError(std::sqrt(timeError) / sumOfWeights);
     layer.nhits(hits.size());
-    layer.position(position / sumOfWeights);
+    layer.position(pos / sumOfWeights);
     // positionError not set
     // Intrinsic direction meaningless in a cluster layer --> not set
 
@@ -200,26 +199,24 @@ private:
     const auto& weights = pcl.weights();
 
     cluster.type(ClusterType::kCluster3D);
-    // eta, phi center, weighted by energy
-    double meta         = 0.;
-    double mphi         = 0.;
     double energy       = 0.;
     double energyError  = 0.;
     double time         = 0.;
     double timeError    = 0.;
-    double sumOfWeights = 0.;
-    float r             = 9999 * cm;
-    for (unsigned i = 0; i < hits; ++i) {
+    double meta         = 0.;
+    double mphi         = 0.;
+    double r            = 9999 * cm;
+    for (unsigned i = 0; i < hits.size(); ++i) {
       const auto& hit   = hits[i];
       const auto weight = weights[i];
       energy += hit.energy() * weight;
       energyError += std::pow(hit.energyError() * weight, 2);
       // energy weighting for the other variables
-      const double eWeight = hit.energy() * weight;
+      const double energyWeight = hit.energy() * weight;
       time += hit.time() * energyWeight;
-      timeError += std::pow(hit.timeError() * energyWeight);
-      meta += eicd::eta(hit.position) * energyWeight;
-      mphi += eicd::azimuthalAngle(hit.position()) * energyWeight;
+      timeError += std::pow(hit.timeError() * energyWeight, 2);
+      meta += eicd::eta(hit.position()) * energyWeight;
+      mphi += eicd::angleAzimuthal(hit.position()) * energyWeight;
       r = std::min(eicd::magnitude(hit.position()), r);
       cluster.addhits(hit);
     }
@@ -232,8 +229,7 @@ private:
 
     // shower radius estimate (eta-phi plane)
     double radius = 0.;
-    for (const auto& clhit : pcl.hits()) {
-      const auto& hit = hits[clhit.index];
+    for (const auto& hit : hits) {
       radius +=
           pow2(hit.position().eta() - cluster.position().eta()) + pow2(hit.position().phi() - cluster.position().phi());
     }
@@ -254,7 +250,7 @@ private:
     int nrows = 0;
     eic::VectorXYZ mean_pos{0, 0, 0};
     for (const auto& layer : layers) {
-      if ((layer.layer() <= m_trackStopLayer) && (layer.nhits() > 0)) {
+      if ((layer.nhits() > 0) && (layer.hits(0).layer() <= m_trackStopLayer)) {
         mean_pos = mean_pos + layer.position();
         nrows += 1;
       }
@@ -269,8 +265,8 @@ private:
     MatrixXd pos(nrows, 3);
     int ir = 0;
     for (const auto& layer : layers) {
-      if ((layer.layer() <= m_trackStopLayer) && (layer.nhits() > 0)) {
-        auto delta = layer.position - mean_pos;
+      if ((layer.nhits() > 0) && (layer.hits(0).layer() <= m_trackStopLayer)) {
+        auto delta = layer.position() - mean_pos;
         pos(ir, 0) = delta.x;
         pos(ir, 1) = delta.y;
         pos(ir, 2) = delta.z;

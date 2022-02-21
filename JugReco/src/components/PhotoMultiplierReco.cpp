@@ -23,7 +23,6 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugBase/UniqueID.h"
 
 // Event Model related classes
 #include "eicd/PMTHitCollection.h"
@@ -40,7 +39,7 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class PhotoMultiplierReco : public GaudiAlgorithm, AlgorithmIDMixin<> {
+  class PhotoMultiplierReco : public GaudiAlgorithm {
   public:
     DataHandle<eic::RawPMTHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::PMTHitCollection>    m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
@@ -54,7 +53,6 @@ namespace Jug::Reco {
     // ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     PhotoMultiplierReco(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc)
-      , AlgorithmIDMixin<>(name, info())
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -96,7 +94,7 @@ namespace Jug::Reco {
           // cell dimension
           auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
           hits.push_back(eic::PMTHit{
-              {rh.ID(), algorithmID()},
+              0 /*deleteme*/,
               rh.cellID(),
               npe,
               time,

@@ -24,7 +24,7 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugReco/ClusterType.h"
+#include "JugReco/ClusterTypes.h"
 
 // Event Model related classes
 #include "eicd/ProtoClusterCollection.h"
