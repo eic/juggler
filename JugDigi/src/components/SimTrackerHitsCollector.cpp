@@ -13,8 +13,8 @@ namespace Jug::Digi {
 
     /** Collect the tracking hits into a single collection.
      *
-     * \param inputTrackingHits [in] vector of collection names
-     * \param trackingHits [out] hits combined into one collection.
+     * \param inputSimTrackerHits [in] vector of collection names
+     * \param outputSimTrackerHits [out] hits combined into one collection.
      *
      * \ingroup digi
      */
