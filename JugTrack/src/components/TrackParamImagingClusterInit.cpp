@@ -15,8 +15,8 @@
 
 #include "eicd/TrackerHitCollection.h"
 #include "eicd/ClusterCollection.h"
+#include "eicd/vector_utils.h"
 
-#include "Math/Vector3D.h"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
   ///// (Reconstructed) track parameters e.g. close to the vertex.
@@ -76,28 +76,19 @@ namespace Jug::Reco {
         using Acts::UnitConstants::mm;
         using Acts::UnitConstants::ns;
 
-        double p = c.energy()*GeV;
+        const double p = c.energy()*GeV;
         // FIXME hardcoded value
         if( p < 0.1*GeV) {
           continue;
         }
-        double len =  c.position().mag();
-        ROOT::Math::XYZVector  momentum(c.position().x * p / len, c.position().y * p / len, c.position().z * p / len);
-
-        // build some track cov matrix
-        //Acts::BoundSymMatrix cov        = Acts::BoundSymMatrix::Zero();
-        //cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = 1.0 * mm*1.0 * mm;
-        //cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = 1.0 * mm*1.0 * mm;
-        //cov(Acts::eBoundPhi, Acts::eBoundPhi)     = M_PI / 180.0;
-        //cov(Acts::eBoundTheta, Acts::eBoundTheta) = M_PI / 180.0;
-        //cov(Acts::eBoundQOverP, Acts::eBoundQOverP)     = 1.0 / (p*p);
-        //cov(Acts::eBoundTime, Acts::eBoundTime)         = Acts::UnitConstants::ns;
+        const double theta = eicd::anglePolar(c.position());
+        const double phi = eicd::angleAzimuthal(c.position());
 
         Acts::BoundVector  params;
         params(Acts::eBoundLoc0)   = 0.0 * mm ;
         params(Acts::eBoundLoc1)   = 0.0 * mm ;
-        params(Acts::eBoundPhi)    = momentum.Phi();
-        params(Acts::eBoundTheta)  = momentum.Theta();
+        params(Acts::eBoundPhi)    = phi;
+        params(Acts::eBoundTheta)  = theta;
         params(Acts::eBoundQOverP) = 1/p;
         params(Acts::eBoundTime)   = 0 * ns;
 
@@ -111,24 +102,12 @@ namespace Jug::Reco {
         Acts::BoundVector  params2;
         params2(Acts::eBoundLoc0)   = 0.0 * mm ;
         params2(Acts::eBoundLoc1)   = 0.0 * mm ;
-        params2(Acts::eBoundPhi)    = momentum.Phi();
-        params2(Acts::eBoundTheta)  = momentum.Theta();
+        params2(Acts::eBoundPhi)    = phi;
+        params2(Acts::eBoundTheta)  = theta;
         params2(Acts::eBoundQOverP) = -1/p;
         params2(Acts::eBoundTime)   = 0 * ns;
         init_trk_params->push_back({pSurface, params2, -1});
 
-        // acts v1.2.0:
-        //init_trk_params->emplace_back(Acts::Vector4(0 * mm, 0 * mm, 0 * mm, 0),
-        //                              Acts::Vector3(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, -1,
-        //                              std::make_optional(cov));
-        //debug() << init_trk_params->back() << endmsg;
-        //init_trk_params->emplace_back(Acts::Vector4(0 * mm, 0 * mm, 0 * mm, 0),
-        //                              Acts::Vector3(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, 1,
-        //                              std::make_optional(cov));
-        ////debug() << init_trk_params->back() << endmsg;
-        //init_trk_params->emplace_back(Acts::Vector4(0 * mm, 0 * mm, 0 * mm, 0),
-        //                              Acts::Vector3(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, 0,
-        //                              std::make_optional(cov));
       }
       return StatusCode::SUCCESS;
     }

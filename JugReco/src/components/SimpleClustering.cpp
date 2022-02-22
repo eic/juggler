@@ -21,6 +21,7 @@
 #include "eicd/ClusterCollection.h"
 #include "eicd/ProtoClusterCollection.h"
 #include "eicd/RawCalorimeterHitCollection.h"
+#include "eicd/vector_utils.h"
 
 using namespace Gaudi::Units;
 
@@ -122,7 +123,7 @@ namespace Jug::Reco {
         std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>> cluster_hits;
 
         for (const auto& [idx, h] : the_hits) {
-          if (h.position().subtract(ref_hit.position()).mag() < max_dist) {
+          if (eicd::magnitude(h.position() - ref_hit.position()) < max_dist) {
             cluster_hits.push_back({idx, h});
           } else {
             remaining_hits.push_back({idx, h});
@@ -142,7 +143,7 @@ namespace Jug::Reco {
         auto pcl = proto.create();
         for (const auto& [idx, h] : cluster_hits) {
           cl.energy(cl.energy() + h.energy());
-          cl.position(cl.position().add(h.position().scale(h.energy()/total_energy)));
+          cl.position(cl.position() + (h.position() * h.energy() / total_energy));
           pcl.addhits(h);
         }
         // Optionally store the MC truth associated with the first hit in this cluster

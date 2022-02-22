@@ -162,7 +162,7 @@ private:
     double time;
     double timeError;
     double sumOfWeights = 0;
-    eic::VectorXYZ pos;
+    auto pos            = layer.position();
     for (const auto& [hit, weight] : hits) {
       energy += hit.energy() * weight;
       energyError += std::pow(hit.energyError() * weight, 2);
@@ -199,13 +199,13 @@ private:
     const auto& weights = pcl.weights();
 
     cluster.type(ClusterType::kCluster3D);
-    double energy       = 0.;
-    double energyError  = 0.;
-    double time         = 0.;
-    double timeError    = 0.;
-    double meta         = 0.;
-    double mphi         = 0.;
-    double r            = 9999 * cm;
+    double energy      = 0.;
+    double energyError = 0.;
+    double time        = 0.;
+    double timeError   = 0.;
+    double meta        = 0.;
+    double mphi        = 0.;
+    double r           = 9999 * cm;
     for (unsigned i = 0; i < hits.size(); ++i) {
       const auto& hit   = hits[i];
       const auto weight = weights[i];
@@ -230,8 +230,8 @@ private:
     // shower radius estimate (eta-phi plane)
     double radius = 0.;
     for (const auto& hit : hits) {
-      radius +=
-          pow2(hit.position().eta() - cluster.position().eta()) + pow2(hit.position().phi() - cluster.position().phi());
+      radius += pow2(eicd::eta(hit.position()) - eicd::eta(cluster.position())) +
+                pow2(eicd::angleAzimuthal(hit.position()) - eicd::angleAzimuthal(cluster.position()));
     }
     cluster.addshapeParameters(std::sqrt(radius / cluster.nhits()));
     // Skewedness not calculated TODO
@@ -248,7 +248,7 @@ private:
 
   std::pair<double /* polar */, double /* azimuthal */> fit_track(const std::vector<eic::Cluster>& layers) const {
     int nrows = 0;
-    eic::VectorXYZ mean_pos{0, 0, 0};
+    eicd::Vector3f mean_pos{0, 0, 0};
     for (const auto& layer : layers) {
       if ((layer.nhits() > 0) && (layer.hits(0).layer() <= m_trackStopLayer)) {
         mean_pos = mean_pos + layer.position();

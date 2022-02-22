@@ -20,6 +20,7 @@
 #include "JugTrack/Track.hpp"
 
 #include "eicd/TrackerHitCollection.h"
+#include "eicd/vector_utils.h"
 
 #include <functional>
 #include <random>
@@ -129,7 +130,7 @@ namespace Jug::Reco {
 
       ROOT::Math::XYZVector tp(track_param.momentum()[0], track_param.momentum()[1], track_param.momentum()[2]);
       auto first_hit = (*hits)[proto_track[0]];
-      auto first_hit_phi   = first_hit.position().phi();
+      auto first_hit_phi   = eicd::angleAzimuthal(first_hit.position());
       auto track_param_phi = tp.phi();
       if (msgLevel(MSG::DEBUG)) {
         debug() << " first hit phi:  " << first_hit_phi   << endmsg;

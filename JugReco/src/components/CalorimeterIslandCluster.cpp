@@ -33,8 +33,8 @@
 #include "eicd/CalorimeterHitCollection.h"
 #include "eicd/ClusterCollection.h"
 #include "eicd/ProtoClusterCollection.h"
-#include "eicd/VectorXY.h"
-#include "eicd/VectorXYZ.h"
+#include "eicd/Vector2f.h"
+#include "eicd/Vector3f.h"
 #include "eicd/vector_utils.h"
 
 using namespace Gaudi::Units;
@@ -45,35 +45,35 @@ using CaloHit = eic::ConstCalorimeterHit;
 using CaloHitCollection = eic::CalorimeterHitCollection;
 
 // helper functions to get distance between hits
-static eic::VectorXY localDistXY(const CaloHit& h1, const CaloHit& h2) {
+static eicd::Vector2f localDistXY(const CaloHit& h1, const CaloHit& h2) {
   const auto delta = h1.local() - h2.local();
   return {delta.x, delta.y};
 }
-static eic::VectorXY localDistXZ(const CaloHit& h1, const CaloHit& h2) {
+static eicd::Vector2f localDistXZ(const CaloHit& h1, const CaloHit& h2) {
   const auto delta = h1.local() - h2.local();
   return {delta.x, delta.z};
 }
-static eic::VectorXY localDistYZ(const CaloHit& h1, const CaloHit& h2) {
+static eicd::Vector2f localDistYZ(const CaloHit& h1, const CaloHit& h2) {
   const auto delta = h1.local() - h2.local();
   return {delta.y, delta.z};
 }
-static eic::VectorXY dimScaledLocalDistXY(const CaloHit& h1, const CaloHit& h2) {
+static eicd::Vector2f dimScaledLocalDistXY(const CaloHit& h1, const CaloHit& h2) {
   const auto delta = h1.local() - h2.local();
   const auto dimsum = h1.dimension() + h2.dimension();
   return {2 * delta.x / dimsum.x, 2 * delta.y / dimsum.y};
 }
-static eic::VectorXY globalDistRPhi(const CaloHit& h1, const CaloHit& h2) {
+static eicd::Vector2f globalDistRPhi(const CaloHit& h1, const CaloHit& h2) {
   return {eicd::magnitude(h1.position()) - eicd::magnitude(h2.position()),
           eicd::angleAzimuthal(h1.position()) - eicd::angleAzimuthal(h2.position())};
 }
-static eic::VectorXY globalDistEtaPhi(const CaloHit& h1,
+static eicd::Vector2f globalDistEtaPhi(const CaloHit& h1,
                                       const CaloHit& h2) {
   return {eicd::eta(h1.position()) - eicd::eta(h2.position()),
           eicd::angleAzimuthal(h1.position()) - eicd::angleAzimuthal(h2.position())};
 }
 // name: {method, units}
 static std::map<std::string,
-                std::tuple<std::function<eic::VectorXY(const CaloHit&, const CaloHit&)>, std::vector<double>>>
+                std::tuple<std::function<eicd::Vector2f(const CaloHit&, const CaloHit&)>, std::vector<double>>>
     distMethods{
         {"localDistXY", {localDistXY, {mm, mm}}},        {"localDistXZ", {localDistXZ, {mm, mm}}},
         {"localDistYZ", {localDistYZ, {mm, mm}}},        {"dimScaledLocalDistXY", {dimScaledLocalDistXY, {1., 1.}}},
@@ -113,7 +113,7 @@ public:
   Gaudi::Property<std::vector<double>> u_globalDistEtaPhi{this, "globalDistEtaPhi", {}};
   Gaudi::Property<std::vector<double>> u_dimScaledLocalDistXY{this, "dimScaledLocalDistXY", {1.8, 1.8}};
   // neighbor checking function
-  std::function<eic::VectorXY(const CaloHit&, const CaloHit&)> hitsDist;
+  std::function<eicd::Vector2f(const CaloHit&, const CaloHit&)> hitsDist;
 
   // unitless counterparts of the input parameters
   double minClusterHitEdep, minClusterCenterEdep, sectorDist;
@@ -231,7 +231,7 @@ private:
     // in the same sector
     if (h1.sector() == h2.sector()) {
       auto dist = hitsDist(h1, h2);
-      return (dist.x <= neighbourDist[0]) && (dist.y <= neighbourDist[1]);
+      return (dist.a <= neighbourDist[0]) && (dist.b <= neighbourDist[1]);
       // different sector, local coordinates do not work, using global coordinates
     } else {
       // sector may have rotation (barrel), so z is included
@@ -354,7 +354,7 @@ private:
       for (const auto& chit : maxima) {
         double dist_ref = chit.dimension().x;
         double energy   = chit.energy();
-        double dist     = hitsDist(chit, hit).mag();
+        double dist     = eicd::magnitude(hitsDist(chit, hit));
         weights[j]      = std::exp(-dist / dist_ref) * energy;
         j += 1;
       }
