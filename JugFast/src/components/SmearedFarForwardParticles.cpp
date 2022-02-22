@@ -13,7 +13,7 @@
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
-#include "eicd/VectorXYZ.h"
+#include "eicd/vector_utils.h"
 
 namespace {
   enum DetectorTags {
@@ -219,7 +219,7 @@ private:
         debug()
             << fmt::format(
                    "Found ZDC particle: {}, Etrue: {}, Emeas: {}, ptrue: {}, pmeas: {}, theta_true: {}, theta_meas: {}",
-                   part.getPDG(), E, rec_part.energy(), part_p_mag, rec_part.p().mag(), th, rec_part.p().theta())
+                   part.getPDG(), E, rec_part.energy(), part_p_mag, eicd::magnitude(rec_part.p()), th, eicd::anglePolar(rec_part.p()))
             << endmsg;
       }
     }
@@ -264,7 +264,7 @@ private:
         debug() << fmt::format("Found B0 particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
                                part.getPDG(), part_p_mag, rec_part.momentum(), part_p_pt,
-                               std::hypot(rec_part.p().x, rec_part.p().y), part_p_theta, rec_part.p().theta())
+                               std::hypot(rec_part.p().x, rec_part.p().y), part_p_theta, eicd::anglePolar(rec_part.p()))
                 << endmsg;
       }
     }
@@ -303,7 +303,7 @@ private:
         debug() << fmt::format("Found RP particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
                                part.getPDG(), part_p_mag, rec_part.momentum(), part_p_pt,
-                               std::hypot(rec_part.p().x, rec_part.p().y), part_p_theta, rec_part.p().theta())
+                               std::hypot(rec_part.p().x, rec_part.p().y), part_p_theta, eicd::anglePolar(rec_part.p()))
                 << endmsg;
       }
     }
@@ -348,7 +348,7 @@ private:
         debug() << fmt::format("Found OMD particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
                                part.getPDG(), part_p_mag, rec_part.momentum(), part_p_pt,
-                               std::hypot(rec_part.p().x, rec_part.p().y), part_p_theta, rec_part.p().theta())
+                               std::hypot(rec_part.p().x, rec_part.p().y), part_p_theta, eicd::anglePolar(rec_part.p()))
                 << endmsg;
       }
     }

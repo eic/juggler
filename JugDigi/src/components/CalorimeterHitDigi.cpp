@@ -212,7 +212,6 @@ namespace Jug::Digi {
       }
 
       // signal sum
-      int nhits = 0;
       for (auto &[id, hits] : merge_map) {
         double edep     = hits[0].getEnergy();
         double time     = hits[0].getContributions(0).getTime();

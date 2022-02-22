@@ -98,8 +98,8 @@ namespace Jug::Reco {
       std::unordered_map<std::pair<int64_t, int64_t>, std::vector<eic::ConstCalorimeterHit>, pair_hash> merged_hits;
 
       for (const auto h : *m_inputHitCollection.get()) {
-        auto bins = std::make_pair(static_cast<int64_t>(pos2bin(h.position().eta(), gridSizes[0], 0.)),
-                                   static_cast<int64_t>(pos2bin(h.position().phi(), gridSizes[1], 0.)));
+        auto bins = std::make_pair(static_cast<int64_t>(pos2bin(eicd::eta(h.position()), gridSizes[0], 0.)),
+                                   static_cast<int64_t>(pos2bin(eicd::angleAzimuthal(h.position()), gridSizes[1], 0.)));
         merged_hits[bins].push_back(h);
       }
 
@@ -109,11 +109,11 @@ namespace Jug::Reco {
         hit.cellID(ref.cellID());
         // TODO, we can do timing cut to reject noises
         hit.time(ref.time());
-        double r = ref.position().mag();
+        double r = eicd::magnitude(ref.position());
         double eta = bin2pos(bins.first, gridSizes[0], 0.);
         double phi = bin2pos(bins.second, gridSizes[1], 1.);
         hit.position(eicd::sphericalToVector(r, eicd::etaToAngle(eta), phi));
-        hit.dimension({gridSizes[0], gridSizes[1], 0.});
+        hit.dimension({static_cast<float>(gridSizes[0]), static_cast<float>(gridSizes[1]), 0.});
         // merge energy
         hit.energy(0.);
         for (const auto &h : hits) {

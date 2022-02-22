@@ -21,12 +21,11 @@ namespace Jug::Fast {
 
 class ParticlesWithTruthPID : public GaudiAlgorithm {
 public:
-  DataHandle<edm4hep::MCParticleCollection> m_inputTruthCollection{"inputMCParticles", Gaudi::DataHandle::Reader,
-                                                                      this};
+  DataHandle<edm4hep::MCParticleCollection> m_inputTruthCollection{"inputMCParticles", Gaudi::DataHandle::Reader, this};
   DataHandle<eic::TrackParametersCollection> m_inputTrackCollection{"inputTrackParameters", Gaudi::DataHandle::Reader,
                                                                     this};
-  DataHandle<eic::ReconstructedParticleCollection> m_outputParticleCollection{
-      "ReconstructedParticles", Gaudi::DataHandle::Writer, this};
+  DataHandle<eic::ReconstructedParticleCollection> m_outputParticleCollection{"ReconstructedParticles",
+                                                                              Gaudi::DataHandle::Writer, this};
 
   // Matching momentum tolerance requires 10% by default;
   Gaudi::Property<double> m_pRelativeTolerance{this, "pRelativeTolerance", {0.1}};
@@ -35,8 +34,7 @@ public:
   // Matchin eta tolerance of 0.1
   Gaudi::Property<double> m_etaTolerance{this, "etaTolerance", {0.2}};
 
-  ParticlesWithTruthPID(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc) {
+  ParticlesWithTruthPID(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputTruthCollection, "MCParticles");
     declareProperty("inputTrackParameters", m_inputTrackCollection, "outputTrackParameters");
     declareProperty("outputParticles", m_outputParticleCollection, "ReconstructedParticles");
@@ -56,28 +54,29 @@ public:
     const double sinPhiOver2Tolerance = sin(0.5 * m_phiTolerance);
     std::vector<bool> consumed(mc.size(), false);
     for (const auto& trk : tracks) {
-      const eic::VectorXYZ mom = eicd::sphericalToVector(1.0 / std::abs(trk.qOverP()), trk.theta(), trk.phi());
-      const auto charge_rec = std::copysign(1., trk.qOverP());
+      const auto mom        = eicd::sphericalToVector(1.0 / std::abs(trk.qOverP()), trk.theta(), trk.phi());
+      const auto charge_rec = trk.charge();
       // utility variables for matching
       int best_match    = -1;
       double best_delta = std::numeric_limits<double>::max();
       for (size_t ip = 0; ip < mc.size(); ++ip) {
         const auto& mcpart = mc[ip];
-        if (consumed[ip] || mcpart.getGeneratorStatus() > 1 || mcpart.getCharge() == 0 || mcpart.getCharge() * charge_rec < 0) {
+        if (consumed[ip] || mcpart.getGeneratorStatus() > 1 || mcpart.getCharge() == 0 ||
+            mcpart.getCharge() * charge_rec < 0) {
           if (msgLevel(MSG::DEBUG)) {
             debug() << "ignoring non-primary/neutral/opposite charge particle" << endmsg;
           }
           continue;
         }
-        const auto& p = mcpart.getMomentum();
-        const auto p_mag = std::hypot(p.x, p.y, p.z);
-        const auto p_phi = std::atan2(p.y, p.x);
-        const auto p_eta = std::atanh(p.z / p_mag);
-        const double dp_rel = std::abs((mom.mag() - p_mag) / p_mag);
+        const auto& p       = mcpart.getMomentum();
+        const auto p_mag    = std::hypot(p.x, p.y, p.z);
+        const auto p_phi    = std::atan2(p.y, p.x);
+        const auto p_eta    = std::atanh(p.z / p_mag);
+        const double dp_rel = std::abs((eicd::magnitude(mom) - p_mag) / p_mag);
         // check the tolerance for sin(dphi/2) to avoid the hemisphere problem and allow
         // for phi rollovers
-        const double dsphi = std::abs(sin(0.5 * (mom.phi() - p_phi)));
-        const double deta  = std::abs((mom.eta() - p_eta));
+        const double dsphi = std::abs(sin(0.5 * (eicd::angleAzimuthal(mom) - p_phi)));
+        const double deta  = std::abs((eicd::eta(mom) - p_eta));
 
         if (dp_rel < m_pRelativeTolerance && deta < m_etaTolerance && dsphi < sinPhiOver2Tolerance) {
           const double delta =
@@ -88,21 +87,21 @@ public:
           }
         }
       }
+      auto rec_part    = part.create();
       int32_t best_pid = 0;
-      eic::VectorXYZ vertex;
-      float time = 0;
-      float mass = 0;
+      auto vertex      = rec_part.v();
+      float time       = 0;
+      float mass       = 0;
       eic::Index mcID;
       if (best_match >= 0) {
         consumed[best_match] = true;
         const auto& mcpart   = mc[best_match];
         best_pid             = mcpart.getPDG();
-        vertex               = {mcpart.getVertex().x, mcpart.getVertex().y, mcpart.getVertex().z};
+        vertex               = mcpart.getVertex();
         time                 = mcpart.getTime();
         mass                 = mcpart.getMass();
-        //mcID                 = {mcpart.ID()};
+        // mcID                 = {mcpart.ID()};
       }
-      auto rec_part = part.create();
       rec_part.p(mom);
       rec_part.v(vertex);
       rec_part.time(time);
@@ -110,10 +109,7 @@ public:
       rec_part.status(static_cast<int16_t>(best_match >= 0 ? 0 : -1));
       rec_part.charge(static_cast<int16_t>(charge_rec));
       rec_part.weight(1.);
-      rec_part.theta(mom.theta());
-      rec_part.phi(mom.phi());
-      rec_part.momentum(mom.mag());
-      rec_part.energy(std::hypot(mom.mag(), mass));
+      rec_part.energy(std::hypot(eicd::magnitude(mom), mass));
       rec_part.mass(mass);
       rec_part.mcID(mcID);
 
@@ -121,20 +117,20 @@ public:
         if (best_match > 0) {
           const auto& mcpart = mc[best_match];
           debug() << fmt::format("Matched track with MC particle {}\n", best_match) << endmsg;
-          debug() << fmt::format("  - Track: (mom: {}, theta: {}, phi: {}, charge: {})", mom.mag(), mom.theta(),
-                                 mom.phi(), charge_rec)
+          debug() << fmt::format("  - Track: (mom: {}, theta: {}, phi: {}, charge: {})", eicd::magnitude(mom),
+                                 eicd::anglePolar(mom), eicd::angleAzimuthal(mom), charge_rec)
                   << endmsg;
-          const auto& p = mcpart.getMomentum();
-          const auto p_mag = std::hypot(p.x, p.y, p.z);
-          const auto p_phi = std::atan2(p.y, p.x);
-          const auto p_theta = std::atan2(std::hypot(p.x, p.y), p.z);
-          debug() << fmt::format("  - MC particle: (mom: {}, theta: {}, phi: {}, charge: {}, type: {}",
-                                 p_mag, p_theta, p_phi, mcpart.getCharge(), mcpart.getPDG())
+          const auto& p      = mcpart.getMomentum();
+          const auto p_mag   = eicd::magnitude(p);
+          const auto p_phi   = eicd::angleAzimuthal(p);
+          const auto p_theta = eicd::anglePolar(p);
+          debug() << fmt::format("  - MC particle: (mom: {}, theta: {}, phi: {}, charge: {}, type: {}", p_mag, p_theta,
+                                 p_phi, mcpart.getCharge(), mcpart.getPDG())
                   << endmsg;
         } else {
           debug() << fmt::format("Did not find a good match for track \n") << endmsg;
-          debug() << fmt::format("  - Track: (mom: {}, theta: {}, phi: {}, charge: {})", mom.mag(), mom.theta(),
-                                 mom.phi(), charge_rec)
+          debug() << fmt::format("  - Track: (mom: {}, theta: {}, phi: {}, charge: {})", eicd::magnitude(mom),
+                                 eicd::anglePolar(mom), eicd::angleAzimuthal(mom), charge_rec)
                   << endmsg;
         }
       }

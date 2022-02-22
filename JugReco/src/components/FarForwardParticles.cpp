@@ -18,6 +18,7 @@
 // Event Model related classes
 #include "eicd/ReconstructedParticleCollection.h"
 #include "eicd/TrackerHitCollection.h"
+#include <eicd/vector_utils.h>
 
 namespace Jug::Reco {
 
@@ -39,16 +40,14 @@ class FarForwardParticles : public GaudiAlgorithm {
   Gaudi::Property<std::string> m_readout{this, "readoutClass", ""};
   Gaudi::Property<std::string> m_layerField{this, "layerField", ""};
   Gaudi::Property<std::string> m_sectorField{this, "sectorField", ""};
-  SmartIF<IGeoSvc>             m_geoSvc;
-  dd4hep::BitFieldCoder*       id_dec = nullptr;
-  size_t                       sector_idx, layer_idx;
+  SmartIF<IGeoSvc> m_geoSvc;
+  dd4hep::BitFieldCoder* id_dec = nullptr;
+  size_t sector_idx, layer_idx;
 
-  Gaudi::Property<std::string>              m_localDetElement{this, "localDetElement", ""};
+  Gaudi::Property<std::string> m_localDetElement{this, "localDetElement", ""};
   Gaudi::Property<std::vector<std::string>> u_localDetFields{this, "localDetFields", {}};
-  dd4hep::DetElement                        local;
-  size_t                                    local_mask = ~0;
-
-
+  dd4hep::DetElement local;
+  size_t local_mask = ~0;
 
   const double aXRP[2][2] = {{2.102403743, 29.11067626}, {0.186640381, 0.192604619}};
   const double aYRP[2][2] = {{0.0000159900, 3.94082098}, {0.0000079946, -0.1402995}};
@@ -57,28 +56,26 @@ class FarForwardParticles : public GaudiAlgorithm {
   double aYRPinv[2][2] = {0.0, 0.0};
 
 public:
-  FarForwardParticles(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc) {
+  FarForwardParticles(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputCollection", m_inputHitCollection, "FarForwardTrackerHits");
     declareProperty("outputCollection", m_outputParticles, "ReconstructedParticles");
   }
 
   // See Wouter's example to extract local coordinates CalorimeterHitReco.cpp
-  //includes DDRec/CellIDPositionConverter.here
-  //See tutorial
+  // includes DDRec/CellIDPositionConverter.here
+  // See tutorial
   // auto converter = m_GeoSvc ....
-  //https://eicweb.phy.anl.gov/EIC/juggler/-/blob/master/JugReco/src/components/CalorimeterHitReco.cpp - line 200
-  //include the Eigen libraries, used in ACTS, for the linear algebra.
+  // https://eicweb.phy.anl.gov/EIC/juggler/-/blob/master/JugReco/src/components/CalorimeterHitReco.cpp - line 200
+  // include the Eigen libraries, used in ACTS, for the linear algebra.
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure()){
+    if (GaudiAlgorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
     m_geoSvc = service(m_geoSvcName);
     if (!m_geoSvc) {
       error() << "Unable to locate Geometry Service. "
-              << "Make sure you have GeoSvc and SimSvc in the right order in the configuration."
-              << endmsg;
+              << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
       return StatusCode::FAILURE;
     }
 
@@ -107,14 +104,12 @@ public:
     if (m_localDetElement.value().size()) {
       try {
         local = m_geoSvc->detector()->detector(m_localDetElement.value());
-        info() << "Local coordinate system from DetElement " << m_localDetElement.value()
-                << endmsg;
+        info() << "Local coordinate system from DetElement " << m_localDetElement.value() << endmsg;
       } catch (...) {
-        error() << "Failed to locate local coordinate system from DetElement "
-                << m_localDetElement.value() << endmsg;
+        error() << "Failed to locate local coordinate system from DetElement " << m_localDetElement.value() << endmsg;
         return StatusCode::FAILURE;
       }
-    // or get from fields
+      // or get from fields
     } else {
       std::vector<std::pair<std::string, int>> fields;
       for (auto& f : u_localDetFields.value()) {
@@ -125,11 +120,11 @@ public:
       if (fields.empty()) {
         local_mask = ~0;
       }
-      //info() << fmt::format("Local DetElement mask {:#064b} from fields [{}]", local_mask,
+      // info() << fmt::format("Local DetElement mask {:#064b} from fields [{}]", local_mask,
       //                      fmt::join(fields, ", "))
       //        << endmsg;
     }
-      
+
     double det = aXRP[0][0] * aXRP[1][1] - aXRP[0][1] * aXRP[1][0];
 
     if (det == 0) {
@@ -175,32 +170,30 @@ public:
 
     for (const auto& h : *rawhits) {
 
-      auto  cellID   = h.cellID();
+      auto cellID = h.cellID();
       // The actual hit position in Global Coordinates
-      //auto pos0 = h.position();
-  
-      auto gpos = converter->position(cellID);
-        // local positions
-        if (m_localDetElement.value().empty()) {
-          auto volman = m_geoSvc->detector()->volumeManager();
-          local       = volman.lookupDetElement(cellID);
-        }
-        auto pos0 = local.nominal().worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z())); //hit position in local coordinates
+      // auto pos0 = h.position();
 
-  
+      auto gpos = converter->position(cellID);
+      // local positions
+      if (m_localDetElement.value().empty()) {
+        auto volman = m_geoSvc->detector()->volumeManager();
+        local       = volman.lookupDetElement(cellID);
+      }
+      auto pos0 = local.nominal().worldToLocal(
+          dd4hep::Position(gpos.x(), gpos.y(), gpos.z())); // hit position in local coordinates
+
       // auto mom0 = h.momentum;
       // auto pidCode = h.g4ID;
       auto eDep = h.edep();
-
-
 
       if (eDep < 0.00001) {
         continue;
       }
 
       if (eventReset < 2) {
-        hitx.push_back(pos0.x());// - local_x_offset_station_2);
-      } // use station 2 for both offsets since it is used for the reference orbit
+        hitx.push_back(pos0.x()); // - local_x_offset_station_2);
+      }                           // use station 2 for both offsets since it is used for the reference orbit
       else {
         hitx.push_back(pos0.x()); // - local_x_offset_station_2);
       }
@@ -226,7 +219,7 @@ public:
 
       if (base == 0) {
         warning() << "Detector separation = 0!"
-                << "Cannot calculate slope!" << endmsg;
+                  << "Cannot calculate slope!" << endmsg;
         return StatusCode::SUCCESS;
       }
 
@@ -254,49 +247,23 @@ public:
       double p    = nomMomentum * (1 + 0.01 * Xip[0]);
       double norm = std::sqrt(1.0 + rsx * rsx + rsy * rsy);
 
-      double prec[3];
-      prec[0] = p * rsx / norm;
-      prec[1] = p * rsy / norm;
-      prec[2] = p / norm;
-
-      // double pT_reco = std::sqrt(prec[0]*prec[0] + prec[1]*prec[1]);
-      float p_reco = std::sqrt(prec[0] * prec[0] + prec[1] * prec[1] + prec[2] * prec[2]);
+      const float prec[3] = {static_cast<float>(p * rsx / norm), static_cast<float>(p * rsy / norm),
+                             static_cast<float>(p / norm)};
 
       //----- end RP reconstruction code ------
 
-      eic::VectorXYZ recoMom(prec[0], prec[1], prec[2]);
-      eic::VectorXYZ primVtx(0, 0, 0);
-      eic::Weight wgt(1);
-
-      // ReconstructedParticle (eic::Index ID, eic::VectorXYZ p, eic::VectorXYZ v, float time, std::int32_t pid,
-      // std::int16_t status, std::int16_t charge, eic::Weight weight, eic::Direction direction, float momentum,
-      // float energy, float mass)
-
-      // eic::ReconstructedParticle rec_part{{part.ID(), algorithmID()},
-      // mom3s,
-      //{part.vs().x, part.vs().y, part.vs().z},
-      // static_cast<float>(part.time()),
-      // part.pdgID(),
-      // 0,
-      // static_cast<int16_t>(part.charge()),
-      // 1.,
-      //{mom3s.theta(), mom3s.phi()},
-      // static_cast<float>(moms),
-      // static_cast<float>(Es),
-      // static_cast<float>(part.mass())};
-
       eic::ReconstructedParticle rpTrack;
-      rpTrack.p(recoMom);
-      rpTrack.v(primVtx);
+      rpTrack.p({prec});
+      rpTrack.v({0, 0, 0});
       rpTrack.time(0);
       rpTrack.pid(2122);
       rpTrack.status(0);
       rpTrack.charge(1);
       rpTrack.weight(1.);
-      rpTrack.theta(recoMom.theta());
-      rpTrack.phi(recoMom.phi());
-      rpTrack.momentum(p_reco);
-      rpTrack.energy(std::hypot(p_reco, .938272));
+      rpTrack.theta(eicd::anglePolar(rpTrack.p()));
+      rpTrack.phi(eicd::angleAzimuthal(rpTrack.p()));
+      rpTrack.momentum(eicd::magnitude(rpTrack.p()));
+      rpTrack.energy(std::hypot(rpTrack.momentum(), .938272));
       rpTrack.mass(.938272);
       rc->push_back(rpTrack);
 

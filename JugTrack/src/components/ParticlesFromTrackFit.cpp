@@ -116,14 +116,14 @@ namespace Jug::Reco {
               debug() << " chi2 = " << trajState.chi2Sum << endmsg;
             }
 
-            const eic::CovXYZ covMomentum {
+            const eicd::Cov3f covMomentum {
               static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundTheta)),
               static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundPhi)),
               static_cast<float>(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)),
               static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundPhi)),
               static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundQOverP)),
               static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundQOverP))};
-            const eic::CovXY covPos {
+            const eicd::Cov2f covPos {
               static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
               static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)),
               static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc1))};

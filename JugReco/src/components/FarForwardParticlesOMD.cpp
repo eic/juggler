@@ -13,6 +13,7 @@
 // Event Model related classes
 #include "eicd/ReconstructedParticleCollection.h"
 #include "eicd/TrackerHitCollection.h"
+#include <eicd/vector_utils.h>
 
 namespace Jug::Reco {
 
@@ -153,49 +154,23 @@ public:
       double p    = nomMomentum * (1 + 0.01 * Xip[0]);
       double norm = std::sqrt(1.0 + rsx * rsx + rsy * rsy);
 
-      double prec[3];
-      prec[0] = p * rsx / norm;
-      prec[1] = p * rsy / norm;
-      prec[2] = p / norm;
-
-      // double pT_reco = std::sqrt(prec[0]*prec[0] + prec[1]*prec[1]);
-      float p_reco = std::sqrt(prec[0] * prec[0] + prec[1] * prec[1] + prec[2] * prec[2]);
+      const float prec[3] = {static_cast<float>(p * rsx / norm), static_cast<float>(p * rsy / norm),
+                             static_cast<float>(p / norm)};
 
       //----- end RP reconstruction code ------
 
-      eic::VectorXYZ recoMom(prec[0], prec[1], prec[2]);
-      eic::VectorXYZ primVtx(0, 0, 0);
-      eic::Weight wgt(1);
-
-      // ReconstructedParticle (eic::Index ID, eic::VectorXYZ p, eic::VectorXYZ v, float time, std::int32_t pid,
-      // std::int16_t status, std::int16_t charge, eic::Weight weight, eic::Direction direction, float momentum, float
-      // energy, float mass)
-
-      // eic::ReconstructedParticle rec_part{{part.ID(), algorithmID()},
-      // mom3s,
-      //{part.vs().x, part.vs().y, part.vs().z},
-      // static_cast<float>(part.time()),
-      // part.pdgID(),
-      // 0,
-      // static_cast<int16_t>(part.charge()),
-      // 1.,
-      //{mom3s.theta(), mom3s.phi()},
-      // static_cast<float>(moms),
-      // static_cast<float>(Es),
-      // static_cast<float>(part.mass())};
-
       eic::ReconstructedParticle rpTrack;
-      rpTrack.p(recoMom);
-      rpTrack.v(primVtx);
+      rpTrack.p({prec});
+      rpTrack.v({0, 0, 0});
       rpTrack.time(0);
       rpTrack.pid(2122);
       rpTrack.status(0);
       rpTrack.charge(1);
       rpTrack.weight(1.);
-      rpTrack.theta(recoMom.theta());
-      rpTrack.phi(recoMom.phi());
-      rpTrack.momentum(p_reco);
-      rpTrack.energy(std::hypot(p_reco, .938272));
+      rpTrack.theta(eicd::anglePolar(rpTrack.p()));
+      rpTrack.phi(eicd::angleAzimuthal(rpTrack.p()));
+      rpTrack.momentum(eicd::magnitude(rpTrack.p()));
+      rpTrack.energy(std::hypot(rpTrack.momentum(), .938272));
       rpTrack.mass(.938272);
       rc->push_back(rpTrack);
 

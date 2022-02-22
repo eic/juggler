@@ -186,18 +186,18 @@ private:
 
     // center of gravity with logarithmic weighting
     float tw = 0.;
-    eic::VectorXYZ v;
+    auto v = cl.position();
     for (unsigned i = 0; i < pcl.hits().size(); ++i) {
       const auto& hit   = pcl.hits()[i];
       const auto weight = pcl.weights()[i];
       float w           = weightFunc(hit.energy() * weight, totalE, m_logWeightBase.value(), 0);
       tw += w;
-      v = v.add(hit.position().scale(w));
+      v = v + (hit.position() * w);
     }
     if (tw == 0.) {
       warning() << "zero total weights encountered, you may want to adjust your weighting parameter." << endmsg;
     }
-    cl.position(v.scale(1 / tw));
+    cl.position(v / tw);
     cl.positionError({}); // @TODO: Covariance matrix
 
     // Optionally constrain the cluster to the hit eta values

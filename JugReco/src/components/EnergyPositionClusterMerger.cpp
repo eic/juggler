@@ -13,6 +13,7 @@
 
 // Event Model related classes
 #include "eicd/ClusterCollection.h"
+#include "eicd/vector_utils.h"
 
 using namespace Gaudi::Units;
 
@@ -46,8 +47,7 @@ public:
   double m_phiTolerance;
 
 public:
-  EnergyPositionClusterMerger(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc) {
+  EnergyPositionClusterMerger(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
     declareProperty("energyClusters", m_energyClusters, "Cluster collection with good energy precision");
     declareProperty("positionClusters", m_positionClusters, "Cluster collection with good position precision");
     declareProperty("outputClusters", m_outputClusters, "");
@@ -64,7 +64,7 @@ public:
     const auto& e_clus   = *(m_energyClusters.get());
     const auto& pos_clus = *(m_positionClusters.get());
     // output
-    auto& merged    = *(m_outputClusters.createAndPut());
+    auto& merged = *(m_outputClusters.createAndPut());
 
     std::vector<bool> consumed(e_clus.size(), false);
 
@@ -80,7 +80,7 @@ public:
         const auto& ec = e_clus[ie];
         // 1. stop if not within tolerance
         //    (make sure to handle rollover of phi properly)
-        double dphi = pc.position().phi() - ec.position().phi();
+        double dphi = eicd::angleAzimuthal(pc.position()) - eicd::angleAzimuthal(ec.position());
         if (std::abs(dphi) > M_PI) {
           dphi = std::abs(dphi) - M_PI;
         }
@@ -116,14 +116,14 @@ public:
         consumed[best_match] = true;
         if (msgLevel(MSG::DEBUG)) {
           debug() << fmt::format("Matched position cluster {} with energy cluster {}\n", pc.id(), ec.id()) << endmsg;
-          debug() << fmt::format("  - Position cluster: (E: {}, phi: {}, z: {})", pc.energy(), pc.position().phi(),
-                                 pc.position().z)
+          debug() << fmt::format("  - Position cluster: (E: {}, phi: {}, z: {})", pc.energy(),
+                                 eicd::angleAzimuthal(pc.position()), pc.position().z)
                   << endmsg;
-          debug() << fmt::format("  - Energy cluster: (E: {}, phi: {}, z: {})", ec.energy(), ec.position().phi(),
-                                 ec.position().z)
+          debug() << fmt::format("  - Energy cluster: (E: {}, phi: {}, z: {})", ec.energy(),
+                                 eicd::angleAzimuthal(ec.position()), ec.position().z)
                   << endmsg;
           debug() << fmt::format("  ---> Merged cluster: (E: {}, phi: {}, z: {})", new_clus.energy(),
-                                 new_clus.position().phi(), new_clus.position().z)
+                                 eicd::angleAzimuthal(new_clus.position()), new_clus.position().z)
                   << endmsg;
         }
       }
