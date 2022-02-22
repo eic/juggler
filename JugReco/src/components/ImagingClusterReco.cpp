@@ -134,7 +134,7 @@ private:
     const auto& hits    = pcl.hits();
     const auto& weights = pcl.weights();
     // using map to have hits sorted by layer
-    std::map<int, std::vector<std::pair<eic::ConstCalorimeterHit, eic::Weight>>> layer_map;
+    std::map<int, std::vector<std::pair<eic::ConstCalorimeterHit, float>>> layer_map;
     for (unsigned i = 0; i < hits.size(); ++i) {
       const auto hit = hits[i];
       auto lid       = hit.layer();
@@ -153,7 +153,7 @@ private:
     return cl_layers;
   }
 
-  eic::Cluster reconstruct_layer(const std::vector<std::pair<eic::ConstCalorimeterHit, eic::Weight>>& hits) const {
+  eic::Cluster reconstruct_layer(const std::vector<std::pair<eic::ConstCalorimeterHit, float>>& hits) const {
     eic::Cluster layer;
     layer.type(ClusterType::kClusterSlice);
     // Calculate averages
