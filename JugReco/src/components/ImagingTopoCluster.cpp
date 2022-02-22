@@ -168,6 +168,7 @@ public:
       auto pcl = proto.create();
       for (const auto& [idx, hit] : group) {
         pcl.addhits(hit);
+        pcl.addweights(1);
       }
     }
 

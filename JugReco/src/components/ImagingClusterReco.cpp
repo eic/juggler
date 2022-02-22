@@ -208,7 +208,7 @@ private:
     double r           = 9999 * cm;
     for (unsigned i = 0; i < hits.size(); ++i) {
       const auto& hit   = hits[i];
-      const auto weight = weights[i];
+      const auto& weight = weights[i];
       energy += hit.energy() * weight;
       energyError += std::pow(hit.energyError() * weight, 2);
       // energy weighting for the other variables
