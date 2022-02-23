@@ -145,6 +145,7 @@ namespace Jug::Reco {
           cl.energy(cl.energy() + h.energy());
           cl.position(cl.position() + (h.position() * h.energy() / total_energy));
           pcl.addhits(h);
+          pcl.addweights(1);
         }
         // Optionally store the MC truth associated with the first hit in this cluster
         // FIXME no connection between cluster and truth in edm4hep
