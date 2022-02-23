@@ -126,7 +126,7 @@ public:
         found_proton = true;
       }
       // Index of true Scattered electron. Currently taken as first status==1 electron in HEPMC record.
-      if (p.getGeneratorStatus() == 1 && p.getPDG() == 11 && ef_iter == mcparts.end()) {
+      if (p.getGeneratorStatus() == 1 && p.getPDG() == 11 && ! (ef_iter != mcparts.end())) {
         ef_iter = p;
       }
 
