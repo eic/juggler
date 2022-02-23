@@ -83,45 +83,45 @@ public:
     for (const auto& p : mcparts) {
       if (p.getGeneratorStatus() == 4 && p.getPDG() == 11) {
         // Incoming electron
-        ei.setPxPyPzE(p.getMomentum().x, p.getMomentum().y, p.getMomentum().z, p.getEnergy());
+        ei.SetPxPyPzE(p.getMomentum().x, p.getMomentum().y, p.getMomentum().z, p.getEnergy());
 
         //Should not include true event-by-event smearing of beam particles for reconstruction
         //Find a better way to do this...
-        ei.setPx(0.);
-        ei.setPy(0.);
+        ei.SetPx(0.);
+        ei.SetPy(0.);
 
         if( fabs(ei.Pz() - 5.0) < 1.0 )
-          ei.setPz(-5.0);
+          ei.SetPz(-5.0);
         else if( fabs(ei.Pz() - 10.0) < 1.0 )
-          ei.setPz(-10.0);
+          ei.SetPz(-10.0);
         else if( fabs(ei.Pz() - 18.0) < 1.0 )
-          ei.setPz(-18.0);
+          ei.SetPz(-18.0);
         
-        ei.setE(std::hypot(ei.Pz(), m_electron));
+        ei.SetE(std::hypot(ei.Pz(), m_electron));
 
         found_electron = true;
       }
       if (p.getGeneratorStatus() == 4 && (p.getPDG() == 2212 || p.getPDG() == 2112)) {
         // Incoming proton
-        pi.setPxPyPzE(p.getMomentum().x, p.getMomentum().y, p.getMomentum().z, p.getEnergy());
+        pi.SetPxPyPzE(p.getMomentum().x, p.getMomentum().y, p.getMomentum().z, p.getEnergy());
 
         //Should not include true event-by-event smearing of beam particles for reconstruction
         //Find a better way to do this...
-        pi.setPy(0.);
+        pi.SetPy(0.);
 
         if( fabs(pi.Pz() - 41.0) < 5.0 ){
-          pi.setPx(41.0*sin(m_crossingAngle));
-          pi.setPz(41.0*cos(m_crossingAngle));
+          pi.SetPx(41.0*sin(m_crossingAngle));
+          pi.SetPz(41.0*cos(m_crossingAngle));
         }
         else if( fabs(pi.Pz() - 100.0) < 5.0 ){
-          pi.setPx(100.0*sin(m_crossingAngle));
-          pi.setPz(100.0*cos(m_crossingAngle));
+          pi.SetPx(100.0*sin(m_crossingAngle));
+          pi.SetPz(100.0*cos(m_crossingAngle));
         }
         else if( fabs(pi.Pz() - 275.0) < 5.0 ){
-          pi.setPx(275.0*sin(m_crossingAngle));
-          pi.setPz(275.0*cos(m_crossingAngle));
+          pi.SetPx(275.0*sin(m_crossingAngle));
+          pi.SetPz(275.0*cos(m_crossingAngle));
         }
-        pi.setE(std::hypot(pi.Px(), pi.Pz(), (p.getPDG() == 2212) ? m_proton : m_neutron));
+        pi.SetE(std::hypot(pi.Px(), pi.Pz(), (p.getPDG() == 2212) ? m_proton : m_neutron));
       
         found_proton = true;
       }
