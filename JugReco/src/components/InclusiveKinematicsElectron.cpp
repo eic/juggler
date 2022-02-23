@@ -10,7 +10,8 @@
 #include "JugBase/IParticleSvc.h"
 #include "JugBase/DataHandle.h"
 
-#include "eicd/VectorXYZT.h"
+#include "Math/GenVector/PxPyPzE4D.h"
+using ROOT::Math::PxPyPzE4D<double> as PxPyPzE4D;
 
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
@@ -73,70 +74,63 @@ public:
     auto& out_kinematics = *(m_outputInclusiveKinematicsCollection.createAndPut());
 
     // Loop over generated particles to get incoming electron beam
-    eicd::VectorXYZT ei, pi;
+    PxPyPzE4D ei, pi;
     bool found_electron = false;
     bool found_proton = false;
     //Also get the true scattered electron, which will not be included in the sum
     //over final-state particles for the JB reconstruction
-    int32_t mcscatID = -1;
+    auto ef_iter = mcparts.end();
     for (const auto& p : mcparts) {
       if (p.getGeneratorStatus() == 4 && p.getPDG() == 11) {
         // Incoming electron
-        ei.x = p.getMomentum().x;
-        ei.y = p.getMomentum().y;
-        ei.z = p.getMomentum().z;
-        ei.t = p.getEnergy();
+        ei.setPxPyPzE(p.getMomentum().x, p.getMomentum().y, p.getMomentum().z, p.getEnergy());
 
         //Should not include true event-by-event smearing of beam particles for reconstruction
         //Find a better way to do this...
-        ei.x = 0.;
-        ei.y = 0.;
+        ei.setPx(0.);
+        ei.setPy(0.);
 
-        if( fabs(ei.z - 5.0) < 1.0 )
-          ei.z = -5.0;
-        else if( fabs(ei.z - 10.0) < 1.0 )
-          ei.z = -10.0;
-        else if( fabs(ei.z - 18.0) < 1.0 )
-          ei.z = -18.0;
+        if( fabs(ei.Pz() - 5.0) < 1.0 )
+          ei.setPz(-5.0);
+        else if( fabs(ei.Pz() - 10.0) < 1.0 )
+          ei.setPz(-10.0);
+        else if( fabs(ei.Pz() - 18.0) < 1.0 )
+          ei.setPz(-18.0);
         
-        ei.t = sqrt( ei.z*ei.z + m_electron*m_electron );
+        ei.setE(std::hypot(ei.Pz(), m_electron));
 
         found_electron = true;
       }
       if (p.getGeneratorStatus() == 4 && (p.getPDG() == 2212 || p.getPDG() == 2112)) {
         // Incoming proton
-        pi.x = p.getMomentum().x;
-        pi.y = p.getMomentum().y;
-        pi.z = p.getMomentum().z;
-        pi.t = p.getEnergy();
+        pi.setPxPyPzE(p.getMomentum().x, p.getMomentum().y, p.getMomentum().z, p.getEnergy());
 
         //Should not include true event-by-event smearing of beam particles for reconstruction
         //Find a better way to do this...
-        pi.y = 0;
+        pi.setPy(0.);
 
-        if( fabs(pi.z - 41.0) < 5.0 ){
-          pi.x = 41.0*sin(m_crossingAngle);
-          pi.z = 41.0*cos(m_crossingAngle);
+        if( fabs(pi.Pz() - 41.0) < 5.0 ){
+          pi.setPx(41.0*sin(m_crossingAngle));
+          pi.setPz(41.0*cos(m_crossingAngle));
         }
-        else if( fabs(pi.z - 100.0) < 5.0 ){
-          pi.x = 100.0*sin(m_crossingAngle);
-          pi.z = 100.0*cos(m_crossingAngle);
+        else if( fabs(pi.Pz() - 100.0) < 5.0 ){
+          pi.setPx(100.0*sin(m_crossingAngle));
+          pi.setPz(100.0*cos(m_crossingAngle));
         }
-        else if( fabs(pi.z - 275.0) < 5.0 ){
-          pi.x = 275.0*sin(m_crossingAngle);
-          pi.z = 275.0*cos(m_crossingAngle);
+        else if( fabs(pi.Pz() - 275.0) < 5.0 ){
+          pi.setPx(275.0*sin(m_crossingAngle));
+          pi.setPz(275.0*cos(m_crossingAngle));
         }
-        pi.t = std::hypot(pi.x, pi.z, (p.getPDG() == 2212) ? m_proton : m_neutron);
+        pi.setE(std::hypot(pi.Px(), pi.Pz(), (p.getPDG() == 2212) ? m_proton : m_neutron));
       
-
         found_proton = true;
       }
       // Index of true Scattered electron. Currently taken as first status==1 electron in HEPMC record.
-      if (p.getGeneratorStatus() == 1 && p.getPDG() == 11 && mcscatID == -1) {
-        mcscatID = p.id();
+      if (p.getGeneratorStatus() == 1 && p.getPDG() == 11 && ef_iter == mcparts.end()) {
+        ef_iter = p;
       }
 
-      if (found_electron && found_proton && mcscatID != -1) {
+      if (found_electron && found_proton && ef_iter != mcparts.end()) {
         break;
       }
     }
@@ -153,7 +147,7 @@ public:
       }
       return StatusCode::SUCCESS;
     }
-    if (mcscatID == -1) {
+    if (ep == mcparts.end()) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "No truth scattered electron found" << endmsg;
       }
@@ -162,12 +156,12 @@ public:
 
     // Loop over reconstructed particles to get outgoing scattered electron
     // Use the true scattered electron from the MC information
-    typedef std::pair<eicd::VectorXYZT, eicd::Index> t_electron;
+    typedef std::pair<PxPyPzE4D, eic::ReconstructedParticleCollection::iterator> t_electron;
     std::vector<t_electron> electrons;
-    for (const auto& p : parts) {
-      if (p.mcID().value == mcscatID) {
+    for (const auto& p: parts) {
+      if (p.mcID() == ef_iter) {
         // Outgoing electron
-        electrons.push_back(t_electron(eicd::VectorXYZT(p.p().x, p.p().y, p.p().z, p.energy()), eicd::Index(p.ID())));
+        electrons.push_back(t_electron(PxPyPzE4D(p.p().x, p.p().y, p.p().z, p.energy()), p));
       }
     }
 
@@ -175,7 +169,7 @@ public:
 
       // DIS kinematics calculations
       auto kin = out_kinematics.create();
-      const auto [ef, scatID] = electrons.front();
+      const auto [ef, part] = electrons.front();
       const auto q = ei.subtract(ef);
       const auto q_dot_pi = q.dot(pi);
       kin.Q2(-q.dot(q));
@@ -183,7 +177,7 @@ public:
       kin.nu(q_dot_pi / m_proton);
       kin.x(kin.Q2() / (2.*q_dot_pi));
       kin.W(sqrt(m_proton*m_proton + 2.*q_dot_pi - kin.Q2()));
-      kin.scatID(scatID);
+      kin.scatID(part);
 
       // Debugging output
       if (msgLevel(MSG::DEBUG)) {
