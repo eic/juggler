@@ -73,6 +73,7 @@ public:
       }
       // Add hit to the appropriate protocluster
       proto[protoIndex[trackID]].addhits(hit);
+      proto[protoIndex[trackID]].addweights(1);
     }
     return StatusCode::SUCCESS;
   }
