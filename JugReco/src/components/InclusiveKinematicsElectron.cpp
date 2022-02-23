@@ -11,7 +11,7 @@
 #include "JugBase/DataHandle.h"
 
 #include "Math/GenVector/PxPyPzE4D.h"
-using ROOT::Math::PxPyPzE4D<double> as PxPyPzE4D;
+typedef ROOT::Math::PxPyPzE4D<double> PxPyPzE4D;
 
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
