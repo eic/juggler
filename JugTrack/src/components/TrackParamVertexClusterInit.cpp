@@ -34,8 +34,8 @@ namespace Jug::Reco {
    */
   class TrackParamVertexClusterInit : public GaudiAlgorithm {
   public:
-    using Clusters =  eic::ClusterCollection;
-    using VertexHits =  eic::TrackerHitCollection;
+    using Clusters =  eicd::ClusterCollection;
+    using VertexHits =  eicd::TrackerHitCollection;
 
     DataHandle<VertexHits>               m_inputVertexHits{"inputVertexHits", Gaudi::DataHandle::Reader, this};
     DataHandle<Clusters>                 m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};

@@ -41,8 +41,8 @@ namespace Jug::Reco {
    */
   class PhotoMultiplierReco : public GaudiAlgorithm {
   public:
-    DataHandle<eic::RawPMTHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-    DataHandle<eic::PMTHitCollection>    m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
+    DataHandle<eicd::RawPMTHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+    DataHandle<eicd::PMTHitCollection>    m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
     Gaudi::Property<double>              m_timeStep{this, "timeStep", 0.0625 * ns};
     Gaudi::Property<double>              m_minNpe{this, "minNpe", 0.0};
     Gaudi::Property<double>              m_speMean{this, "speMean", 80.0};
@@ -93,7 +93,7 @@ namespace Jug::Reco {
               m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().position();
           // cell dimension
           auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
-          hits.push_back(eic::PMTHit{
+          hits.push_back(eicd::PMTHit{
               0 /*deleteme*/,
               rh.cellID(),
               npe,

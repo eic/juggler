@@ -29,7 +29,7 @@ namespace Jug::Digi {
     Rndm::Numbers                            m_gaussDist;
     DataHandle<edm4hep::SimTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                   this};
-    DataHandle<eic::RawTrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+    DataHandle<eicd::RawTrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                    this};
 
   public:
@@ -57,7 +57,7 @@ namespace Jug::Digi {
       auto simhits = m_inputHitCollection.get();
       // Create output collections
       auto rawhits = m_outputHitCollection.createAndPut();
-      // eic::RawTrackerHitCollection* rawHitCollection = new eic::RawTrackerHitCollection();
+      // eicd::RawTrackerHitCollection* rawHitCollection = new eicd::RawTrackerHitCollection();
       std::map<long long, int> cell_hit_map;
       for (const auto& ahit : *simhits) {
         if (msgLevel(MSG::DEBUG)) {
@@ -80,7 +80,7 @@ namespace Jug::Digi {
         // std::cout << ahit << "\n";
         if (cell_hit_map.count(ahit.getCellID()) == 0) {
           cell_hit_map[ahit.getCellID()] = rawhits->size();
-          eic::RawTrackerHit rawhit(0 /* TBDeleted */,
+          eicd::RawTrackerHit rawhit(0 /* TBDeleted */,
                                     ahit.getCellID(),
                                     ahit.getMCParticle().getTime() * 1e6 + m_gaussDist() * 1e3, // ns->fs
                                     std::llround(ahit.getEDep() * 1e6));

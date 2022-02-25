@@ -44,9 +44,9 @@ namespace Reco {
   class TrackerHitReconstruction : public GaudiAlgorithm {
   public:
     Gaudi::Property<float> m_timeResolution{this, "timeResolution", 10}; // in ns
-    DataHandle<eic::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+    DataHandle<eicd::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                   this};
-    DataHandle<eic::TrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
+    DataHandle<eicd::TrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
 
     /// Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
@@ -73,7 +73,7 @@ namespace Reco {
     StatusCode execute() override {
       constexpr auto mm = dd4hep::mm;
       // input collection
-      const eic::RawTrackerHitCollection* rawhits = m_inputHitCollection.get();
+      const eicd::RawTrackerHitCollection* rawhits = m_inputHitCollection.get();
       // Create output collections
       auto rec_hits = m_outputHitCollection.createAndPut();
 
@@ -102,7 +102,7 @@ namespace Reco {
         //      - XYZ segmentation: xx -> sigma_x, yy-> sigma_y, zz -> sigma_z, tt -> 0
         //    This is properly in line with how we get the local coordinates for the hit
         //    in the TrackerSourceLinker.
-        eic::TrackerHit hit{0 /*deleteme */,                                       // Hit ID
+        eicd::TrackerHit hit{0 /*deleteme */,                                       // Hit ID
                             ahit.cellID(),                                         // Raw DD4hep cell ID
                             {pos.x() / mm, pos.y() / mm, pos.z() / mm},            // mm
                             {get_variance(dim[0] / mm), get_variance(dim[1] / mm), // variance (see note above)

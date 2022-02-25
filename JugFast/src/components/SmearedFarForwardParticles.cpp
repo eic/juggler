@@ -29,7 +29,7 @@ namespace Jug::Fast {
 class SmearedFarForwardParticles : public GaudiAlgorithm {
 public:
   DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"SmearedFarForwardParticles", Gaudi::DataHandle::Writer,
+  DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"SmearedFarForwardParticles", Gaudi::DataHandle::Writer,
                                                                      this};
 
   Gaudi::Property<bool> m_enableZDC{this, "enableZDC", true};
@@ -65,7 +65,7 @@ public:
   Rndm::Numbers m_gaussDist;
 
   private:
-  using RecData = eic::ReconstructedParticle;
+  using RecData = eicd::ReconstructedParticle;
 
   public:
   SmearedFarForwardParticles(const std::string& name, ISvcLocator* svcLoc)
@@ -196,7 +196,7 @@ private:
       const auto mom3s = rotateIonToLabDirection(mom3s_ion);
       const auto mom3s_phi = std::atan2(mom3s.y, mom3s.x);
       const auto mom3s_theta = std::atan2(std::hypot(mom3s.y, mom3s.x), mom3s.z);
-      eic::ReconstructedParticle rec_part;
+      eicd::ReconstructedParticle rec_part;
       //rec_part.ID({part.id(), algorithmID()});
       rec_part.p({mom3s.x, mom3s.y, mom3s.z});
       rec_part.v({part.getVertex().x, part.getVertex().y, part.getVertex().z});
@@ -384,7 +384,7 @@ private:
     const auto psmear = rotateIonToLabDirection(psmear_ion);
     const auto psmear_phi = std::atan2(psmear.x, psmear.y);
     const auto psmear_theta = std::atan2(std::hypot(psmear.x, psmear.y), psmear.z);
-    eic::ReconstructedParticle rec_part;
+    eicd::ReconstructedParticle rec_part;
     rec_part.ID(part.id());
     rec_part.p({psmear.x, psmear.y, psmear.z});
     rec_part.v({part.getVertex().x, part.getVertex().y, part.getVertex().z});

@@ -50,8 +50,8 @@ public:
   Gaudi::Property<std::vector<std::string>> u_fields{this, "fields", {"layer"}};
   // reference field numbers to locate position for each merged hits group
   Gaudi::Property<std::vector<int>> u_refs{this, "fieldRefNumbers", {}};
-  DataHandle<eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+  DataHandle<eicd::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                   this};
 
   SmartIF<IGeoSvc> m_geoSvc;
@@ -107,7 +107,7 @@ public:
     auto& outputs = *m_outputHitCollection.createAndPut();
 
     // find the hits that belong to the same group (for merging)
-    std::unordered_map<long long, std::vector<eic::ConstCalorimeterHit>> merge_map;
+    std::unordered_map<long long, std::vector<eicd::ConstCalorimeterHit>> merge_map;
     for (const auto& h : inputs) {
       int64_t id = h.cellID() & id_mask;
       // use the reference field position
@@ -150,7 +150,7 @@ public:
 
       const auto& href = hits.front();
       outputs.push_back(
-          eic::CalorimeterHit{ref_id,
+          eicd::CalorimeterHit{ref_id,
                               energy,
                               energyError,
                               time,

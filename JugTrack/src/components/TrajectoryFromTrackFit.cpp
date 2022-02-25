@@ -51,7 +51,7 @@ namespace Jug::Reco {
    class TrajectoryFromTrackFit : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
    public:
     DataHandle<TrajectoriesContainer>     m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
-    DataHandle<eic::TrajectoryCollection> m_outputTrajectory{"outputTrajectoryParameters", Gaudi::DataHandle::Writer, this};
+    DataHandle<eicd::TrajectoryCollection> m_outputTrajectory{"outputTrajectoryParameters", Gaudi::DataHandle::Writer, this};
 
    public:
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
@@ -155,14 +155,14 @@ namespace Jug::Reco {
           double p = 1.0 / parameter[Acts::eBoundQOverP];
           double p_phi = parameter[Acts::eBoundPhi];
           double p_theta = parameter[Acts::eBoundTheta];
-          eic::VectorXYZT mom(p*sin(p_theta)*cos(p_phi), p*sin(p_theta)*sin(p_phi), p*cos(p_theta), 0);
+          eicd::VectorXYZT mom(p*sin(p_theta)*cos(p_phi), p*sin(p_theta)*sin(p_phi), p*cos(p_theta), 0);
 
           if (msgLevel(MSG::DEBUG)) {
             debug() << " chi2 = " << trajState.chi2Sum << endmsg;
             debug() << " pathlength at reference layer = " << pathlength_at_reflayer << "mm" << endmsg;
           }
             
-          eic::Trajectory traj_par{
+          eicd::Trajectory traj_par{
             {ID++, algorithmID()},
             {0, 0}, // proto track ID
             {0, 0}, // track param ID

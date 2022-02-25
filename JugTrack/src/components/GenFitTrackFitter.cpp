@@ -93,7 +93,7 @@ namespace Jug::Reco {
   StatusCode GenFitTrackFitter::execute()
   {
     // Read input data
-    const eic::TrackerHitCollection* hits              = m_inputHitCollection.get();
+    const eicd::TrackerHitCollection* hits              = m_inputHitCollection.get();
     const TrackParametersContainer*  initialParameters = m_initialTrackParameters.get();
     const ProtoTrackContainer*       protoTracks       = m_inputProtoTracks.get();
 
@@ -300,12 +300,12 @@ namespace Jug::Reco {
       }
 
 
-      //eic::TrackParameters electron_track_params({ID++, algorithmID()}, {0.0,0.0},{0.0,0.0},{0.0,0.0},{0.0,0.0},
+      //eicd::TrackParameters electron_track_params({ID++, algorithmID()}, {0.0,0.0},{0.0,0.0},{0.0,0.0},{0.0,0.0},
 
 
 
-      // TrackParameters(eic::Index ID, eic::FloatPair loc, eic::FloatPair locError, eic::Direction direction,
-      // eic::Direction directionError, float qOverP, float qOverPError, float time, float timeError);
+      // TrackParameters(eicd::Index ID, eicd::FloatPair loc, eicd::FloatPair locError, eicd::Direction direction,
+      // eicd::Direction directionError, float qOverP, float qOverPError, float time, float timeError);
       //tracks->push_back(electron_track_params);
 
       // delete fitter;

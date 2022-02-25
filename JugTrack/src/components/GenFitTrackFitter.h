@@ -74,11 +74,11 @@ namespace Jug::Reco {
   };
 
 public:
-  DataHandle<eic::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
   DataHandle<TrackParametersContainer>  m_initialTrackParameters{"initialTrackParameters", Gaudi::DataHandle::Reader, this};
   DataHandle<ProtoTrackContainer>       m_inputProtoTracks{"inputProtoTracks", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::TrackParametersCollection> m_foundTracks{"trackParameters", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::TrajectoryCollection> m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
+  DataHandle<eicd::TrackParametersCollection> m_foundTracks{"trackParameters", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::TrajectoryCollection> m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
 
   SmartIF<IGeoSvc> m_geoSvc;
   // Acts::GeometryContext                 m_geoctx;

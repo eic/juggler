@@ -23,8 +23,8 @@
 namespace Jug::Reco {
 
 class FarForwardParticles : public GaudiAlgorithm {
-  DataHandle<eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHits", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
+  DataHandle<eicd::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHits", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
                                                                      this};
 
   //----- Define constants here ------
@@ -148,7 +148,7 @@ public:
   }
 
   StatusCode execute() override {
-    const eic::TrackerHitCollection* rawhits = m_inputHitCollection.get();
+    const eicd::TrackerHitCollection* rawhits = m_inputHitCollection.get();
     auto& rc                                 = *(m_outputParticles.createAndPut());
 
     auto converter = m_geoSvc->cellIDPositionConverter();
@@ -252,7 +252,7 @@ public:
 
       //----- end RP reconstruction code ------
 
-      eic::ReconstructedParticle rpTrack;
+      eicd::ReconstructedParticle rpTrack;
       rpTrack.p({prec});
       rpTrack.v({0, 0, 0});
       rpTrack.time(0);

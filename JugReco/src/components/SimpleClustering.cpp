@@ -33,9 +33,9 @@ namespace Jug::Reco {
    */
   class SimpleClustering : public GaudiAlgorithm {
   public:
-    using RecHits  = eic::CalorimeterHitCollection;
-    using ProtoClusters = eic::ProtoClusterCollection;
-    using Clusters = eic::ClusterCollection;
+    using RecHits  = eicd::CalorimeterHitCollection;
+    using ProtoClusters = eicd::ProtoClusterCollection;
+    using Clusters = eicd::ClusterCollection;
 
     DataHandle<RecHits>       m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<ProtoClusters> m_outputProtoClusters{"outputProtoCluster", Gaudi::DataHandle::Writer, this};
@@ -93,13 +93,13 @@ namespace Jug::Reco {
       //  mcHits = m_inputMC->get();
       //}
 
-      std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>> the_hits;
-      std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>> remaining_hits;
+      std::vector<std::pair<uint32_t, eicd::ConstCalorimeterHit>> the_hits;
+      std::vector<std::pair<uint32_t, eicd::ConstCalorimeterHit>> remaining_hits;
 
       double max_dist   = m_maxDistance.value() / mm;
       double min_energy = m_minModuleEdep.value() / GeV;
 
-      eic::ConstCalorimeterHit ref_hit;
+      eicd::ConstCalorimeterHit ref_hit;
       bool have_ref = false;
       // Collect all our hits, and get the highest energy hit
       {
@@ -120,7 +120,7 @@ namespace Jug::Reco {
 
       while (have_ref && ref_hit.energy() > min_energy) {
 
-        std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>> cluster_hits;
+        std::vector<std::pair<uint32_t, eicd::ConstCalorimeterHit>> cluster_hits;
 
         for (const auto& [idx, h] : the_hits) {
           if (eicd::magnitude(h.position() - ref_hit.position()) < max_dist) {
@@ -132,7 +132,7 @@ namespace Jug::Reco {
 
         double total_energy = std::accumulate(
             std::begin(cluster_hits), std::end(cluster_hits), 0.0,
-            [](double t, const std::pair<uint32_t, eic::ConstCalorimeterHit>& h1) { return (t + h1.second.energy()); });
+            [](double t, const std::pair<uint32_t, eicd::ConstCalorimeterHit>& h1) { return (t + h1.second.energy()); });
 
         if (msgLevel(MSG::DEBUG)) {
           debug() << " total_energy = " << total_energy << endmsg;

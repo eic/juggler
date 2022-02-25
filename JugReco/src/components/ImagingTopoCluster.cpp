@@ -65,9 +65,9 @@ public:
   // minimum number of hits (to save this cluster)
   Gaudi::Property<int> m_minClusterNhits{this, "minClusterNhits", 10};
   // input hits collection
-  DataHandle<eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
   // output clustered hits
-  DataHandle<eic::ProtoClusterCollection> m_outputProtoClusterCollection{"outputProtoClusterCollection",
+  DataHandle<eicd::ProtoClusterCollection> m_outputProtoClusterCollection{"outputProtoClusterCollection",
                                                                          Gaudi::DataHandle::Writer, this};
 
   // unitless counterparts of the input parameters
@@ -130,7 +130,7 @@ public:
 
     // group neighboring hits
     std::vector<bool> visits(hits.size(), false);
-    std::vector<std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>>> groups;
+    std::vector<std::vector<std::pair<uint32_t, eicd::ConstCalorimeterHit>>> groups;
     for (size_t i = 0; i < hits.size(); ++i) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << fmt::format("hit {:d}: local position = ({}, {}, {}), global position = ({}, {}, {})", i + 1,
@@ -178,7 +178,7 @@ private:
   template <typename T> static inline T pow2(const T& x) { return x * x; }
 
   // helper function to group hits
-  bool is_neighbor(const eic::ConstCalorimeterHit& h1, const eic::ConstCalorimeterHit& h2) const {
+  bool is_neighbor(const eicd::ConstCalorimeterHit& h1, const eicd::ConstCalorimeterHit& h2) const {
     // different sectors, simple distance check
     if (h1.sector() != h2.sector()) {
       return std::sqrt(pow2(h1.position().x - h2.position().x) + pow2(h1.position().y - h2.position().y) +
@@ -202,8 +202,8 @@ private:
   }
 
   // grouping function with Depth-First Search
-  void dfs_group(std::vector<std::pair<uint32_t, eic::ConstCalorimeterHit>>& group, int idx,
-                 const eic::CalorimeterHitCollection& hits, std::vector<bool>& visits) const {
+  void dfs_group(std::vector<std::pair<uint32_t, eicd::ConstCalorimeterHit>>& group, int idx,
+                 const eicd::CalorimeterHitCollection& hits, std::vector<bool>& visits) const {
     // not a qualified hit to participate in clustering, stop here
     if (hits[idx].energy() < minClusterHitEdep) {
       visits[idx] = true;

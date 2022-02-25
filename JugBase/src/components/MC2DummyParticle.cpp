@@ -17,7 +17,7 @@ namespace Jug::Base {
     class MC2DummyParticle : public GaudiAlgorithm {
     public:
       DataHandle<edm4hep::MCParticleCollection> m_inputParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
-      DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"DummyReconstructedParticles",
+      DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"DummyReconstructedParticles",
                                                                              Gaudi::DataHandle::Writer, this};
       Rndm::Numbers                                    m_gaussDist;
       Gaudi::Property<double>                          m_smearing{this, "smearing", 0.01 /* 1 percent*/};
@@ -60,31 +60,33 @@ namespace Jug::Base {
           const auto pvec     = p.getMomentum();
           const auto pgen     = std::hypot(pvec.x, pvec.y, pvec.z);
           const auto momentum = pgen * m_gaussDist();
-          const auto energy   = p.getEnergy();
-          const auto px       = p.getMomentum().x * momentum / pgen;
-          const auto py       = p.getMomentum().y * momentum / pgen;
-          const auto pz       = p.getMomentum().z * momentum / pgen;
-          // @TODO: vertex smearing
-          const auto vx       = p.getVertex().x;
-          const auto vy       = p.getVertex().y;
-          const auto vz       = p.getVertex().z;
+          // make sure we keep energy consistent
+          using MomType        = decltype(eicd::ReconstructedParticle().momentum().x);
+          const MomType energy = std::sqrt(p.getEnergy() * p.getEnergy() - pgen * pgen + momentum * momentum);
+          const MomType px     = p.getMomentum().x * momentum / pgen;
+          const MomType py     = p.getMomentum().y * momentum / pgen;
+          const MomType pz     = p.getMomentum().z * momentum / pgen;
 
-          const auto p_phi = std::atan2(py, px);
-          const auto p_theta = std::atan2(std::hypot(px, py), pz);
+          const MomType dpx = m_smearing.value() * px;
+          const MomType dpy = m_smearing.value() * py;
+          const MomType dpz = m_smearing.value() * pz;
+          const MomType dE  = m_smearing.value() * energy;
+          // ignore covariance for now
+          // @TODO: vertex smearing
+          const MomType vx = p.getVertex().x;
+          const MomType vy = p.getVertex().y;
+          const MomType vz = p.getVertex().z;
 
           auto rec_part = out_parts.create();
-          rec_part.p({px, py, pz});
-          rec_part.v({vx, vy, vz});
-          rec_part.time(p.getTime());
-          rec_part.pid(p.getPDG());
-          rec_part.status(p.getGeneratorStatus());
-          rec_part.charge(p.getCharge());
-          rec_part.weight(1.);
-          rec_part.theta(p_theta);
-          rec_part.phi(p_phi);
-          rec_part.momentum(momentum);
+          rec_part.type(-1);
           rec_part.energy(energy);
+          rec_part.momentum({px, py, pz});
+          rec_part.referencePoint({vx, vy, vz}); // @FIXME: probably not what we want?
+          rec_part.charge(p.getCharge());
           rec_part.mass(p.getMass());
+          rec_part.goodnessOfPID(1); // Perfect PID
+          rec_part.covMatrix({dpx, dpy, dpz, dE});
+          rec_part.PDG(p.getPDG());
         }
         return StatusCode::SUCCESS;
       }

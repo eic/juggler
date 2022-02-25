@@ -22,9 +22,9 @@ namespace Jug::Fast {
 class ParticlesWithTruthPID : public GaudiAlgorithm {
 public:
   DataHandle<edm4hep::MCParticleCollection> m_inputTruthCollection{"inputMCParticles", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::TrackParametersCollection> m_inputTrackCollection{"inputTrackParameters", Gaudi::DataHandle::Reader,
+  DataHandle<eicd::TrackParametersCollection> m_inputTrackCollection{"inputTrackParameters", Gaudi::DataHandle::Reader,
                                                                     this};
-  DataHandle<eic::ReconstructedParticleCollection> m_outputParticleCollection{"ReconstructedParticles",
+  DataHandle<eicd::ReconstructedParticleCollection> m_outputParticleCollection{"ReconstructedParticles",
                                                                               Gaudi::DataHandle::Writer, this};
 
   // Matching momentum tolerance requires 10% by default;
@@ -92,7 +92,7 @@ public:
       auto vertex      = rec_part.v();
       float time       = 0;
       float mass       = 0;
-      eic::Index mcID;
+      eicd::Index mcID;
       if (best_match >= 0) {
         consumed[best_match] = true;
         const auto& mcpart   = mc[best_match];

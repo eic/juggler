@@ -23,7 +23,7 @@ namespace Jug::Reco {
  */
 class HoughTransformProtoTracks : public GaudiAlgorithm {
 public:
-  DataHandle<eic::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
   DataHandle<Jug::ProtoTrackContainer> m_outputProtoTracks{"outputProtoTracks", Gaudi::DataHandle::Writer, this};
 
 public:
@@ -40,7 +40,7 @@ public:
 
   StatusCode execute() override {
     // input collection
-    const eic::TrackerHitCollection* hits = m_inputTrackerHits.get();
+    const eicd::TrackerHitCollection* hits = m_inputTrackerHits.get();
     // Create output collections
     auto proto_tracks = m_outputProtoTracks.createAndPut();
 

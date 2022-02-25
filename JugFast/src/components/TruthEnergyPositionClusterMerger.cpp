@@ -34,10 +34,10 @@ class TruthEnergyPositionClusterMerger : public GaudiAlgorithm {
 public:
   // Input
   DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::ClusterCollection> m_energyClusters{"EnergyClusters", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::ClusterCollection> m_positionClusters{"PositionClusters", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::ClusterCollection> m_energyClusters{"EnergyClusters", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::ClusterCollection> m_positionClusters{"PositionClusters", Gaudi::DataHandle::Reader, this};
   // Output
-  DataHandle<eic::ClusterCollection> m_outputClusters{"OutputClusters", Gaudi::DataHandle::Writer, this};
+  DataHandle<eicd::ClusterCollection> m_outputClusters{"OutputClusters", Gaudi::DataHandle::Writer, this};
 
 public:
   TruthEnergyPositionClusterMerger(const std::string& name, ISvcLocator* svcLoc)
@@ -155,8 +155,8 @@ public:
 
   // get a map of mcID --> cluster
   // input: cluster_collections --> list of handles to all cluster collections
-  std::map<eic::Index, eic::ConstCluster> indexedClusters(const eic::ClusterCollection& clusters) const {
-    std::map<eic::Index, eic::ConstCluster> matched = {};
+  std::map<eicd::Index, eicd::ConstCluster> indexedClusters(const eicd::ClusterCollection& clusters) const {
+    std::map<eicd::Index, eicd::ConstCluster> matched = {};
     for (const auto& cluster : clusters) {
       if (msgLevel(MSG::VERBOSE)) {
         verbose() << " --> Found cluster: " << cluster.id() << " with mcID " << cluster.mcID() << " and energy "

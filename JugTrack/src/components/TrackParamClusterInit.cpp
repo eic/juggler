@@ -41,7 +41,7 @@ namespace Jug::Reco {
    */
   class TrackParamClusterInit : public GaudiAlgorithm {
   public:
-    using Clusters =  eic::ClusterCollection;
+    using Clusters =  eicd::ClusterCollection;
 
     DataHandle<Clusters>                 m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
     DataHandle<TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
@@ -65,7 +65,7 @@ namespace Jug::Reco {
 
     StatusCode execute() override {
       // input collection
-      const eic::ClusterCollection* clusters = m_inputClusters.get();
+      const eicd::ClusterCollection* clusters = m_inputClusters.get();
       // Create output collections
       auto init_trk_params = m_outputInitialTrackParameters.createAndPut();
 

@@ -21,7 +21,7 @@ class InclusiveKinematicsTruth : public GaudiAlgorithm {
 public:
   DataHandle<edm4hep::MCParticleCollection> m_inputParticleCollection{"MCParticles", Gaudi::DataHandle::Reader,
                                                                          this};
-  DataHandle<eic::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{"InclusiveKinematicsTruth",
+  DataHandle<eicd::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{"InclusiveKinematicsTruth",
                                                                                        Gaudi::DataHandle::Writer, this};
 
   SmartIF<IParticleSvc> m_pidSvc;

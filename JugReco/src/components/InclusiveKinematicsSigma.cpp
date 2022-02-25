@@ -28,11 +28,11 @@ public:
     "inputMCParticles",
     Gaudi::DataHandle::Reader,
     this};
-  DataHandle<eic::ReconstructedParticleCollection> m_inputParticleCollection{
+  DataHandle<eicd::ReconstructedParticleCollection> m_inputParticleCollection{
     "ReconstructedParticles",
     Gaudi::DataHandle::Reader,
     this};
-  DataHandle<eic::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{
+  DataHandle<eicd::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{
     "InclusiveKinematicsSigma",
     Gaudi::DataHandle::Writer,
     this};
@@ -67,7 +67,7 @@ public:
     return StatusCode::SUCCESS;
   }
 
-  TLorentzVector apply_boost(eic::VectorXYZT ei_eicv, eic::VectorXYZT pi_eicv, TLorentzVector part){
+  TLorentzVector apply_boost(eicd::VectorXYZT ei_eicv, eicd::VectorXYZT pi_eicv, TLorentzVector part){
 
     //Step 1: Find the needed boosts and rotations from the incoming lepton and hadron beams 
     //(note, this will give you a perfect boost, in principle you will not know the beam momenta exactly and should use an average)
@@ -108,12 +108,12 @@ public:
   StatusCode execute() override {
     // input collections
     const edm4hep::MCParticleCollection& mcparts = *(m_inputMCParticleCollection.get());
-    const eic::ReconstructedParticleCollection& parts = *(m_inputParticleCollection.get());
+    const eicd::ReconstructedParticleCollection& parts = *(m_inputParticleCollection.get());
     // output collection
     auto& out_kinematics = *(m_outputInclusiveKinematicsCollection.createAndPut());
 
     // Loop over generated particles to get incoming electron beam
-    eic::VectorXYZT ei, pi;
+    eicd::VectorXYZT ei, pi;
     bool found_electron = false;
     bool found_proton = false;
     //Also get the true scattered electron, which will not be included in the sum
@@ -214,7 +214,7 @@ public:
     // -----------------------------------------------------------------
 
     // Reconstructed Index of scattered electron
-    eic::Index scatID;
+    eicd::Index scatID;
 
     //Sums in colinear frame
     double pxsum = 0;

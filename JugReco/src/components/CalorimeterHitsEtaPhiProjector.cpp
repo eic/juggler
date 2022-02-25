@@ -59,9 +59,9 @@ namespace Jug::Reco {
   class CalorimeterHitsEtaPhiProjector : public GaudiAlgorithm {
   public:
     Gaudi::Property<std::vector<double>>        u_gridSizes{this, "gridSizes", {0.001, 0.001*rad}};
-    DataHandle<eic::CalorimeterHitCollection>   m_inputHitCollection{
+    DataHandle<eicd::CalorimeterHitCollection>   m_inputHitCollection{
         "inputHitCollection", Gaudi::DataHandle::Reader, this};
-    DataHandle<eic::CalorimeterHitCollection>   m_outputHitCollection{
+    DataHandle<eicd::CalorimeterHitCollection>   m_outputHitCollection{
         "outputHitCollection", Gaudi::DataHandle::Writer, this};
 
     double gridSizes[2];
@@ -95,7 +95,7 @@ namespace Jug::Reco {
       auto& mhits = *m_outputHitCollection.createAndPut();
 
       // container
-      std::unordered_map<std::pair<int64_t, int64_t>, std::vector<eic::ConstCalorimeterHit>, pair_hash> merged_hits;
+      std::unordered_map<std::pair<int64_t, int64_t>, std::vector<eicd::ConstCalorimeterHit>, pair_hash> merged_hits;
 
       for (const auto h : *m_inputHitCollection.get()) {
         auto bins = std::make_pair(static_cast<int64_t>(pos2bin(eicd::eta(h.position()), gridSizes[0], 0.)),
@@ -105,7 +105,7 @@ namespace Jug::Reco {
 
       for (const auto &[bins, hits] : merged_hits) {
         const auto ref = hits.front();
-        eic::CalorimeterHit hit;
+        eicd::CalorimeterHit hit;
         hit.cellID(ref.cellID());
         // TODO, we can do timing cut to reject noises
         hit.time(ref.time());

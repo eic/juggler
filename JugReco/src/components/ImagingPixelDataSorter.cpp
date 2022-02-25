@@ -45,9 +45,9 @@ namespace Jug::Reco {
   public:
     Gaudi::Property<int>                        m_nLayers{this, "numberOfLayers", 9};
     Gaudi::Property<int>                        m_nHits{this, "numberOfHits", 50};
-    DataHandle<eic::CalorimeterHitCollection>   m_inputHitCollection{"inputHitCollection",
+    DataHandle<eicd::CalorimeterHitCollection>   m_inputHitCollection{"inputHitCollection",
                                                                      Gaudi::DataHandle::Reader, this};
-    DataHandle<eic::CalorimeterHitCollection>   m_outputHitCollection{"outputHitCollection",
+    DataHandle<eicd::CalorimeterHitCollection>   m_outputHitCollection{"outputHitCollection",
                                                                       Gaudi::DataHandle::Writer, this};
 
     ImagingPixelDataSorter(const std::string& name, ISvcLocator* svcLoc)
@@ -74,7 +74,7 @@ namespace Jug::Reco {
       auto& mhits = *m_outputHitCollection.createAndPut();
 
       // group the hits by layer
-      std::vector<std::vector<eic::ConstCalorimeterHit>> layer_hits;
+      std::vector<std::vector<eicd::ConstCalorimeterHit>> layer_hits;
       layer_hits.resize(m_nLayers);
       for (const auto& h : hits) {
         auto k = h.layer();
@@ -86,7 +86,7 @@ namespace Jug::Reco {
       // sort by energy
       for (auto &layer : layer_hits) {
         std::sort(layer.begin(), layer.end(),
-          [] (const eic::ConstCalorimeterHit &h1, const eic::ConstCalorimeterHit &h2) {
+          [] (const eicd::ConstCalorimeterHit &h1, const eicd::ConstCalorimeterHit &h2) {
             return h1.energy() > h2.energy();
           });
       }

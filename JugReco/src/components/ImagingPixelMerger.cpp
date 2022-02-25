@@ -56,8 +56,8 @@ namespace Jug::Reco {
   public:
     Gaudi::Property<float>                  m_etaSize{this, "etaSize", 0.001};
     Gaudi::Property<float>                  m_phiSize{this, "phiSize", 0.001};
-    DataHandle<eic::CalorimeterHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
-    DataHandle<eic::CalorimeterHitCollection> m_outputHits{"outputHits", Gaudi::DataHandle::Writer, this};
+    DataHandle<eicd::CalorimeterHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
+    DataHandle<eicd::CalorimeterHitCollection> m_outputHits{"outputHits", Gaudi::DataHandle::Writer, this};
 
     ImagingPixelMerger(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc)

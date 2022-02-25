@@ -17,7 +17,7 @@ namespace Jug::Fast {
 class MC2SmearedParticle : public GaudiAlgorithm {
 public:
   DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"SmearedReconstructedParticles",
+  DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"SmearedReconstructedParticles",
                                                                          Gaudi::DataHandle::Writer, this};
   Rndm::Numbers m_gaussDist;
   Gaudi::Property<double> m_smearing{this, "smearing", 0.01 /* 1 percent*/};

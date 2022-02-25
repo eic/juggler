@@ -59,9 +59,9 @@ public:
   double thresholdADC;
   double stepTDC;
 
-  DataHandle<eic::RawCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+  DataHandle<eicd::RawCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                     this};
-  DataHandle<eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+  DataHandle<eicd::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                   this};
 
   // geometry service to get ids, ignored if no names provided
