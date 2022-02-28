@@ -94,14 +94,14 @@ namespace Jug::Reco {
           // cell dimension
           auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
           hits.push_back(eicd::PMTHit{
-              0 /*deleteme*/,
               rh.cellID(),
               npe,
               time,
               static_cast<float>(m_timeStep / ns),
               {gpos.x(), gpos.y(), gpos.z()},
               {pos.x(), pos.y(), pos.z()},
-              {dim[0]/mm, dim[1]/mm, dim[2]/mm}});
+              {dim[0]/mm, dim[1]/mm, dim[2]/mm}},
+              {0,0,0}); // @FIXME: set local position
         }
       }
 

@@ -122,7 +122,6 @@ public:
         for (auto &it : hit_groups) {
             for (auto &data : it.second) {
                 eicd::RawPMTHit hit{
-                  0 /* Old ID TBDeleted */,
                   it.first,
                   static_cast<uint32_t>(data.signal), 
                   static_cast<uint32_t>(data.time/(m_timeStep/ns))};
