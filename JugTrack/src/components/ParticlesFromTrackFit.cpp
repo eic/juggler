@@ -40,10 +40,10 @@ namespace Jug::Reco {
    */
    class ParticlesFromTrackFit : public GaudiAlgorithm {
    public:
-    //DataHandle<eic::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+    //DataHandle<eicd::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<TrajectoriesContainer>     m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
-    DataHandle<eic::BasicParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer, this};
-    DataHandle<eic::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters", Gaudi::DataHandle::Writer, this};
+    DataHandle<eicd::BasicParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer, this};
+    DataHandle<eicd::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters", Gaudi::DataHandle::Writer, this};
 
    public:
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
@@ -129,7 +129,7 @@ namespace Jug::Reco {
               static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc1))};
             const float timeError{sqrt(static_cast<float>(covariance(Acts::eBoundTime, Acts::eBoundTime)))};
 
-                eic::TrackParameters pars{0, // type: track head --> 0
+                eicd::TrackParameters pars{0, // type: track head --> 0
                                           {parameter[Acts::eBoundLoc0], parameter[Acts::eBoundLoc1]},
                                           covPos,
                                           static_cast<float>(parameter[Acts::eBoundTheta]),
@@ -165,8 +165,7 @@ namespace Jug::Reco {
               return;
             }
 
-            eic::BasicParticle p{
-                {-1, 0},
+            eicd::BasicParticle p{
                 eicd::sphericalToVector(1.0 / std::abs(params[Acts::eBoundQOverP]), 
                                                params[Acts::eBoundTheta],
                                                params[Acts::eBoundPhi]),
@@ -181,11 +180,6 @@ namespace Jug::Reco {
           });
       }
 
-      // set our IDs
-      for (size_t i = 0; i < rec_parts->size(); ++i) {
-        (*rec_parts)[i].ID({static_cast<int32_t>(i), 0});
-      }
-      
       return StatusCode::SUCCESS;
     }
 

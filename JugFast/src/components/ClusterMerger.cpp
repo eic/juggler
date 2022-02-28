@@ -28,9 +28,9 @@ namespace Jug::Fast {
 class ClusterMerger : public GaudiAlgorithm {
 public:
   // Input
-  DataHandle<eic::ClusterCollection> m_inputClusters{"InputClusters", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::ClusterCollection> m_inputClusters{"InputClusters", Gaudi::DataHandle::Reader, this};
   // Output
-  DataHandle<eic::ClusterCollection> m_outputClusters{"OutputClusters", Gaudi::DataHandle::Writer, this};
+  DataHandle<eicd::ClusterCollection> m_outputClusters{"OutputClusters", Gaudi::DataHandle::Writer, this};
 public:
   ClusterMerger(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc) {
@@ -84,7 +84,7 @@ public:
         float energyError = 0;
         float time        = 0;
         int nhits = 0;
-        eic::VectorXYZ position;
+        eicd::VectorXYZ position;
         for (const auto& clus : clusters) {
           if (msgLevel(MSG::DEBUG)) {
             debug() << "   --> Adding cluster with energy: " << clus.energy() << endmsg;
@@ -116,8 +116,8 @@ public:
   }
 
   // get a map of mcID --> std::vector<cluster> for clusters that belong together
-  std::map<eic::Index, std::vector<eic::ConstCluster>> indexedClusterLists(const eic::ClusterCollection& clusters) const {
-    std::map<eic::Index, std::vector<eic::ConstCluster>> matched = {};
+  std::map<eicd::Index, std::vector<eicd::ConstCluster>> indexedClusterLists(const eicd::ClusterCollection& clusters) const {
+    std::map<eicd::Index, std::vector<eicd::ConstCluster>> matched = {};
     for (const auto& cluster : clusters) {
       if (msgLevel(MSG::VERBOSE)) {
         verbose() << " --> Found cluster with mcID " << cluster.mcID() << " and energy "

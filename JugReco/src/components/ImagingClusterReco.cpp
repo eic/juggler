@@ -49,9 +49,9 @@ class ImagingClusterReco : public GaudiAlgorithm {
 public:
   Gaudi::Property<int> m_trackStopLayer{this, "trackStopLayer", 9};
 
-  DataHandle<eic::ProtoClusterCollection> m_inputProtoClusters{"inputProtoClusters", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::ClusterCollection> m_outputLayers{"outputLayers", Gaudi::DataHandle::Writer, this};
-  DataHandle<eic::ClusterCollection> m_outputClusters{"outputClusters", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::ProtoClusterCollection> m_inputProtoClusters{"inputProtoClusters", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::ClusterCollection> m_outputLayers{"outputLayers", Gaudi::DataHandle::Writer, this};
+  DataHandle<eicd::ClusterCollection> m_outputClusters{"outputClusters", Gaudi::DataHandle::Reader, this};
 
   // Collection for MC hits when running on MC
   Gaudi::Property<std::string> m_mcHits{this, "mcHits", ""};
@@ -130,11 +130,11 @@ public:
 private:
   template <typename T> static inline T pow2(const T& x) { return x * x; }
 
-  std::vector<eic::Cluster> reconstruct_cluster_layers(const eic::ConstProtoCluster& pcl) const {
+  std::vector<eicd::Cluster> reconstruct_cluster_layers(const eicd::ConstProtoCluster& pcl) const {
     const auto& hits    = pcl.hits();
     const auto& weights = pcl.weights();
     // using map to have hits sorted by layer
-    std::map<int, std::vector<std::pair<eic::ConstCalorimeterHit, float>>> layer_map;
+    std::map<int, std::vector<std::pair<eicd::ConstCalorimeterHit, float>>> layer_map;
     for (unsigned i = 0; i < hits.size(); ++i) {
       const auto hit = hits[i];
       auto lid       = hit.layer();
@@ -145,7 +145,7 @@ private:
     }
 
     // create layers
-    std::vector<eic::Cluster> cl_layers;
+    std::vector<eicd::Cluster> cl_layers;
     for (const auto& [lid, layer_hits] : layer_map) {
       auto layer = reconstruct_layer(layer_hits);
       cl_layers.push_back(layer);
@@ -153,8 +153,8 @@ private:
     return cl_layers;
   }
 
-  eic::Cluster reconstruct_layer(const std::vector<std::pair<eic::ConstCalorimeterHit, float>>& hits) const {
-    eic::Cluster layer;
+  eicd::Cluster reconstruct_layer(const std::vector<std::pair<eicd::ConstCalorimeterHit, float>>& hits) const {
+    eicd::Cluster layer;
     layer.type(ClusterType::kClusterSlice);
     // Calculate averages
     double energy;
@@ -192,8 +192,8 @@ private:
     return layer;
   }
 
-  eic::Cluster reconstruct_cluster(const eic::ConstProtoCluster& pcl) {
-    eic::Cluster cluster;
+  eicd::Cluster reconstruct_cluster(const eicd::ConstProtoCluster& pcl) {
+    eicd::Cluster cluster;
 
     const auto& hits    = pcl.hits();
     const auto& weights = pcl.weights();
@@ -246,7 +246,7 @@ private:
     return cluster;
   }
 
-  std::pair<double /* polar */, double /* azimuthal */> fit_track(const std::vector<eic::Cluster>& layers) const {
+  std::pair<double /* polar */, double /* azimuthal */> fit_track(const std::vector<eicd::Cluster>& layers) const {
     int nrows = 0;
     eicd::Vector3f mean_pos{0, 0, 0};
     for (const auto& layer : layers) {

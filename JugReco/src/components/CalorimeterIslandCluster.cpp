@@ -41,8 +41,8 @@ using namespace Gaudi::Units;
 
 namespace {
 
-using CaloHit = eic::ConstCalorimeterHit;
-using CaloHitCollection = eic::CalorimeterHitCollection;
+using CaloHit = eicd::ConstCalorimeterHit;
+using CaloHitCollection = eicd::CalorimeterHitCollection;
 
 // helper functions to get distance between hits
 static eicd::Vector2f localDistXY(const CaloHit& h1, const CaloHit& h2) {
@@ -101,7 +101,7 @@ public:
   Gaudi::Property<double> m_minClusterHitEdep{this, "minClusterHitEdep", 0.};
   Gaudi::Property<double> m_minClusterCenterEdep{this, "minClusterCenterEdep", 50.0 * MeV};
   DataHandle<CaloHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::ProtoClusterCollection> m_outputProtoCollection{"outputProtoClusterCollection",
+  DataHandle<eicd::ProtoClusterCollection> m_outputProtoCollection{"outputProtoClusterCollection",
                                                                   Gaudi::DataHandle::Writer, this};
 
   // neighbour checking distances
@@ -319,7 +319,7 @@ private:
 
   // split a group of hits according to the local maxima
   void split_group(std::vector<std::pair<uint32_t, CaloHit>>& group, const std::vector<CaloHit>& maxima,
-                   eic::ProtoClusterCollection& proto) const {
+                   eicd::ProtoClusterCollection& proto) const {
     // special cases
     if (maxima.size() == 0) {
       if (msgLevel(MSG::VERBOSE)) {
@@ -327,7 +327,7 @@ private:
       }
       return;
     } else if (maxima.size() == 1) {
-      eic::ProtoCluster pcl;
+      eicd::ProtoCluster pcl;
       for (auto& [idx, hit] : group) {
         pcl.addhits(hit);
         pcl.addweights(1.);
@@ -342,7 +342,7 @@ private:
     // split between maxima
     // TODO, here we can implement iterations with profile, or even ML for better splits
     std::vector<double> weights(maxima.size(), 1.);
-    std::vector<eic::ProtoCluster> pcls;
+    std::vector<eicd::ProtoCluster> pcls;
     for (size_t k = 0; k < maxima.size(); ++k) {
       pcls.push_back({});
     }

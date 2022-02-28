@@ -30,13 +30,13 @@ class MatchClusters : public GaudiAlgorithm {
 public:
   // input data
   DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::ReconstructedParticleCollection> m_inputParticles{"ReconstructedChargedParticles",
+  DataHandle<eicd::ReconstructedParticleCollection> m_inputParticles{"ReconstructedChargedParticles",
                                                                     Gaudi::DataHandle::Reader, this};
   Gaudi::Property<std::vector<std::string>> m_inputClusters{this, "inputClusters", {}, "Clusters to be aggregated"};
-  std::vector<DataHandle<eic::ClusterCollection>*> m_inputClusterCollections;
+  std::vector<DataHandle<eicd::ClusterCollection>*> m_inputClusterCollections;
 
   // output data
-  DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"ReconstructedParticles",
+  DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"ReconstructedParticles",
                                                                      Gaudi::DataHandle::Writer, this};
 
   MatchClusters(const std::string& name, ISvcLocator* svcLoc)
@@ -130,20 +130,20 @@ public:
   }
 
 private:
-  std::vector<DataHandle<eic::ClusterCollection>*> getClusterCollections(const std::vector<std::string>& cols) {
-    std::vector<DataHandle<eic::ClusterCollection>*> ret;
+  std::vector<DataHandle<eicd::ClusterCollection>*> getClusterCollections(const std::vector<std::string>& cols) {
+    std::vector<DataHandle<eicd::ClusterCollection>*> ret;
     for (const auto& colname : cols) {
       debug() << "initializing cluster collection: " << colname << endmsg;
-      ret.push_back(new DataHandle<eic::ClusterCollection>{colname, Gaudi::DataHandle::Reader, this});
+      ret.push_back(new DataHandle<eicd::ClusterCollection>{colname, Gaudi::DataHandle::Reader, this});
     }
     return ret;
   }
 
   // get a map of mcID --> cluster
   // input: cluster_collections --> list of handles to all cluster collections
-  std::map<eic::Index, eic::ConstCluster>
-  indexedClusters(const std::vector<DataHandle<eic::ClusterCollection>*>& cluster_collections) const {
-    std::map<eic::Index, eic::ConstCluster> matched = {};
+  std::map<eicd::Index, eicd::ConstCluster>
+  indexedClusters(const std::vector<DataHandle<eicd::ClusterCollection>*>& cluster_collections) const {
+    std::map<eicd::Index, eicd::ConstCluster> matched = {};
     for (const auto& cluster_handle : cluster_collections) {
       const auto& clusters = *(cluster_handle->get());
       for (const auto& cluster : clusters) {
@@ -174,13 +174,13 @@ private:
 
   // reconstruct a neutral cluster
   // (for now assuming the vertex is at (0,0,0))
-  eic::ReconstructedParticle reconstruct_neutral(const eic::ConstCluster& clus, const double mass,
+  eicd::ReconstructedParticle reconstruct_neutral(const eicd::ConstCluster& clus, const double mass,
                                                  const int32_t pid) const {
     const float energy   = clus.energy();
     const float momentum = energy < mass ? 0 : std::sqrt(energy * energy - mass * mass);
     const auto p = eicd::normalizeVector(clus.position(), momentum);
     // setup our particle
-    eic::ReconstructedParticle part;
+    eicd::ReconstructedParticle part;
     part.p(p);
     part.time(clus.time());
     part.pid(pid);

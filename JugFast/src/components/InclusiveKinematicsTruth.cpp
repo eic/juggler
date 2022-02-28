@@ -21,7 +21,7 @@ class InclusiveKinematicsTruth : public GaudiAlgorithm {
 public:
   DataHandle<edm4hep::MCParticleCollection> m_inputParticleCollection{"MCParticles", Gaudi::DataHandle::Reader,
                                                                          this};
-  DataHandle<eic::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{"InclusiveKinematicsTruth",
+  DataHandle<eicd::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{"InclusiveKinematicsTruth",
                                                                                        Gaudi::DataHandle::Writer, this};
 
   SmartIF<IParticleSvc> m_pidSvc;
@@ -139,7 +139,8 @@ public:
     kin.nu(q * pi / m_proton);
     kin.x(kin.Q2() / (2. * q * pi));
     kin.W(sqrt((pi + q).m2()));
-    kin.scatID(mcscatID);
+//    kin.scat(????); @TODO: this is now set as a OneToOneRelation to ReconstructedParticle, 
+//                           which breaks for this algorithm that takes raw MCParticles
 
     // Debugging output
     if (msgLevel(MSG::DEBUG)) {

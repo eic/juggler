@@ -21,9 +21,9 @@ namespace Jug::Reco {
     class TrackingHitsCollector2 : public GaudiAlgorithm {
     public:
       Gaudi::Property<std::vector<std::string>> m_inputTrackingHits{this, "inputTrackingHits", {},"Tracker hits to be aggregated"};
-      DataHandle<eic::TrackerHitCollection> m_trackingHits{"trackingHits", Gaudi::DataHandle::Writer, this};
+      DataHandle<eicd::TrackerHitCollection> m_trackingHits{"trackingHits", Gaudi::DataHandle::Writer, this};
 
-      std::vector<DataHandle<eic::TrackerHitCollection>*> m_hitCollections;
+      std::vector<DataHandle<eicd::TrackerHitCollection>*> m_hitCollections;
 
     public:
       TrackingHitsCollector2(const std::string& name, ISvcLocator* svcLoc)
@@ -42,7 +42,7 @@ namespace Jug::Reco {
           return StatusCode::FAILURE;
         for (auto colname : m_inputTrackingHits) {
           debug() << "initializing collection: " << colname  << endmsg;
-          m_hitCollections.push_back(new DataHandle<eic::TrackerHitCollection>{colname, Gaudi::DataHandle::Reader, this});
+          m_hitCollections.push_back(new DataHandle<eicd::TrackerHitCollection>{colname, Gaudi::DataHandle::Reader, this});
         }
         return StatusCode::SUCCESS;
       }
@@ -54,7 +54,7 @@ namespace Jug::Reco {
           debug() << "execute collector" << endmsg;
         }
         for(const auto& hits: m_hitCollections) {
-          const eic::TrackerHitCollection* hitCol = hits->get();
+          const eicd::TrackerHitCollection* hitCol = hits->get();
           if (msgLevel(MSG::DEBUG)) {
             debug() << "col n hits: " << hitCol->size() << endmsg;
           }

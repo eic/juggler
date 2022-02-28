@@ -72,9 +72,9 @@ public:
   // for endcaps.
   Gaudi::Property<bool> m_enableEtaBounds{this, "enableEtaBounds", false};
 
-  //DataHandle<eic::CalorimeterHitCollection> m_inputHits{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::ProtoClusterCollection> m_inputProto{"inputProtoClusterCollection", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::ClusterCollection> m_outputClusters{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
+  //DataHandle<eicd::CalorimeterHitCollection> m_inputHits{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::ProtoClusterCollection> m_inputProto{"inputProtoClusterCollection", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::ClusterCollection> m_outputClusters{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
 
   // Pointer to the geometry service
   SmartIF<IGeoSvc> m_geoSvc;
@@ -139,8 +139,8 @@ public:
   }
 
 private:
-  eic::Cluster reconstruct(const eic::ConstProtoCluster& pcl) const {
-    eic::Cluster cl;
+  eicd::Cluster reconstruct(const eicd::ConstProtoCluster& pcl) const {
+    eicd::Cluster cl;
     cl.nhits(pcl.hits_size());
 
     // no hits

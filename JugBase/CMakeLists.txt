@@ -34,7 +34,6 @@ gaudi_add_module(JugBasePlugins
   src/components/GeoSvc.cpp
   src/components/ParticleSvc.cpp
   src/components/InputCopier.cpp
-  src/components/MC2DummyParticle.cpp
   src/components/PodioInput.cpp
   src/components/PodioOutput.cpp
   src/components/ReadTestConsumer.cxx

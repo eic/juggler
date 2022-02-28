@@ -18,8 +18,8 @@
 namespace Jug::Reco {
 
 class FarForwardParticlesOMD : public GaudiAlgorithm {
-  DataHandle<eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHits", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
+  DataHandle<eicd::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHits", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
                                                                      this};
 
   //----- Define constants here ------
@@ -71,7 +71,7 @@ public:
   }
 
   StatusCode execute() override {
-    const eic::TrackerHitCollection* rawhits = m_inputHitCollection.get();
+    const eicd::TrackerHitCollection* rawhits = m_inputHitCollection.get();
     auto& rc                                 = *(m_outputParticles.createAndPut());
 
     // for (const auto& part : mc) {
@@ -159,19 +159,16 @@ public:
 
       //----- end RP reconstruction code ------
 
-      eic::ReconstructedParticle rpTrack;
-      rpTrack.p({prec});
-      rpTrack.v({0, 0, 0});
-      rpTrack.time(0);
-      rpTrack.pid(2122);
-      rpTrack.status(0);
+      eicd::ReconstructedParticle rpTrack;
+      rpTrack.type(0);
+      rpTrack.energy(std::hypot(eicd::magnitude(rpTrack.momentum()), .938272));
+      rpTrack.momentum({prec});
+      rpTrack.referencePoint({0, 0, 0});
       rpTrack.charge(1);
-      rpTrack.weight(1.);
-      rpTrack.theta(eicd::anglePolar(rpTrack.p()));
-      rpTrack.phi(eicd::angleAzimuthal(rpTrack.p()));
-      rpTrack.momentum(eicd::magnitude(rpTrack.p()));
-      rpTrack.energy(std::hypot(rpTrack.momentum(), .938272));
       rpTrack.mass(.938272);
+      rpTrack.goodnessOfPID(1.);
+      rpTrack.PDG(2122);
+      //rpTrack.covMatrix(); // @TODO: Errors
       rc->push_back(rpTrack);
 
     } // end enough hits for matrix reco

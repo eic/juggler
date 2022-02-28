@@ -23,7 +23,7 @@ namespace Jug::Reco {
  */
 class ProtoTrackMatching : public GaudiAlgorithm {
 public:
-  DataHandle<eic::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
   DataHandle<TrackParametersContainer> m_initialTrackParameters{"initialTrackParameters", Gaudi::DataHandle::Reader, this};
   DataHandle<ProtoTrackContainer> m_inputProtoTracks{"inputProtoTracks", Gaudi::DataHandle::Reader, this};
   DataHandle<ProtoTrackContainer> m_outputProtoTracks{"matchedProtoTracks", Gaudi::DataHandle::Writer, this};
@@ -46,7 +46,7 @@ public:
     // input collection
     
     // hits is unused, commented out for now to avoid compiler warning
-    //const eic::TrackerHitCollection* hits              = m_inputTrackerHits.get();
+    //const eicd::TrackerHitCollection* hits              = m_inputTrackerHits.get();
     
     const ProtoTrackContainer*       proto_tracks      = m_inputProtoTracks.get();
     const TrackParametersContainer*  initialParameters = m_initialTrackParameters.get();

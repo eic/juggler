@@ -13,6 +13,7 @@
 
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
+#include "eicd/MCRecoParticleAssociationCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
 #include "eicd/TrackParametersCollection.h"
 #include "eicd/vector_utils.h"
@@ -22,10 +23,12 @@ namespace Jug::Fast {
 class ParticlesWithTruthPID : public GaudiAlgorithm {
 public:
   DataHandle<edm4hep::MCParticleCollection> m_inputTruthCollection{"inputMCParticles", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::TrackParametersCollection> m_inputTrackCollection{"inputTrackParameters", Gaudi::DataHandle::Reader,
-                                                                    this};
-  DataHandle<eic::ReconstructedParticleCollection> m_outputParticleCollection{"ReconstructedParticles",
-                                                                              Gaudi::DataHandle::Writer, this};
+  DataHandle<eicd::TrackParametersCollection> m_inputTrackCollection{"inputTrackParameters", Gaudi::DataHandle::Reader,
+                                                                     this};
+  DataHandle<eicd::ReconstructedParticleCollection> m_outputParticleCollection{"ReconstructedParticles",
+                                                                               Gaudi::DataHandle::Writer, this};
+  DataHandle<eicd::MCRecoParticleAssociationCollection> m_outputAssocCollection{"MCRecoParticleAssociation",
+                                                                                Gaudi::DataHandle::Writer, this};
 
   // Matching momentum tolerance requires 10% by default;
   Gaudi::Property<double> m_pRelativeTolerance{this, "pRelativeTolerance", {0.1}};
@@ -38,6 +41,7 @@ public:
     declareProperty("inputMCParticles", m_inputTruthCollection, "MCParticles");
     declareProperty("inputTrackParameters", m_inputTrackCollection, "outputTrackParameters");
     declareProperty("outputParticles", m_outputParticleCollection, "ReconstructedParticles");
+    declareProperty("outputAssociations", m_outputAssocCollection, "MCRecoParticleAssociation");
   }
   StatusCode initialize() override {
     if (GaudiAlgorithm::initialize().isFailure())
@@ -50,6 +54,7 @@ public:
     const auto& mc     = *(m_inputTruthCollection.get());
     const auto& tracks = *(m_inputTrackCollection.get());
     auto& part         = *(m_outputParticleCollection.createAndPut());
+    auto& assoc        = *(m_outputAssocCollection.createAndPut());
 
     const double sinPhiOver2Tolerance = sin(0.5 * m_phiTolerance);
     std::vector<bool> consumed(mc.size(), false);
@@ -87,31 +92,35 @@ public:
           }
         }
       }
-      auto rec_part    = part.create();
-      int32_t best_pid = 0;
-      auto vertex      = rec_part.v();
-      float time       = 0;
-      float mass       = 0;
-      eic::Index mcID;
+      auto rec_part       = part.create();
+      int32_t best_pid    = 0;
+      auto referencePoint = rec_part.referencePoint();
+      // float time          = 0;
+      float mass = 0;
       if (best_match >= 0) {
         consumed[best_match] = true;
         const auto& mcpart   = mc[best_match];
         best_pid             = mcpart.getPDG();
-        vertex               = mcpart.getVertex();
-        time                 = mcpart.getTime();
-        mass                 = mcpart.getMass();
-        // mcID                 = {mcpart.ID()};
+        referencePoint       = {
+            static_cast<float>(mcpart.getVertex().x), static_cast<float>(mcpart.getVertex().y),
+            static_cast<float>(mcpart.getVertex().z)}; // @TODO: not sure if vertex/reference poitn makes sense here
+        // time                 = mcpart.getTime();
+        mass = mcpart.getMass();
       }
-      rec_part.p(mom);
-      rec_part.v(vertex);
-      rec_part.time(time);
-      rec_part.pid(best_pid);
-      rec_part.status(static_cast<int16_t>(best_match >= 0 ? 0 : -1));
-      rec_part.charge(static_cast<int16_t>(charge_rec));
-      rec_part.weight(1.);
+      rec_part.type(static_cast<int16_t>(best_match >= 0 ? 0 : -1)); // @TODO: determine type codes
       rec_part.energy(std::hypot(eicd::magnitude(mom), mass));
+      rec_part.momentum(mom);
+      rec_part.referencePoint(referencePoint);
+      rec_part.charge(charge_rec);
       rec_part.mass(mass);
-      rec_part.mcID(mcID);
+      rec_part.goodnessOfPID(1); // perfect PID
+      rec_part.PDG(best_pid);
+      // rec_part.covMatrix()  // @TODO: covariance matrix on 4-momentum
+      // Also write MC <--> truth particle association
+      auto rec_assoc = assoc.create();
+      rec_assoc.simID(best_match);
+      rec_assoc.weight(1);
+      rec_assoc.rec(rec_part);
 
       if (msgLevel(MSG::DEBUG)) {
         if (best_match > 0) {
@@ -138,7 +147,7 @@ public:
 
     return StatusCode::SUCCESS;
   }
-};
+}; // namespace Jug::Fast
 
 DECLARE_COMPONENT(ParticlesWithTruthPID)
 

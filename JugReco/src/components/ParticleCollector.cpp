@@ -21,10 +21,10 @@ namespace Jug::Reco {
 class ParticleCollector : public GaudiAlgorithm {
 public:
   Gaudi::Property<std::vector<std::string>> m_inputParticles{this, "inputParticles", {}, "Particles to be aggregated"};
-  DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
+  DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
                                                                      this};
 
-  std::vector<DataHandle<eic::ReconstructedParticleCollection>*> m_particleCollections;
+  std::vector<DataHandle<eicd::ReconstructedParticleCollection>*> m_particleCollections;
 
 public:
   ParticleCollector(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
@@ -45,7 +45,7 @@ public:
     for (auto colname : m_inputParticles) {
       debug() << "initializing collection: " << colname << endmsg;
       m_particleCollections.push_back(
-          new DataHandle<eic::ReconstructedParticleCollection>{colname, Gaudi::DataHandle::Reader, this});
+          new DataHandle<eicd::ReconstructedParticleCollection>{colname, Gaudi::DataHandle::Reader, this});
     }
     return StatusCode::SUCCESS;
   }

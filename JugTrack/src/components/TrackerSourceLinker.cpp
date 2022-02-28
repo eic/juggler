@@ -42,7 +42,7 @@ namespace Jug::Reco {
    */
   class TrackerSourceLinker : public GaudiAlgorithm {
   public:
-    DataHandle<eic::TrackerHitCollection>    m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+    DataHandle<eicd::TrackerHitCollection>    m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<std::list<IndexSourceLink>>   m_sourceLinkStorage{"sourceLinkStorage", Gaudi::DataHandle::Writer, this};
     DataHandle<IndexSourceLinkContainer>     m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};
     DataHandle<MeasurementContainer>         m_outputMeasurements{"outputMeasurements", Gaudi::DataHandle::Writer, this};
@@ -77,7 +77,7 @@ namespace Jug::Reco {
       constexpr double mm_conv = mm_acts / dd4hep::mm; // = 1/0.1
 
       // input collection
-      const eic::TrackerHitCollection* hits = m_inputHitCollection.get();
+      const eicd::TrackerHitCollection* hits = m_inputHitCollection.get();
       // Create output collections
       auto linkStorage  = m_sourceLinkStorage.createAndPut();
       auto sourceLinks  = m_outputSourceLinks.createAndPut();

@@ -25,11 +25,11 @@ public:
     "inputMCParticles",
     Gaudi::DataHandle::Reader,
     this};
-  DataHandle<eic::ReconstructedParticleCollection> m_inputParticleCollection{
+  DataHandle<eicd::ReconstructedParticleCollection> m_inputParticleCollection{
     "ReconstructedParticles",
     Gaudi::DataHandle::Reader,
     this};
-  DataHandle<eic::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{
+  DataHandle<eicd::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{
     "InclusiveKinematicsElectron",
     Gaudi::DataHandle::Writer,
     this};
@@ -67,12 +67,12 @@ public:
   StatusCode execute() override {
     // input collections
     const edm4hep::MCParticleCollection& mcparts = *(m_inputMCParticleCollection.get());
-    const eic::ReconstructedParticleCollection& parts = *(m_inputParticleCollection.get());
+    const eicd::ReconstructedParticleCollection& parts = *(m_inputParticleCollection.get());
     // output collection
     auto& out_kinematics = *(m_outputInclusiveKinematicsCollection.createAndPut());
 
     // Loop over generated particles to get incoming electron beam
-    eic::VectorXYZT ei, pi;
+    eicd::VectorXYZT ei, pi;
     bool found_electron = false;
     bool found_proton = false;
     //Also get the true scattered electron, which will not be included in the sum
@@ -161,12 +161,12 @@ public:
 
     // Loop over reconstructed particles to get outgoing scattered electron
     // Use the true scattered electron from the MC information
-    typedef std::pair<eic::VectorXYZT, eic::Index> t_electron;
+    typedef std::pair<eicd::VectorXYZT, eicd::Index> t_electron;
     std::vector<t_electron> electrons;
     for (const auto& p : parts) {
       if (p.mcID().value == mcscatID) {
         // Outgoing electron
-        electrons.push_back(t_electron(eic::VectorXYZT(p.p().x, p.p().y, p.p().z, p.energy()), eic::Index(p.ID())));
+        electrons.push_back(t_electron(eicd::VectorXYZT(p.p().x, p.p().y, p.p().z, p.energy()), eicd::Index(p.ID())));
       }
     }
 

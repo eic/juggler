@@ -17,12 +17,12 @@ namespace Jug::Reco {
      */
     class TrackingHitsCollector : public GaudiAlgorithm {
     public:
-      DataHandle<eic::TrackerHitCollection> m_trackerBarrelHits{"trackerBarrelHits", Gaudi::DataHandle::Reader, this};
-      DataHandle<eic::TrackerHitCollection> m_trackerEndcapHits{"trackerEndcapHits", Gaudi::DataHandle::Reader, this};
-      DataHandle<eic::TrackerHitCollection> m_vertexBarrelHits {"vertexBarrelHits" , Gaudi::DataHandle::Reader, this};
-      DataHandle<eic::TrackerHitCollection> m_vertexEndcapHits {"vertexEndcapHits" , Gaudi::DataHandle::Reader, this};
-      DataHandle<eic::TrackerHitCollection> m_gemEndcapHits {"gemEndcapHits" , Gaudi::DataHandle::Reader, this};
-      DataHandle<eic::TrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
+      DataHandle<eicd::TrackerHitCollection> m_trackerBarrelHits{"trackerBarrelHits", Gaudi::DataHandle::Reader, this};
+      DataHandle<eicd::TrackerHitCollection> m_trackerEndcapHits{"trackerEndcapHits", Gaudi::DataHandle::Reader, this};
+      DataHandle<eicd::TrackerHitCollection> m_vertexBarrelHits {"vertexBarrelHits" , Gaudi::DataHandle::Reader, this};
+      DataHandle<eicd::TrackerHitCollection> m_vertexEndcapHits {"vertexEndcapHits" , Gaudi::DataHandle::Reader, this};
+      DataHandle<eicd::TrackerHitCollection> m_gemEndcapHits {"gemEndcapHits" , Gaudi::DataHandle::Reader, this};
+      DataHandle<eicd::TrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
 
     public:
       TrackingHitsCollector(const std::string& name, ISvcLocator* svcLoc)
@@ -44,11 +44,11 @@ namespace Jug::Reco {
 
       StatusCode execute() override
       {
-        const eic::TrackerHitCollection* trkBarrelHits = m_trackerBarrelHits.get();
-        const eic::TrackerHitCollection* trkEndcapHits = m_trackerEndcapHits.get();
-        const eic::TrackerHitCollection* vtxBarrelHits = m_vertexBarrelHits .get();
-        const eic::TrackerHitCollection* vtxEndcapHits = m_vertexEndcapHits .get();
-        const eic::TrackerHitCollection* gemEndcapHits = m_gemEndcapHits .get();
+        const eicd::TrackerHitCollection* trkBarrelHits = m_trackerBarrelHits.get();
+        const eicd::TrackerHitCollection* trkEndcapHits = m_trackerEndcapHits.get();
+        const eicd::TrackerHitCollection* vtxBarrelHits = m_vertexBarrelHits .get();
+        const eicd::TrackerHitCollection* vtxEndcapHits = m_vertexEndcapHits .get();
+        const eicd::TrackerHitCollection* gemEndcapHits = m_gemEndcapHits .get();
         auto outputHits = m_outputHitCollection.createAndPut();
 
         for (const auto* hits : {trkBarrelHits, trkEndcapHits, vtxBarrelHits, vtxEndcapHits, gemEndcapHits}) {

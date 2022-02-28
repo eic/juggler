@@ -8,7 +8,6 @@ gaudi_add_module(JugDigiPlugins
   src/components/CalorimeterHitDigi.cpp 
   src/components/CalorimeterBirksCorr.cpp
   src/components/PhotoMultiplierDigi.cpp 
-  src/components/UFSDTrackerDigi.cpp 
   src/components/SiliconTrackerDigi.cpp 
   src/components/SimTrackerHitsCollector.cpp 
   LINK

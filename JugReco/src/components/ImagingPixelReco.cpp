@@ -57,9 +57,9 @@ public:
   double dyRangeADC;
 
   // hits containers
-  DataHandle<eic::RawCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+  DataHandle<eicd::RawCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                     this};
-  DataHandle<eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+  DataHandle<eicd::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                   this};
 
   // Pointer to the geometry service
@@ -132,7 +132,7 @@ public:
       const auto alignment = volman.lookupDetElement(id).nominal();
       const auto pos       = alignment.worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
 
-        hits.push_back(eic::CalorimeterHit{id,                         // cellID
+        hits.push_back(eicd::CalorimeterHit{id,                         // cellID
                                            static_cast<float>(energy), // energy
                                            0,                          // energyError
                                            static_cast<float>(time),   // time

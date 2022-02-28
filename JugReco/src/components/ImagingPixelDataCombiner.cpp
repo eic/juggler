@@ -45,9 +45,9 @@ class ImagingPixelDataCombiner : public GaudiAlgorithm {
 public:
   Gaudi::Property<int> m_layerIncrement{this, "layerIncrement", 0};
   Gaudi::Property<std::string> m_rule{this, "rule", "concatenate"};
-  DataHandle<eic::CalorimeterHitCollection> m_inputHits1{"inputHits1", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::CalorimeterHitCollection> m_inputHits2{"inputHits2", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::CalorimeterHitCollection> m_outputHits{"outputHits", Gaudi::DataHandle::Writer, this};
+  DataHandle<eicd::CalorimeterHitCollection> m_inputHits1{"inputHits1", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::CalorimeterHitCollection> m_inputHits2{"inputHits2", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::CalorimeterHitCollection> m_outputHits{"outputHits", Gaudi::DataHandle::Writer, this};
   std::vector<std::string> supported_rules{"concatenate", "interlayer"};
 
   ImagingPixelDataCombiner(const std::string& name, ISvcLocator* svcLoc)
@@ -76,7 +76,7 @@ public:
     // input collections
     const auto hits1 = m_inputHits1.get();
     const auto hits2 = m_inputHits2.get();
-    std::vector<const eic::CalorimeterHitCollection*> inputs{hits1, hits2};
+    std::vector<const eicd::CalorimeterHitCollection*> inputs{hits1, hits2};
     // Create output collections
     auto mhits = m_outputHits.createAndPut();
 
@@ -85,7 +85,7 @@ public:
       for (int i = 0; i < (int)inputs.size(); ++i) {
         auto coll = inputs[i];
         for (auto hit : *coll) {
-          eic::CalorimeterHit h2{
+          eicd::CalorimeterHit h2{
               hit.cellID(),    hit.energy(),   hit.energyError(), hit.time(),
               hit.timeError(), hit.position(), hit.dimension(),   hit.layer() + m_layerIncrement * i,
               hit.sector(),    hit.local(),
@@ -136,7 +136,7 @@ public:
         }
 
         // push hit, increment of index
-        eic::CalorimeterHit h2{
+        eicd::CalorimeterHit h2{
             hit.cellID(),    hit.energy(),   hit.energyError(), hit.time(),
             hit.timeError(), hit.position(), hit.dimension(),   hit.layer() + m_layerIncrement * curr_coll,
             hit.sector(),    hit.local()};

@@ -33,9 +33,9 @@ namespace Jug::Fast {
  */
 class TruthClustering : public GaudiAlgorithm {
 public:
-  DataHandle<eic::CalorimeterHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::CalorimeterHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
   DataHandle<edm4hep::SimCalorimeterHitCollection> m_mcHits{"mcHits", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::ProtoClusterCollection> m_outputProtoClusters{"outputProtoClusters", Gaudi::DataHandle::Writer, this};
+  DataHandle<eicd::ProtoClusterCollection> m_outputProtoClusters{"outputProtoClusters", Gaudi::DataHandle::Writer, this};
 
   TruthClustering(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc) {

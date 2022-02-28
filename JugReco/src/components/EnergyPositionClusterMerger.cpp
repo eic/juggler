@@ -34,10 +34,10 @@ namespace Jug::Reco {
 class EnergyPositionClusterMerger : public GaudiAlgorithm {
 public:
   // Input
-  DataHandle<eic::ClusterCollection> m_energyClusters{"energyClusters", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::ClusterCollection> m_positionClusters{"positionClusters", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::ClusterCollection> m_energyClusters{"energyClusters", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::ClusterCollection> m_positionClusters{"positionClusters", Gaudi::DataHandle::Reader, this};
   // Output
-  DataHandle<eic::ClusterCollection> m_outputClusters{"outputClusters", Gaudi::DataHandle::Writer, this};
+  DataHandle<eicd::ClusterCollection> m_outputClusters{"outputClusters", Gaudi::DataHandle::Writer, this};
   // Negative values mean the tolerance check is disabled
   Gaudi::Property<double> m_zToleranceUnits{this, "zTolerance", -1 * cm};
   Gaudi::Property<double> m_phiToleranceUnits{this, "phiTolerance", 20 * degree};

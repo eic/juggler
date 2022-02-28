@@ -41,10 +41,10 @@ namespace Jug::Track {
  */
 class ActsTrajectoryReader : public GaudiAlgorithm {
 public:
-  DataHandle<eic::TrackerHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::TrackerHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
   DataHandle<TrajectoriesContainer> m_inputTrajectories{"inputActsTrajectories", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::TrajectoryCollection> m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
-  DataHandle<eic::TrackParametersCollection> m_outputParameters{"outputParameters", Gaudi::DataHandle::Writer, this};
+  DataHandle<eicd::TrajectoryCollection> m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
+  DataHandle<eicd::TrackParametersCollection> m_outputParameters{"outputParameters", Gaudi::DataHandle::Writer, this};
 
 public:
   //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
@@ -64,7 +64,7 @@ public:
   StatusCode execute() override {
     // input
     const TrajectoriesContainer& acts_traj = *(m_inputTrajectories.get());
-    const eic::TrackerHitCollection& hits  = *(m_inputHits.get());
+    const eicd::TrackerHitCollection& hits  = *(m_inputHits.get());
     // create output collections
     auto out_traj = m_outputTrajectories.createAndPut();
     auto out_pars = m_outputParameters.createAndPut();
@@ -139,7 +139,7 @@ public:
                                               static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundTime)),
                                               static_cast<float>(covariance(Acts::eBoundQOverP, Acts::eBoundTime))};
 
-        eic::TrackParameters pars{0, // type: track head --> 0
+        eicd::TrackParameters pars{0, // type: track head --> 0
                                   {parameter[Acts::eBoundLoc0], parameter[Acts::eBoundLoc1]},
                                   static_cast<float>(parameter[Acts::eBoundTheta]),
                                   static_cast<float>(parameter[Acts::eBoundPhi]),
@@ -172,9 +172,9 @@ public:
           return;
         }
 
-        eic::BasicParticle p{
+        eicd::BasicParticle p{
             {-1, 0},
-            eic::VectorPolar( // 3-momentum vector
+            eicd::VectorPolar( // 3-momentum vector
                 {1.0 / std::abs(params[Acts::eBoundQOverP]), params[Acts::eBoundTheta], params[Acts::eBoundPhi]}),
             {0., 0., 0.},                                                        // vectex 3-vector
             0.,                                                                  // time

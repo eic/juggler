@@ -38,7 +38,7 @@ class PhotoMultiplierDigi : public GaudiAlgorithm
 public:
     DataHandle<edm4hep::SimTrackerHitCollection>
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-    DataHandle<eic::RawPMTHitCollection>
+    DataHandle<eicd::RawPMTHitCollection>
         m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
     Gaudi::Property<std::vector<std::pair<double, double>>>
         u_quantumEfficiency{this, "quantumEfficiency", {{2.6*eV, 0.3}, {7.0*eV, 0.3}}};
@@ -121,8 +121,7 @@ public:
         // build hit
         for (auto &it : hit_groups) {
             for (auto &data : it.second) {
-                eic::RawPMTHit hit{
-                  0 /* Old ID TBDeleted */,
+                eicd::RawPMTHit hit{
                   it.first,
                   static_cast<uint32_t>(data.signal), 
                   static_cast<uint32_t>(data.time/(m_timeStep/ns))};

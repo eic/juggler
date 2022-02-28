@@ -12,16 +12,12 @@
 
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
+#include "eicd/MCRecoParticleAssociationCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
 #include "eicd/vector_utils.h"
 
 namespace {
-  enum DetectorTags {
-    kTagB0 = 1,
-    kTagRP = 2,
-    kTagOMD = 3,
-    kTagZDC = 4
-  };
+enum DetectorTags { kTagB0 = 1, kTagRP = 2, kTagOMD = 3, kTagZDC = 4 };
 }
 
 namespace Jug::Fast {
@@ -29,8 +25,10 @@ namespace Jug::Fast {
 class SmearedFarForwardParticles : public GaudiAlgorithm {
 public:
   DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader, this};
-  DataHandle<eic::ReconstructedParticleCollection> m_outputParticles{"SmearedFarForwardParticles", Gaudi::DataHandle::Writer,
-                                                                     this};
+  DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"SmearedFarForwardParticles",
+                                                                      Gaudi::DataHandle::Writer, this};
+  DataHandle<eicd::MCRecoParticleAssociationCollection> m_outputAssocCollection{"MCRecoParticleAssociation",
+                                                                                Gaudi::DataHandle::Writer, this};
 
   Gaudi::Property<bool> m_enableZDC{this, "enableZDC", true};
   Gaudi::Property<bool> m_enableB0{this, "enableB0", true};
@@ -60,18 +58,21 @@ public:
   Gaudi::Property<double> m_pMaxRigidityOMD{this, "pMaxRigidityOMD", 0.60};
 
   // Crossing angle, set to -25mrad
-  Gaudi::Property<double> m_crossingAngle{this, "crossingAngle", -0.025}; //-0.025}; -- causes double rotation with afterburner
+  Gaudi::Property<double> m_crossingAngle{this, "crossingAngle",
+                                          -0.025}; //-0.025}; -- causes double rotation with afterburner
 
   Rndm::Numbers m_gaussDist;
 
-  private:
-  using RecData = eic::ReconstructedParticle;
+private:
+  using RecPart = eicd::ReconstructedParticle;
+  using Assoc   = eicd::MCRecoParticleAssociation;
+  using RecData = std::pair<RecPart, Assoc>;
 
-  public:
-  SmearedFarForwardParticles(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc) {
+public:
+  SmearedFarForwardParticles(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputMCParticles, "MCParticles");
     declareProperty("outputParticles", m_outputParticles, "ReconstructedParticles");
+    declareProperty("outputAssociations", m_outputAssocCollection, "MCRecoParticleAssociation");
   }
   StatusCode initialize() override {
     if (GaudiAlgorithm::initialize().isFailure())
@@ -89,12 +90,13 @@ public:
   StatusCode execute() override {
     const auto& mc = *(m_inputMCParticles.get());
     auto& rc       = *(m_outputParticles.createAndPut());
+    auto& assoc    = *(m_outputAssocCollection.createAndPut());
 
     double ionBeamEnergy = 0;
     if (m_ionBeamEnergy > 0) {
       ionBeamEnergy = m_ionBeamEnergy;
     } else {
-      for (const auto& part: mc) {
+      for (const auto& part : mc) {
         if (part.getGeneratorStatus() == 4 && part.getPDG() == 2212) {
           auto E = part.getEnergy();
           if (33 < E && E < 50) {
@@ -130,8 +132,9 @@ public:
       rc_parts.push_back(omd(mc, ionBeamEnergy));
     }
     for (const auto& det : rc_parts) {
-      for (const auto& part : det) {
+      for (const auto& [part, link] : det) {
         rc.push_back(part);
+        assoc.push_back(link);
       }
     }
     return StatusCode::SUCCESS;
@@ -155,30 +158,29 @@ private:
         continue;
       }
       // only 0-->4.5 mrad
-      const double mom_ion_phi = std::atan2(mom_ion.x, mom_ion.y);
-      const double mom_ion_theta = std::atan2(std::hypot(mom_ion.x, mom_ion.y), mom_ion.z);
+      const double mom_ion_theta = eicd::anglePolar(mom_ion);
+      const double mom_ion_phi   = eicd::angleAzimuthal(mom_ion);
       if (mom_ion_theta > 4.5 / 1000.) {
         continue;
       }
 
-      double conTerm = 0.05; //default 5%
-      double stoTerm = 0.5;  //default 50%
-      double angTerm = 0.003; //3mrad
+      double conTerm = 0.05;  // default 5%
+      double stoTerm = 0.5;   // default 50%
+      double angTerm = 0.003; // 3mrad
 
-      if(part.getPDG() == 2112){
-        conTerm = 0.05; //default 5%
-        stoTerm = 0.5;  //default 50%
-        angTerm = 0.003; //3mrad
-      }
-      else if(part.getPDG() == 22){  //EMCAL expected to have slightly better performance
-        conTerm = 0.03; //default 3%
-        stoTerm = 0.10;  //default 10% for WSciFi
-        angTerm = 0.001; //1mrad is the detault for the block size
+      if (part.getPDG() == 2112) {
+        conTerm = 0.05;                 // default 5%
+        stoTerm = 0.5;                  // default 50%
+        angTerm = 0.003;                // 3mrad
+      } else if (part.getPDG() == 22) { // EMCAL expected to have slightly better performance
+        conTerm = 0.03;                 // default 3%
+        stoTerm = 0.10;                 // default 10% for WSciFi
+        angTerm = 0.001;                // 1mrad is the detault for the block size
       }
 
       // explicit double precision due to E*E - m*m
-      const double E = part.getEnergy();
-      const double dE   = sqrt((conTerm * E) * (conTerm * E) + stoTerm * stoTerm * E) * m_gaussDist(); //50%/SqrtE + 5%
+      const double E    = part.getEnergy();
+      const double dE   = sqrt((conTerm * E) * (conTerm * E) + stoTerm * stoTerm * E) * m_gaussDist(); // 50%/SqrtE + 5%
       const double Es   = E + dE;
       const double th   = mom_ion_theta;
       const double dth  = (angTerm / sqrt(E)) * m_gaussDist();
@@ -188,38 +190,34 @@ private:
       const double phis = phi + dphi;
       const double moms = sqrt(Es * Es - part.getMass() * part.getMass());
       // now cast back into float
-      const edm4hep::Vector3f mom3s_ion{
-        static_cast<float>(moms*sin(ths)*cos(phis)),
-        static_cast<float>(moms*sin(ths)*sin(phis)),
-        static_cast<float>(moms*cos(ths))
-      };
-      const auto mom3s = rotateIonToLabDirection(mom3s_ion);
-      const auto mom3s_phi = std::atan2(mom3s.y, mom3s.x);
-      const auto mom3s_theta = std::atan2(std::hypot(mom3s.y, mom3s.x), mom3s.z);
-      eic::ReconstructedParticle rec_part;
-      //rec_part.ID({part.id(), algorithmID()});
-      rec_part.p({mom3s.x, mom3s.y, mom3s.z});
-      rec_part.v({part.getVertex().x, part.getVertex().y, part.getVertex().z});
-      rec_part.time(static_cast<float>(part.getTime()));
-      rec_part.pid(part.getPDG());
-      rec_part.status(kTagZDC);
-      rec_part.charge(static_cast<int16_t>(part.getCharge()));
-      rec_part.weight(1.);
-      rec_part.theta(mom3s_theta);
-      rec_part.phi(mom3s_phi);
-      rec_part.momentum(static_cast<float>(moms));
+      const auto mom3s_ion = eicd::sphericalToVector(moms, ths, phis);
+      const auto mom3s     = rotateIonToLabDirection(mom3s_ion);
+      RecPart rec_part;
+      rec_part.type(kTagZDC);
       rec_part.energy(static_cast<float>(Es));
+      rec_part.momentum({mom3s.x, mom3s.y, mom3s.z});
+      rec_part.referencePoint({static_cast<float>(part.getVertex().x), static_cast<float>(part.getVertex().y),
+                               static_cast<float>(part.getVertex().z)});
+      rec_part.charge(static_cast<int16_t>(part.getCharge()));
       rec_part.mass(static_cast<float>(part.getMass()));
-      //rec_part.mcID();
-      rc.push_back(rec_part);
+      rec_part.goodnessOfPID(1.);
+      rec_part.PDG(part.getPDG());
+      Assoc assoc;
+      assoc.simID(part.getObjectID().index);
+      assoc.weight(1.);
+      assoc.rec(rec_part);
+
+      // rec_part.mcID();
+      rc.push_back({rec_part, assoc});
 
       if (msgLevel(MSG::DEBUG)) {
-        const auto& part_p = part.getMomentum();
+        const auto& part_p    = part.getMomentum();
         const auto part_p_mag = std::hypot(part_p.x, part_p.y, part_p.z);
         debug()
             << fmt::format(
                    "Found ZDC particle: {}, Etrue: {}, Emeas: {}, ptrue: {}, pmeas: {}, theta_true: {}, theta_meas: {}",
-                   part.getPDG(), E, rec_part.energy(), part_p_mag, eicd::magnitude(rec_part.p()), th, eicd::anglePolar(rec_part.p()))
+                   part.getPDG(), E, rec_part.energy(), part_p_mag, eicd::magnitude(rec_part.momentum()), th,
+                   eicd::anglePolar(rec_part.momentum()))
             << endmsg;
       }
     }
@@ -242,29 +240,29 @@ private:
         continue;
       }
       // only 6-->20 mrad
-      const auto mom_ion = removeCrossingAngle(part.getMomentum()); //rotateLabToIonDirection(part.getMomentum());
-      const auto mom_ion_theta = std::atan2(std::hypot(mom_ion.x, mom_ion.y), mom_ion.z);
+      const auto mom_ion = removeCrossingAngle(part.getMomentum()); // rotateLabToIonDirection(part.getMomentum());
+      const auto mom_ion_theta = eicd::anglePolar(mom_ion);
       if (mom_ion_theta < m_thetaMinB0 || mom_ion_theta > m_thetaMaxB0) {
         continue;
       }
-      auto rc_part = smearMomentum(part);
+      auto [rc_part, assoc] = smearMomentum(part);
       // we don't detect photon energy, just its angles and presence
       if (part.getPDG() == 22) {
-        rc_part.p({0,0,0});
+        rc_part.momentum({0, 0, 0});
         rc_part.energy(0);
       }
-      rc_part.status(kTagB0);
-      rc.push_back(rc_part);
+      rc_part.type(kTagB0);
+      rc.push_back({rc_part, assoc});
       if (msgLevel(MSG::DEBUG)) {
-        auto& rec_part = rc.back();
-        const auto& part_p = part.getMomentum();
-        const auto part_p_pt = std::hypot(part_p.x, part_p.y);
-        const auto part_p_mag = std::hypot(part_p.x, part_p.y, part_p.z);
-        const auto part_p_theta = std::atan2(std::hypot(part_p.x, part_p.y), part_p.z);
+        const auto& part_p      = part.getMomentum();
+        const auto part_p_pt    = eicd::magnitudeTransverse(part_p);
+        const auto part_p_mag   = eicd::magnitude(part_p);
+        const auto part_p_theta = eicd::anglePolar(part_p);
         debug() << fmt::format("Found B0 particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
-                               part.getPDG(), part_p_mag, rec_part.momentum(), part_p_pt,
-                               std::hypot(rec_part.p().x, rec_part.p().y), part_p_theta, eicd::anglePolar(rec_part.p()))
+                               part.getPDG(), part_p_mag, eicd::magnitude(rc_part.momentum()), part_p_pt,
+                               eicd::magnitudeTransverse(rc_part.momentum()), part_p_theta,
+                               eicd::anglePolar(rc_part.momentum()))
                 << endmsg;
       }
     }
@@ -285,25 +283,25 @@ private:
       if (part.getPDG() != 2212) {
         continue;
       }
-      const auto mom_ion = removeCrossingAngle(part.getMomentum()); //rotateLabToIonDirection(part.getMomentum());
-      const auto mom_ion_theta = std::atan2(std::hypot(mom_ion.x, mom_ion.y), mom_ion.z);
+      const auto mom_ion = removeCrossingAngle(part.getMomentum()); // rotateLabToIonDirection(part.getMomentum());
+      const auto mom_ion_theta = eicd::anglePolar(mom_ion);
       if (mom_ion_theta < m_thetaMinRP || mom_ion_theta > m_thetaMaxRP ||
           mom_ion.z < m_pMinRigidityRP * ionBeamEnergy) {
         continue;
       }
-      auto rc_part = smearMomentum(part);
-      rc_part.status(kTagRP);
-      rc.push_back(rc_part);
+      auto [rc_part, assoc] = smearMomentum(part);
+      rc_part.type(kTagRP);
+      rc.push_back({rc_part, assoc});
       if (msgLevel(MSG::DEBUG)) {
-        auto& rec_part = rc.back();
-        const auto& part_p = part.getMomentum();
-        const auto part_p_pt = std::hypot(part_p.x, part_p.y);
-        const auto part_p_mag = std::hypot(part_p.x, part_p.y, part_p.z);
-        const auto part_p_theta = std::atan2(std::hypot(part_p.x, part_p.y), part_p.z);
+        const auto& part_p      = part.getMomentum();
+        const auto part_p_pt    = eicd::magnitudeTransverse(part_p);
+        const auto part_p_mag   = eicd::magnitude(part_p);
+        const auto part_p_theta = eicd::anglePolar(part_p);
         debug() << fmt::format("Found RP particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
-                               part.getPDG(), part_p_mag, rec_part.momentum(), part_p_pt,
-                               std::hypot(rec_part.p().x, rec_part.p().y), part_p_theta, eicd::anglePolar(rec_part.p()))
+                               part.getPDG(), part_p_mag, eicd::magnitude(rc_part.momentum()), part_p_pt,
+                               eicd::magnitudeTransverse(rc_part.momentum()), part_p_theta,
+                               eicd::anglePolar(rc_part.momentum()))
                 << endmsg;
       }
     }
@@ -323,32 +321,23 @@ private:
       if (part.getPDG() != 2212) {
         continue;
       }
-      const auto mom_ion = removeCrossingAngle(part.getMomentum()); //rotateLabToIonDirection(part.getMomentum());
-      //const auto mom_ion_phi = std::atan2(mom_ion.x, mom_ion.y);
-      //const auto mom_ion_theta = std::atan2(std::hypot(mom_ion.x, mom_ion.y), mom_ion.z);
+      const auto mom_ion = removeCrossingAngle(part.getMomentum()); // rotateLabToIonDirection(part.getMomentum());
       if (mom_ion.z < m_pMinRigidityOMD * ionBeamEnergy || mom_ion.z > m_pMaxRigidityOMD * ionBeamEnergy) {
         continue;
       }
-      // angle cut
-      //const double phi          = (mom_ion_phi < M_PI) ? mom_ion_phi : mom_ion_phi - 2 * M_PI;
-      //const bool in_small_angle = (mom_ion_theta > m_thetaMinFullOMD && mom_ion_theta < m_thetaMaxFullOMD);
-      //const bool in_large_angle = (mom_ion_theta > m_thetaMinPartialOMD && mom_ion_theta < m_thetaMaxPartialOMD);
-      //if (!in_small_angle || (std::abs(phi) > 1 && !in_large_angle)) {
-      //  continue;
-      //}
-      auto rc_part = smearMomentum(part);
-      rc_part.status(kTagOMD);
-      rc.push_back(rc_part);
+      auto [rc_part, assoc] = smearMomentum(part);
+      rc_part.type(kTagOMD);
+      rc.push_back({rc_part, assoc});
       if (msgLevel(MSG::DEBUG)) {
-        auto& rec_part = rc.back();
-        const auto& part_p = part.getMomentum();
-        const auto part_p_pt = std::hypot(part_p.x, part_p.y);
-        const auto part_p_mag = std::hypot(part_p.x, part_p.y, part_p.z);
-        const auto part_p_theta = std::atan2(std::hypot(part_p.x, part_p.y), part_p.z);
+        const auto& part_p      = part.getMomentum();
+        const auto part_p_pt    = eicd::magnitudeTransverse(part_p);
+        const auto part_p_mag   = eicd::magnitude(part_p);
+        const auto part_p_theta = eicd::anglePolar(part_p);
         debug() << fmt::format("Found OMD particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
-                               part.getPDG(), part_p_mag, rec_part.momentum(), part_p_pt,
-                               std::hypot(rec_part.p().x, rec_part.p().y), part_p_theta, eicd::anglePolar(rec_part.p()))
+                               part.getPDG(), part_p_mag, eicd::magnitude(rc_part.momentum()), part_p_pt,
+                               eicd::magnitudeTransverse(rc_part.momentum()), part_p_theta,
+                               eicd::anglePolar(rc_part.momentum()))
                 << endmsg;
       }
     }
@@ -363,77 +352,62 @@ private:
     const double dp    = (0.025 * p) * m_gaussDist();
     const double ps    = p + dp;
 
-    //const double pt  = std::hypot(mom_ion.x, mom_ion.y);
-    //const double dpt = (0.03 * pt) * m_gaussDist();
+    // const double pt  = std::hypot(mom_ion.x, mom_ion.y);
+    // const double dpt = (0.03 * pt) * m_gaussDist();
     // just apply relative smearing on px and py
     const double dpxs = (0.03 * mom_ion.x) * m_gaussDist(); //+ (1 + dpt / pt);
     const double dpys = (0.03 * mom_ion.y) * m_gaussDist(); //+ (1 + dpt / pt);
 
-    const double pxs = mom_ion.x + dpxs; 
-    const double pys = mom_ion.y + dpys; 
+    const double pxs = mom_ion.x + dpxs;
+    const double pys = mom_ion.y + dpys;
 
     // now get pz
     const double pzs = sqrt(ps * ps - pxs * pxs - pys * pys);
 
     // And build our 3-vector
-    const edm4hep::Vector3f psmear_ion{
-      static_cast<float>(pxs),
-      static_cast<float>(pys),
-      static_cast<float>(pzs)
-    };
+    const edm4hep::Vector3f psmear_ion{static_cast<float>(pxs), static_cast<float>(pys), static_cast<float>(pzs)};
     const auto psmear = rotateIonToLabDirection(psmear_ion);
-    const auto psmear_phi = std::atan2(psmear.x, psmear.y);
-    const auto psmear_theta = std::atan2(std::hypot(psmear.x, psmear.y), psmear.z);
-    eic::ReconstructedParticle rec_part;
-    rec_part.ID(part.id());
-    rec_part.p({psmear.x, psmear.y, psmear.z});
-    rec_part.v({part.getVertex().x, part.getVertex().y, part.getVertex().z});
-    rec_part.time(static_cast<float>(part.getTime()));
-    rec_part.pid(part.getPDG());
-    rec_part.status(0);
-    rec_part.charge(static_cast<int16_t>(part.getCharge()));
-    rec_part.weight(1.);
-    rec_part.theta(psmear_theta);
-    rec_part.phi(psmear_phi);
-    rec_part.momentum(static_cast<float>(ps));
+    eicd::ReconstructedParticle rec_part;
+    rec_part.type(-1);
     rec_part.energy(std::hypot(ps, part.getMass()));
+    rec_part.momentum({psmear.x, psmear.y, psmear.z});
+    rec_part.referencePoint({static_cast<float>(part.getVertex().x), static_cast<float>(part.getVertex().y),
+                             static_cast<float>(part.getVertex().z)});
+    rec_part.charge(static_cast<int16_t>(part.getCharge()));
     rec_part.mass(static_cast<float>(part.getMass()));
-    //rec_part.mcID(part.ID());
-    return rec_part;
+    rec_part.goodnessOfPID(1); // perfect PID
+    rec_part.PDG(part.getPDG());
+    Assoc assoc;
+    assoc.simID(part.getObjectID().index);
+    assoc.weight(1.);
+    assoc.rec(rec_part);
+
+    return {rec_part, assoc};
   }
 
+private:
   // Rotate 25mrad about the y-axis
   edm4hep::Vector3f rotateLabToIonDirection(const edm4hep::Vector3f& vec) const {
     const auto sth = sin(-m_crossingAngle);
     const auto cth = cos(-m_crossingAngle);
-    return {
-      static_cast<float>(cth * vec.x + sth * vec.z),
-      static_cast<float>(vec.y),
-      static_cast<float>(-sth * vec.x + cth * vec.z)
-    };
+    return {static_cast<float>(cth * vec.x + sth * vec.z), static_cast<float>(vec.y),
+            static_cast<float>(-sth * vec.x + cth * vec.z)};
   }
 
   edm4hep::Vector3f rotateIonToLabDirection(const edm4hep::Vector3f& vec) const {
     const auto sth = sin(m_crossingAngle);
     const auto cth = cos(m_crossingAngle);
-    return {
-      static_cast<float>(cth * vec.x + sth * vec.z),
-      static_cast<float>(vec.y),
-      static_cast<float>(-sth * vec.x + cth * vec.z)
-    };
+    return {static_cast<float>(cth * vec.x + sth * vec.z), static_cast<float>(vec.y),
+            static_cast<float>(-sth * vec.x + cth * vec.z)};
   }
 
   edm4hep::Vector3f removeCrossingAngle(const edm4hep::Vector3f& vec) const {
     const auto sth = std::sin(-m_crossingAngle);
     const auto cth = std::cos(-m_crossingAngle);
-    return {
-      static_cast<float>(cth * vec.x + sth * vec.z),
-      static_cast<float>(vec.y),
-      static_cast<float>(-sth * vec.x + cth * vec.z)
-    };
+    return {static_cast<float>(cth * vec.x + sth * vec.z), static_cast<float>(vec.y),
+            static_cast<float>(-sth * vec.x + cth * vec.z)};
   }
-
-}; 
+};
 
 DECLARE_COMPONENT(SmearedFarForwardParticles)
 

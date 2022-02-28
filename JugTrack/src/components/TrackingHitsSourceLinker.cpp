@@ -37,13 +37,13 @@ namespace Jug::Reco {
    */
   class TrackingHitsSourceLinker : public GaudiAlgorithm {
   public:
-    using TrkHits = eic::TrackerHitCollection;
+    using TrkHits = eicd::TrackerHitCollection;
 
     Gaudi::Property<std::vector<std::string>> m_inputs{this, "inputTrackerCollections", {}, "List of intput tracker hit collections"};
     std::vector<DataHandle<TrkHits>*>         m_inputHandles;
 
     // Gaudi::Property<std::vector<std::string>> m_inputCollections{this, "inputCollections", {}, "Input Tracker hit
-    // collections"}; DataHandle<eic::TrackerHitCollection>    m_inputHitCollection{"inputHitCollection",
+    // collections"}; DataHandle<eicd::TrackerHitCollection>    m_inputHitCollection{"inputHitCollection",
     // Gaudi::DataHandle::Reader, this};
     DataHandle<SourceLinkContainer> m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};
 
@@ -101,7 +101,7 @@ namespace Jug::Reco {
 
       for (const auto& handle : m_inputHandles) {
         // input collection
-        const eic::TrackerHitCollection* hits = handle->get();
+        const eicd::TrackerHitCollection* hits = handle->get();
         if (msgLevel(MSG::DEBUG)) {
           debug() << (*hits).size() << " hits " << endmsg;
         }
