@@ -45,8 +45,9 @@ namespace Reco {
   public:
     Gaudi::Property<float> m_timeResolution{this, "timeResolution", 10}; // in ns
     DataHandle<eicd::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
-                                                                  this};
-    DataHandle<eicd::TrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
+                                                                   this};
+    DataHandle<eicd::TrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+                                                                 this};
 
     /// Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
@@ -102,15 +103,15 @@ namespace Reco {
         //      - XYZ segmentation: xx -> sigma_x, yy-> sigma_y, zz -> sigma_z, tt -> 0
         //    This is properly in line with how we get the local coordinates for the hit
         //    in the TrackerSourceLinker.
-        eicd::TrackerHit hit{0 /*deleteme */,                                       // Hit ID
-                            ahit.cellID(),                                         // Raw DD4hep cell ID
-                            {pos.x() / mm, pos.y() / mm, pos.z() / mm},            // mm
-                            {get_variance(dim[0] / mm), get_variance(dim[1] / mm), // variance (see note above)
-                             std::size(dim) > 2 ? get_variance(dim[2] / mm) : 0.},
-                            (float)ahit.time() / 1000,                 // ns
-                            m_timeResolution,                          // in ns
-                            static_cast<float>(ahit.charge() / 1.0e6), // Collected energy (GeV)
-                            0.0f};                                     // Error on the energy
+        eicd::TrackerHit hit{ahit.cellID(), // Raw DD4hep cell ID
+                             {static_cast<float>(pos.x() / mm), static_cast<float>(pos.y() / mm),
+                              static_cast<float>(pos.z() / mm)},                    // mm
+                             {get_variance(dim[0] / mm), get_variance(dim[1] / mm), // variance (see note above)
+                              std::size(dim) > 2 ? get_variance(dim[2] / mm) : 0.},
+                             static_cast<float>(ahit.timeStamp() / 1000), // ns
+                             m_timeResolution,                            // in ns
+                             static_cast<float>(ahit.charge() / 1.0e6),   // Collected energy (GeV)
+                             0.0f};                                       // Error on the energy
         rec_hits->push_back(hit);
       }
       return StatusCode::SUCCESS;
