@@ -105,7 +105,7 @@ namespace Jug::Reco {
       {
         uint32_t idx  = 0;
         for (const auto& h : hits) {
-          if (!have_ref || h.energy() > ref_hit.energy()) {
+          if (!have_ref || h.getEnergy() > ref_hit.getEnergy()) {
             ref_hit  = h;
             have_ref = true;
           }
@@ -118,12 +118,12 @@ namespace Jug::Reco {
         debug() << " max_dist = " << max_dist << endmsg;
       }
 
-      while (have_ref && ref_hit.energy() > min_energy) {
+      while (have_ref && ref_hit.getEnergy() > min_energy) {
 
         std::vector<std::pair<uint32_t, eicd::ConstCalorimeterHit>> cluster_hits;
 
         for (const auto& [idx, h] : the_hits) {
-          if (eicd::magnitude(h.position() - ref_hit.position()) < max_dist) {
+          if (eicd::magnitude(h.getPosition() - ref_hit.getPosition()) < max_dist) {
             cluster_hits.push_back({idx, h});
           } else {
             remaining_hits.push_back({idx, h});
@@ -132,20 +132,20 @@ namespace Jug::Reco {
 
         double total_energy = std::accumulate(
             std::begin(cluster_hits), std::end(cluster_hits), 0.0,
-            [](double t, const std::pair<uint32_t, eicd::ConstCalorimeterHit>& h1) { return (t + h1.second.energy()); });
+            [](double t, const std::pair<uint32_t, eicd::ConstCalorimeterHit>& h1) { return (t + h1.second.getEnergy()); });
 
         if (msgLevel(MSG::DEBUG)) {
           debug() << " total_energy = " << total_energy << endmsg;
           debug() << " cluster size " << cluster_hits.size() << endmsg;
         }
         auto cl = clusters.create();
-        cl.nhits(cluster_hits.size());
+        cl.setNhits(cluster_hits.size());
         auto pcl = proto.create();
         for (const auto& [idx, h] : cluster_hits) {
-          cl.energy(cl.energy() + h.energy());
-          cl.position(cl.position() + (h.position() * h.energy() / total_energy));
-          pcl.addhits(h);
-          pcl.addweights(1);
+          cl.setEnergy(cl.getEnergy() + h.getEnergy());
+          cl.setPosition(cl.getPosition() + (h.getPosition() * h.getEnergy() / total_energy));
+          pcl.addToHits(h);
+          pcl.addToWeights(1);
         }
         // Optionally store the MC truth associated with the first hit in this cluster
         // FIXME no connection between cluster and truth in edm4hep
@@ -157,7 +157,7 @@ namespace Jug::Reco {
         have_ref = false;
         if ((remaining_hits.size() > 5) && (clusters.size() < 10)) {
           for (const auto& [idx, h] : remaining_hits) {
-            if (!have_ref || h.energy() > ref_hit.energy()) {
+            if (!have_ref || h.getEnergy() > ref_hit.getEnergy()) {
               ref_hit  = h;
               have_ref = true;
             }

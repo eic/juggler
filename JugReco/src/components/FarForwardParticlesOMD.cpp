@@ -92,10 +92,10 @@ public:
     for (const auto& h : *rawhits) {
 
       // The actual hit position:
-      auto pos0 = h.position();
+      auto pos0 = h.getPosition();
       // auto mom0 = h.momentum;
       // auto pidCode = h.g4ID;
-      auto eDep = h.edep();
+      auto eDep = h.getEdep();
 
       if (eDep < 0.00001) {
         continue;
@@ -160,14 +160,14 @@ public:
       //----- end RP reconstruction code ------
 
       eicd::ReconstructedParticle rpTrack;
-      rpTrack.type(0);
-      rpTrack.energy(std::hypot(eicd::magnitude(rpTrack.momentum()), .938272));
-      rpTrack.momentum({prec});
-      rpTrack.referencePoint({0, 0, 0});
-      rpTrack.charge(1);
-      rpTrack.mass(.938272);
-      rpTrack.goodnessOfPID(1.);
-      rpTrack.PDG(2122);
+      rpTrack.setType(0);
+      rpTrack.setMomentum({prec});
+      rpTrack.setEnergy(std::hypot(eicd::magnitude(rpTrack.getMomentum()), .938272));
+      rpTrack.setReferencePoint({0, 0, 0});
+      rpTrack.setCharge(1);
+      rpTrack.setMass(.938272);
+      rpTrack.setGoodnessOfPID(1.);
+      rpTrack.setPDG(2122);
       //rpTrack.covMatrix(); // @TODO: Errors
       rc->push_back(rpTrack);
 

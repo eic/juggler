@@ -64,8 +64,8 @@ public:
     // 1. conformal XY transform hits
     // 2. fill histogram with phi
     for(const auto& ahit : *hits) {
-      double xc = ahit.position().x - ref_hit.x();
-      double yc = ahit.position().y - ref_hit.y();
+      double xc = ahit.getPosition().x - ref_hit.x();
+      double yc = ahit.getPosition().y - ref_hit.y();
       double r = std::hypot(xc, yc);
       conformal_hits.push_back({2.0*xc/r,2.0*yc/r});
       h_phi.Fill(conformal_hits.back().phi());

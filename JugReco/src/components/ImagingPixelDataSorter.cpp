@@ -77,7 +77,7 @@ namespace Jug::Reco {
       std::vector<std::vector<eicd::ConstCalorimeterHit>> layer_hits;
       layer_hits.resize(m_nLayers);
       for (const auto& h : hits) {
-        auto k = h.layer();
+        auto k = h.getLayer();
         if ((int)k < m_nLayers) {
           layer_hits[k].push_back(h);
         }
@@ -87,7 +87,7 @@ namespace Jug::Reco {
       for (auto &layer : layer_hits) {
         std::sort(layer.begin(), layer.end(),
           [] (const eicd::ConstCalorimeterHit &h1, const eicd::ConstCalorimeterHit &h2) {
-            return h1.energy() > h2.energy();
+            return h1.getEnergy() > h2.getEnergy();
           });
       }
 
@@ -98,8 +98,8 @@ namespace Jug::Reco {
           // pad zeros if no hits
           if (i >= layer.size()) {
             auto h = mhits.create();
-            h.layer((int)k);
-            h.energy(0.);
+            h.setLayer((int)k);
+            h.setEnergy(0.);
           } else {
             auto h = layer[i].clone();
             mhits.push_back(h);

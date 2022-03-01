@@ -65,10 +65,11 @@ public:
   // minimum number of hits (to save this cluster)
   Gaudi::Property<int> m_minClusterNhits{this, "minClusterNhits", 10};
   // input hits collection
-  DataHandle<eicd::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+                                                                  this};
   // output clustered hits
   DataHandle<eicd::ProtoClusterCollection> m_outputProtoClusterCollection{"outputProtoClusterCollection",
-                                                                         Gaudi::DataHandle::Writer, this};
+                                                                          Gaudi::DataHandle::Writer, this};
 
   // unitless counterparts of the input parameters
   double localDistXY[2], layerDistEtaPhi[2], sectorDist;
@@ -134,12 +135,12 @@ public:
     for (size_t i = 0; i < hits.size(); ++i) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << fmt::format("hit {:d}: local position = ({}, {}, {}), global position = ({}, {}, {})", i + 1,
-                               hits[i].local().x, hits[i].local().y, hits[i].position().z, hits[i].position().x,
-                               hits[i].position().y, hits[i].position().z)
+                               hits[i].getLocal().x, hits[i].getLocal().y, hits[i].getPosition().z,
+                               hits[i].getPosition().x, hits[i].getPosition().y, hits[i].getPosition().z)
                 << endmsg;
       }
       // already in a group, or not energetic enough to form a cluster
-      if (visits[i] || hits[i].energy() < minClusterCenterEdep) {
+      if (visits[i] || hits[i].getEnergy() < minClusterCenterEdep) {
         continue;
       }
       groups.emplace_back();
@@ -160,15 +161,15 @@ public:
       }
       double energy = 0.;
       for (const auto& [idx, hit] : group) {
-        energy += hit.energy();
+        energy += hit.getEnergy();
       }
       if (energy < minClusterEdep) {
         continue;
       }
       auto pcl = proto.create();
       for (const auto& [idx, hit] : group) {
-        pcl.addhits(hit);
-        pcl.addweights(1);
+        pcl.addToHits(hit);
+        pcl.addToWeights(1);
       }
     }
 
@@ -181,20 +182,20 @@ private:
   // helper function to group hits
   bool is_neighbor(const eicd::ConstCalorimeterHit& h1, const eicd::ConstCalorimeterHit& h2) const {
     // different sectors, simple distance check
-    if (h1.sector() != h2.sector()) {
-      return std::sqrt(pow2(h1.position().x - h2.position().x) + pow2(h1.position().y - h2.position().y) +
-                       pow2(h1.position().z - h2.position().z)) <= sectorDist;
+    if (h1.getSector() != h2.getSector()) {
+      return std::sqrt(pow2(h1.getPosition().x - h2.getPosition().x) + pow2(h1.getPosition().y - h2.getPosition().y) +
+                       pow2(h1.getPosition().z - h2.getPosition().z)) <= sectorDist;
     }
 
     // layer check
-    int ldiff = std::abs(h1.layer() - h2.layer());
+    int ldiff = std::abs(h1.getLayer() - h2.getLayer());
     // same layer, check local positions
     if (!ldiff) {
-      return (std::abs(h1.local().x - h2.local().x) <= localDistXY[0]) &&
-             (std::abs(h1.local().y - h2.local().y) <= localDistXY[1]);
+      return (std::abs(h1.getLocal().x - h2.getLocal().x) <= localDistXY[0]) &&
+             (std::abs(h1.getLocal().y - h2.getLocal().y) <= localDistXY[1]);
     } else if (ldiff <= m_neighbourLayersRange) {
-      return (std::abs(eicd::eta(h1.position()) - eicd::eta(h2.position())) <= layerDistEtaPhi[0]) &&
-             (std::abs(eicd::angleAzimuthal(h1.position()) - eicd::angleAzimuthal(h2.position())) <=
+      return (std::abs(eicd::eta(h1.getPosition()) - eicd::eta(h2.getPosition())) <= layerDistEtaPhi[0]) &&
+             (std::abs(eicd::angleAzimuthal(h1.getPosition()) - eicd::angleAzimuthal(h2.getPosition())) <=
               layerDistEtaPhi[1]);
     }
 
@@ -206,7 +207,7 @@ private:
   void dfs_group(std::vector<std::pair<uint32_t, eicd::ConstCalorimeterHit>>& group, int idx,
                  const eicd::CalorimeterHitCollection& hits, std::vector<bool>& visits) const {
     // not a qualified hit to participate in clustering, stop here
-    if (hits[idx].energy() < minClusterHitEdep) {
+    if (hits[idx].getEnergy() < minClusterHitEdep) {
       visits[idx] = true;
       return;
     }

@@ -72,8 +72,8 @@ public:
         protoIndex[trackID] = proto.size() - 1;
       }
       // Add hit to the appropriate protocluster
-      proto[protoIndex[trackID]].addhits(hit);
-      proto[protoIndex[trackID]].addweights(1);
+      proto[protoIndex[trackID]].addToHits(hit);
+      proto[protoIndex[trackID]].addToWeights(1);
     }
     return StatusCode::SUCCESS;
   }

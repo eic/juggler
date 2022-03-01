@@ -134,11 +134,11 @@ public:
     // DIS kinematics calculations
     auto kin = out_kinematics.create();
     const auto q = ei - ef;
-    kin.Q2(-1. * q.m2());
-    kin.y((q * pi) / (ei * pi));
-    kin.nu(q * pi / m_proton);
-    kin.x(kin.Q2() / (2. * q * pi));
-    kin.W(sqrt((pi + q).m2()));
+    kin.setQ2(-1. * q.m2());
+    kin.setY((q * pi) / (ei * pi));
+    kin.setNu(q * pi / m_proton);
+    kin.setX(kin.getQ2() / (2. * q * pi));
+    kin.setW(sqrt((pi + q).m2()));
 //    kin.scat(????); @TODO: this is now set as a OneToOneRelation to ReconstructedParticle, 
 //                           which breaks for this algorithm that takes raw MCParticles
 
@@ -149,11 +149,11 @@ public:
       debug() << "ef = " << ef << endmsg;
       debug() << "q = " << q << endmsg;
       debug() << "x,y,Q2,W,nu = "
-              << kin.x() << "," 
-              << kin.y() << ","
-              << kin.Q2() << ","
-              << kin.W() << ","
-              << kin.nu()
+              << kin.getX() << "," 
+              << kin.getY() << ","
+              << kin.getQ2() << ","
+              << kin.getW() << ","
+              << kin.getNu()
               << endmsg;
     }
 

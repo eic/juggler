@@ -164,16 +164,15 @@ public:
     // energy time reconstruction
     for (const auto& rh : rawhits) {
       // did not pass the zero-suppression threshold
-      if ((rh.amplitude() - m_pedMeanADC) < thresholdADC) {
+      if ((rh.getAmplitude() - m_pedMeanADC) < thresholdADC) {
         continue;
       }
 
       // convert ADC -> energy
       const float energy =
-          (rh.amplitude() - m_pedMeanADC) / static_cast<float>(m_capADC.value()) * dyRangeADC / m_sampFrac;
-
-      const float time  = rh.timeStamp() / stepTDC;
-      const auto cellID = rh.cellID();
+          (rh.getAmplitude() - m_pedMeanADC) / static_cast<float>(m_capADC.value()) * dyRangeADC / m_sampFrac; 
+      const float time  = rh.getTimeStamp() / stepTDC;
+      const auto cellID = rh.getCellID();
       const int lid = id_dec && !m_layerField.value().empty() ? static_cast<int>(id_dec->get(cellID, layer_idx)) : -1;
       const int sid = id_dec && m_sectorField.value().size() ? static_cast<int>(id_dec->get(cellID, sector_idx)) : -1;
       // global positions
@@ -201,7 +200,7 @@ public:
         dim[i] = cdim[i] / m_lUnit;
         }
         hits.push_back({
-            rh.cellID(),    // cellID
+            rh.getCellID(),    // cellID
             energy,         // energy
             0,              // @TODO: energy error
             time,           // time

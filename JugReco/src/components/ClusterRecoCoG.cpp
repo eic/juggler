@@ -72,7 +72,7 @@ public:
   // for endcaps.
   Gaudi::Property<bool> m_enableEtaBounds{this, "enableEtaBounds", false};
 
-  //DataHandle<eicd::CalorimeterHitCollection> m_inputHits{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  // DataHandle<eicd::CalorimeterHitCollection> m_inputHits{"inputHitCollection", Gaudi::DataHandle::Reader, this};
   DataHandle<eicd::ProtoClusterCollection> m_inputProto{"inputProtoClusterCollection", Gaudi::DataHandle::Reader, this};
   DataHandle<eicd::ClusterCollection> m_outputClusters{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
 
@@ -82,7 +82,7 @@ public:
   std::function<double(double, double, double, int)> weightFunc;
 
   ClusterRecoCoG(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
-    //declareProperty("inputHitCollection", m_inputHits, "");
+    // declareProperty("inputHitCollection", m_inputHits, "");
     declareProperty("inputProtoClusterCollection", m_inputProto, "");
     declareProperty("outputClusterCollection", m_outputClusters, "");
   }
@@ -121,7 +121,7 @@ public:
 
   StatusCode execute() override {
     // input collections
-    //const auto& hits  = *m_inputHits.get();
+    // const auto& hits  = *m_inputHits.get();
     const auto& proto = *m_inputProto.get();
     auto& clusters    = *m_outputClusters.createAndPut();
 
@@ -129,8 +129,8 @@ public:
       auto cl = reconstruct(pcl);
 
       if (msgLevel(MSG::DEBUG)) {
-        debug() << cl.nhits() << " hits: " << cl.energy() / GeV << " GeV, (" << cl.position().x / mm << ", "
-                << cl.position().y / mm << ", " << cl.position().z / mm << ")" << endmsg;
+        debug() << cl.getNhits() << " hits: " << cl.getEnergy() / GeV << " GeV, (" << cl.getPosition().x / mm << ", "
+                << cl.getPosition().y / mm << ", " << cl.getPosition().z / mm << ")" << endmsg;
       }
       clusters.push_back(cl);
     }
@@ -141,7 +141,7 @@ public:
 private:
   eicd::Cluster reconstruct(const eicd::ConstProtoCluster& pcl) const {
     eicd::Cluster cl;
-    cl.nhits(pcl.hits_size());
+    cl.setNhits(pcl.hits_size());
 
     // no hits
     if (msgLevel(MSG::DEBUG)) {
@@ -157,21 +157,19 @@ private:
     // Used to optionally constrain the cluster eta to those of the contributing hits
     float minHitEta = std::numeric_limits<float>::max();
     float maxHitEta = std::numeric_limits<float>::min();
-    auto time       = pcl.hits()[0].time();
-    auto timeError  = pcl.hits()[0].timeError();
-    for (unsigned i = 0; i < pcl.hits().size(); ++i) {
-      const auto& hit   = pcl.hits()[i];
-      const auto weight = pcl.weights()[i];
+    auto time       = pcl.getHits()[0].getTime();
+    auto timeError  = pcl.getHits()[0].getTimeError();
+    for (unsigned i = 0; i < pcl.getHits().size(); ++i) {
+      const auto& hit   = pcl.getHits()[i];
+      const auto weight = pcl.getWeights()[i];
       if (msgLevel(MSG::DEBUG)) {
-        debug() << "hit energy = " << hit.energy() << " hit weight: " << weight << endmsg;
+        debug() << "hit energy = " << hit.getEnergy() << " hit weight: " << weight << endmsg;
       }
-      auto energy = hit.energy() * weight;
+      auto energy = hit.getEnergy() * weight;
       totalE += energy;
       if (energy > maxE) {
-        maxE = energy;
-        time = hit.time();
       }
-      const float eta = eicd::eta(hit.position());
+      const float eta = eicd::eta(hit.getPosition());
       if (eta < minHitEta) {
         minHitEta = eta;
       }
@@ -179,37 +177,37 @@ private:
         maxHitEta = eta;
       }
     }
-    cl.energy(totalE / m_sampFrac);
-    cl.energyError(0.);
-    cl.time(time);
-    cl.timeError(timeError);
+    cl.setEnergy(totalE / m_sampFrac);
+    cl.setEnergyError(0.);
+    cl.setTime(time);
+    cl.setTimeError(timeError);
 
     // center of gravity with logarithmic weighting
     float tw = 0.;
-    auto v = cl.position();
-    for (unsigned i = 0; i < pcl.hits().size(); ++i) {
-      const auto& hit   = pcl.hits()[i];
-      const auto weight = pcl.weights()[i];
-      float w           = weightFunc(hit.energy() * weight, totalE, m_logWeightBase.value(), 0);
+    auto v   = cl.getPosition();
+    for (unsigned i = 0; i < pcl.getHits().size(); ++i) {
+      const auto& hit   = pcl.getHits()[i];
+      const auto weight = pcl.getWeights()[i];
+      float w           = weightFunc(hit.getEnergy() * weight, totalE, m_logWeightBase.value(), 0);
       tw += w;
-      v = v + (hit.position() * w);
+      v = v + (hit.getPosition() * w);
     }
     if (tw == 0.) {
       warning() << "zero total weights encountered, you may want to adjust your weighting parameter." << endmsg;
     }
-    cl.position(v / tw);
-    cl.positionError({}); // @TODO: Covariance matrix
+    cl.setPosition(v / tw);
+    cl.setPositionError({}); // @TODO: Covariance matrix
 
     // Optionally constrain the cluster to the hit eta values
     if (m_enableEtaBounds) {
-      const bool overflow  = (eicd::eta(cl.position()) > maxHitEta);
-      const bool underflow = (eicd::eta(cl.position()) < minHitEta);
+      const bool overflow  = (eicd::eta(cl.getPosition()) > maxHitEta);
+      const bool underflow = (eicd::eta(cl.getPosition()) < minHitEta);
       if (overflow || underflow) {
-        const double newEta           = overflow ? maxHitEta : minHitEta;
-        const double newTheta         = eicd::etaToAngle(newEta);
-        const double newR             = eicd::magnitude(cl.position());
-        const double newPhi           = eicd::angleAzimuthal(cl.position());
-        cl.position(eicd::sphericalToVector(newR, newTheta, newPhi));
+        const double newEta   = overflow ? maxHitEta : minHitEta;
+        const double newTheta = eicd::etaToAngle(newEta);
+        const double newR     = eicd::magnitude(cl.getPosition());
+        const double newPhi   = eicd::angleAzimuthal(cl.getPosition());
+        cl.setPosition(eicd::sphericalToVector(newR, newTheta, newPhi));
         if (msgLevel(MSG::DEBUG)) {
           debug() << "Bound cluster position to contributing hits due to " << (overflow ? "overflow" : "underflow")
                   << endmsg;
@@ -221,21 +219,21 @@ private:
 
     // best estimate on the cluster direction is the cluster position
     // for simple 2D CoG clustering
-    cl.intrinsicTheta(eicd::anglePolar(cl.position()));
-    cl.intrinsicPhi(eicd::angleAzimuthal(cl.position()));
+    cl.setIntrinsicTheta(eicd::anglePolar(cl.getPosition()));
+    cl.setIntrinsicPhi(eicd::angleAzimuthal(cl.getPosition()));
     // TODO errors
 
     // Calculate radius
     // @TODO: add skewness
-    if (cl.nhits() > 1) {
+    if (cl.getNhits() > 1) {
       double radius = 0;
-      for (const auto& hit : pcl.hits()) {
-        const auto delta = cl.position() - hit.position();
+      for (const auto& hit : pcl.getHits()) {
+        const auto delta = cl.getPosition() - hit.getPosition();
         radius += delta * delta;
       }
-      radius = sqrt((1. / (cl.nhits() - 1.)) * radius);
-      cl.addshapeParameters(radius);
-      cl.addshapeParameters(0 /* skewness */); // skewness not yet calculated
+      radius = sqrt((1. / (cl.getNhits() - 1.)) * radius);
+      cl.addToShapeParameters(radius);
+      cl.addToShapeParameters(0 /* skewness */); // skewness not yet calculated
     }
 
     // Optionally store the MC truth associated with the first hit in this cluster

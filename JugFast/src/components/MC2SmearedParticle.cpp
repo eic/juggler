@@ -74,15 +74,15 @@ public:
       const MomType vz = p.getVertex().z;
 
       auto rec_part = out_parts.create();
-      rec_part.type(-1); // @TODO: determine type codes
-      rec_part.energy(energy);
-      rec_part.momentum({px, py, pz});
-      rec_part.referencePoint({vx, vy, vz}); // @FIXME: probably not what we want?
-      rec_part.charge(p.getCharge());
-      rec_part.mass(p.getMass());
-      rec_part.goodnessOfPID(1); // Perfect PID
-      rec_part.covMatrix({dpx, dpy, dpz, dE});
-      rec_part.PDG(p.getPDG());
+      rec_part.setType(-1); // @TODO: determine type codes
+      rec_part.setEnergy(energy);
+      rec_part.setMomentum({px, py, pz});
+      rec_part.setReferencePoint({vx, vy, vz}); // @FIXME: probably not what we want?
+      rec_part.setCharge(p.getCharge());
+      rec_part.setMass(p.getMass());
+      rec_part.setGoodnessOfPID(1); // Perfect PID
+      rec_part.setCovMatrix({dpx, dpy, dpz, dE});
+      rec_part.setPDG(p.getPDG());
     }
     return StatusCode::SUCCESS;
   }

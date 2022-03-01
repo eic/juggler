@@ -76,13 +76,13 @@ namespace Jug::Reco {
         using Acts::UnitConstants::mm;
         using Acts::UnitConstants::ns;
 
-        const double p = c.energy()*GeV;
+        const double p = c.getEnergy()*GeV;
         // FIXME hardcoded value
         if( p < 0.1*GeV) {
           continue;
         }
-        const double theta = eicd::anglePolar(c.position());
-        const double phi = eicd::angleAzimuthal(c.position());
+        const double theta = eicd::anglePolar(c.getPosition());
+        const double phi = eicd::angleAzimuthal(c.getPosition());
 
         Acts::BoundVector  params;
         params(Acts::eBoundLoc0)   = 0.0 * mm ;

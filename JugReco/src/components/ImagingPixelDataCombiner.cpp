@@ -86,9 +86,9 @@ public:
         auto coll = inputs[i];
         for (auto hit : *coll) {
           eicd::CalorimeterHit h2{
-              hit.cellID(),    hit.energy(),   hit.energyError(), hit.time(),
-              hit.timeError(), hit.position(), hit.dimension(),   hit.layer() + m_layerIncrement * i,
-              hit.sector(),    hit.local(),
+              hit.getCellID(),    hit.getEnergy(),   hit.getEnergyError(), hit.getTime(),
+              hit.getTimeError(), hit.getPosition(), hit.getDimension(),   hit.getLayer() + m_layerIncrement * i,
+              hit.getSector(),    hit.getLocal(),
           };
           mhits->push_back(h2);
         }
@@ -122,24 +122,24 @@ public:
 
         auto hit = (*coll)[i];
         if (!init_layer) {
-          curr_layer = hit.layer();
+          curr_layer = hit.getLayer();
           init_layer = true;
         }
 
         // reach this layer's end
-        if (curr_layer != hit.layer()) {
+        if (curr_layer != hit.getLayer()) {
           curr_coll++;
           init_layer = false;
           // curr_ihit = 0;
-          // info() << "layer end : " << curr_layer << " != " << hit.layer() << endmsg;
+          // info() << "layer end : " << curr_layer << " != " << hit.getLayer() << endmsg;
           continue;
         }
 
         // push hit, increment of index
         eicd::CalorimeterHit h2{
-            hit.cellID(),    hit.energy(),   hit.energyError(), hit.time(),
-            hit.timeError(), hit.position(), hit.dimension(),   hit.layer() + m_layerIncrement * curr_coll,
-            hit.sector(),    hit.local()};
+            hit.getCellID(),    hit.getEnergy(),   hit.getEnergyError(), hit.getTime(),
+            hit.getTimeError(), hit.getPosition(), hit.getDimension(),   hit.getLayer() + m_layerIncrement * curr_coll,
+            hit.getSector(),    hit.getLocal()};
         mhits->push_back(h2);
         i++;
         // info() << curr_coll << ": " << curr_ihit ++ << endmsg;

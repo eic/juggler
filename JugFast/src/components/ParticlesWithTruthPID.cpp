@@ -59,8 +59,8 @@ public:
     const double sinPhiOver2Tolerance = sin(0.5 * m_phiTolerance);
     std::vector<bool> consumed(mc.size(), false);
     for (const auto& trk : tracks) {
-      const auto mom        = eicd::sphericalToVector(1.0 / std::abs(trk.qOverP()), trk.theta(), trk.phi());
-      const auto charge_rec = trk.charge();
+      const auto mom        = eicd::sphericalToVector(1.0 / std::abs(trk.getQOverP()), trk.getTheta(), trk.getPhi());
+      const auto charge_rec = trk.getCharge();
       // utility variables for matching
       int best_match    = -1;
       double best_delta = std::numeric_limits<double>::max();
@@ -107,20 +107,20 @@ public:
         // time                 = mcpart.getTime();
         mass = mcpart.getMass();
       }
-      rec_part.type(static_cast<int16_t>(best_match >= 0 ? 0 : -1)); // @TODO: determine type codes
-      rec_part.energy(std::hypot(eicd::magnitude(mom), mass));
-      rec_part.momentum(mom);
-      rec_part.referencePoint(referencePoint);
-      rec_part.charge(charge_rec);
-      rec_part.mass(mass);
-      rec_part.goodnessOfPID(1); // perfect PID
-      rec_part.PDG(best_pid);
+      rec_part.setType(static_cast<int16_t>(best_match >= 0 ? 0 : -1)); // @TODO: determine type codes
+      rec_part.setEnergy(std::hypot(eicd::magnitude(mom), mass));
+      rec_part.setMomentum(mom);
+      rec_part.setReferencePoint(referencePoint);
+      rec_part.setCharge(charge_rec);
+      rec_part.setMass(mass);
+      rec_part.setGoodnessOfPID(1); // perfect PID
+      rec_part.setPDG(best_pid);
       // rec_part.covMatrix()  // @TODO: covariance matrix on 4-momentum
       // Also write MC <--> truth particle association
       auto rec_assoc = assoc.create();
-      rec_assoc.simID(best_match);
-      rec_assoc.weight(1);
-      rec_assoc.rec(rec_part);
+      rec_assoc.setSimID(best_match);
+      rec_assoc.setWeight(1);
+      rec_assoc.setRec(rec_part);
 
       if (msgLevel(MSG::DEBUG)) {
         if (best_match > 0) {

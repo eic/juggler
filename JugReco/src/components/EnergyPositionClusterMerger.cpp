@@ -80,13 +80,13 @@ public:
         const auto& ec = e_clus[ie];
         // 1. stop if not within tolerance
         //    (make sure to handle rollover of phi properly)
-        double dphi = eicd::angleAzimuthal(pc.position()) - eicd::angleAzimuthal(ec.position());
+        double dphi = eicd::angleAzimuthal(pc.getPosition()) - eicd::angleAzimuthal(ec.getPosition());
         if (std::abs(dphi) > M_PI) {
           dphi = std::abs(dphi) - M_PI;
         }
         if ((m_energyRelTolerance > 0 &&
-             (ec.energy() <= 0 || fabs((pc.energy() - ec.energy()) / ec.energy()) > m_energyRelTolerance)) ||
-            (m_zTolerance > 0 && fabs(pc.position().z - ec.position().z) > m_zTolerance) ||
+             (ec.getEnergy() <= 0 || fabs((pc.getEnergy() - ec.getEnergy()) / ec.getEnergy()) > m_energyRelTolerance)) ||
+            (m_zTolerance > 0 && fabs(pc.getPosition().z - ec.getPosition().z) > m_zTolerance) ||
             (m_phiTolerance > 0 && dphi > m_phiTolerance)) {
           continue;
         }
@@ -94,7 +94,7 @@ public:
         //     where we have multiple matches. In this case take the one with the closest
         //     energies.
         // 2. best match?
-        const double delta = fabs(pc.energy() - ec.energy());
+        const double delta = fabs(pc.getEnergy() - ec.getEnergy());
         if (delta < best_delta) {
           best_delta = delta;
           best_match = ie;
@@ -104,26 +104,26 @@ public:
       if (best_match >= 0) {
         const auto& ec = e_clus[best_match];
         auto new_clus  = merged.create();
-        new_clus.energy(ec.energy());
-        new_clus.energyError(ec.energyError());
-        new_clus.time(pc.time());
-        new_clus.nhits(pc.nhits() + ec.nhits());
-        new_clus.position(pc.position());
-        new_clus.positionError(pc.positionError());
-        new_clus.addclusters(pc);
-        new_clus.addclusters(ec);
+        new_clus.setEnergy(ec.getEnergy());
+        new_clus.setEnergyError(ec.getEnergyError());
+        new_clus.setTime(pc.getTime());
+        new_clus.setNhits(pc.getNhits() + ec.getNhits());
+        new_clus.setPosition(pc.getPosition());
+        new_clus.setPositionError(pc.getPositionError());
+        new_clus.addToClusters(pc);
+        new_clus.addToClusters(ec);
         // label our energy cluster as consumed
         consumed[best_match] = true;
         if (msgLevel(MSG::DEBUG)) {
           debug() << fmt::format("Matched position cluster {} with energy cluster {}\n", pc.id(), ec.id()) << endmsg;
-          debug() << fmt::format("  - Position cluster: (E: {}, phi: {}, z: {})", pc.energy(),
-                                 eicd::angleAzimuthal(pc.position()), pc.position().z)
+          debug() << fmt::format("  - Position cluster: (E: {}, phi: {}, z: {})", pc.getEnergy(),
+                                 eicd::angleAzimuthal(pc.getPosition()), pc.getPosition().z)
                   << endmsg;
-          debug() << fmt::format("  - Energy cluster: (E: {}, phi: {}, z: {})", ec.energy(),
-                                 eicd::angleAzimuthal(ec.position()), ec.position().z)
+          debug() << fmt::format("  - Energy cluster: (E: {}, phi: {}, z: {})", ec.getEnergy(),
+                                 eicd::angleAzimuthal(ec.getPosition()), ec.getPosition().z)
                   << endmsg;
-          debug() << fmt::format("  ---> Merged cluster: (E: {}, phi: {}, z: {})", new_clus.energy(),
-                                 eicd::angleAzimuthal(new_clus.position()), new_clus.position().z)
+          debug() << fmt::format("  ---> Merged cluster: (E: {}, phi: {}, z: {})", new_clus.getEnergy(),
+                                 eicd::angleAzimuthal(new_clus.getPosition()), new_clus.getPosition().z)
                   << endmsg;
         }
       }

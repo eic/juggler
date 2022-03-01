@@ -1,6 +1,6 @@
 /*  General PhotoMultiplier Reconstruction
  *
- *  Estimate the number of photo-electrons and convert timeStamp to time
+ *  Estimate the number of photo-electrons and convert getTimeStamp to time
  *  Collect cell information
  *
  *  Author: Chao Peng (ANL)
@@ -34,7 +34,7 @@ namespace Jug::Reco {
 
 /**  General PhotoMultiplier Reconstruction
  *
- *  Estimate the number of photo-electrons and convert timeStamp to time
+ *  Estimate the number of photo-electrons and convert getTimeStamp to time
  *  Collect cell information
  *
  * \ingroup reco
@@ -77,10 +77,10 @@ public:
 
     // reconstruct number of photo-electrons and time
     for (const auto& rh : rawhits) {
-      float npe = (rh.integral() - m_pedMean) / m_speMean;
+      float npe = (rh.getIntegral() - m_pedMean) / m_speMean;
       if (npe >= m_minNpe) {
-        float time = rh.timeStamp() * (static_cast<float>(m_timeStep) / ns);
-        auto id    = rh.cellID();
+        float time = rh.getTimeStamp() * (static_cast<float>(m_timeStep) / ns);
+        auto id    = rh.getCellID();
         // global positions
         auto gpos = m_geoSvc->cellIDPositionConverter()->position(id);
         // local positions
@@ -88,7 +88,7 @@ public:
         // cell dimension
         auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
         hits.push_back(eicd::PMTHit{
-            rh.cellID(),
+            rh.getCellID(),
             npe,
             time,
             static_cast<float>(m_timeStep / ns),

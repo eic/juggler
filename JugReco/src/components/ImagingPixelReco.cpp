@@ -113,13 +113,13 @@ public:
     // energy time reconstruction
     for (const auto& rh : rawhits) {
       // did not pass the threshold
-      if ((rh.amplitude() - m_pedMeanADC) < m_thresholdADC * m_pedSigmaADC) {
+      if ((rh.getAmplitude() - m_pedMeanADC) < m_thresholdADC * m_pedSigmaADC) {
         continue;
       }
       const double energy =
-          (rh.amplitude() - m_pedMeanADC) / (double)m_capADC * dyRangeADC / m_sampFrac; // convert ADC -> energy
-      const double time = rh.timeStamp() * 1.e-6;                                       // ns
-      const auto id     = rh.cellID();
+          (rh.getAmplitude() - m_pedMeanADC) / (double)m_capADC * dyRangeADC / m_sampFrac; // convert ADC -> energy
+      const double time = rh.getTimeStamp() * 1.e-6;                                       // ns
+      const auto id     = rh.getCellID();
       // @TODO remove
       const int lid = (int)id_dec->get(id, layer_idx);
       const int sid = (int)id_dec->get(id, sector_idx);

@@ -81,8 +81,8 @@ namespace Reco {
       debug() << " raw hits size : " << std::size(*rawhits) << endmsg;
       for (const auto& ahit : *rawhits) {
         // debug() << "cell ID : " << ahit.cellID() << endmsg;
-        auto pos = m_geoSvc->cellIDPositionConverter()->position(ahit.cellID());
-        auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(ahit.cellID());
+        auto pos = m_geoSvc->cellIDPositionConverter()->position(ahit.getCellID());
+        auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(ahit.getCellID());
 
         if (msgLevel(MSG::VERBOSE)) {
           size_t i = 0;
@@ -103,14 +103,14 @@ namespace Reco {
         //      - XYZ segmentation: xx -> sigma_x, yy-> sigma_y, zz -> sigma_z, tt -> 0
         //    This is properly in line with how we get the local coordinates for the hit
         //    in the TrackerSourceLinker.
-        eicd::TrackerHit hit{ahit.cellID(), // Raw DD4hep cell ID
+        eicd::TrackerHit hit{ahit.getCellID(), // Raw DD4hep cell ID
                              {static_cast<float>(pos.x() / mm), static_cast<float>(pos.y() / mm),
                               static_cast<float>(pos.z() / mm)},                    // mm
                              {get_variance(dim[0] / mm), get_variance(dim[1] / mm), // variance (see note above)
                               std::size(dim) > 2 ? get_variance(dim[2] / mm) : 0.},
-                             static_cast<float>(ahit.timeStamp() / 1000), // ns
+                             static_cast<float>(ahit.getTimeStamp() / 1000), // ns
                              m_timeResolution,                            // in ns
-                             static_cast<float>(ahit.charge() / 1.0e6),   // Collected energy (GeV)
+                             static_cast<float>(ahit.getCharge() / 1.0e6),   // Collected energy (GeV)
                              0.0f};                                       // Error on the energy
         rec_hits->push_back(hit);
       }

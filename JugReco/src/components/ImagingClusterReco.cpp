@@ -93,7 +93,7 @@ public:
     //}
 
     for (const auto& pcl : proto) {
-      if (!pcl.hits().empty() && !pcl.hits(0).isAvailable()) {
+      if (!pcl.getHits().empty() && !pcl.getHits(0).isAvailable()) {
         warning() << "Protocluster hit relation is invalid, skipping protocluster" << endmsg;
         continue;
       }
@@ -103,14 +103,14 @@ public:
 
       // Get cluster direction from the layer profile
       auto [theta, phi] = fit_track(cl_layers);
-      cl.intrinsicTheta(theta);
-      cl.intrinsicPhi(phi);
+      cl.setIntrinsicTheta(theta);
+      cl.setIntrinsicPhi(phi);
       // no error on the intrinsic direction TODO
 
       // store layer and clusters on the datastore
       for (auto& layer : cl_layers) {
         layers.push_back(layer);
-        cl.addclusters(layer);
+        cl.addToClusters(layer);
       }
       clusters.push_back(cl);
     }
@@ -119,7 +119,8 @@ public:
     if (msgLevel(MSG::DEBUG)) {
       for (const auto& cl : clusters) {
         debug() << fmt::format("Cluster {:d}: Edep = {:.3f} MeV, Dir = ({:.3f}, {:.3f}) deg", cl.id(),
-                               cl.energy() * 1000., cl.intrinsicTheta() / M_PI * 180., cl.intrinsicPhi() / M_PI * 180.)
+                               cl.getEnergy() * 1000., cl.getIntrinsicTheta() / M_PI * 180.,
+                               cl.getIntrinsicPhi() / M_PI * 180.)
                 << endmsg;
       }
     }
@@ -131,13 +132,13 @@ private:
   template <typename T> static inline T pow2(const T& x) { return x * x; }
 
   std::vector<eicd::Cluster> reconstruct_cluster_layers(const eicd::ConstProtoCluster& pcl) const {
-    const auto& hits    = pcl.hits();
-    const auto& weights = pcl.weights();
+    const auto& hits    = pcl.getHits();
+    const auto& weights = pcl.getWeights();
     // using map to have hits sorted by layer
     std::map<int, std::vector<std::pair<eicd::ConstCalorimeterHit, float>>> layer_map;
     for (unsigned i = 0; i < hits.size(); ++i) {
       const auto hit = hits[i];
-      auto lid       = hit.layer();
+      auto lid       = hit.getLayer();
       if (!layer_map.count(lid)) {
         layer_map[lid] = {};
       }
@@ -155,38 +156,38 @@ private:
 
   eicd::Cluster reconstruct_layer(const std::vector<std::pair<eicd::ConstCalorimeterHit, float>>& hits) const {
     eicd::Cluster layer;
-    layer.type(ClusterType::kClusterSlice);
+    layer.setType(ClusterType::kClusterSlice);
     // Calculate averages
     double energy;
     double energyError;
     double time;
     double timeError;
     double sumOfWeights = 0;
-    auto pos            = layer.position();
+    auto pos            = layer.getPosition();
     for (const auto& [hit, weight] : hits) {
-      energy += hit.energy() * weight;
-      energyError += std::pow(hit.energyError() * weight, 2);
-      time += hit.time() * weight;
-      timeError += std::pow(hit.timeError() * weight, 2);
-      pos = pos + hit.position() * weight;
+      energy += hit.getEnergy() * weight;
+      energyError += std::pow(hit.getEnergyError() * weight, 2);
+      time += hit.getTime() * weight;
+      timeError += std::pow(hit.getTimeError() * weight, 2);
+      pos = pos + hit.getPosition() * weight;
       sumOfWeights += weight;
-      layer.addhits(hit);
+      layer.addToHits(hit);
     }
-    layer.energy(energy);
-    layer.energyError(std::sqrt(energyError));
-    layer.time(time / sumOfWeights);
-    layer.timeError(std::sqrt(timeError) / sumOfWeights);
-    layer.nhits(hits.size());
-    layer.position(pos / sumOfWeights);
+    layer.setEnergy(energy);
+    layer.setEnergyError(std::sqrt(energyError));
+    layer.setTime(time / sumOfWeights);
+    layer.setTimeError(std::sqrt(timeError) / sumOfWeights);
+    layer.setNhits(hits.size());
+    layer.setPosition(pos / sumOfWeights);
     // positionError not set
     // Intrinsic direction meaningless in a cluster layer --> not set
 
     // Calculate radius as the standard deviation of the hits versus the cluster center
     double radius = 0.;
     for (const auto& [hit, weight] : hits) {
-      radius += std::pow(eicd::magnitude(hit.position() - layer.position()), 2);
+      radius += std::pow(eicd::magnitude(hit.getPosition() - layer.getPosition()), 2);
     }
-    layer.addshapeParameters(std::sqrt(radius / layer.nhits()));
+    layer.addToShapeParameters(std::sqrt(radius / layer.getNhits()));
     // TODO Skewedness
 
     return layer;
@@ -195,10 +196,10 @@ private:
   eicd::Cluster reconstruct_cluster(const eicd::ConstProtoCluster& pcl) {
     eicd::Cluster cluster;
 
-    const auto& hits    = pcl.hits();
-    const auto& weights = pcl.weights();
+    const auto& hits    = pcl.getHits();
+    const auto& weights = pcl.getWeights();
 
-    cluster.type(ClusterType::kCluster3D);
+    cluster.setType(ClusterType::kCluster3D);
     double energy      = 0.;
     double energyError = 0.;
     double time        = 0.;
@@ -207,39 +208,39 @@ private:
     double mphi        = 0.;
     double r           = 9999 * cm;
     for (unsigned i = 0; i < hits.size(); ++i) {
-      const auto& hit   = hits[i];
+      const auto& hit    = hits[i];
       const auto& weight = weights[i];
-      energy += hit.energy() * weight;
-      energyError += std::pow(hit.energyError() * weight, 2);
+      energy += hit.getEnergy() * weight;
+      energyError += std::pow(hit.getEnergyError() * weight, 2);
       // energy weighting for the other variables
-      const double energyWeight = hit.energy() * weight;
-      time += hit.time() * energyWeight;
-      timeError += std::pow(hit.timeError() * energyWeight, 2);
-      meta += eicd::eta(hit.position()) * energyWeight;
-      mphi += eicd::angleAzimuthal(hit.position()) * energyWeight;
-      r = std::min(eicd::magnitude(hit.position()), r);
-      cluster.addhits(hit);
+      const double energyWeight = hit.getEnergy() * weight;
+      time += hit.getTime() * energyWeight;
+      timeError += std::pow(hit.getTimeError() * energyWeight, 2);
+      meta += eicd::eta(hit.getPosition()) * energyWeight;
+      mphi += eicd::angleAzimuthal(hit.getPosition()) * energyWeight;
+      r = std::min(eicd::magnitude(hit.getPosition()), r);
+      cluster.addToHits(hit);
     }
-    cluster.energy(energy);
-    cluster.energyError(std::sqrt(energyError));
-    cluster.time(time / energy);
-    cluster.timeError(std::sqrt(timeError) / energy);
-    cluster.nhits(hits.size());
-    cluster.position(eicd::sphericalToVector(r, eicd::etaToAngle(meta / energy), mphi / energy));
+    cluster.setEnergy(energy);
+    cluster.setEnergyError(std::sqrt(energyError));
+    cluster.setTime(time / energy);
+    cluster.setTimeError(std::sqrt(timeError) / energy);
+    cluster.setNhits(hits.size());
+    cluster.setPosition(eicd::sphericalToVector(r, eicd::etaToAngle(meta / energy), mphi / energy));
 
     // shower radius estimate (eta-phi plane)
     double radius = 0.;
     for (const auto& hit : hits) {
-      radius += pow2(eicd::eta(hit.position()) - eicd::eta(cluster.position())) +
-                pow2(eicd::angleAzimuthal(hit.position()) - eicd::angleAzimuthal(cluster.position()));
+      radius += pow2(eicd::eta(hit.getPosition()) - eicd::eta(cluster.getPosition())) +
+                pow2(eicd::angleAzimuthal(hit.getPosition()) - eicd::angleAzimuthal(cluster.getPosition()));
     }
-    cluster.addshapeParameters(std::sqrt(radius / cluster.nhits()));
+    cluster.addToShapeParameters(std::sqrt(radius / cluster.getNhits()));
     // Skewedness not calculated TODO
 
     // Optionally store the MC truth associated with the first hit in this cluster
     // FIXME no connection between cluster and truth in edm4hep
     // if (mcHits) {
-    //  const auto& mc_hit    = (*mcHits)[pcl.hits(0).ID.value];
+    //  const auto& mc_hit    = (*mcHits)[pcl.getHits(0).ID.value];
     //  cluster.mcID({mc_hit.truth().trackID, m_kMonteCarloSource});
     //}
 
@@ -250,8 +251,8 @@ private:
     int nrows = 0;
     eicd::Vector3f mean_pos{0, 0, 0};
     for (const auto& layer : layers) {
-      if ((layer.nhits() > 0) && (layer.hits(0).layer() <= m_trackStopLayer)) {
-        mean_pos = mean_pos + layer.position();
+      if ((layer.getNhits() > 0) && (layer.getHits(0).getLayer() <= m_trackStopLayer)) {
+        mean_pos = mean_pos + layer.getPosition();
         nrows += 1;
       }
     }
@@ -265,8 +266,8 @@ private:
     MatrixXd pos(nrows, 3);
     int ir = 0;
     for (const auto& layer : layers) {
-      if ((layer.nhits() > 0) && (layer.hits(0).layer() <= m_trackStopLayer)) {
-        auto delta = layer.position() - mean_pos;
+      if ((layer.getNhits() > 0) && (layer.getHits(0).getLayer() <= m_trackStopLayer)) {
+        auto delta = layer.getPosition() - mean_pos;
         pos(ir, 0) = delta.x;
         pos(ir, 1) = delta.y;
         pos(ir, 2) = delta.z;

@@ -109,7 +109,7 @@ public:
     // find the hits that belong to the same group (for merging)
     std::unordered_map<long long, std::vector<eicd::ConstCalorimeterHit>> merge_map;
     for (const auto& h : inputs) {
-      int64_t id = h.cellID() & id_mask;
+      int64_t id = h.getCellID() & id_mask;
       // use the reference field position
       auto it = merge_map.find(id);
       if (it == merge_map.end()) {
@@ -139,10 +139,10 @@ public:
       float time        = 0;
       float timeError   = 0;
       for (auto& hit : hits) {
-        energy += hit.energy();
-        energyError += hit.energyError() * hit.energyError();
-        time += hit.time();
-        timeError += hit.timeError() + hit.timeError();
+        energy += hit.getEnergy();
+        energyError += hit.getEnergyError() * hit.getEnergyError();
+        time += hit.getTime();
+        timeError += hit.getTimeError() * hit.getTimeError();
       }
       energyError = sqrt(energyError);
       time /= hits.size();
@@ -156,9 +156,9 @@ public:
                               time,
                               timeError,
                               {gpos.x() / dd4hep::mm, gpos.y() / dd4hep::mm, gpos.z() / dd4hep::mm},
-                              href.dimension(),
-                              href.sector(),
-                              href.layer(),
+                              href.getDimension(),
+                              href.getSector(),
+                              href.getLayer(),
                               {pos.x(), pos.y(), pos.z()}}); // Can do better here? Right now position is mapped on the central hit
     }
 

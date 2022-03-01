@@ -46,30 +46,30 @@ using CaloHitCollection = eicd::CalorimeterHitCollection;
 
 // helper functions to get distance between hits
 static eicd::Vector2f localDistXY(const CaloHit& h1, const CaloHit& h2) {
-  const auto delta = h1.local() - h2.local();
+  const auto delta = h1.getLocal() - h2.getLocal();
   return {delta.x, delta.y};
 }
 static eicd::Vector2f localDistXZ(const CaloHit& h1, const CaloHit& h2) {
-  const auto delta = h1.local() - h2.local();
+  const auto delta = h1.getLocal() - h2.getLocal();
   return {delta.x, delta.z};
 }
 static eicd::Vector2f localDistYZ(const CaloHit& h1, const CaloHit& h2) {
-  const auto delta = h1.local() - h2.local();
+  const auto delta = h1.getLocal() - h2.getLocal();
   return {delta.y, delta.z};
 }
 static eicd::Vector2f dimScaledLocalDistXY(const CaloHit& h1, const CaloHit& h2) {
-  const auto delta = h1.local() - h2.local();
-  const auto dimsum = h1.dimension() + h2.dimension();
+  const auto delta = h1.getLocal() - h2.getLocal();
+  const auto dimsum = h1.getDimension() + h2.getDimension();
   return {2 * delta.x / dimsum.x, 2 * delta.y / dimsum.y};
 }
 static eicd::Vector2f globalDistRPhi(const CaloHit& h1, const CaloHit& h2) {
-  return {eicd::magnitude(h1.position()) - eicd::magnitude(h2.position()),
-          eicd::angleAzimuthal(h1.position()) - eicd::angleAzimuthal(h2.position())};
+  return {eicd::magnitude(h1.getPosition()) - eicd::magnitude(h2.getPosition()),
+          eicd::angleAzimuthal(h1.getPosition()) - eicd::angleAzimuthal(h2.getPosition())};
 }
 static eicd::Vector2f globalDistEtaPhi(const CaloHit& h1,
                                       const CaloHit& h2) {
-  return {eicd::eta(h1.position()) - eicd::eta(h2.position()),
-          eicd::angleAzimuthal(h1.position()) - eicd::angleAzimuthal(h2.position())};
+  return {eicd::eta(h1.getPosition()) - eicd::eta(h2.getPosition()),
+          eicd::angleAzimuthal(h1.getPosition()) - eicd::angleAzimuthal(h2.getPosition())};
 }
 // name: {method, units}
 static std::map<std::string,
@@ -197,8 +197,8 @@ public:
         const auto& hit = hits[i];
         debug() << fmt::format("hit {:d}: energy = {:.4f} MeV, local = ({:.4f}, {:.4f}) mm, "
                                "global=({:.4f}, {:.4f}, {:.4f}) mm",
-                               i, hit.energy() * 1000., hit.local().x, hit.local().y, hit.position().x,
-                               hit.position().y, hit.position().z)
+                               i, hit.getEnergy() * 1000., hit.getLocal().x, hit.getLocal().y, hit.getPosition().x,
+                               hit.getPosition().y, hit.getPosition().z)
                 << endmsg;
       }
       // already in a group
@@ -229,13 +229,13 @@ private:
   // helper function to group hits
   inline bool is_neighbour(const CaloHit& h1, const CaloHit& h2) const {
     // in the same sector
-    if (h1.sector() == h2.sector()) {
+    if (h1.getSector() == h2.getSector()) {
       auto dist = hitsDist(h1, h2);
       return (dist.a <= neighbourDist[0]) && (dist.b <= neighbourDist[1]);
       // different sector, local coordinates do not work, using global coordinates
     } else {
       // sector may have rotation (barrel), so z is included
-      return (eicd::magnitude(h1.position() - h2.position()) <= sectorDist);
+      return (eicd::magnitude(h1.getPosition() - h2.getPosition()) <= sectorDist);
     }
   }
 
@@ -243,7 +243,7 @@ private:
   void dfs_group(std::vector<std::pair<uint32_t, CaloHit>>& group, int idx,
                  const CaloHitCollection& hits, std::vector<bool>& visits) const {
     // not a qualified hit to particpate clustering, stop here
-    if (hits[idx].energy() < minClusterHitEdep) {
+    if (hits[idx].getEnergy() < minClusterHitEdep) {
       visits[idx] = true;
       return;
     }
@@ -270,11 +270,11 @@ private:
     if (global) {
       int mpos = 0;
       for (size_t i = 0; i < group.size(); ++i) {
-        if (group[mpos].second.energy() < group[i].second.energy()) {
+        if (group[mpos].second.getEnergy() < group[i].second.getEnergy()) {
           mpos = i;
         }
       }
-      if (group[mpos].second.energy() >= minClusterCenterEdep) {
+      if (group[mpos].second.getEnergy() >= minClusterCenterEdep) {
         maxima.push_back(group[mpos].second);
       }
       return maxima;
@@ -282,7 +282,7 @@ private:
 
     for (auto& [idx, hit] : group) {
       // not a qualified center
-      if (hit.energy() < minClusterCenterEdep) {
+      if (hit.getEnergy() < minClusterCenterEdep) {
         continue;
       }
 
@@ -292,7 +292,7 @@ private:
           continue;
         }
 
-        if (is_neighbour(hit, hit2) && hit2.energy() > hit.energy()) {
+        if (is_neighbour(hit, hit2) && hit2.getEnergy() > hit.getEnergy()) {
           maximum = false;
           break;
         }
@@ -329,8 +329,8 @@ private:
     } else if (maxima.size() == 1) {
       eicd::ProtoCluster pcl;
       for (auto& [idx, hit] : group) {
-        pcl.addhits(hit);
-        pcl.addweights(1.);
+        pcl.addToHits(hit);
+        pcl.addToWeights(1.);
       }
       proto.push_back(pcl);
       if (msgLevel(MSG::VERBOSE)) {
@@ -352,8 +352,8 @@ private:
       size_t j = 0;
       // calculate weights for local maxima
       for (const auto& chit : maxima) {
-        double dist_ref = chit.dimension().x;
-        double energy   = chit.energy();
+        double dist_ref = chit.getDimension().x;
+        double energy   = chit.getEnergy();
         double dist     = eicd::magnitude(hitsDist(chit, hit));
         weights[j]      = std::exp(-dist / dist_ref) * energy;
         j += 1;
@@ -376,8 +376,8 @@ private:
         if (weight <= 1e-6) {
           continue;
         }
-        pcls[k].addhits(hit);
-        pcls[k].addweights(weight);
+        pcls[k].addToHits(hit);
+        pcls[k].addToWeights(weight);
       }
       i += 1;
     }

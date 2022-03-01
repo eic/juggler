@@ -193,19 +193,19 @@ private:
       const auto mom3s_ion = eicd::sphericalToVector(moms, ths, phis);
       const auto mom3s     = rotateIonToLabDirection(mom3s_ion);
       RecPart rec_part;
-      rec_part.type(kTagZDC);
-      rec_part.energy(static_cast<float>(Es));
-      rec_part.momentum({mom3s.x, mom3s.y, mom3s.z});
-      rec_part.referencePoint({static_cast<float>(part.getVertex().x), static_cast<float>(part.getVertex().y),
-                               static_cast<float>(part.getVertex().z)});
-      rec_part.charge(static_cast<int16_t>(part.getCharge()));
-      rec_part.mass(static_cast<float>(part.getMass()));
-      rec_part.goodnessOfPID(1.);
-      rec_part.PDG(part.getPDG());
+      rec_part.setType(kTagZDC);
+      rec_part.setEnergy(static_cast<float>(Es));
+      rec_part.setMomentum({mom3s.x, mom3s.y, mom3s.z});
+      rec_part.setReferencePoint({static_cast<float>(part.getVertex().x), static_cast<float>(part.getVertex().y),
+                                  static_cast<float>(part.getVertex().z)});
+      rec_part.setCharge(static_cast<int16_t>(part.getCharge()));
+      rec_part.setMass(static_cast<float>(part.getMass()));
+      rec_part.setGoodnessOfPID(1.);
+      rec_part.setPDG(part.getPDG());
       Assoc assoc;
-      assoc.simID(part.getObjectID().index);
-      assoc.weight(1.);
-      assoc.rec(rec_part);
+      assoc.setSimID(part.getObjectID().index);
+      assoc.setWeight(1.);
+      assoc.setRec(rec_part);
 
       // rec_part.mcID();
       rc.push_back({rec_part, assoc});
@@ -216,8 +216,8 @@ private:
         debug()
             << fmt::format(
                    "Found ZDC particle: {}, Etrue: {}, Emeas: {}, ptrue: {}, pmeas: {}, theta_true: {}, theta_meas: {}",
-                   part.getPDG(), E, rec_part.energy(), part_p_mag, eicd::magnitude(rec_part.momentum()), th,
-                   eicd::anglePolar(rec_part.momentum()))
+                   part.getPDG(), E, rec_part.getEnergy(), part_p_mag, eicd::magnitude(rec_part.getMomentum()), th,
+                   eicd::anglePolar(rec_part.getMomentum()))
             << endmsg;
       }
     }
@@ -248,10 +248,10 @@ private:
       auto [rc_part, assoc] = smearMomentum(part);
       // we don't detect photon energy, just its angles and presence
       if (part.getPDG() == 22) {
-        rc_part.momentum({0, 0, 0});
-        rc_part.energy(0);
+        rc_part.setMomentum({0, 0, 0});
+        rc_part.setEnergy(0);
       }
-      rc_part.type(kTagB0);
+      rc_part.setType(kTagB0);
       rc.push_back({rc_part, assoc});
       if (msgLevel(MSG::DEBUG)) {
         const auto& part_p      = part.getMomentum();
@@ -290,7 +290,7 @@ private:
         continue;
       }
       auto [rc_part, assoc] = smearMomentum(part);
-      rc_part.type(kTagRP);
+      rc_part.setType(kTagRP);
       rc.push_back({rc_part, assoc});
       if (msgLevel(MSG::DEBUG)) {
         const auto& part_p      = part.getMomentum();
@@ -326,7 +326,7 @@ private:
         continue;
       }
       auto [rc_part, assoc] = smearMomentum(part);
-      rc_part.type(kTagOMD);
+      rc_part.setType(kTagOMD);
       rc.push_back({rc_part, assoc});
       if (msgLevel(MSG::DEBUG)) {
         const auto& part_p      = part.getMomentum();
@@ -368,19 +368,19 @@ private:
     const edm4hep::Vector3f psmear_ion{static_cast<float>(pxs), static_cast<float>(pys), static_cast<float>(pzs)};
     const auto psmear = rotateIonToLabDirection(psmear_ion);
     eicd::ReconstructedParticle rec_part;
-    rec_part.type(-1);
-    rec_part.energy(std::hypot(ps, part.getMass()));
-    rec_part.momentum({psmear.x, psmear.y, psmear.z});
-    rec_part.referencePoint({static_cast<float>(part.getVertex().x), static_cast<float>(part.getVertex().y),
-                             static_cast<float>(part.getVertex().z)});
-    rec_part.charge(static_cast<int16_t>(part.getCharge()));
-    rec_part.mass(static_cast<float>(part.getMass()));
-    rec_part.goodnessOfPID(1); // perfect PID
-    rec_part.PDG(part.getPDG());
+    rec_part.setType(-1);
+    rec_part.setEnergy(std::hypot(ps, part.getMass()));
+    rec_part.setMomentum({psmear.x, psmear.y, psmear.z});
+    rec_part.setReferencePoint({static_cast<float>(part.getVertex().x), static_cast<float>(part.getVertex().y),
+                                static_cast<float>(part.getVertex().z)});
+    rec_part.setCharge(static_cast<int16_t>(part.getCharge()));
+    rec_part.setMass(static_cast<float>(part.getMass()));
+    rec_part.setGoodnessOfPID(1); // perfect PID
+    rec_part.setPDG(part.getPDG());
     Assoc assoc;
-    assoc.simID(part.getObjectID().index);
-    assoc.weight(1.);
-    assoc.rec(rec_part);
+    assoc.setSimID(part.getObjectID().index);
+    assoc.setWeight(1.);
+    assoc.setRec(rec_part);
 
     return {rec_part, assoc};
   }
