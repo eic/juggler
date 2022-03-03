@@ -24,7 +24,7 @@ namespace Jug::Digi {
  */
 class SiliconTrackerDigi : public GaudiAlgorithm {
 public:
-  Gaudi::Property<double> m_getTimeResolution{this, "getTimeResolution", 10}; // todo : add units
+  Gaudi::Property<double> m_timeResolution{this, "timeResolution", 10}; // todo : add units
   Gaudi::Property<double> m_threshold{this, "threshold", 0. * Gaudi::Units::keV};
   Rndm::Numbers m_gaussDist;
   DataHandle<edm4hep::SimTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
@@ -42,7 +42,7 @@ public:
     if (GaudiAlgorithm::initialize().isFailure())
       return StatusCode::FAILURE;
     IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
-    StatusCode sc        = m_gaussDist.initialize(randSvc, Rndm::Gauss(0.0, m_getTimeResolution.value()));
+    StatusCode sc        = m_gaussDist.initialize(randSvc, Rndm::Gauss(0.0, m_timeResolution.value()));
     if (!sc.isSuccess()) {
       return StatusCode::FAILURE;
     }
