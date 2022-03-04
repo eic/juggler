@@ -91,11 +91,11 @@ public:
         ei.x = 0.;
         ei.y = 0.;
 
-        if( fabs(ei.z - 5.0) < 1.0 )
+        if( fabs(ei.z + 5.0) < 1.0 )
           ei.z = -5.0;
-        else if( fabs(ei.z - 10.0) < 1.0 )
+        else if( fabs(ei.z + 10.0) < 1.0 )
           ei.z = -10.0;
-        else if( fabs(ei.z - 18.0) < 1.0 )
+        else if( fabs(ei.z + 18.0) < 1.0 )
           ei.z = -18.0;
         
         ei.t = sqrt( ei.z*ei.z + m_electron*m_electron );
