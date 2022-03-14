@@ -22,6 +22,7 @@ gaudi_add_module(JugRecoPlugins
   src/components/ImagingPixelMerger.cpp 
   src/components/ImagingPixelDataCombiner.cpp 
   src/components/ImagingPixelDataSorter.cpp 
+  src/components/ImagingPixelDataShaper.cpp
   src/components/ImagingTopoCluster.cpp 
   src/components/ImagingClusterReco.cpp 
   src/components/PhotoMultiplierReco.cpp
