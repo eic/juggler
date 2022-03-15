@@ -94,6 +94,7 @@ public:
 
     // Get incoming hadron beam
     auto pi_iter = Jug::Reco::Beam::find_first_beam_hadron(mcparts);
+    PxPyPzE4D pi;
     if (pi_iter != mcparts.end()) {
       pi = Jug::Reco::Beam::round_beam_four_momentum(
         pi_iter.getMomentum(),
