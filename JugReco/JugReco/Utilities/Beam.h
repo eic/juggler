@@ -37,23 +37,23 @@ namespace Beam {
     return parts.end();
   }
 
-  const edm4hep::MCParticleCollection::iterator
-  find_first_beam_electron(const edm4hep::MCParticleCollection& mcparts) {
+  const edm4hep::MCParticleConstCollection::iterator
+  find_first_beam_electron(const edm4hep::MCParticleConstCollection& mcparts) {
     return find_first_with_status_pdg(mcparts, {4}, {11});
   }
 
-  const edm4hep::MCParticleCollection::iterator
-  find_first_beam_hadron(const edm4hep::MCParticleCollection& mcparts) {
+  const edm4hep::MCParticleConstCollection::iterator
+  find_first_beam_hadron(const edm4hep::MCParticleConstCollection& mcparts) {
     return find_first_with_status_pdg(mcparts, {4}, {2212, 2112});
   }
 
-  const edm4hep::MCParticleCollection::iterator
-  find_first_scattered_electron(const edm4hep::MCParticleCollection& mcparts) {
+  const edm4hep::MCParticleConstCollection::iterator
+  find_first_scattered_electron(const edm4hep::MCParticleConstCollection& mcparts) {
     return find_first_with_status_pdg(mcparts, {1}, {11});
   }
 
-  const edm4hep::ReconstructedParticleCollection::iterator
-  find_first_scattered_electron(const edm4hep::ReconstructedParticleCollection& rcparts) {
+  const edm4hep::ReconstructedParticleConstCollection::iterator
+  find_first_scattered_electron(const edm4hep::ReconstructedParticleConstCollection& rcparts) {
     return find_first_with_pdg(rcparts, {11});
   }
 
