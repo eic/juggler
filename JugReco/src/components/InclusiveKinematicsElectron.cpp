@@ -76,38 +76,41 @@ public:
     // output collection
     auto& out_kinematics = *(m_outputInclusiveKinematicsCollection.createAndPut());
 
-
     // Get incoming electron beam
     auto ei_iter = Jug::Reco::Beam::find_first_beam_electron(mcparts);
-    if (ei_iter == mcparts.end()) {
+    PxPyPzE4D ei;
+    if (ei_iter != mcparts.end()) {
+      ei = Jug::Reco::Beam::round_beam_four_momentum(
+        ei_iter.getMomentum(),
+        m_electron,
+        {-5.0, -10.0, -18.0},
+        0.0);
+    } else {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "No beam electron found" << endmsg;
       }
       return StatusCode::SUCCESS;
     }
-    PxPyPzE4D ei = Jug::Reco::Beam::round_beam_four_momentum(
-      ei_iter.getMomentum(),
-      m_electron,
-      {-5.0, -10.0, -18.0},
-      0.0);
 
     // Get incoming hadron beam
     auto pi_iter = Jug::Reco::Beam::find_first_beam_hadron(mcparts);
-    if (pi_iter == mcparts.end()) {
+    if (pi_iter != mcparts.end()) {
+      pi = Jug::Reco::Beam::round_beam_four_momentum(
+        pi_iter.getMomentum(),
+        pi_iter.getPDG() == 2212 ? m_proton : m_neutron,
+        {41.0, 100.0, 275.0},
+        m_crossingAngle);
+    } else {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "No beam hadron found" << endmsg;
       }
       return StatusCode::SUCCESS;
     }
-    PxPyPzE4D pi = Jug::Reco::Beam::round_beam_four_momentum(
-      pi_iter.getMomentum(),
-      pi_iter.getPDG() == 2212 ? m_proton : m_neutron,
-      {41.0, 100.0, 275.0},
-      m_crossingAngle);
 
     // Get first scattered electron
     auto ef_iter = Jug::Reco::Beam::find_first_scattered_electron(mcparts);
-    if (ef_iter == mcparts.end()) {
+    if (ef_iter != mcparts.end()) {
+    } else {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "No truth scattered electron found" << endmsg;
       }
