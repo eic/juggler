@@ -10,6 +10,7 @@
 #include "JugBase/IParticleSvc.h"
 #include "JugBase/DataHandle.h"
 
+#include "JugReco/Utilities/Beam.h"
 #include "JugReco/Utilities/Boost.h"
 
 #include "Math/GenVector/PxPyPzE4D.h"
@@ -75,111 +76,75 @@ public:
     // output collection
     auto& out_kinematics = *(m_outputInclusiveKinematicsCollection.createAndPut());
 
-    // Loop over generated particles to get incoming electron beam
-    PxPyPzE4D ei, pi;
-    bool found_electron = false;
-    bool found_proton = false;
-    //Also get the true scattered electron, which will not be included in the sum
-    //over final-state particles for the JB reconstruction
-    auto ef_iter = mcparts.end();
-    for (const auto& p : mcparts) {
-      if (p.getGeneratorStatus() == 4 && p.getPDG() == 11) {
-        // Incoming electron
-        ei.SetPxPyPzE(p.getMomentum().x, p.getMomentum().y, p.getMomentum().z, p.getEnergy());
 
-        //Should not include true event-by-event smearing of beam particles for reconstruction
-        //Find a better way to do this...
-        ei.SetPx(0.);
-        ei.SetPy(0.);
-
-        if( fabs(ei.Pz() - 5.0) < 1.0 )
-          ei.SetPz(-5.0);
-        else if( fabs(ei.Pz() - 10.0) < 1.0 )
-          ei.SetPz(-10.0);
-        else if( fabs(ei.Pz() - 18.0) < 1.0 )
-          ei.SetPz(-18.0);
-        
-        ei.SetE(std::hypot(ei.Pz(), m_electron));
-
-        found_electron = true;
-      }
-      if (p.getGeneratorStatus() == 4 && (p.getPDG() == 2212 || p.getPDG() == 2112)) {
-        // Incoming proton
-        pi.SetPxPyPzE(p.getMomentum().x, p.getMomentum().y, p.getMomentum().z, p.getEnergy());
-
-        //Should not include true event-by-event smearing of beam particles for reconstruction
-        //Find a better way to do this...
-        pi.SetPy(0.);
-
-        if( fabs(pi.Pz() - 41.0) < 5.0 ){
-          pi.SetPx(41.0*sin(m_crossingAngle));
-          pi.SetPz(41.0*cos(m_crossingAngle));
-        }
-        else if( fabs(pi.Pz() - 100.0) < 5.0 ){
-          pi.SetPx(100.0*sin(m_crossingAngle));
-          pi.SetPz(100.0*cos(m_crossingAngle));
-        }
-        else if( fabs(pi.Pz() - 275.0) < 5.0 ){
-          pi.SetPx(275.0*sin(m_crossingAngle));
-          pi.SetPz(275.0*cos(m_crossingAngle));
-        }
-        pi.SetE(std::hypot(pi.Px(), pi.Pz(), (p.getPDG() == 2212) ? m_proton : m_neutron));
-      
-        found_proton = true;
-      }
-      // Index of true Scattered electron. Currently taken as first status==1 electron in HEPMC record.
-      if (p.getGeneratorStatus() == 1 && p.getPDG() == 11 && ! (ef_iter != mcparts.end())) {
-        ef_iter = p;
-      }
-
-      if (found_electron && found_proton && ef_iter != mcparts.end()) {
-        break;
-      }
-    }
-
-    if (found_electron == false) {
+    // Get incoming electron beam
+    const auto ei_iter = Jug::Reco::Beam::find_first_beam_electron(mcparts);
+    PxPyPzE4D ei;
+    if (ei_iter != mcparts.end()) {
+      ei = Jug::Reco::Beam::round_beam_four_momentum(
+        ei_iter.getMomentum(),
+        ei_iter.getEnergy(),
+        m_electron,
+        {-5.0, -10.0, -18.0},
+        0.0);
+    } else {
       if (msgLevel(MSG::DEBUG)) {
-        debug() << "No initial electron found" << endmsg;
+        debug() << "No beam electron found" << endmsg;
       }
       return StatusCode::SUCCESS;
     }
-    if (found_proton == false) {
+
+    // Get incoming hadron beam
+    const auto pi_iter = Jug::Reco::Beam::find_first_beam_hadron(mcparts);
+    PxPyPzE4D pi;
+    if (pi_iter != mcparts.end()) {
+      pi = Jug::Reco::Beam::round_beam_four_momentum(
+        pi_iter.getMomentum(),
+        pi_iter.getEnergy(),
+        pi_iter.getPDG() == 2212 ? m_proton : m_neutron,
+        {41.0, 100.0, 275.0},
+        m_crossingAngle);
+    } else {
       if (msgLevel(MSG::DEBUG)) {
-        debug() << "No initial proton found" << endmsg;
+        debug() << "No beam hadron found" << endmsg;
       }
       return StatusCode::SUCCESS;
     }
-    if (ep == mcparts.end()) {
+
+    // Get first scattered electron
+    const auto ef_iter = Jug::Reco::Beam::find_first_scattered_electron(mcparts);
+    if (ef_iter == mcparts.end()) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "No truth scattered electron found" << endmsg;
       }
-      return StatusCode::SUCCESS;      
+      return StatusCode::SUCCESS;
     }
 
     // Loop over reconstructed particles to get outgoing scattered electron
     // Use the true scattered electron from the MC information
-    typedef std::pair<PxPyPzE4D, eic::ReconstructedParticleCollection::iterator> t_electron;
-    std::vector<t_electron> electrons;
-    for (const auto& p: parts) {
-      if (p.mcID() == ef_iter) {
-        // Outgoing electron
-        electrons.push_back(t_electron(PxPyPzE4D(p.p().x, p.p().y, p.p().z, p.energy()), p));
-      }
+    const auto rc_ef_iter = Jug::Reco::Beam::find_first_scattered_electron(parts);
+    
+    std::vector<PxPyPzE4D> electrons;
+    auto is_electron = [](const auto &v) { return v.pdg == 11; };
+    for (const auto& p: parts | std::views::filter(is_electron)) {
+      electrons.push_back({p.getMomentum().x, p.getMomentum().y, p.getMomentum().z, p.getEnergy()});
     }
+    std::range::sort(electrons, [](PxPyPzE4D a, PxPyPzE4D b) { return a.E() > b.E(); });
 
     if (electrons.size() > 0) {
 
       // DIS kinematics calculations
       auto kin = out_kinematics.create();
-      const auto [ef, part] = electrons.front();
+      const auto mass = pi_iter.getPDG() == 2212 ? m_proton : m_neutron;
+      const auto ef = electrons.front();
       const auto q = ei.subtract(ef);
       const auto q_dot_pi = q.dot(pi);
-      kin.Q2(-q.dot(q));
-      kin.y(q_dot_pi / ei.dot(pi));
-      kin.nu(q_dot_pi / m_proton);
-      kin.x(kin.Q2() / (2.*q_dot_pi));
-      kin.W(sqrt(m_proton*m_proton + 2.*q_dot_pi - kin.Q2()));
-      kin.scatID(part);
+      kin.setQ2(-q.dot(q));
+      kin.setY(q_dot_pi / ei.dot(pi));
+      kin.setNu(q_dot_pi / m_proton);
+      kin.setX(kin.getQ2() / (2.*q_dot_pi));
+      kin.setW(sqrt( + 2.*q_dot_pi - kin.Q2()));
+      kin.setScat(part);
 
       // Debugging output
       if (msgLevel(MSG::DEBUG)) {
@@ -188,11 +153,11 @@ public:
         debug() << "ef = " << ef << endmsg;
         debug() << "q = " << q << endmsg;
         debug() << "x,y,Q2,W,nu = "
-                << kin.x() << "," 
-                << kin.y() << ","
-                << kin.Q2() << ","
-                << kin.W() << ","
-                << kin.nu()
+                << kin.getX() << "," 
+                << kin.getY() << ","
+                << kin.getQ2() << ","
+                << kin.getW() << ","
+                << kin.getNu()
                 << endmsg;
       }
     }
