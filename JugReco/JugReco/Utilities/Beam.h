@@ -4,6 +4,7 @@
 typedef ROOT::Math::PxPyPzE4D<double> PxPyPzE4D;
 
 #include "edm4hep/MCParticleCollection.h"
+#include "edm4hep/ReconstructedParticleCollection.h"
 
 namespace Jug::Reco {
 
@@ -59,19 +60,18 @@ namespace Beam {
   PxPyPzE4D
   round_beam_four_momentum(
       const edm4hep::Vector3f& p_in,
-      const float E_in,
       const float mass,
       const std::vector<float>& pz_set,
       const float crossing_angle = 0.0) {
     PxPyPzE4D p_out;
     for (const auto& pz : pz_set) {
-      if (fabs(p.z / pz - 1) < 0.1) {
-        p_out.setZ(pz);
+      if (fabs(p_in.z / pz - 1) < 0.1) {
+        p_out.SetPz(pz);
         break;
       }
     }
-    p_out.SetPx(p_out.z * sin(m_crossingAngle));
-    p_out.SetPz(p_out.z * cos(m_crossingAngle));
+    p_out.SetPx(p_out.z * sin(crossing_angle));
+    p_out.SetPz(p_out.z * cos(crossing_angle));
     p_out.SetE(std::hypot(p_out.Px(), p_out.Pz(), mass));
     return p_out;
   }

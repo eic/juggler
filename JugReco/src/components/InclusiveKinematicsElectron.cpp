@@ -83,7 +83,6 @@ public:
     if (ei_iter != mcparts.end()) {
       ei = Jug::Reco::Beam::round_beam_four_momentum(
         ei_iter.getMomentum(),
-        ei_iter.getEnergy(),
         m_electron,
         {-5.0, -10.0, -18.0},
         0.0);
@@ -100,7 +99,6 @@ public:
     if (pi_iter != mcparts.end()) {
       pi = Jug::Reco::Beam::round_beam_four_momentum(
         pi_iter.getMomentum(),
-        pi_iter.getEnergy(),
         pi_iter.getPDG() == 2212 ? m_proton : m_neutron,
         {41.0, 100.0, 275.0},
         m_crossingAngle);
