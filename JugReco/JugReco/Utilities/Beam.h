@@ -70,8 +70,8 @@ namespace Beam {
         break;
       }
     }
-    p_out.SetPx(p_out.z * sin(crossing_angle));
-    p_out.SetPz(p_out.z * cos(crossing_angle));
+    p_out.SetPx(p_out.Pz() * sin(crossing_angle));
+    p_out.SetPz(p_out.Pz() * cos(crossing_angle));
     p_out.SetE(std::hypot(p_out.Px(), p_out.Pz(), mass));
     return p_out;
   }
