@@ -78,7 +78,7 @@ public:
 
 
     // Get incoming electron beam
-    const auto ei_iter = Jug::Reco::Beam::find_first_beam_electron(mcparts);
+    auto ei_iter = Jug::Reco::Beam::find_first_beam_electron(mcparts);
     if (ei_iter == mcparts.end()) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "No beam electron found" << endmsg;
@@ -92,7 +92,7 @@ public:
       0.0);
 
     // Get incoming hadron beam
-    const auto pi_iter = Jug::Reco::Beam::find_first_beam_hadron(mcparts);
+    auto pi_iter = Jug::Reco::Beam::find_first_beam_hadron(mcparts);
     if (pi_iter == mcparts.end()) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "No beam hadron found" << endmsg;
@@ -106,7 +106,7 @@ public:
       m_crossingAngle);
 
     // Get first scattered electron
-    const auto ef_iter = Jug::Reco::Beam::find_first_scattered_electron(mcparts);
+    auto ef_iter = Jug::Reco::Beam::find_first_scattered_electron(mcparts);
     if (ef_iter == mcparts.end()) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "No truth scattered electron found" << endmsg;
