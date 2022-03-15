@@ -3,8 +3,8 @@
 #include "Math/GenVector/PxPyPzE4D.h"
 typedef ROOT::Math::PxPyPzE4D<double> PxPyPzE4D;
 
-#include "edm4hep/MCParticleCollection.h"
-#include "edm4hep/ReconstructedParticleCollection.h"
+#include "edm4hep/MCParticleConstCollection.h"
+#include "edm4hep/ReconstructedParticleConstCollection.h"
 
 namespace Jug::Reco {
 
