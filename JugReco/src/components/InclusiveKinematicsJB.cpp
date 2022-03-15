@@ -217,13 +217,13 @@ public:
       auto W_jb = sqrt ( m_proton*m_proton + 2*m_proton*nu_jb - Q2_jb );      
 
       auto kin = out_kinematics.create();
-      kin.Q2(Q2_jb);
-      kin.y(y_jb);
-      kin.nu(nu_jb);
-      kin.x(x_jb);
-      kin.W(W_jb);
+      kin.setQ2(Q2_jb);
+      kin.setY(y_jb);
+      kin.setNu(nu_jb);
+      kin.setX(x_jb);
+      kin.setW(W_jb);
     
-      kin.scatID(scatID); //MC index of scattered electron
+      kin.setScat(scatID); //MC index of scattered electron
 
     // Debugging output
     if (msgLevel(MSG::DEBUG)) {

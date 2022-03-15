@@ -225,13 +225,13 @@ public:
       auto W_da = sqrt ( m_proton*m_proton + 2*m_proton*nu_da - Q2_da );      
 
       auto kin = out_kinematics.create();
-      kin.Q2(Q2_da);
-      kin.y(y_da);
-      kin.nu(nu_da);
-      kin.x(x_da);
-      kin.W(W_da);
+      kin.setQ2(Q2_da);
+      kin.setY(y_da);
+      kin.setNu(nu_da);
+      kin.setX(x_da);
+      kin.setW(W_da);
     
-      kin.scatID(scatID); //MC index of scattered electron
+      kin.setScat(scatID); //MC index of scattered electron
 
       // Debugging output
       if (msgLevel(MSG::DEBUG)) {

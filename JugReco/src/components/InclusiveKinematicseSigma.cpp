@@ -234,13 +234,13 @@ public:
       auto W_esig = sqrt ( m_proton*m_proton + 2*m_proton*nu_esig - Q2_esig );      
 
       auto kin = out_kinematics.create();
-      kin.Q2(Q2_esig);
-      kin.y(y_esig);
-      kin.nu(nu_esig);
-      kin.x(x_esig);
-      kin.W(W_esig);
+      kin.setQ2(Q2_esig);
+      kin.setY(y_esig);
+      kin.setNu(nu_esig);
+      kin.setX(x_esig);
+      kin.setW(W_esig);
     
-      kin.scatID(scatID); //MC index of scattered electron
+      kin.setScat(scatID); //MC index of scattered electron
 
       // Debugging output
       if (msgLevel(MSG::DEBUG)) {
