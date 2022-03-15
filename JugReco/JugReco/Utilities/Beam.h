@@ -3,16 +3,15 @@
 #include "Math/GenVector/PxPyPzE4D.h"
 typedef ROOT::Math::PxPyPzE4D<double> PxPyPzE4D;
 
-#include "edm4hep/MCParticleConstCollection.h"
-#include "edm4hep/ReconstructedParticleConstCollection.h"
+#include "edm4hep/MCParticleCollection.h"
+#include "edm4hep/ReconstructedParticleCollection.h"
 
 namespace Jug::Reco {
 
 namespace Beam {
 
   template<class collection>
-  const collection::iterator
-  find_first_with_pdg(
+  auto find_first_with_pdg(
       const collection& parts,
       const std::set<int32_t>& pdg) {
     for (const auto& p: parts) {
@@ -24,8 +23,7 @@ namespace Beam {
   }
 
   template<class collection>
-  const collection::iterator
-  find_first_with_status_pdg(
+  auto find_first_with_status_pdg(
       const collection& parts,
       const std::set<int32_t>& status,
       const std::set<int32_t>& pdg) {
