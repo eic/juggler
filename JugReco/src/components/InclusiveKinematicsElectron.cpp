@@ -10,6 +10,8 @@
 #include "JugBase/IParticleSvc.h"
 #include "JugBase/DataHandle.h"
 
+#include "JugReco/Utilities/Boost.h"
+
 #include "Math/GenVector/PxPyPzE4D.h"
 typedef ROOT::Math::PxPyPzE4D<double> PxPyPzE4D;
 

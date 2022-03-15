@@ -10,10 +10,10 @@
 #include "JugBase/IParticleSvc.h"
 #include "JugBase/DataHandle.h"
 
-#include "eicd/VectorXYZT.h"
+#include "JugReco/Utilities/Boost.h"
 
-#include "TLorentzVector.h"
-#include "TVector3.h"
+#include "Math/GenVector/PxPyPzE4D.h"
+typedef ROOT::Math::PxPyPzE4D<double> PxPyPzE4D;
 
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
@@ -66,44 +66,6 @@ public:
     m_electron = m_pidSvc->particle(11).mass;
 
     return StatusCode::SUCCESS;
-  }
-
-  TLorentzVector apply_boost(eicd::VectorXYZT ei_eicv, eicd::VectorXYZT pi_eicv, TLorentzVector part){
-
-    //Step 1: Find the needed boosts and rotations from the incoming lepton and hadron beams 
-    //(note, this will give you a perfect boost, in principle you will not know the beam momenta exactly and should use an average)
-  
-    // Define the Boost to make beams back-to-back
-    TLorentzVector ei(ei_eicv.x,ei_eicv.y,ei_eicv.z,ei_eicv.t);
-    TLorentzVector pi(pi_eicv.x,pi_eicv.y,pi_eicv.z,pi_eicv.t);
-
-    TLorentzVector cmBoost = (1./ei.E())*ei + (1./pi.E())*pi;
-
-    TLorentzVector boost(-cmBoost.Px(),-cmBoost.Py(),-cmBoost.Pz(),cmBoost.E());
-    TVector3 b;
-    b = boost.BoostVector();
-
-    TLorentzVector boostBack(0.0,0.0,cmBoost.Pz(),cmBoost.E());
-    TVector3 bb;
-    bb = boostBack.BoostVector(); // This will boost beams from a center of momentum frame back to (nearly) their original energies
-
-    // Boost and rotate the incoming beams to find the proper rotations TLorentzVector
-    pi.Boost(b); // Boost to COM frame
-    ei.Boost(b);
-    double rotAboutY = -1.0*TMath::ATan2(pi.Px(),pi.Pz()); // Rotate to remove x component of beams
-    double rotAboutX = 1.0*TMath::ATan2(pi.Py(),pi.Pz()); // Rotate to remove y component of beams
-
-    //Step 2: Apply boosts and rotations to any particle 4-vector 
-    //(here too, choices will have to be made as to what the 4-vector is for reconstructed particles)
-  
-    //Boost and rotate particle 4-momenta into the headon frame
-    part.Boost(b);
-    part.RotateY(rotAboutY);
-    part.RotateX(rotAboutX);
-    part.Boost(bb);
-
-    return part;
-
   }
 
   StatusCode execute() override {
@@ -231,7 +193,7 @@ public:
         if(p.mcID().value == mcscatID){
 
           TLorentzVector e_lab(p.p().x,p.p().y,p.p().z,p.energy());
-          TLorentzVector e_boosted = apply_boost(ei,pi,e_lab);
+          TLorentzVector e_boosted = Jug::Reco::Boost::apply_boost(ei,pi,e_lab);
           
           scatID = p.ID();
           pt_e = e_boosted.Pt();
@@ -244,7 +206,7 @@ public:
           TLorentzVector hf_lab(p.p().x,p.p().y,p.p().z,p.energy());
 
           //Boost to colinear frame
-          TLorentzVector hf_boosted = apply_boost(ei,pi,hf_lab);
+          TLorentzVector hf_boosted = Jug::Reco::Boost::apply_boost(ei,pi,hf_lab);
           pxsum += hf_boosted.Px();
           pysum += hf_boosted.Py();
           pzsum += hf_boosted.Pz();
