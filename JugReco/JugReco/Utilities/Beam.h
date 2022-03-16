@@ -14,7 +14,7 @@ namespace Beam {
   auto find_first_with_pdg(
       const collection& parts,
       const std::set<int32_t>& pdg) {
-    for (const auto& p: parts) {
+    for (auto p = parts.begin(); p != parts.end(); p++) {
       if (pdg.count(p.getPDG()) > 0) {
         return p;
       }
@@ -27,7 +27,7 @@ namespace Beam {
       const collection& parts,
       const std::set<int32_t>& status,
       const std::set<int32_t>& pdg) {
-    for (const auto& p: parts) {
+    for (auto p = parts.begin(); p != parts.end(); p++) {
       if (status.count(p.getGeneratorStatus()) > 0 && pdg.count(p.getPDG()) > 0) {
         return p;
       }
@@ -35,23 +35,19 @@ namespace Beam {
     return parts.end();
   }
 
-  const edm4hep::MCParticleCollection::iterator
-  find_first_beam_electron(const edm4hep::MCParticleCollection& mcparts) {
+  auto find_first_beam_electron(const edm4hep::MCParticleCollection& mcparts) {
     return find_first_with_status_pdg(mcparts, {4}, {11});
   }
 
-  const edm4hep::MCParticleCollection::iterator
-  find_first_beam_hadron(const edm4hep::MCParticleCollection& mcparts) {
+  auto find_first_beam_hadron(const edm4hep::MCParticleCollection& mcparts) {
     return find_first_with_status_pdg(mcparts, {4}, {2212, 2112});
   }
 
-  const edm4hep::MCParticleCollection::iterator
-  find_first_scattered_electron(const edm4hep::MCParticleCollection& mcparts) {
+  auto find_first_scattered_electron(const edm4hep::MCParticleCollection& mcparts) {
     return find_first_with_status_pdg(mcparts, {1}, {11});
   }
 
-  const edm4hep::ReconstructedParticleCollection::iterator
-  find_first_scattered_electron(const edm4hep::ReconstructedParticleCollection& rcparts) {
+  auto find_first_scattered_electron(const edm4hep::ReconstructedParticleCollection& rcparts) {
     return find_first_with_pdg(rcparts, {11});
   }
 
