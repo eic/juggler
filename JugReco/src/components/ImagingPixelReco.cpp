@@ -139,7 +139,7 @@ public:
                                            0,                          // timeError TODO
                                            {gpos.x() / m_lUnit, gpos.y() / m_lUnit, gpos.z() / m_lUnit}, // global pos
                                            {0, 0, 0}, // @TODO: add dimension
-                                           lid,sid,
+                                           sid,lid,
                                            {pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit}}); // local pos
     }
     return StatusCode::SUCCESS;
