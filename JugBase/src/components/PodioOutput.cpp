@@ -49,7 +49,8 @@ void PodioOutput::resetBranches(const std::vector<std::pair<std::string, podio::
       auto colls = references;
       if (colls) {
         for (size_t j = 0; j < colls->size(); ++j) {
-          auto l_branch = m_datatree->GetBranch((collName + "#" + std::to_string(j)).c_str());
+          const auto brName = podio::root_utils::refBranch(collName, j);
+          auto l_branch = m_datatree->GetBranch(brName.c_str());
           l_branch->SetAddress(&(*colls)[j]);
         }
       }
@@ -68,17 +69,15 @@ void PodioOutput::resetBranches(const std::vector<std::pair<std::string, podio::
 }
 
 void PodioOutput::createBranches(const std::vector<std::pair<std::string, podio::CollectionBase*>>& collections) {
+  // collectionID, collection type, subset collection
+  std::vector<std::tuple<int, std::string, bool>>* collectionInfo = new std::vector<std::tuple<int, std::string, bool>>();
+  collectionInfo->reserve(collections.size());
+
   for (auto& [collName, collBuffers] : collections) {
-    #if podio_VERSION_MAJOR == 0 && (podio_VERSION_MINOR < 13 || (podio_VERSION_MINOR == 13 && podio_VERSION_PATCH < 2))
-    auto data = collBuffers->getBufferAddress();
-    auto references = collBuffers->referenceCollections();
-    auto vecmembers = collBuffers->vectorMembers();
-    #else
     auto buffers = collBuffers->getBuffers();
     auto data = buffers.data;
     auto references = buffers.references;
     auto vecmembers = buffers.vectorMembers;
-    #endif
 
     const std::string className     = collBuffers->getValueTypeName();
     const std::string collClassName = "vector<" + className + "Data>";
@@ -108,10 +107,16 @@ void PodioOutput::createBranches(const std::vector<std::pair<std::string, podio:
       }
     }
 
+    const auto collID = m_podioDataSvc->getCollectionIDs()->collectionID(collName);
+    const auto collType = collBuffers->getValueTypeName() + "Collection";
+    collectionInfo->emplace_back(collID, std::move(collType), collBuffers->isSubsetCollection());
+
     debug() << isOn << " Registering collection " << collClassName << " " << collName.c_str() << " containing type "
             << className << endmsg;
     collBuffers->prepareForWrite();
   }
+
+  m_metadatatree->Branch("CollectionTypeInfo", collectionInfo);
 }
 
 StatusCode PodioOutput::execute() {
@@ -129,6 +134,7 @@ StatusCode PodioOutput::execute() {
     debug() << "Filling DataTree .." << endmsg;
   }
   m_datatree->Fill();
+  m_evtMDtree->Fill();
   return StatusCode::SUCCESS;
 }
 
