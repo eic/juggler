@@ -199,7 +199,7 @@ namespace Jug::Digi {
       auto rawhits = m_outputHitCollection.createAndPut();
 
       // find the hits that belong to the same group (for merging)
-      std::unordered_map<long long, std::vector<edm4hep::ConstSimCalorimeterHit>> merge_map;
+      std::unordered_map<long long, std::vector<edm4hep::SimCalorimeterHit>> merge_map;
       for (const auto &ahit : *simhits) {
         int64_t hid = (ahit.getCellID() & id_mask) | ref_mask;
         auto    it  = merge_map.find(hid);
