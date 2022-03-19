@@ -25,7 +25,7 @@ endif()
 find_package(EICD REQUIRED)
 find_package(EDM4HEP REQUIRED)
 
-find_package(podio 0.11...0.14 REQUIRED)
+find_package(podio 0.14.1 REQUIRED)
 add_definitions("-Dpodio_VERSION_MAJOR=${podio_VERSION_MAJOR}")
 add_definitions("-Dpodio_VERSION_MINOR=${podio_VERSION_MINOR}")
 add_definitions("-Dpodio_VERSION_PATCH=${podio_VERSION_PATCH}")
