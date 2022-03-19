@@ -131,11 +131,11 @@ public:
 private:
   template <typename T> static inline T pow2(const T& x) { return x * x; }
 
-  std::vector<eicd::MutableCluster> reconstruct_cluster_layers(const eicd::ProtoCluster& pcl) const {
+  std::vector<eicd::Cluster> reconstruct_cluster_layers(const eicd::ProtoCluster& pcl) const {
     const auto& hits    = pcl.getHits();
     const auto& weights = pcl.getWeights();
     // using map to have hits sorted by layer
-    std::map<int, std::vector<std::pair<eicd::MutableCalorimeterHit, float>>> layer_map;
+    std::map<int, std::vector<std::pair<eicd::CalorimeterHit, float>>> layer_map;
     for (unsigned i = 0; i < hits.size(); ++i) {
       const auto hit = hits[i];
       auto lid       = hit.getLayer();
@@ -146,7 +146,7 @@ private:
     }
 
     // create layers
-    std::vector<eicd::MutableCluster> cl_layers;
+    std::vector<eicd::Cluster> cl_layers;
     for (const auto& [lid, layer_hits] : layer_map) {
       auto layer = reconstruct_layer(layer_hits);
       cl_layers.push_back(layer);
@@ -193,7 +193,7 @@ private:
     return layer;
   }
 
-  eicd::Cluster reconstruct_cluster(const eicd::ProtoCluster& pcl) {
+  eicd::MutableCluster reconstruct_cluster(const eicd::ProtoCluster& pcl) {
     eicd::MutableCluster cluster;
 
     const auto& hits    = pcl.getHits();

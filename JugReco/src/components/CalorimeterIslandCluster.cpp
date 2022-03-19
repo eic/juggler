@@ -41,7 +41,7 @@ using namespace Gaudi::Units;
 
 namespace {
 
-using CaloHit = eicd::ConstCalorimeterHit;
+using CaloHit = eicd::CalorimeterHit;
 using CaloHitCollection = eicd::CalorimeterHitCollection;
 
 // helper functions to get distance between hits
@@ -327,7 +327,7 @@ private:
       }
       return;
     } else if (maxima.size() == 1) {
-      eicd::ProtoCluster pcl;
+      eicd::MutableProtoCluster pcl;
       for (auto& [idx, hit] : group) {
         pcl.addToHits(hit);
         pcl.addToWeights(1.);
@@ -342,7 +342,7 @@ private:
     // split between maxima
     // TODO, here we can implement iterations with profile, or even ML for better splits
     std::vector<double> weights(maxima.size(), 1.);
-    std::vector<eicd::ProtoCluster> pcls;
+    std::vector<eicd::MutableProtoCluster> pcls;
     for (size_t k = 0; k < maxima.size(); ++k) {
       pcls.push_back({});
     }
