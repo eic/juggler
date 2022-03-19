@@ -141,9 +141,9 @@ private:
 
   // get a map of mcID --> cluster
   // input: cluster_collections --> list of handles to all cluster collections
-  std::map<eicd::Index, eicd::ConstCluster>
+  std::map<eicd::Index, eicd::Cluster>
   indexedClusters(const std::vector<DataHandle<eicd::ClusterCollection>*>& cluster_collections) const {
-    std::map<eicd::Index, eicd::ConstCluster> matched = {};
+    std::map<eicd::Index, eicd::Cluster> matched = {};
     for (const auto& cluster_handle : cluster_collections) {
       const auto& clusters = *(cluster_handle->get());
       for (const auto& cluster : clusters) {
@@ -174,7 +174,7 @@ private:
 
   // reconstruct a neutral cluster
   // (for now assuming the vertex is at (0,0,0))
-  eicd::ReconstructedParticle reconstruct_neutral(const eicd::ConstCluster& clus, const double mass,
+  eicd::ReconstructedParticle reconstruct_neutral(const eicd::Cluster& clus, const double mass,
                                                  const int32_t pid) const {
     const float energy   = clus.energy();
     const float momentum = energy < mass ? 0 : std::sqrt(energy * energy - mass * mass);

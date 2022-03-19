@@ -89,7 +89,7 @@ public:
     auto& mhits = *m_outputHitCollection.createAndPut();
 
     // container
-    std::unordered_map<std::pair<int64_t, int64_t>, std::vector<eicd::ConstCalorimeterHit>, pair_hash> merged_hits;
+    std::unordered_map<std::pair<int64_t, int64_t>, std::vector<eicd::CalorimeterHit>, pair_hash> merged_hits;
 
     for (const auto h : *m_inputHitCollection.get()) {
       auto bins =
@@ -100,7 +100,7 @@ public:
 
     for (const auto& [bins, hits] : merged_hits) {
       const auto ref = hits.front();
-      eicd::CalorimeterHit hit;
+      eicd::MutableCalorimeterHit hit;
       hit.setCellID(ref.getCellID());
       // TODO, we can do timing cut to reject noises
       hit.setTime(ref.getTime());

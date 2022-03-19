@@ -131,7 +131,7 @@ public:
 
     // group neighboring hits
     std::vector<bool> visits(hits.size(), false);
-    std::vector<std::vector<std::pair<uint32_t, eicd::ConstCalorimeterHit>>> groups;
+    std::vector<std::vector<std::pair<uint32_t, eicd::CalorimeterHit>>> groups;
     for (size_t i = 0; i < hits.size(); ++i) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << fmt::format("hit {:d}: local position = ({}, {}, {}), global position = ({}, {}, {})", i + 1,
@@ -180,7 +180,7 @@ private:
   template <typename T> static inline T pow2(const T& x) { return x * x; }
 
   // helper function to group hits
-  bool is_neighbor(const eicd::ConstCalorimeterHit& h1, const eicd::ConstCalorimeterHit& h2) const {
+  bool is_neighbor(const eicd::CalorimeterHit& h1, const eicd::CalorimeterHit& h2) const {
     // different sectors, simple distance check
     if (h1.getSector() != h2.getSector()) {
       return std::sqrt(pow2(h1.getPosition().x - h2.getPosition().x) + pow2(h1.getPosition().y - h2.getPosition().y) +
@@ -204,7 +204,7 @@ private:
   }
 
   // grouping function with Depth-First Search
-  void dfs_group(std::vector<std::pair<uint32_t, eicd::ConstCalorimeterHit>>& group, int idx,
+  void dfs_group(std::vector<std::pair<uint32_t, eicd::CalorimeterHit>>& group, int idx,
                  const eicd::CalorimeterHitCollection& hits, std::vector<bool>& visits) const {
     // not a qualified hit to participate in clustering, stop here
     if (hits[idx].getEnergy() < minClusterHitEdep) {

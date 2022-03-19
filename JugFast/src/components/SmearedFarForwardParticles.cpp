@@ -64,8 +64,8 @@ public:
   Rndm::Numbers m_gaussDist;
 
 private:
-  using RecPart = eicd::ReconstructedParticle;
-  using Assoc   = eicd::MCRecoParticleAssociation;
+  using RecPart = eicd::MutableReconstructedParticle;
+  using Assoc   = eicd::MutableMCRecoParticleAssociation;
   using RecData = std::pair<RecPart, Assoc>;
 
 public:
@@ -346,7 +346,7 @@ private:
 
   // all momentum smearing in EIC-smear for the far-forward region uses
   // the same 2 relations for P and Pt smearing (B0, RP, OMD)
-  RecData smearMomentum(const edm4hep::ConstMCParticle& part) {
+  RecData smearMomentum(const edm4hep::MCParticle& part) {
     const auto mom_ion = rotateLabToIonDirection(part.getMomentum());
     const double p     = std::hypot(mom_ion.x, mom_ion.y, mom_ion.z);
     const double dp    = (0.025 * p) * m_gaussDist();
@@ -367,7 +367,7 @@ private:
     // And build our 3-vector
     const edm4hep::Vector3f psmear_ion{static_cast<float>(pxs), static_cast<float>(pys), static_cast<float>(pzs)};
     const auto psmear = rotateIonToLabDirection(psmear_ion);
-    eicd::ReconstructedParticle rec_part;
+    eicd::MutableReconstructedParticle rec_part;
     rec_part.setType(-1);
     rec_part.setEnergy(std::hypot(ps, part.getMass()));
     rec_part.setMomentum({psmear.x, psmear.y, psmear.z});

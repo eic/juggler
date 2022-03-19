@@ -139,7 +139,7 @@ public:
   }
 
 private:
-  eicd::Cluster reconstruct(const eicd::ConstProtoCluster& pcl) const {
+  eicd::Cluster reconstruct(const eicd::ProtoCluster& pcl) const {
     eicd::Cluster cl;
     cl.setNhits(pcl.hits_size());
 
