@@ -93,13 +93,13 @@ namespace Jug::Reco {
       //  mcHits = m_inputMC->get();
       //}
 
-      std::vector<std::pair<uint32_t, eicd::ConstCalorimeterHit>> the_hits;
-      std::vector<std::pair<uint32_t, eicd::ConstCalorimeterHit>> remaining_hits;
+      std::vector<std::pair<uint32_t, eicd::CalorimeterHit>> the_hits;
+      std::vector<std::pair<uint32_t, eicd::CalorimeterHit>> remaining_hits;
 
       double max_dist   = m_maxDistance.value() / mm;
       double min_energy = m_minModuleEdep.value() / GeV;
 
-      eicd::ConstCalorimeterHit ref_hit;
+      eicd::CalorimeterHit ref_hit;
       bool have_ref = false;
       // Collect all our hits, and get the highest energy hit
       {
@@ -120,7 +120,7 @@ namespace Jug::Reco {
 
       while (have_ref && ref_hit.getEnergy() > min_energy) {
 
-        std::vector<std::pair<uint32_t, eicd::ConstCalorimeterHit>> cluster_hits;
+        std::vector<std::pair<uint32_t, eicd::CalorimeterHit>> cluster_hits;
 
         for (const auto& [idx, h] : the_hits) {
           if (eicd::magnitude(h.getPosition() - ref_hit.getPosition()) < max_dist) {
@@ -132,7 +132,7 @@ namespace Jug::Reco {
 
         double total_energy = std::accumulate(
             std::begin(cluster_hits), std::end(cluster_hits), 0.0,
-            [](double t, const std::pair<uint32_t, eicd::ConstCalorimeterHit>& h1) { return (t + h1.second.getEnergy()); });
+            [](double t, const std::pair<uint32_t, eicd::CalorimeterHit>& h1) { return (t + h1.second.getEnergy()); });
 
         if (msgLevel(MSG::DEBUG)) {
           debug() << " total_energy = " << total_energy << endmsg;

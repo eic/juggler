@@ -29,16 +29,10 @@ inline std::string vecBranch(const std::string& name, size_t index) {
 
 
 inline void setCollectionAddresses(podio::CollectionBase* collection, const CollectionBranches& branches) {
-  #if podio_VERSION_MAJOR == 0 && (podio_VERSION_MINOR < 13 || (podio_VERSION_MINOR == 13 && podio_VERSION_PATCH < 2))
-  auto data = collection->getBufferAddress();
-  auto references = collection->referenceCollections();
-  auto vecmembers = collection->vectorMembers();
-  #else
   auto buffers = collection->getBuffers();
   auto data = buffers.data;
   auto references = buffers.references;
   auto vecmembers = buffers.vectorMembers;
-  #endif
 
   if (data) {
     branches.data->SetAddress(data);

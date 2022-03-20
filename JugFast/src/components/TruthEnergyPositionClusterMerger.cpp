@@ -155,8 +155,8 @@ public:
 
   // get a map of mcID --> cluster
   // input: cluster_collections --> list of handles to all cluster collections
-  std::map<eicd::Index, eicd::ConstCluster> indexedClusters(const eicd::ClusterCollection& clusters) const {
-    std::map<eicd::Index, eicd::ConstCluster> matched = {};
+  std::map<eicd::Index, eicd::Cluster> indexedClusters(const eicd::ClusterCollection& clusters) const {
+    std::map<eicd::Index, eicd::Cluster> matched = {};
     for (const auto& cluster : clusters) {
       if (msgLevel(MSG::VERBOSE)) {
         verbose() << " --> Found cluster: " << cluster.id() << " with mcID " << cluster.mcID() << " and energy "

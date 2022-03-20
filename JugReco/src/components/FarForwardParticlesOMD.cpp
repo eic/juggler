@@ -159,7 +159,7 @@ public:
 
       //----- end RP reconstruction code ------
 
-      eicd::ReconstructedParticle rpTrack;
+      eicd::MutableReconstructedParticle rpTrack;
       rpTrack.setType(0);
       rpTrack.setMomentum({prec});
       rpTrack.setEnergy(std::hypot(eicd::magnitude(rpTrack.getMomentum()), .938272));

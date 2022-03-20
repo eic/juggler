@@ -27,33 +27,31 @@ StatusCode PodioOutput::initialize() {
   m_datatree = m_podioDataSvc->eventDataTree();
   m_datatree->SetDirectory(m_file.get());
   m_metadatatree = new TTree("metadata", "Metadata tree");
+  m_runMDtree = new TTree("run_metadata", "Run metadata tree");
+  m_evtMDtree = new TTree("evt_metadata", "Event metadata tree");
+  m_colMDtree = new TTree("col_metadata", "Collection metadata tree");
+
+  m_evtMDtree->Branch("evtMD", "GenericParameters", m_podioDataSvc->getProvider().eventMetaDataPtr() ) ;
   m_switch       = KeepDropSwitch(m_outputCommands);
   return StatusCode::SUCCESS;
 }
 
 void PodioOutput::resetBranches(const std::vector<std::pair<std::string, podio::CollectionBase*>>& collections) {
   for (auto& [collName, collBuffers] : collections) {
-    #if podio_VERSION_MAJOR == 0 && (podio_VERSION_MINOR < 13 || (podio_VERSION_MINOR == 13 && podio_VERSION_PATCH < 2))
-    auto data = collBuffers->getBufferAddress();
-    auto references = collBuffers->referenceCollections();
-    auto vecmembers = collBuffers->vectorMembers();
-    #else
     auto buffers = collBuffers->getBuffers();
     auto data = buffers.data;
     auto references = buffers.references;
     auto vecmembers = buffers.vectorMembers;
-    #endif
 
     if (m_switch.isOn(collName)) {
       // Reconnect branches and collections
       m_datatree->SetBranchAddress(collName.c_str(), data);
       auto colls = references;
       if (colls) {
-        int j = 0;
-        for (auto& c : (*colls)) {
+        for (size_t j = 0; j < colls->size(); ++j) {
           const auto brName = podio::root_utils::refBranch(collName, j);
-          m_datatree->SetBranchAddress(brName.c_str(), &c);
-          ++j;
+          auto l_branch = m_datatree->GetBranch(brName.c_str());
+          l_branch->SetAddress(&(*colls)[j]);
         }
       }
       auto colls_v = vecmembers;
@@ -71,17 +69,15 @@ void PodioOutput::resetBranches(const std::vector<std::pair<std::string, podio::
 }
 
 void PodioOutput::createBranches(const std::vector<std::pair<std::string, podio::CollectionBase*>>& collections) {
+  // collectionID, collection type, subset collection
+  std::vector<std::tuple<int, std::string, bool>>* collectionInfo = new std::vector<std::tuple<int, std::string, bool>>();
+  collectionInfo->reserve(collections.size());
+
   for (auto& [collName, collBuffers] : collections) {
-    #if podio_VERSION_MAJOR == 0 && (podio_VERSION_MINOR < 13 || (podio_VERSION_MINOR == 13 && podio_VERSION_PATCH < 2))
-    auto data = collBuffers->getBufferAddress();
-    auto references = collBuffers->referenceCollections();
-    auto vecmembers = collBuffers->vectorMembers();
-    #else
     auto buffers = collBuffers->getBuffers();
     auto data = buffers.data;
     auto references = buffers.references;
     auto vecmembers = buffers.vectorMembers;
-    #endif
 
     const std::string className     = collBuffers->getValueTypeName();
     const std::string collClassName = "vector<" + className + "Data>";
@@ -95,7 +91,7 @@ void PodioOutput::createBranches(const std::vector<std::pair<std::string, podio:
         int j = 0;
         for (auto& c : (*refColls)) {
           const auto brName = podio::root_utils::refBranch(collName, j);
-          m_datatree->Branch(brName.c_str(), c);
+          m_datatree->Branch(brName.c_str(), c.get());
           ++j;
         }
       }
@@ -111,10 +107,16 @@ void PodioOutput::createBranches(const std::vector<std::pair<std::string, podio:
       }
     }
 
+    const auto collID = m_podioDataSvc->getCollectionIDs()->collectionID(collName);
+    const auto collType = collBuffers->getValueTypeName() + "Collection";
+    collectionInfo->emplace_back(collID, std::move(collType), collBuffers->isSubsetCollection());
+
     debug() << isOn << " Registering collection " << collClassName << " " << collName.c_str() << " containing type "
             << className << endmsg;
     collBuffers->prepareForWrite();
   }
+
+  m_metadatatree->Branch("CollectionTypeInfo", collectionInfo);
 }
 
 StatusCode PodioOutput::execute() {
@@ -132,6 +134,7 @@ StatusCode PodioOutput::execute() {
     debug() << "Filling DataTree .." << endmsg;
   }
   m_datatree->Fill();
+  m_evtMDtree->Fill();
   return StatusCode::SUCCESS;
 }
 
@@ -183,6 +186,10 @@ StatusCode PodioOutput::finalize() {
   m_metadatatree->Branch("gaudiConfigOptions", &config_data);
   m_metadatatree->Branch("CollectionIDs", m_podioDataSvc->getCollectionIDs());
   m_metadatatree->Fill();
+  m_colMDtree->Branch("colMD", "std::map<int,podio::GenericParameters>", m_podioDataSvc->getProvider().getColMetaDataMap() ) ;
+  m_colMDtree->Fill();
+  m_runMDtree->Branch("runMD", "std::map<int,podio::GenericParameters>", m_podioDataSvc->getProvider().getRunMetaDataMap() ) ;
+  m_runMDtree->Fill();
   m_datatree->Write();
   m_file->Write();
   m_file->Close();

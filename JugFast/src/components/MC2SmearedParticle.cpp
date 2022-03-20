@@ -57,7 +57,7 @@ public:
       const auto pgen     = std::hypot(pvec.x, pvec.y, pvec.z);
       const auto momentum = pgen * m_gaussDist();
       // make sure we keep energy consistent
-      using MomType        = decltype(eicd::ReconstructedParticle().momentum().x);
+      using MomType        = decltype(eicd::ReconstructedParticle().getMomentum().x);
       const MomType energy = std::sqrt(p.getEnergy() * p.getEnergy() - pgen * pgen + momentum * momentum);
       const MomType px     = p.getMomentum().x * momentum / pgen;
       const MomType py     = p.getMomentum().y * momentum / pgen;

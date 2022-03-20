@@ -74,7 +74,7 @@ namespace Jug::Reco {
       auto& mhits = *m_outputHitCollection.createAndPut();
 
       // group the hits by layer
-      std::vector<std::vector<eicd::ConstCalorimeterHit>> layer_hits;
+      std::vector<std::vector<eicd::CalorimeterHit>> layer_hits;
       layer_hits.resize(m_nLayers);
       for (const auto& h : hits) {
         auto k = h.getLayer();
@@ -86,7 +86,7 @@ namespace Jug::Reco {
       // sort by energy
       for (auto &layer : layer_hits) {
         std::sort(layer.begin(), layer.end(),
-          [] (const eicd::ConstCalorimeterHit &h1, const eicd::ConstCalorimeterHit &h2) {
+          [] (const eicd::CalorimeterHit &h1, const eicd::CalorimeterHit &h2) {
             return h1.getEnergy() > h2.getEnergy();
           });
       }
