@@ -90,7 +90,7 @@ analysis:clang-tidy:
     - juggler:local
   script:
     - |
-      run-clang-tidy-13 -p build -j20 -export-fixes clang_tidy_fixes.yml -extra-arg='-std=c++20'
+      run-clang-tidy-13 -p build -j20 -export-fixes clang_tidy_fixes.yml -extra-arg='-std=c++17'
   artifacts:
     expire_in: 1 week
     paths:
