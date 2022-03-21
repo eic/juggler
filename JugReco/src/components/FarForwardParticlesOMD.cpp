@@ -177,6 +177,7 @@ public:
   }
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(FarForwardParticlesOMD)
 
 } // namespace Jug::Reco

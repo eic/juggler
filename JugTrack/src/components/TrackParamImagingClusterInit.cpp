@@ -112,6 +112,7 @@ namespace Jug::Reco {
       return StatusCode::SUCCESS;
     }
   };
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   DECLARE_COMPONENT(TrackParamImagingClusterInit)
 
 } // namespace Jug::reco

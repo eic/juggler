@@ -6,6 +6,7 @@
 #include "JugBase/DataWrapper.h"
 #include "JugBase/PodioDataSvc.h"
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(PodioInput)
 
 PodioInput::PodioInput(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {}

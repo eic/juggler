@@ -179,6 +179,7 @@ namespace Jug::Reco {
     }
 
   };
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   DECLARE_COMPONENT(TrajectoryFromTrackFit)
 
 } // namespace Jug::Reco

@@ -5,6 +5,7 @@
 #include "TFile.h"
 #include "rootutils.h"
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(PodioOutput)
 
 PodioOutput::PodioOutput(const std::string& name, ISvcLocator* svcLoc)

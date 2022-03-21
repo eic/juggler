@@ -204,6 +204,7 @@ public:
   }
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(InclusiveKinematicsElectron)
 
 } // namespace Jug::Reco

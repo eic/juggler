@@ -79,6 +79,7 @@ public:
   }
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(TruthClustering)
 
 } // namespace Jug::Fast

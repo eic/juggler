@@ -97,6 +97,7 @@ namespace Jug::Digi {
       return StatusCode::SUCCESS;
     }
   };
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   DECLARE_COMPONENT(CalorimeterBirksCorr)
 
 } // namespace Jug::Digi

@@ -1,5 +1,6 @@
 #include "ParticleSvc.h"
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(ParticleSvc)
 
 namespace {

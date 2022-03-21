@@ -161,6 +161,7 @@ public:
   }
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(InclusiveKinematicsTruth)
 
 } // namespace Jug::Fast

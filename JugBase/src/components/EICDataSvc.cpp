@@ -2,6 +2,7 @@
 
 // Instantiation of a static factory class used by clients to create
 // instances of this service
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(EICDataSvc)
 
 /// Standard Constructor

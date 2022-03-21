@@ -171,6 +171,7 @@ public:
 
 }; // class CalorimeterHitsMerger
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(CalorimeterHitsMerger)
 
 } // namespace Jug::Reco

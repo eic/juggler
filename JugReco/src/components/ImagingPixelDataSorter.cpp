@@ -112,6 +112,7 @@ namespace Jug::Reco {
 
   }; // class ImagingPixelDataSorter
 
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   DECLARE_COMPONENT(ImagingPixelDataSorter)
 
 } // namespace Jug::Reco

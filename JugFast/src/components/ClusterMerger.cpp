@@ -137,6 +137,7 @@ public:
     return matched;
   }
 };
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(ClusterMerger)
 
 } // namespace Jug::Fast

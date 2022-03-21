@@ -8,6 +8,7 @@
 
 using namespace Acts;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(TestACTSLogger)
 
 TestACTSLogger::TestACTSLogger(const std::string& aName, ISvcLocator* aSvcLoc)

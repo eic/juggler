@@ -149,6 +149,7 @@ public:
   }
 }; // namespace Jug::Fast
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(ParticlesWithTruthPID)
 
 } // namespace Jug::Fast
