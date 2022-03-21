@@ -195,22 +195,30 @@ public:
         std::transform(cdim.begin(), cdim.end(), cdim.begin(),
                        std::bind(std::multiplies<double>(), std::placeholders::_1, 2));
         }
-        double dim[3] = {0., 0., 0.};
-        for (size_t i = 0; i < cdim.size() && i < 3; ++i) {
-        dim[i] = cdim[i] / m_lUnit;
-        }
+
+        // create const vectors for passing to hit initializer list
+        const decltype(eicd::CalorimeterHitData::position) position(
+          gpos.x() / m_lUnit, gpos.y() / m_lUnit, gpos.z() / m_lUnit
+        );
+        const decltype(eicd::CalorimeterHitData::dimension) dimension(
+          cdim[0] / m_lUnit, cdim[1] / m_lUnit, cdim[2] / m_lUnit
+        );
+        const decltype(eicd::CalorimeterHitData::local) local(
+          pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit
+        );
+
         hits.push_back({
-            rh.getCellID(),    // cellID
+            rh.getCellID(), // cellID
             energy,         // energy
             0,              // @TODO: energy error
             time,           // time
             0,              // time error FIXME should be configurable
-            {gpos.x() / m_lUnit, gpos.y() / m_lUnit, gpos.z() / m_lUnit}, // global pos
-            {dim[0], dim[1], dim[2]},
+            position,       // global pos
+            dimension,
             // Local hit info
             sid,
             lid,
-            {pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit},    // local pos
+            local,          // local pos
         });
     }
 

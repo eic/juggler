@@ -63,13 +63,27 @@ static eicd::Vector2f dimScaledLocalDistXY(const CaloHit& h1, const CaloHit& h2)
   return {2 * delta.x / dimsum.x, 2 * delta.y / dimsum.y};
 }
 static eicd::Vector2f globalDistRPhi(const CaloHit& h1, const CaloHit& h2) {
-  return {eicd::magnitude(h1.getPosition()) - eicd::magnitude(h2.getPosition()),
-          eicd::angleAzimuthal(h1.getPosition()) - eicd::angleAzimuthal(h2.getPosition())};
+  using vector_type = decltype(eicd::Vector2f::a);
+  return {
+    static_cast<vector_type>(
+      eicd::magnitude(h1.getPosition()) - eicd::magnitude(h2.getPosition())
+    ),
+    static_cast<vector_type>(
+      eicd::angleAzimuthal(h1.getPosition()) - eicd::angleAzimuthal(h2.getPosition())
+    )
+  };
 }
 static eicd::Vector2f globalDistEtaPhi(const CaloHit& h1,
-                                      const CaloHit& h2) {
-  return {eicd::eta(h1.getPosition()) - eicd::eta(h2.getPosition()),
-          eicd::angleAzimuthal(h1.getPosition()) - eicd::angleAzimuthal(h2.getPosition())};
+                                       const CaloHit& h2) {
+  using vector_type = decltype(eicd::Vector2f::a);
+  return {
+    static_cast<vector_type>(
+      eicd::eta(h1.getPosition()) - eicd::eta(h2.getPosition())
+    ),
+    static_cast<vector_type>(
+      eicd::angleAzimuthal(h1.getPosition()) - eicd::angleAzimuthal(h2.getPosition())
+    )
+  };
 }
 // name: {method, units}
 static std::map<std::string,

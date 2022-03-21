@@ -132,15 +132,24 @@ public:
       const auto alignment = volman.lookupDetElement(id).nominal();
       const auto pos       = alignment.worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
 
-        hits.push_back(eicd::CalorimeterHit{id,                         // cellID
-                                           static_cast<float>(energy), // energy
-                                           0,                          // energyError
-                                           static_cast<float>(time),   // time
-                                           0,                          // timeError TODO
-                                           {gpos.x() / m_lUnit, gpos.y() / m_lUnit, gpos.z() / m_lUnit}, // global pos
-                                           {0, 0, 0}, // @TODO: add dimension
-                                           sid,lid,
-                                           {pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit}}); // local pos
+
+      // create const vectors for passing to hit initializer list
+      const decltype(eicd::CalorimeterHitData::position) position(
+        gpos.x() / m_lUnit, gpos.y() / m_lUnit, gpos.z() / m_lUnit
+      );
+      const decltype(eicd::CalorimeterHitData::local) local(
+        pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit
+      );
+
+      hits.push_back(eicd::CalorimeterHit{id,                         // cellID
+                                          static_cast<float>(energy), // energy
+                                          0,                          // energyError
+                                          static_cast<float>(time),   // time
+                                          0,                          // timeError TODO
+                                          position,                   // global pos
+                                          {0, 0, 0}, // @TODO: add dimension
+                                          sid,lid,
+                                          local});                    // local pos
     }
     return StatusCode::SUCCESS;
   }
