@@ -199,18 +199,37 @@ public:
         for (size_t i = 0; i < cdim.size() && i < 3; ++i) {
         dim[i] = cdim[i] / m_lUnit;
         }
+        using hit_type = eicd::CalorimeterHitData;
+        using position_type = decltype(hit_type::position.x);
+        const decltype(hit_type::position) position(
+          static_cast<position_type>(gpos.x() / m_lUnit),
+          static_cast<position_type>(gpos.y() / m_lUnit),
+          static_cast<position_type>(gpos.z() / m_lUnit)
+        );
+        using dimension_type = decltype(hit_type::dimension.x);
+        const decltype(hit_type::dimension) dimension(
+          static_cast<dimension_type>(dim[0]),
+          static_cast<dimension_type>(dim[1]),
+          static_cast<dimension_type>(dim[2])
+        );
+        using local_type = decltype(hit_type::local.x);
+        const decltype(hit_type::local) local(
+          static_cast<local_type>(pos.x() / m_lUnit),
+          static_cast<local_type>(pos.y() / m_lUnit),
+          static_cast<local_type>(pos.z() / m_lUnit)
+        );
         hits.push_back({
             rh.getCellID(),    // cellID
             energy,         // energy
             0,              // @TODO: energy error
             time,           // time
             0,              // time error FIXME should be configurable
-            {gpos.x() / m_lUnit, gpos.y() / m_lUnit, gpos.z() / m_lUnit}, // global pos
-            {dim[0], dim[1], dim[2]},
+            position,       // global pos
+            dimension,
             // Local hit info
             sid,
             lid,
-            {pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit},    // local pos
+            local,          // local pos
         });
     }
 

@@ -116,6 +116,11 @@ namespace Jug::Reco {
               debug() << " chi2 = " << trajState.chi2Sum << endmsg;
             }
 
+            using loc_type = decltype(eicd::TrackParametersData::loc.a);
+            const decltype(eicd::TrackParametersData::loc) loc {
+              static_cast<loc_type>(parameter[Acts::eBoundLoc0]),
+              static_cast<loc_type>(parameter[Acts::eBoundLoc1])
+            };
             const eicd::Cov3f covMomentum {
               static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundTheta)),
               static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundPhi)),
@@ -130,7 +135,7 @@ namespace Jug::Reco {
             const float timeError{sqrt(static_cast<float>(covariance(Acts::eBoundTime, Acts::eBoundTime)))};
 
                 eicd::TrackParameters pars{0, // type: track head --> 0
-                                          {parameter[Acts::eBoundLoc0], parameter[Acts::eBoundLoc1]},
+                                          loc,
                                           covPos,
                                           static_cast<float>(parameter[Acts::eBoundTheta]),
                                           static_cast<float>(parameter[Acts::eBoundPhi]),

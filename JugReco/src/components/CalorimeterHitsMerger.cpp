@@ -149,17 +149,30 @@ public:
       timeError = sqrt(timeError) / hits.size();
 
       const auto& href = hits.front();
+      using hit_type = eicd::CalorimeterHitData;
+      using position_type = decltype(hit_type::position.x);
+      const decltype(hit_type::position) position(
+        static_cast<position_type>(gpos.x() / dd4hep::mm),
+        static_cast<position_type>(gpos.y() / dd4hep::mm),
+        static_cast<position_type>(gpos.z() / dd4hep::mm)
+      );
+      using local_type = decltype(hit_type::local.x);
+      const decltype(hit_type::local) local(
+        static_cast<local_type>(pos.x()),
+        static_cast<local_type>(pos.y()),
+        static_cast<local_type>(pos.z())
+      );
       outputs.push_back(
           eicd::CalorimeterHit{ref_id,
                               energy,
                               energyError,
                               time,
                               timeError,
-                              {gpos.x() / dd4hep::mm, gpos.y() / dd4hep::mm, gpos.z() / dd4hep::mm},
+                              position,
                               href.getDimension(),
                               href.getSector(),
                               href.getLayer(),
-                              {pos.x(), pos.y(), pos.z()}}); // Can do better here? Right now position is mapped on the central hit
+                              local}); // Can do better here? Right now position is mapped on the central hit
     }
 
     if (msgLevel(MSG::DEBUG)) {
