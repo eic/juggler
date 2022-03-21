@@ -211,6 +211,7 @@ private:
     }
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(PhotoMultiplierDigi)
 
 } // namespace Jug::Digi

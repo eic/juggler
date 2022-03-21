@@ -88,6 +88,7 @@ public:
   }
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(MC2SmearedParticle)
 
 } // namespace Jug::Fast

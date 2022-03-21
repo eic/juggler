@@ -117,6 +117,7 @@ namespace Reco {
       return StatusCode::SUCCESS;
     }
   };
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   DECLARE_COMPONENT(TrackerHitReconstruction)
 
 } // namespace Reco

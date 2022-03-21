@@ -157,6 +157,7 @@ private:
   }
 }; // class ImagingPixelMerger
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(ImagingPixelMerger)
 
 } // namespace Jug::Reco

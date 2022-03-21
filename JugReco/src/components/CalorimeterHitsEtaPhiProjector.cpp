@@ -128,6 +128,7 @@ public:
 
 }; // class CalorimeterHitsEtaPhiProjector
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(CalorimeterHitsEtaPhiProjector)
 
 } // namespace Jug::Reco

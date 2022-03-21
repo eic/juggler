@@ -106,6 +106,7 @@ public:
     return StatusCode::SUCCESS;
   }
 };
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(ConformalXYPeakProtoTracks)
 
 } // namespace Jug::Reco

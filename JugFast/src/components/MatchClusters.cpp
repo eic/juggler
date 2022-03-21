@@ -196,6 +196,7 @@ private:
   }
 }; // namespace Jug::Fast
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(MatchClusters)
 
 } // namespace Jug::Fast

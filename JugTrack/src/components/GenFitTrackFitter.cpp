@@ -298,5 +298,6 @@ StatusCode GenFitTrackFitter::execute() {
   return StatusCode::SUCCESS;
 }
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(GenFitTrackFitter)
 } // namespace Jug::Reco

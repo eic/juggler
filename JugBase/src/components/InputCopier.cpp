@@ -59,12 +59,15 @@ namespace Jug {
     };
 
     using CalorimeterColCopier = InputCopier<edm4hep::SimCalorimeterHitCollection, edm4hep::SimCalorimeterHitCollection>;
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     DECLARE_COMPONENT(CalorimeterColCopier)
 
     using TrackerColCopier = InputCopier<edm4hep::SimTrackerHitCollection, edm4hep::SimTrackerHitCollection>;
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     DECLARE_COMPONENT(TrackerColCopier)
 
     using MCCopier = InputCopier<edm4hep::MCParticleCollection, edm4hep::MCParticleCollection>;
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     DECLARE_COMPONENT(MCCopier)
 
   } // namespace Examples

@@ -247,6 +247,7 @@ namespace Jug::Digi {
       }
     }
   };
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   DECLARE_COMPONENT(CalorimeterHitDigi)
 
 } // namespace Jug::Digi

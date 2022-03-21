@@ -219,6 +219,7 @@ public:
 
 }; // class CalorimeterHitReco
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(CalorimeterHitReco)
 
 } // namespace Jug::Reco

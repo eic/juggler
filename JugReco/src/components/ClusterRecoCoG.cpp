@@ -247,6 +247,7 @@ private:
   }
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(ClusterRecoCoG)
 
 } // namespace Jug::Reco

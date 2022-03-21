@@ -282,6 +282,7 @@ private:
   }
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(ImagingClusterReco)
 
 } // namespace Jug::Reco

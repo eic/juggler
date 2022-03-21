@@ -152,6 +152,7 @@ public:
 
 }; // class ImagingPixelDataCombiner
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(ImagingPixelDataCombiner)
 
 } // namespace Jug::Reco
