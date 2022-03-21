@@ -152,7 +152,7 @@ public:
 
       // create const vectors for passing to hit initializer list
       const decltype(eicd::CalorimeterHitData::position) position(
-        gpos.x() / dd4hep::mm, gpos.y() / dd4hep::mm, gpos.z() / dd4hep::mm)
+        gpos.x() / dd4hep::mm, gpos.y() / dd4hep::mm, gpos.z() / dd4hep::mm
       );
       const decltype(eicd::CalorimeterHitData::local) local(
         pos.x(), pos.y(), pos.z()
