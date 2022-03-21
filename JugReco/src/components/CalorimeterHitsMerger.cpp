@@ -149,19 +149,15 @@ public:
       timeError = sqrt(timeError) / hits.size();
 
       const auto& href = hits.front();
-      using hit_type = eicd::CalorimeterHitData;
-      using position_type = decltype(hit_type::position.x);
-      const decltype(hit_type::position) position(
-        static_cast<position_type>(gpos.x() / dd4hep::mm),
-        static_cast<position_type>(gpos.y() / dd4hep::mm),
-        static_cast<position_type>(gpos.z() / dd4hep::mm)
+
+      // create const vectors for passing to hit initializer list
+      const decltype(eicd::CalorimeterHitData::position) position(
+        gpos.x() / dd4hep::mm, gpos.y() / dd4hep::mm, gpos.z() / dd4hep::mm)
       );
-      using local_type = decltype(hit_type::local.x);
-      const decltype(hit_type::local) local(
-        static_cast<local_type>(pos.x()),
-        static_cast<local_type>(pos.y()),
-        static_cast<local_type>(pos.z())
+      const decltype(eicd::CalorimeterHitData::local) local(
+        pos.x(), pos.y(), pos.z()
       );
+
       outputs.push_back(
           eicd::CalorimeterHit{ref_id,
                               energy,

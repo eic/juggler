@@ -116,10 +116,9 @@ namespace Jug::Reco {
               debug() << " chi2 = " << trajState.chi2Sum << endmsg;
             }
 
-            using loc_type = decltype(eicd::TrackParametersData::loc.a);
-            const decltype(eicd::TrackParametersData::loc) loc {
-              static_cast<loc_type>(parameter[Acts::eBoundLoc0]),
-              static_cast<loc_type>(parameter[Acts::eBoundLoc1])
+            const eicd::Vector2f loc {
+              parameter[Acts::eBoundLoc0],
+              parameter[Acts::eBoundLoc1]
             };
             const eicd::Cov3f covMomentum {
               static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundTheta)),
@@ -172,8 +171,8 @@ namespace Jug::Reco {
 
             eicd::BasicParticle p{
                 eicd::sphericalToVector(1.0 / std::abs(params[Acts::eBoundQOverP]), 
-                                               params[Acts::eBoundTheta],
-                                               params[Acts::eBoundPhi]),
+                                        params[Acts::eBoundTheta],
+                                        params[Acts::eBoundPhi]),
                 {0., 0., 0.},                                                        // vectex 3-vector
                 0.,                                                                  // time
                 0,                                                                   // PDG particle code

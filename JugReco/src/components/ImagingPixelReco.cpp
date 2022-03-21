@@ -132,19 +132,15 @@ public:
       const auto alignment = volman.lookupDetElement(id).nominal();
       const auto pos       = alignment.worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
 
-      using hit_type = eicd::CalorimeterHitData;
-      using position_type = decltype(hit_type::position.x);
-      const decltype(hit_type::position) position(
-        static_cast<position_type>(gpos.x() / m_lUnit),
-        static_cast<position_type>(gpos.y() / m_lUnit),
-        static_cast<position_type>(gpos.z() / m_lUnit)
+
+      // create const vectors for passing to hit initializer list
+      const decltype(eicd::CalorimeterHitData::position) position(
+        gpos.x() / m_lUnit, gpos.y() / m_lUnit, gpos.z() / m_lUnit)
       );
-      using local_type = decltype(hit_type::local.x);
-      const decltype(hit_type::local) local(
-        static_cast<local_type>(pos.x() / m_lUnit), 
-        static_cast<local_type>(pos.y() / m_lUnit), 
-        static_cast<local_type>(pos.z() / m_lUnit) 
+      const decltype(eicd::CalorimeterHitData::local) local(
+        pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit
       );
+
       hits.push_back(eicd::CalorimeterHit{id,                         // cellID
                                           static_cast<float>(energy), // energy
                                           0,                          // energyError

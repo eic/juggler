@@ -195,31 +195,20 @@ public:
         std::transform(cdim.begin(), cdim.end(), cdim.begin(),
                        std::bind(std::multiplies<double>(), std::placeholders::_1, 2));
         }
-        double dim[3] = {0., 0., 0.};
-        for (size_t i = 0; i < cdim.size() && i < 3; ++i) {
-        dim[i] = cdim[i] / m_lUnit;
-        }
-        using hit_type = eicd::CalorimeterHitData;
-        using position_type = decltype(hit_type::position.x);
-        const decltype(hit_type::position) position(
-          static_cast<position_type>(gpos.x() / m_lUnit),
-          static_cast<position_type>(gpos.y() / m_lUnit),
-          static_cast<position_type>(gpos.z() / m_lUnit)
+
+        // create const vectors for passing to hit initializer list
+        const decltype(eicd::CalorimeterHitData::position) position(
+          gpos.x() / m_lUnit, gpos.y() / m_lUnit, gpos.z() / m_lUnit)
         );
-        using dimension_type = decltype(hit_type::dimension.x);
-        const decltype(hit_type::dimension) dimension(
-          static_cast<dimension_type>(dim[0]),
-          static_cast<dimension_type>(dim[1]),
-          static_cast<dimension_type>(dim[2])
+        const decltype(eicd::CalorimeterHitData::dimension) dimension(
+          cdim[0] / m_lUnit, cdim[1] / m_lUnit, cdim[2] / m_lUnit
         );
-        using local_type = decltype(hit_type::local.x);
-        const decltype(hit_type::local) local(
-          static_cast<local_type>(pos.x() / m_lUnit),
-          static_cast<local_type>(pos.y() / m_lUnit),
-          static_cast<local_type>(pos.z() / m_lUnit)
+        const decltype(eicd::CalorimeterHitData::local) local(
+          pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit
         );
+
         hits.push_back({
-            rh.getCellID(),    // cellID
+            rh.getCellID(), // cellID
             energy,         // energy
             0,              // @TODO: energy error
             time,           // time
