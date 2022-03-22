@@ -35,7 +35,7 @@ namespace Jug::Reco {
 /** Hits combiner for ML algorithm input.
  *
  * A hits-level data combiner to combine two datasets into one for machine learning
- * It accepts inputs from data sorter that hits are sorted by layers
+ * It accepts inputs from data x that hits are sorted by layers
  * Two different datasets will be combined together following specified rules in handling the layers
  * Supported rules: concatenate, interlayer
  *
