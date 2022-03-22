@@ -32,6 +32,7 @@
 #include "eicd/vector_utils.h"
 
 using namespace Gaudi::Units;
+using namespace std;
 
 namespace Jug::Reco {
 
