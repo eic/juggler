@@ -67,7 +67,7 @@ public:
     // input collections
     const auto hits = m_inputHits.get();
 
-    cout << hits.getLayer.size() << endl;
+    cout << hits.getLayer().size() << endl;
     
 
     // int layers = 29;
