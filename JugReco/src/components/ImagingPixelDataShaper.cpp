@@ -8,6 +8,8 @@
 #include <bitset>
 #include <fmt/format.h>
 #include <unordered_map>
+#include <cmath>
+#include <iostream>
 
 #include "Gaudi/Property.h"
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -64,7 +66,34 @@ public:
     // input collections
     const auto hits = m_inputHits.get();
 
-    float output[20][29][5];  // fill array with hits
+    cout << hits.getLayer.size() << endl;
+    
+
+    // int layers = 29;
+    // int nHits = 20;
+    // int features = 5;
+    // float output[layers][nHits][features];
+
+    // for (int i = 0; i < layers; i++) {  // 29 layers
+    //   for (int j = 0; j < nHits; j++) {  // 20 most energetic hits
+    //     for (int k = 0; k < features; k++){  // 5 features of each hit
+    //       x = hits.getPosition.x;
+    //       y = hits.getPosition.y;
+    //       z = hits.getPosition.z;
+
+    //       rc = sqrt(pow(x, 2) + pow(y, 2));
+    //       r = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+    //       theta = acos(z/r);
+    //       phi = atan2(hits.getPosition.y, hits.getPosition.x)
+    //       eta = -1*log10(tan(theta/ 2.))
+
+    //       layer_type = floor(hits.getLayer());
+    //       energy = hits.getEnergy();
+    //       output[i][j][k] = {layer_type, energy, rc, eta, phi}
+    //     }
+    //   }
+    // }
+      
 
     return StatusCode::SUCCESS;
   }
