@@ -68,7 +68,7 @@ public:
     const auto hits = m_inputHits.get();
     std::vector<const eicd::CalorimeterHitCollection*> inputs{hits}; 
 
-    cout << inputs.size();
+    cout << inputs.size() << endl;
 
     // int layers = 29;
     // int nHits = 20;
