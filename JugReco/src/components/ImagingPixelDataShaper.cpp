@@ -66,9 +66,9 @@ public:
   StatusCode execute() override {
     // input collections
     const auto hits = m_inputHits.get();
+    std::vector<const eicd::CalorimeterHitCollection*> inputs{hits}; 
 
-    cout << hits->getLayer().size() << endl;
-    
+    cout << inputs.size();
 
     // int layers = 29;
     // int nHits = 20;
