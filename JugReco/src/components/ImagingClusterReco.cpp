@@ -46,7 +46,7 @@ namespace Jug::Reco {
  *  \ingroup reco
  */
 class ImagingClusterReco : public GaudiAlgorithm {
-public:
+private:
   Gaudi::Property<int> m_trackStopLayer{this, "trackStopLayer", 9};
 
   DataHandle<eicd::ProtoClusterCollection> m_inputProtoClusters{"inputProtoClusters", Gaudi::DataHandle::Reader, this};
@@ -58,6 +58,7 @@ public:
   // Optional handle to MC hits
   std::unique_ptr<DataHandle<edm4hep::SimCalorimeterHitCollection>> m_inputMC;
 
+public:
   ImagingClusterReco(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputProtoClusters", m_inputProtoClusters, "");
     declareProperty("outputLayers", m_outputLayers, "");
@@ -131,7 +132,7 @@ public:
 private:
   template <typename T> static inline T pow2(const T& x) { return x * x; }
 
-  std::vector<eicd::Cluster> reconstruct_cluster_layers(const eicd::ProtoCluster& pcl) const {
+  static std::vector<eicd::Cluster> reconstruct_cluster_layers(const eicd::ProtoCluster& pcl) {
     const auto& hits    = pcl.getHits();
     const auto& weights = pcl.getWeights();
     // using map to have hits sorted by layer
@@ -139,7 +140,7 @@ private:
     for (unsigned i = 0; i < hits.size(); ++i) {
       const auto hit = hits[i];
       auto lid       = hit.getLayer();
-      if (!layer_map.count(lid)) {
+      if (layer_map.count(lid) == 0) {
         layer_map[lid] = {};
       }
       layer_map[lid].push_back({hit, weights[i]});
@@ -154,15 +155,15 @@ private:
     return cl_layers;
   }
 
-  eicd::Cluster reconstruct_layer(const std::vector<std::pair<eicd::CalorimeterHit, float>>& hits) const {
+  static eicd::Cluster reconstruct_layer(const std::vector<std::pair<eicd::CalorimeterHit, float>>& hits) {
     eicd::MutableCluster layer;
     layer.setType(ClusterType::kClusterSlice);
     // Calculate averages
-    double energy;
-    double energyError;
-    double time;
-    double timeError;
-    double sumOfWeights = 0;
+    double energy{0};
+    double energyError{0};
+    double time{0};
+    double timeError{0};
+    double sumOfWeights{0};
     auto pos            = layer.getPosition();
     for (const auto& [hit, weight] : hits) {
       energy += hit.getEnergy() * weight;

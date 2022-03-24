@@ -22,7 +22,7 @@ namespace Jug::Reco {
  *  \ingroup tracking
  */
 class HoughTransformProtoTracks : public GaudiAlgorithm {
-public:
+private:
   DataHandle<eicd::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
   DataHandle<Jug::ProtoTrackContainer> m_outputProtoTracks{"outputProtoTracks", Gaudi::DataHandle::Writer, this};
 

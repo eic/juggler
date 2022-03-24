@@ -33,7 +33,7 @@
 #include "eicd/vector_utils.h"
 
 using namespace Gaudi::Units;
-typedef ROOT::Math::XYZPoint Point3D;
+using Point3D = ROOT::Math::XYZPoint;
 
 struct pair_hash {
   template <class T1, class T2> std::size_t operator()(const std::pair<T1, T2>& pair) const {
@@ -55,15 +55,16 @@ namespace Jug::Reco {
  * \ingroup reco
  */
 class CalorimeterHitsEtaPhiProjector : public GaudiAlgorithm {
-public:
+private:
   Gaudi::Property<std::vector<double>> u_gridSizes{this, "gridSizes", {0.001, 0.001 * rad}};
   DataHandle<eicd::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                   this};
   DataHandle<eicd::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                    this};
 
-  double gridSizes[2];
+  double gridSizes[2]{0.0, 0.0};
 
+public:
   CalorimeterHitsEtaPhiProjector(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputHitCollection", m_inputHitCollection, "");
     declareProperty("outputHitCollection", m_outputHitCollection, "");

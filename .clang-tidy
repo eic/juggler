@@ -9,6 +9,7 @@ Checks: '
   -modernize-use-trailing-return-type,
   -modernize-avoid-c-arrays,
   -modernize-use-nodiscard,
-  -readability-magic-numbers
+  -readability-magic-numbers,
+  -cppcoreguidelines-avoid-magic-numbers
 '
 FormatStyle: file

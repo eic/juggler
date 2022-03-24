@@ -38,7 +38,7 @@ namespace Jug::Reco {
  * \ingroup tracking
  */
 class SingleTrackSourceLinker : public GaudiAlgorithm {
-public:
+private:
   DataHandle<eicd::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
   DataHandle<std::list<IndexSourceLink>> m_sourceLinkStorage{"sourceLinkStorage", Gaudi::DataHandle::Writer, this};
   DataHandle<IndexSourceLinkContainer> m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};
@@ -57,8 +57,9 @@ public:
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure())
+    if (GaudiAlgorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
+    }
     m_geoSvc = service("GeoSvc");
     if (!m_geoSvc) {
       error() << "Unable to locate Geometry Service. "
@@ -72,10 +73,10 @@ public:
     // input collection
     const eicd::TrackerHitCollection* hits = m_inputHitCollection.get();
     // Create output collections
-    auto linkStorage  = m_sourceLinkStorage.createAndPut();
-    auto sourceLinks  = m_outputSourceLinks.createAndPut();
-    auto measurements = m_outputMeasurements.createAndPut();
-    auto protoTracks  = m_outputProtoTracks.createAndPut();
+    auto* linkStorage  = m_sourceLinkStorage.createAndPut();
+    auto* sourceLinks  = m_outputSourceLinks.createAndPut();
+    auto* measurements = m_outputMeasurements.createAndPut();
+    auto* protoTracks  = m_outputProtoTracks.createAndPut();
     // IndexMultimap<ActsFatras::Barcode> hitParticlesMap;
     // IndexMultimap<Index> hitSimHitsMap;
     sourceLinks->reserve(hits->size());
@@ -93,7 +94,7 @@ public:
 
       track.emplace_back(ihit);
 
-      auto vol_ctx  = m_geoSvc->cellIDPositionConverter()->findContext(ahit.getCellID());
+      const auto* vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.getCellID());
       auto vol_id   = vol_ctx->identifier;
       const auto is = m_geoSvc->surfaceMap().find(vol_id);
       if (is == m_geoSvc->surfaceMap().end()) {

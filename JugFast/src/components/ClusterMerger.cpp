@@ -26,7 +26,7 @@ namespace Jug::Fast {
  * \ingroup fast
  */
 class ClusterMerger : public GaudiAlgorithm {
-public:
+private:
   // Input
   DataHandle<eicd::ClusterCollection> m_inputClusters{"InputClusters", Gaudi::DataHandle::Reader, this};
   // Output

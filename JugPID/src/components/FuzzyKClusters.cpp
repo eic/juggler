@@ -19,16 +19,8 @@ using namespace Eigen;
 //  KMeans Algorithm
 // =================================================================================================
 
-KMeans::KMeans()
-: n_iters(0), variance(0.)
-{
-    // place holder
-}
-
-KMeans::~KMeans()
-{
-    // place holder
-}
+KMeans::KMeans() = default;
+KMeans::~KMeans() = default;
 
 MatrixXd KMeans::Fit(const MatrixXd &data, int k, double q, double epsilon, int max_iters)
 {
@@ -115,16 +107,8 @@ void KMeans::FormClusters(MatrixXd &clusters, const MatrixXd &data, double q)
 //          vol. 16, no. 8, pp. 855-861, Aug. 1994, doi: 10.1109/34.308484.
 // =================================================================================================
 
-KRings::KRings()
-: KMeans()
-{
-    // place holder
-}
-
-KRings::~KRings()
-{
-    // place holder
-}
+KRings::KRings() = default;
+KRings::~KRings() = default;
 
 MatrixXd KRings::Fit(const MatrixXd &data, int k, double q, double epsilon, int max_iters)
 {

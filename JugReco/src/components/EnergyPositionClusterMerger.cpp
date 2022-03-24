@@ -32,7 +32,7 @@ namespace Jug::Reco {
  * \ingroup reco
  */
 class EnergyPositionClusterMerger : public GaudiAlgorithm {
-public:
+private:
   // Input
   DataHandle<eicd::ClusterCollection> m_energyClusters{"energyClusters", Gaudi::DataHandle::Reader, this};
   DataHandle<eicd::ClusterCollection> m_positionClusters{"positionClusters", Gaudi::DataHandle::Reader, this};
@@ -43,8 +43,8 @@ public:
   Gaudi::Property<double> m_phiToleranceUnits{this, "phiTolerance", 20 * degree};
   Gaudi::Property<double> m_energyRelTolerance{this, "energyRelTolerance", 0.3};
   // Unitless (GeV/mm/ns/rad) versions of these tolerances
-  double m_zTolerance;
-  double m_phiTolerance;
+  double m_zTolerance{0};
+  double m_phiTolerance{0};
 
 public:
   EnergyPositionClusterMerger(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {

@@ -12,7 +12,7 @@ public:
     declareProperty("genParticles", m_genParticles, "mc particles to read");
   }
 
-  ~ReadTestConsumer(){};
+  ~ReadTestConsumer() = default;
 
   StatusCode initialize() {
     warning() << "This is a deprecated test algorithm" << endmsg;

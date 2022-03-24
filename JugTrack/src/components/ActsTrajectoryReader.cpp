@@ -40,7 +40,7 @@ namespace Jug::Track {
  * \ingroup tracking
  */
 class ActsTrajectoryReader : public GaudiAlgorithm {
-public:
+private:
   DataHandle<eicd::TrackerHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
   DataHandle<TrajectoriesContainer> m_inputTrajectories{"inputActsTrajectories", Gaudi::DataHandle::Reader, this};
   DataHandle<eicd::TrajectoryCollection> m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};

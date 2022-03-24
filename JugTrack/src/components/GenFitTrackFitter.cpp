@@ -63,8 +63,9 @@ GenFitTrackFitter::GenFitTrackFitter(const std::string& name, ISvcLocator* svcLo
 }
 
 StatusCode GenFitTrackFitter::initialize() {
-  if (GaudiAlgorithm::initialize().isFailure())
+  if (GaudiAlgorithm::initialize().isFailure()) {
     return StatusCode::FAILURE;
+  }
   m_geoSvc = service("GeoSvc");
   if (!m_geoSvc) {
     error() << "Unable to locate Geometry Service. "
@@ -184,13 +185,13 @@ StatusCode GenFitTrackFitter::execute() {
     for (int ihit : proto_track) {
       const auto& ahit = (*hits)[ihit];
 
-      auto vol_ctx        = m_geoSvc->cellIDPositionConverter()->findContext(ahit.getCellID());
+      const auto* vol_ctx        = m_geoSvc->cellIDPositionConverter()->findContext(ahit.getCellID());
       auto vol_id         = vol_ctx->identifier;
       auto volman         = m_geoSvc->detector()->volumeManager();
       auto alignment      = volman.lookupDetElement(vol_id).nominal();
       auto local_position = alignment.worldToLocal(
           {ahit.getPosition().x / 10.0, ahit.getPosition().y / 10.0, ahit.getPosition().z / 10.0});
-      auto surf = m_surfaceMap[vol_id];
+      auto* surf = m_surfaceMap[vol_id];
       auto local_position2 =
           surf->globalToLocal({ahit.getPosition().x / 10.0, ahit.getPosition().y / 10.0, ahit.getPosition().z / 10.0});
 
@@ -220,7 +221,7 @@ StatusCode GenFitTrackFitter::execute() {
         debug() << "covariance matrix :  " << hitCov(0, 0) << " " << hitCov(1, 1) << " " << endmsg;
         debug() << "  hit coordinates :  " << hitCoords[0] << " " << hitCoords[1] << " " << endmsg;
       }
-      auto measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, 1 /** type **/, nhit, nullptr);
+      auto* measurement = new genfit::PlanarMeasurement(hitCoords, hitCov, 1 /** type **/, nhit, nullptr);
 
       // measurement->setPlane(genfit::SharedPlanePtr(new genfit::DetPlane(point, u_dir, v_dir)),
       measurement->setPlane(m_detPlaneMap[vol_id], vol_id);
@@ -257,7 +258,8 @@ StatusCode GenFitTrackFitter::execute() {
       // unused
       // float charge      = fitTrack.getFitStatus()->getCharge();
 
-      TVector3 vertexPos, vertexMom;
+      TVector3 vertexPos;
+      TVector3 vertexMom;
       TMatrixDSym vertexCov;
       genfit::MeasuredStateOnPlane state = fitTrack.getFittedState(); // copy
       TVector3 vertex(0, 0, 0);

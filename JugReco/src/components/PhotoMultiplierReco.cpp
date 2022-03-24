@@ -40,7 +40,7 @@ namespace Jug::Reco {
  * \ingroup reco
  */
 class PhotoMultiplierReco : public GaudiAlgorithm {
-public:
+private:
   DataHandle<eicd::RawPMTHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
   DataHandle<eicd::PMTHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
   Gaudi::Property<double> m_timeStep{this, "timeStep", 0.0625 * ns};
@@ -50,6 +50,7 @@ public:
   /// Pointer to the geometry service
   SmartIF<IGeoSvc> m_geoSvc;
 
+public:
   // ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
   PhotoMultiplierReco(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputHitCollection", m_inputHitCollection, "");

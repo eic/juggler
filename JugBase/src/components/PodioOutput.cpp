@@ -9,15 +9,18 @@
 DECLARE_COMPONENT(PodioOutput)
 
 PodioOutput::PodioOutput(const std::string& name, ISvcLocator* svcLoc)
-    : GaudiAlgorithm(name, svcLoc), m_firstEvent(true) {}
+    : GaudiAlgorithm(name, svcLoc), m_firstEvent(true),
+      m_podioDataSvc(nullptr), m_datatree(nullptr), m_metadatatree(nullptr),
+      m_runMDtree(nullptr), m_evtMDtree(nullptr), m_colMDtree(nullptr) {}
 
 StatusCode PodioOutput::initialize() {
-  if (GaudiAlgorithm::initialize().isFailure())
+  if (GaudiAlgorithm::initialize().isFailure()) {
     return StatusCode::FAILURE;
+  }
 
   // check whether we have the PodioEvtSvc active
   m_podioDataSvc = dynamic_cast<PodioDataSvc*>(evtSvc().get());
-  if (!m_podioDataSvc) {
+  if (m_podioDataSvc == nullptr) {
     error() << "Failed to get the DataSvc" << endmsg;
     return StatusCode::FAILURE;
   }
@@ -38,25 +41,25 @@ StatusCode PodioOutput::initialize() {
 }
 
 void PodioOutput::resetBranches(const std::vector<std::pair<std::string, podio::CollectionBase*>>& collections) {
-  for (auto& [collName, collBuffers] : collections) {
+  for (const auto& [collName, collBuffers] : collections) {
     auto buffers = collBuffers->getBuffers();
-    auto data = buffers.data;
-    auto references = buffers.references;
-    auto vecmembers = buffers.vectorMembers;
+    auto* data = buffers.data;
+    auto* references = buffers.references;
+    auto* vecmembers = buffers.vectorMembers;
 
     if (m_switch.isOn(collName)) {
       // Reconnect branches and collections
       m_datatree->SetBranchAddress(collName.c_str(), data);
-      auto colls = references;
-      if (colls) {
+      auto* colls = references;
+      if (colls != nullptr) {
         for (size_t j = 0; j < colls->size(); ++j) {
           const auto brName = podio::root_utils::refBranch(collName, j);
-          auto l_branch = m_datatree->GetBranch(brName.c_str());
+          auto* l_branch = m_datatree->GetBranch(brName.c_str());
           l_branch->SetAddress(&(*colls)[j]);
         }
       }
-      auto colls_v = vecmembers;
-      if (colls_v) {
+      auto* colls_v = vecmembers;
+      if (colls_v != nullptr) {
         int j = 0;
         for (auto& [dataType, add] : (*colls_v)) {
           const auto brName = podio::root_utils::vecBranch(collName, j);
@@ -71,14 +74,14 @@ void PodioOutput::resetBranches(const std::vector<std::pair<std::string, podio::
 
 void PodioOutput::createBranches(const std::vector<std::pair<std::string, podio::CollectionBase*>>& collections) {
   // collectionID, collection type, subset collection
-  std::vector<std::tuple<int, std::string, bool>>* collectionInfo = new std::vector<std::tuple<int, std::string, bool>>();
+  auto* collectionInfo = new std::vector<std::tuple<int, std::string, bool>>();
   collectionInfo->reserve(collections.size());
 
-  for (auto& [collName, collBuffers] : collections) {
+  for (const auto& [collName, collBuffers] : collections) {
     auto buffers = collBuffers->getBuffers();
-    auto data = buffers.data;
-    auto references = buffers.references;
-    auto vecmembers = buffers.vectorMembers;
+    auto* data = buffers.data;
+    auto* references = buffers.references;
+    auto* vecmembers = buffers.vectorMembers;
 
     const std::string className     = collBuffers->getValueTypeName();
     const std::string collClassName = "vector<" + className + "Data>";
@@ -88,7 +91,7 @@ void PodioOutput::createBranches(const std::vector<std::pair<std::string, podio:
       isOn = 1;
       m_datatree->Branch(collName.c_str(), collClassName.c_str(), data);
       // Create branches for collections holding relations
-      if (auto refColls = references) {
+      if (auto* refColls = references) {
         int j = 0;
         for (auto& c : (*refColls)) {
           const auto brName = podio::root_utils::refBranch(collName, j);
@@ -97,7 +100,7 @@ void PodioOutput::createBranches(const std::vector<std::pair<std::string, podio:
         }
       }
       // vector members
-      if (auto vminfo = vecmembers) {
+      if (auto* vminfo = vecmembers) {
         int j = 0;
         for (auto& [dataType, add] : (*vminfo)) {
           const std::string typeName = "vector<" + dataType + ">";

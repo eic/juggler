@@ -22,6 +22,8 @@ if(ENABLE_CLANG_TIDY)
   endif()
 endif()
 
+find_package(Microsoft.GSL CONFIG)
+
 find_package(EICD REQUIRED)
 find_package(EDM4HEP 0.4.1 REQUIRED)
 

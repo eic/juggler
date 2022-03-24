@@ -29,7 +29,7 @@
 #include "TGeoMaterialInterface.h"
 #include "PlanarMeasurement.h"
 
-static const std::map<int, Acts::Logging::Level> _msgMap = {
+static const std::map<int, Acts::Logging::Level> s_msgMap = {
     {MSG::DEBUG, Acts::Logging::DEBUG},
     {MSG::VERBOSE, Acts::Logging::VERBOSE},
     {MSG::INFO, Acts::Logging::INFO},
@@ -45,7 +45,7 @@ void draw_surfaces(std::shared_ptr<const Acts::TrackingGeometry> trk_geo, const 
 
   trk_geo->visitSurfaces([&](const Acts::Surface* surface) {
     // for now we just require a valid surface
-    if (not surface) {
+    if (surface == nullptr) {
       std::cout << " Not a surface \n";
       return;
     }
@@ -56,8 +56,8 @@ void draw_surfaces(std::shared_ptr<const Acts::TrackingGeometry> trk_geo, const 
   os << std::fixed << std::setprecision(6);
   size_t nVtx = 0;
   for (const auto& srfx : surfaces) {
-    const PlaneSurface*                 srf    = dynamic_cast<const PlaneSurface*>(srfx);
-    const PlanarBounds*                 bounds = dynamic_cast<const PlanarBounds*>(&srf->bounds());
+    const auto* srf    = dynamic_cast<const PlaneSurface*>(srfx);
+    const auto* bounds = dynamic_cast<const PlanarBounds*>(&srf->bounds());
     for (const auto& vtxloc : bounds->vertices()) {
       Vector3 vtx = srf->transform(geo_ctx) * Vector3(vtxloc.x(), vtxloc.y(), 0);
       os << "v " << vtx.x() << " " << vtx.y() << " " << vtx.z() << "\n";
@@ -83,7 +83,7 @@ GeoSvc::GeoSvc(const std::string& name, ISvcLocator* svc)
     , m_log(msgSvc(), name) {}
 
 GeoSvc::~GeoSvc() {
-  if (m_dd4hepGeo) {
+  if (m_dd4hepGeo != nullptr) {
     try {
       m_dd4hepGeo->destroyInstance();
       m_dd4hepGeo = 0;
@@ -94,8 +94,9 @@ GeoSvc::~GeoSvc() {
 
 StatusCode GeoSvc::initialize() {
   StatusCode sc = Service::initialize();
-  if (!sc.isSuccess())
+  if (!sc.isSuccess()) {
     return sc;
+  }
   // Turn off TGeo printouts if appropriate for the msg level
   if (msgLevel() >= MSG::INFO) {
     TGeoManager::SetVerboseLevel(0);
@@ -103,10 +104,11 @@ StatusCode GeoSvc::initialize() {
   uint printoutLevel = msgLevel();
   dd4hep::setPrintLevel(dd4hep::PrintLevel(printoutLevel));
   // m_incidentSvc->addListener(this, "GeometryFailure");
-  if (buildDD4HepGeo().isFailure())
+  if (buildDD4HepGeo().isFailure()) {
     m_log << MSG::ERROR << "Could not build DD4Hep geometry" << endmsg;
-  else
+  } else {
     m_log << MSG::INFO << "DD4Hep geometry SUCCESSFULLY built" << endmsg;
+  }
 
   // Genfit
   genfit::FieldManager::getInstance()->init(new genfit::ConstField(
@@ -116,7 +118,7 @@ StatusCode GeoSvc::initialize() {
   // create a list of all surfaces in the detector:
   dd4hep::rec::SurfaceManager surfMan( *m_dd4hepGeo ) ;
   debug() << " surface manager " << endmsg;
-  const auto sM = surfMan.map("tracker") ;
+  const auto* const sM = surfMan.map("tracker") ;
   if (sM != nullptr) {
     debug() << " surface map  size: " << sM->size() << endmsg;
     // setup  dd4hep surface map
@@ -132,8 +134,8 @@ StatusCode GeoSvc::initialize() {
   }
 
   // Set ACTS logging level
-  auto im = _msgMap.find(msgLevel());
-  if (im != _msgMap.end()) {
+  auto im = s_msgMap.find(msgLevel());
+  if (im != s_msgMap.end()) {
     m_actsLoggingLevel = im->second;
   }
 
@@ -176,21 +178,21 @@ StatusCode GeoSvc::initialize() {
     debug() << "visiting all the surfaces  " << endmsg;
     m_trackingGeo->visitSurfaces([this](const Acts::Surface* surface) {
       // for now we just require a valid surface
-      if (not surface) {
+      if (surface == nullptr) {
         info() << "no surface??? " << endmsg;
         return;
       }
-      auto det_element =
+      const auto* det_element =
         dynamic_cast<const Acts::DD4hepDetectorElement*>(surface->associatedDetectorElement());
 
-      if (!det_element) {
+      if (det_element == nullptr) {
         error() << "invalid det_element!!! " << endmsg;
         return;
       }
       // more verbose output is lower enum value
       debug() << " det_element->identifier() " << det_element->identifier() << endmsg;
       auto volman  = m_dd4hepGeo->volumeManager();
-      auto vol_ctx = volman.lookupContext(det_element->identifier());
+      auto* vol_ctx = volman.lookupContext(det_element->identifier());
       auto vol_id  = vol_ctx->identifier;
 
       if (msgLevel() <= MSG::DEBUG) {

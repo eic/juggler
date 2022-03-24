@@ -61,7 +61,7 @@ static const std::map<std::string, std::function<double(double, double, double, 
  * \ingroup reco
  */
 class ClusterRecoCoG : public GaudiAlgorithm {
-public:
+private:
   Gaudi::Property<double> m_sampFrac{this, "samplingFraction", 1.0};
   Gaudi::Property<double> m_logWeightBase{this, "logWeightBase", 3.6};
   Gaudi::Property<double> m_depthCorrection{this, "depthCorrection", 0.0};
@@ -78,9 +78,10 @@ public:
 
   // Pointer to the geometry service
   SmartIF<IGeoSvc> m_geoSvc;
-  double m_depthCorr;
+  double m_depthCorr{0};
   std::function<double(double, double, double, int)> weightFunc;
 
+public:
   ClusterRecoCoG(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
     // declareProperty("inputHitCollection", m_inputHits, "");
     declareProperty("inputProtoClusterCollection", m_inputProto, "");

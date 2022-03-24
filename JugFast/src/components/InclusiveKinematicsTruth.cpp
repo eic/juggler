@@ -18,16 +18,17 @@
 namespace Jug::Fast {
 
 class InclusiveKinematicsTruth : public GaudiAlgorithm {
-public:
+private:
   DataHandle<edm4hep::MCParticleCollection> m_inputParticleCollection{"MCParticles", Gaudi::DataHandle::Reader,
                                                                          this};
   DataHandle<eicd::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{"InclusiveKinematicsTruth",
                                                                                        Gaudi::DataHandle::Writer, this};
 
   SmartIF<IParticleSvc> m_pidSvc;
-  double m_proton;
-  double m_neutron;
+  double m_proton{0};
+  double m_neutron{0};
 
+public:
   InclusiveKinematicsTruth(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputParticleCollection, "MCParticles");
@@ -35,8 +36,9 @@ public:
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure())
+    if (GaudiAlgorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
+    }
 
     m_pidSvc = service("ParticleSvc");
     if (!m_pidSvc) {

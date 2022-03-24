@@ -20,7 +20,7 @@
 namespace Jug::Reco {
 
 class InclusiveKinematicsElectron : public GaudiAlgorithm {
-public:
+private:
   DataHandle<edm4hep::MCParticleCollection> m_inputMCParticleCollection{
     "inputMCParticles",
     Gaudi::DataHandle::Reader,
@@ -39,6 +39,7 @@ public:
   SmartIF<IParticleSvc> m_pidSvc;
   double m_proton, m_neutron, m_electron;
 
+public:
   InclusiveKinematicsElectron(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputMCParticleCollection, "MCParticles");

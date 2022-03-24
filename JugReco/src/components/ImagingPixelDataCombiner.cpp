@@ -42,7 +42,7 @@ namespace Jug::Reco {
  * \ingroup reco
  */
 class ImagingPixelDataCombiner : public GaudiAlgorithm {
-public:
+private:
   Gaudi::Property<int> m_layerIncrement{this, "layerIncrement", 0};
   Gaudi::Property<std::string> m_rule{this, "rule", "concatenate"};
   DataHandle<eicd::CalorimeterHitCollection> m_inputHits1{"inputHits1", Gaudi::DataHandle::Reader, this};
@@ -50,6 +50,7 @@ public:
   DataHandle<eicd::CalorimeterHitCollection> m_outputHits{"outputHits", Gaudi::DataHandle::Writer, this};
   std::vector<std::string> supported_rules{"concatenate", "interlayer"};
 
+public:
   ImagingPixelDataCombiner(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputHits1", m_inputHits1, "");
@@ -74,16 +75,16 @@ public:
 
   StatusCode execute() override {
     // input collections
-    const auto hits1 = m_inputHits1.get();
-    const auto hits2 = m_inputHits2.get();
+    const auto* const hits1 = m_inputHits1.get();
+    const auto* const hits2 = m_inputHits2.get();
     std::vector<const eicd::CalorimeterHitCollection*> inputs{hits1, hits2};
     // Create output collections
-    auto mhits = m_outputHits.createAndPut();
+    auto* mhits = m_outputHits.createAndPut();
 
     // concatenate
     if (m_rule.value() == supported_rules[0]) {
       for (int i = 0; i < (int)inputs.size(); ++i) {
-        auto coll = inputs[i];
+        const auto* const coll = inputs[i];
         for (auto hit : *coll) {
           eicd::CalorimeterHit h2{
               hit.getCellID(),    hit.getEnergy(),   hit.getEnergyError(), hit.getTime(),
@@ -108,8 +109,8 @@ public:
         }
 
         // merge hits
-        int& i    = indices[curr_coll];
-        auto coll = inputs[curr_coll];
+        int& i                 = indices[curr_coll];
+        const auto* const coll = inputs[curr_coll];
 
         // reach this collection's end
         if (i >= (int)coll->size()) {

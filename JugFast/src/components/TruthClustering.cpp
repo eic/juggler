@@ -32,11 +32,12 @@ namespace Jug::Fast {
  * \ingroup reco
  */
 class TruthClustering : public GaudiAlgorithm {
-public:
+private:
   DataHandle<eicd::CalorimeterHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
   DataHandle<edm4hep::SimCalorimeterHitCollection> m_mcHits{"mcHits", Gaudi::DataHandle::Reader, this};
   DataHandle<eicd::ProtoClusterCollection> m_outputProtoClusters{"outputProtoClusters", Gaudi::DataHandle::Writer, this};
 
+public:
   TruthClustering(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputHits", m_inputHits, "Input calorimeter reco hits");
@@ -62,12 +63,11 @@ public:
     std::map<int32_t, int32_t> protoIndex;
 
     // Loop over al calorimeter hits and sort per mcparticle
-    for (uint32_t i = 0; i < hits.size(); ++i) {
-      const auto& hit       = hits[i];
+    for (const auto& hit : hits) {
       const auto& mcHit     = mc[hit.getObjectID().index];
       const auto& trackID   = mcHit.getContributions(0).getParticle().id();
       // Create a new protocluster if we don't have one for this trackID
-      if (!protoIndex.count(trackID)) {
+      if (protoIndex.count(trackID) == 0) {
         auto pcl = proto.create();
         protoIndex[trackID] = proto.size() - 1;
       }

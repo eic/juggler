@@ -34,15 +34,14 @@ inline double get_variance(const double pixel_size) {
 }
 } // namespace
 
-namespace Jug {
-namespace Reco {
+namespace Jug::Reco {
 
   /** Tracker hit reconstruction.
    *
    * \ingroup reco
    */
   class TrackerHitReconstruction : public GaudiAlgorithm {
-  public:
+  private:
     Gaudi::Property<float> m_timeResolution{this, "timeResolution", 10}; // in ns
     DataHandle<eicd::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                    this};
@@ -60,8 +59,9 @@ namespace Reco {
     }
 
     StatusCode initialize() override {
-      if (GaudiAlgorithm::initialize().isFailure())
+      if (GaudiAlgorithm::initialize().isFailure()) {
         return StatusCode::FAILURE;
+      }
       m_geoSvc = service("GeoSvc");
       if (!m_geoSvc) {
         error() << "Unable to locate Geometry Service. "
@@ -74,9 +74,9 @@ namespace Reco {
     StatusCode execute() override {
       constexpr auto mm = dd4hep::mm;
       // input collection
-      const eicd::RawTrackerHitCollection* rawhits = m_inputHitCollection.get();
+      const auto* const rawhits = m_inputHitCollection.get();
       // Create output collections
-      auto rec_hits = m_outputHitCollection.createAndPut();
+      auto* rec_hits = m_outputHitCollection.createAndPut();
 
       debug() << " raw hits size : " << std::size(*rawhits) << endmsg;
       for (const auto& ahit : *rawhits) {
@@ -111,7 +111,7 @@ namespace Reco {
                              static_cast<float>(ahit.getTimeStamp() / 1000), // ns
                              m_timeResolution,                            // in ns
                              static_cast<float>(ahit.getCharge() / 1.0e6),   // Collected energy (GeV)
-                             0.0f};                                       // Error on the energy
+                             0.0F};                                       // Error on the energy
         rec_hits->push_back(hit);
       }
       return StatusCode::SUCCESS;
@@ -120,6 +120,5 @@ namespace Reco {
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   DECLARE_COMPONENT(TrackerHitReconstruction)
 
-} // namespace Reco
-} // namespace Jug
+} // namespace Jug::Reco
 

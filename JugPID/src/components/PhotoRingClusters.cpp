@@ -37,7 +37,7 @@ namespace Jug::Reco {
  * \ingroup reco
  */
 class PhotoRingClusters : public GaudiAlgorithm {
-public:
+private:
   DataHandle<eicd::PMTHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
   DataHandle<eicd::RingImageCollection> m_outputClusterCollection{"outputClusterCollection", Gaudi::DataHandle::Writer,
                                                                   this};
@@ -51,6 +51,7 @@ public:
   // Pointer to the geometry service
   SmartIF<IGeoSvc> m_geoSvc;
 
+public:
   // ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
   PhotoRingClusters(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputHitCollection", m_inputHitCollection, "");

@@ -110,7 +110,7 @@ namespace Jug::Reco {
  * \ingroup reco
  */
 class CalorimeterIslandCluster : public GaudiAlgorithm {
-public:
+private:
   Gaudi::Property<bool> m_splitCluster{this, "splitCluster", true};
   Gaudi::Property<double> m_minClusterHitEdep{this, "minClusterHitEdep", 0.};
   Gaudi::Property<double> m_minClusterCenterEdep{this, "minClusterCenterEdep", 50.0 * MeV};
@@ -130,9 +130,10 @@ public:
   std::function<eicd::Vector2f(const CaloHit&, const CaloHit&)> hitsDist;
 
   // unitless counterparts of the input parameters
-  double minClusterHitEdep, minClusterCenterEdep, sectorDist;
+  double minClusterHitEdep{0}, minClusterCenterEdep{0}, sectorDist{0};
   std::array<double, 2> neighbourDist = {0., 0.};
 
+public:
   CalorimeterIslandCluster(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputHitCollection", m_inputHitCollection, "");
     declareProperty("outputProtoClusterCollection", m_outputProtoCollection, "");
@@ -150,7 +151,7 @@ public:
 
     // set coordinate system
     auto set_dist_method = [this](const Gaudi::Property<std::vector<double>>& uprop) {
-      if (not uprop.size()) {
+      if (uprop.size() == 0) {
         return false;
       }
       auto& [method, units] = distMethods[uprop.name()];
@@ -262,7 +263,7 @@ private:
       return;
     }
 
-    group.push_back({idx, hits[idx]});
+    group.emplace_back(idx, hits[idx]);
     visits[idx] = true;
     for (size_t i = 0; i < hits.size(); ++i) {
       if (visits[i] || !is_neighbour(hits[idx], hits[i])) {
@@ -294,14 +295,14 @@ private:
       return maxima;
     }
 
-    for (auto& [idx, hit] : group) {
+    for (const auto& [idx, hit] : group) {
       // not a qualified center
       if (hit.getEnergy() < minClusterCenterEdep) {
         continue;
       }
 
       bool maximum = true;
-      for (auto& [idx2, hit2] : group) {
+      for (const auto& [idx2, hit2] : group) {
         if (hit == hit2) {
           continue;
         }
@@ -321,7 +322,7 @@ private:
   }
 
   // helper function
-  inline void vec_normalize(std::vector<double>& vals) const {
+  inline static void vec_normalize(std::vector<double>& vals) {
     double total = 0.;
     for (auto& val : vals) {
       total += val;
@@ -358,7 +359,7 @@ private:
     std::vector<double> weights(maxima.size(), 1.);
     std::vector<eicd::MutableProtoCluster> pcls;
     for (size_t k = 0; k < maxima.size(); ++k) {
-      pcls.push_back({});
+      pcls.emplace_back();
     }
 
     size_t i = 0;

@@ -50,12 +50,13 @@ namespace Jug::Reco {
  * \ingroup reco
  */
 class ImagingPixelMerger : public GaudiAlgorithm {
-public:
+private:
   Gaudi::Property<float> m_etaSize{this, "etaSize", 0.001};
   Gaudi::Property<float> m_phiSize{this, "phiSize", 0.001};
   DataHandle<eicd::CalorimeterHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
   DataHandle<eicd::CalorimeterHitCollection> m_outputHits{"outputHits", Gaudi::DataHandle::Writer, this};
 
+public:
   ImagingPixelMerger(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputHits", m_inputHits, "");
     declareProperty("outputHits", m_outputHits, "");
@@ -146,9 +147,13 @@ public:
   }
 
 private:
-  int pos2grid(float pos, float size, float offset = 0.) const { return std::floor((pos - offset) / size); }
-  int grid2pos(float grid, float size, float offset = 0.) const { return (grid + 0.5) * size + offset; }
-  float cotan(float theta) const {
+  static int pos2grid(float pos, float size, float offset = 0.) {
+    return std::floor((pos - offset) / size);
+  }
+  static int grid2pos(float grid, float size, float offset = 0.) {
+    return (grid + 0.5) * size + offset;
+  }
+  static float cotan(float theta) {
     if (std::abs(std::sin(theta)) < 1e-6) {
       return 0.;
     } else {

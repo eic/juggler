@@ -19,7 +19,7 @@ namespace Jug::Digi {
      * \ingroup digi
      */
     class SimTrackerHitsCollector : public GaudiAlgorithm {
-    public:
+    private:
       Gaudi::Property<std::vector<std::string>> m_inputSimTrackerHits{this, "inputSimTrackerHits", {},"Tracker hits to be aggregated"};
       DataHandle<edm4hep::SimTrackerHitCollection> m_outputSimTrackerHits{"outputSimTrackerHits", Gaudi::DataHandle::Writer, this};
 
@@ -32,14 +32,15 @@ namespace Jug::Digi {
         declareProperty("outputSimTrackerHits", m_outputSimTrackerHits, "output hits combined into single collection");
       }
       ~SimTrackerHitsCollector() {
-        for (auto col : m_hitCollections) {
-          if (col) { delete col; }
+        for (auto* col : m_hitCollections) {
+          delete col;
         }
       }
 
       StatusCode initialize() override {
-        if (GaudiAlgorithm::initialize().isFailure())
+        if (GaudiAlgorithm::initialize().isFailure()) {
           return StatusCode::FAILURE;
+        }
         for (auto colname : m_inputSimTrackerHits) {
           debug() << "initializing collection: " << colname  << endmsg;
           m_hitCollections.push_back(new DataHandle<edm4hep::SimTrackerHitCollection>{colname, Gaudi::DataHandle::Reader, this});
@@ -49,7 +50,7 @@ namespace Jug::Digi {
 
       StatusCode execute() override
       {
-        auto outputHits = m_outputSimTrackerHits.createAndPut();
+        auto* outputHits = m_outputSimTrackerHits.createAndPut();
         if (msgLevel(MSG::DEBUG)) {
           debug() << "execute collector" << endmsg;
         }

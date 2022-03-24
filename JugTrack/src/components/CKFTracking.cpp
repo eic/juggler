@@ -46,7 +46,7 @@
 #include <stdexcept>
 
 
-static const std::map<int, Acts::Logging::Level> _msgMap = {
+static const std::map<int, Acts::Logging::Level> s_msgMap = {
     {MSG::DEBUG, Acts::Logging::DEBUG},
     {MSG::VERBOSE, Acts::Logging::VERBOSE},
     {MSG::INFO, Acts::Logging::INFO},
@@ -70,8 +70,9 @@ namespace Jug::Reco {
 
   StatusCode CKFTracking::initialize()
   {
-    if (GaudiAlgorithm::initialize().isFailure())
+    if (GaudiAlgorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
+    }
     m_geoSvc = service("GeoSvc");
     if (!m_geoSvc) {
       error() << "Unable to locate Geometry Service. "
@@ -97,8 +98,8 @@ namespace Jug::Reco {
         },
     };
     m_trackFinderFunc = CKFTracking::makeCKFTrackingFunction(m_geoSvc->trackingGeometry(), m_BField);
-    auto im = _msgMap.find(msgLevel());
-    if (im != _msgMap.end()) {
+    auto im = s_msgMap.find(msgLevel());
+    if (im != s_msgMap.end()) {
         m_actsLoggingLevel = im->second;
     }
     return StatusCode::SUCCESS;
@@ -107,13 +108,13 @@ namespace Jug::Reco {
   StatusCode CKFTracking::execute()
   {
     // Read input data
-    const IndexSourceLinkContainer* src_links       = m_inputSourceLinks.get();
-    const TrackParametersContainer* init_trk_params = m_inputInitialTrackParameters.get();
-    const MeasurementContainer*     measurements    = m_inputMeasurements.get();
+    const auto* const src_links       = m_inputSourceLinks.get();
+    const auto* const init_trk_params = m_inputInitialTrackParameters.get();
+    const auto* const measurements    = m_inputMeasurements.get();
 
     //// Prepare the output data with MultiTrajectory
     // TrajectoryContainer trajectories;
-    auto trajectories = m_outputTrajectories.createAndPut();
+    auto* trajectories = m_outputTrajectories.createAndPut();
     trajectories->reserve(init_trk_params->size());
 
     //// Construct a perigee surface as the target surface

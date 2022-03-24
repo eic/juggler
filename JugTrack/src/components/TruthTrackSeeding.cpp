@@ -31,7 +31,7 @@ namespace Jug::Reco {
    *  \ingroup tracking
    */
   class TruthTrackSeeding : public GaudiAlgorithm {
-  public:
+  private:
     DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader,
                                                                     this};
     DataHandle<eicd::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters",
@@ -49,7 +49,7 @@ namespace Jug::Reco {
         return StatusCode::FAILURE;
       }
       IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
-      if (!randSvc) {
+      if (randSvc == nullptr) {
         return StatusCode::FAILURE;
       }
       m_pidSvc = service("ParticleSvc");
@@ -64,9 +64,9 @@ namespace Jug::Reco {
 
     StatusCode execute() override {
       // input collection
-      const edm4hep::MCParticleCollection* mcparts = m_inputMCParticles.get();
+      const auto* const mcparts = m_inputMCParticles.get();
       // Create output collections
-      auto init_trk_params = m_outputTrackParameters.createAndPut();
+      auto* init_trk_params = m_outputTrackParameters.createAndPut();
 
       for(const auto& part : *mcparts) {
 
@@ -90,16 +90,16 @@ namespace Jug::Reco {
 
         const auto q_over_p = charge / p;
 
-        eicd::TrackParameters params{-1,               // type --> seed (-1)
-                                   {0.0f, 0.0f},      // location on surface
-                                   {0.1, 0.1, 0.1},   // Covariance on location
-                                   theta,             // theta (rad)
-                                   phi,               // phi  (rad)
-                                   q_over_p * .05f,   // Q/P (e/GeV)
-                                   {0.1, 0.1, 0.1},   // Covariance on theta/phi/Q/P
-                                   part.getTime(),    // Time (ns)
-                                   0.1,               // Error on time
-                                   charge};           // Charge
+        eicd::TrackParameters params{-1,                // type --> seed (-1)
+                                     {0.0F, 0.0F},      // location on surface
+                                     {0.1, 0.1, 0.1},   // Covariance on location
+                                     theta,             // theta (rad)
+                                     phi,               // phi  (rad)
+                                     q_over_p * .05F,   // Q/P (e/GeV)
+                                     {0.1, 0.1, 0.1},   // Covariance on theta/phi/Q/P
+                                     part.getTime(),    // Time (ns)
+                                     0.1,               // Error on time
+                                     charge};           // Charge
 
         ////// Construct a perigee surface as the target surface
         //auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(

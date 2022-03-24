@@ -40,7 +40,7 @@ namespace Jug::Reco {
    *  \ingroup tracking
    */
   class TrackParamImagingClusterInit : public GaudiAlgorithm {
-  public:
+  private:
     using ImagingClusters =  eicd::ClusterCollection;
 
     DataHandle<ImagingClusters>          m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
@@ -55,19 +55,21 @@ namespace Jug::Reco {
     }
 
     StatusCode initialize() override {
-      if (GaudiAlgorithm::initialize().isFailure())
+      if (GaudiAlgorithm::initialize().isFailure()) {
         return StatusCode::FAILURE;
+      }
       IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
-      if(!randSvc)
+      if (randSvc == nullptr) {
         return StatusCode::FAILURE;
+      }
       return StatusCode::SUCCESS;
     }
 
     StatusCode execute() override {
       // input collection
-      const eicd::ClusterCollection* clusters = m_inputClusters.get();
+      const auto* const clusters = m_inputClusters.get();
       // Create output collections
-      auto init_trk_params = m_outputInitialTrackParameters.createAndPut();
+      auto* init_trk_params = m_outputInitialTrackParameters.createAndPut();
 
       for(const auto& c : *clusters) {
 

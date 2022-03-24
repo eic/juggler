@@ -43,7 +43,7 @@ namespace Jug::Reco {
  *  \ingroup reco
  */
 class CalorimeterHitsMerger : public GaudiAlgorithm {
-public:
+private:
   Gaudi::Property<std::string> m_geoSvcName{this, "geoServiceName", "GeoSvc"};
   Gaudi::Property<std::string> m_readout{this, "readoutClass", ""};
   // field names to generate id mask, the hits will be grouped by masking the field
@@ -55,8 +55,9 @@ public:
                                                                   this};
 
   SmartIF<IGeoSvc> m_geoSvc;
-  uint64_t id_mask, ref_mask;
+  uint64_t id_mask{0}, ref_mask{0};
 
+public:
   CalorimeterHitsMerger(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputHitCollection", m_inputHitCollection, "");
     declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -87,7 +88,7 @@ public:
         id_mask |= id_desc.field(u_fields[i])->mask();
         // use the provided id number to find ref cell, or use 0
         int ref = i < u_refs.size() ? u_refs[i] : 0;
-        ref_fields.push_back({u_fields[i], ref});
+        ref_fields.emplace_back(u_fields[i], ref);
       }
       ref_mask = id_desc.encode(ref_fields);
       // debug() << fmt::format("Referece id mask for the fields {:#064b}", ref_mask) << endmsg;

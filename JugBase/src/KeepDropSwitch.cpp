@@ -6,7 +6,8 @@
 
 int wildcmp(const char* wild, const char* string) {
   // Written by Jack Handy - <A href="mailto:jakkhandy@hotmail.com">jakkhandy@hotmail.com</A>
-  const char *cp = nullptr, *mp = nullptr;
+  const char *cp = nullptr;
+  const char *mp = nullptr;
   while ((*string) && (*wild != '*')) {
     if ((*wild != *string) && (*wild != '?')) {
       return 0;
@@ -40,17 +41,19 @@ std::vector<std::string> split(const std::string& s, char delim) {
   std::stringstream ss(s);
   std::string item;
   while (std::getline(ss, item, delim)) {
-    if (item != "") elems.push_back(item);
+    if (!item.empty()) {
+      elems.push_back(item);
+    }
   }
   return elems;
 }
 
 bool KeepDropSwitch::isOn(const std::string& astring) const {
-  typedef std::map<std::string, bool>::const_iterator MIter;
-  MIter im = m_cache.find(astring);
-  if (im != m_cache.end())
+  using MIter = std::map<std::string, bool>::const_iterator;
+  auto im = m_cache.find(astring);
+  if (im != m_cache.end()) {
     return im->second;
-  else {
+  } else {
     bool val = getFlag(astring);
     m_cache.insert(std::pair<std::string, bool>(astring, val));
     return val;
@@ -69,11 +72,11 @@ bool KeepDropSwitch::getFlag(const std::string& astring) const {
     std::string cmd = words[0];
     std::string pattern = words[1];
     Cmd theCmd = UNKNOWN;
-    if (cmd == "keep")
+    if (cmd == "keep") {
       theCmd = KEEP;
-    else if (cmd == "drop")
+    } else if (cmd == "drop") {
       theCmd = DROP;
-    else {
+    } else {
       std::ostringstream msg;
       msg << "malformed command in line: " << std::endl;
       msg << cmdline << std::endl;
@@ -81,20 +84,22 @@ bool KeepDropSwitch::getFlag(const std::string& astring) const {
       throw std::invalid_argument(msg.str());
     }
     bool match = wildcmp(pattern.c_str(), astring.c_str());
-    if (not match)
+    if (not match) {
       continue;
-    else if (theCmd == KEEP)
+    } else if (theCmd == KEEP) {
       flag = true;
-    else
+    } else {
       flag = false;
+    }
   }
   return flag;
 }
 
 KeepDropSwitch::Cmd KeepDropSwitch::extractCommand(const std::string cmdline) const {
   std::vector<std::string> words = split(cmdline, ' ');
-  for (auto& word : words)
+  for (auto& word : words) {
     std::cout << "'" << word << "' ";
+  }
   std::cout << std::endl;
   return UNKNOWN;
 }

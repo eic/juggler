@@ -70,10 +70,10 @@ namespace Jug::Digi {
     Gaudi::Property<std::string>              m_readout{this, "readoutClass", ""};
 
     // unitless counterparts of inputs
-    double           dyRangeADC, stepTDC, tRes, eRes[3] = {0., 0., 0.};
+    double           dyRangeADC{0}, stepTDC{0}, tRes{0}, eRes[3] = {0., 0., 0.};
     Rndm::Numbers    m_normDist;
     SmartIF<IGeoSvc> m_geoSvc;
-    uint64_t         id_mask, ref_mask;
+    uint64_t         id_mask{0}, ref_mask{0};
 
     DataHandle<edm4hep::SimCalorimeterHitCollection> m_inputHitCollection{
       "inputHitCollection", Gaudi::DataHandle::Reader, this};
@@ -82,8 +82,7 @@ namespace Jug::Digi {
 
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     CalorimeterHitDigi(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc)
-    {
+      : GaudiAlgorithm(name, svcLoc) {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
     }
@@ -110,7 +109,7 @@ namespace Jug::Digi {
       stepTDC    = ns / m_resolutionTDC.value();
 
       // need signal sum
-      if (u_fields.value().size()) {
+      if (!u_fields.value().empty()) {
         m_geoSvc = service(m_geoSvcName);
         // sanity checks
         if (!m_geoSvc) {
@@ -134,7 +133,7 @@ namespace Jug::Digi {
             id_mask |= id_desc.field(u_fields[i])->mask();
             // use the provided id number to find ref cell, or use 0
             int ref = i < u_refs.size() ? u_refs[i] : 0;
-            ref_fields.push_back({u_fields[i], ref});
+            ref_fields.emplace_back(u_fields[i], ref);
           }
           ref_mask = id_desc.encode(ref_fields);
           // debug() << fmt::format("Referece id mask for the fields {:#064b}", ref_mask) << endmsg;
@@ -152,7 +151,7 @@ namespace Jug::Digi {
 
     StatusCode execute() override
     {
-      if (u_fields.value().size()) {
+      if (!u_fields.value().empty()) {
         signal_sum_digi();
       } else {
         single_hits_digi();
@@ -163,9 +162,9 @@ namespace Jug::Digi {
   private:
     void single_hits_digi() {
       // input collections
-      const auto simhits = m_inputHitCollection.get();
+      const auto* const simhits = m_inputHitCollection.get();
       // Create output collections
-      auto rawhits = m_outputHitCollection.createAndPut();
+      auto* rawhits = m_outputHitCollection.createAndPut();
       for (const auto& ahit : *simhits) {
         // Note: juggler internal unit of energy is GeV
         const double eDep    = ahit.getEnergy();
@@ -180,9 +179,11 @@ namespace Jug::Digi {
         const long long adc = std::llround(ped +  m_corrMeanScale * eDep * (1. + eResRel) / dyRangeADC * m_capADC);
 
         double time = std::numeric_limits<double>::max();
-        for (const auto& c : ahit.getContributions())
-          if (c.getTime() <= time)
+        for (const auto& c : ahit.getContributions()) {
+          if (c.getTime() <= time) {
             time = c.getTime();
+          }
+        }
         const long long tdc = std::llround((time + m_normDist() * tRes) * stepTDC);
 
         eicd::RawCalorimeterHit rawhit(
@@ -195,8 +196,8 @@ namespace Jug::Digi {
     }
 
     void signal_sum_digi() {
-      const auto simhits = m_inputHitCollection.get();
-      auto rawhits = m_outputHitCollection.createAndPut();
+      const auto* const simhits = m_inputHitCollection.get();
+      auto* rawhits = m_outputHitCollection.createAndPut();
 
       // find the hits that belong to the same group (for merging)
       std::unordered_map<long long, std::vector<edm4hep::SimCalorimeterHit>> merge_map;

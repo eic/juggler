@@ -19,7 +19,7 @@ namespace Jug::Reco {
  * \ingroup reco
  */
 class ParticleCollector : public GaudiAlgorithm {
-public:
+private:
   Gaudi::Property<std::vector<std::string>> m_inputParticles{this, "inputParticles", {}, "Particles to be aggregated"};
   DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
                                                                      this};
@@ -31,10 +31,8 @@ public:
     declareProperty("outputParticles", m_outputParticles, "output particles combined into single collection");
   }
   ~ParticleCollector() {
-    for (auto col : m_particleCollections) {
-      if (col) {
-        delete col;
-      }
+    for (auto* col : m_particleCollections) {
+      delete col;
     }
   }
 
@@ -51,7 +49,7 @@ public:
   }
 
   StatusCode execute() override {
-    auto output = m_outputParticles.createAndPut();
+    auto* output = m_outputParticles.createAndPut();
     if (msgLevel(MSG::DEBUG)) {
       debug() << "execute collector" << endmsg;
     }

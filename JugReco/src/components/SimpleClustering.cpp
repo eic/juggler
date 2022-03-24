@@ -32,7 +32,7 @@ namespace Jug::Reco {
    * \ingroup reco
    */
   class SimpleClustering : public GaudiAlgorithm {
-  public:
+  private:
     using RecHits  = eicd::CalorimeterHitCollection;
     using ProtoClusters = eicd::ProtoClusterCollection;
     using Clusters = eicd::ClusterCollection;
@@ -52,6 +52,7 @@ namespace Jug::Reco {
     // Optional handle to MC hits
     std::unique_ptr<DataHandle<edm4hep::SimCalorimeterHitCollection>> m_inputMC;
 
+  public:
     SimpleClustering(const std::string& name, ISvcLocator* svcLoc) 
       : GaudiAlgorithm(name, svcLoc) {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
@@ -109,7 +110,7 @@ namespace Jug::Reco {
             ref_hit  = h;
             have_ref = true;
           }
-          the_hits.push_back({idx, h});
+          the_hits.emplace_back(idx, h);
           idx += 1;
         }
       }
@@ -124,9 +125,9 @@ namespace Jug::Reco {
 
         for (const auto& [idx, h] : the_hits) {
           if (eicd::magnitude(h.getPosition() - ref_hit.getPosition()) < max_dist) {
-            cluster_hits.push_back({idx, h});
+            cluster_hits.emplace_back(idx, h);
           } else {
-            remaining_hits.push_back({idx, h});
+            remaining_hits.emplace_back(idx, h);
           }
         }
 

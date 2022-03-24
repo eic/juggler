@@ -19,7 +19,7 @@ namespace Jug::Reco {
      * \ingroup reco
      */
     class TrackingHitsCollector2 : public GaudiAlgorithm {
-    public:
+    private:
       Gaudi::Property<std::vector<std::string>> m_inputTrackingHits{this, "inputTrackingHits", {},"Tracker hits to be aggregated"};
       DataHandle<eicd::TrackerHitCollection> m_trackingHits{"trackingHits", Gaudi::DataHandle::Writer, this};
 
@@ -32,14 +32,15 @@ namespace Jug::Reco {
         declareProperty("trackingHits", m_trackingHits, "output hits combined into single collection");
       }
       ~TrackingHitsCollector2() {
-        for (auto col : m_hitCollections) {
-          if (col) { delete col; }
+        for (auto* col : m_hitCollections) {
+          delete col;
         }
       }
 
       StatusCode initialize() override {
-        if (GaudiAlgorithm::initialize().isFailure())
+        if (GaudiAlgorithm::initialize().isFailure()) {
           return StatusCode::FAILURE;
+        }
         for (auto colname : m_inputTrackingHits) {
           debug() << "initializing collection: " << colname  << endmsg;
           m_hitCollections.push_back(new DataHandle<eicd::TrackerHitCollection>{colname, Gaudi::DataHandle::Reader, this});
@@ -49,7 +50,7 @@ namespace Jug::Reco {
 
       StatusCode execute() override
       {
-        auto outputHits = m_trackingHits.createAndPut();
+        auto* outputHits = m_trackingHits.createAndPut();
         if (msgLevel(MSG::DEBUG)) {
           debug() << "execute collector" << endmsg;
         }

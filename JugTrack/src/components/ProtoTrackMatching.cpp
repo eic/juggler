@@ -22,7 +22,7 @@ namespace Jug::Reco {
  *  \ingroup tracking
  */
 class ProtoTrackMatching : public GaudiAlgorithm {
-public:
+private:
   DataHandle<eicd::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
   DataHandle<TrackParametersContainer> m_initialTrackParameters{"initialTrackParameters", Gaudi::DataHandle::Reader, this};
   DataHandle<ProtoTrackContainer> m_inputProtoTracks{"inputProtoTracks", Gaudi::DataHandle::Reader, this};
@@ -37,8 +37,9 @@ public:
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure())
+    if (GaudiAlgorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
+    }
     return StatusCode::SUCCESS;
   }
 
@@ -46,13 +47,13 @@ public:
     // input collection
     
     // hits is unused, commented out for now to avoid compiler warning
-    //const eicd::TrackerHitCollection* hits              = m_inputTrackerHits.get();
+    //const auto* const hits              = m_inputTrackerHits.get();
     
-    const ProtoTrackContainer*       proto_tracks      = m_inputProtoTracks.get();
-    const TrackParametersContainer*  initialParameters = m_initialTrackParameters.get();
+    const auto* const proto_tracks      = m_inputProtoTracks.get();
+    const auto* const initialParameters = m_initialTrackParameters.get();
 
     // Create output collections
-    auto matched_proto_tracks = m_outputProtoTracks.createAndPut();
+    auto* matched_proto_tracks = m_outputProtoTracks.createAndPut();
 
     int n_tracks = initialParameters->size();
     int n_proto_tracks = proto_tracks->size();

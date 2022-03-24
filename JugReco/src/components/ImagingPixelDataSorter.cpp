@@ -42,7 +42,7 @@ namespace Jug::Reco {
    * \ingroup reco
    */
   class ImagingPixelDataSorter : public GaudiAlgorithm {
-  public:
+  private:
     Gaudi::Property<int>                        m_nLayers{this, "numberOfLayers", 9};
     Gaudi::Property<int>                        m_nHits{this, "numberOfHits", 50};
     DataHandle<eicd::CalorimeterHitCollection>   m_inputHitCollection{"inputHitCollection",
@@ -50,6 +50,7 @@ namespace Jug::Reco {
     DataHandle<eicd::CalorimeterHitCollection>   m_outputHitCollection{"outputHitCollection",
                                                                       Gaudi::DataHandle::Writer, this};
 
+  public:
     ImagingPixelDataSorter(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc)
     {

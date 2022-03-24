@@ -46,7 +46,7 @@ namespace Jug::Reco {
  * \ingroup reco
  */
 class ImagingTopoCluster : public GaudiAlgorithm {
-public:
+private:
   // maximum difference in layer numbers that can be considered as neighbours
   Gaudi::Property<int> m_neighbourLayersRange{this, "neighbourLayersRange", 1};
   // maximum distance of local (x, y) to be considered as neighbors at the same layer
@@ -72,9 +72,10 @@ public:
                                                                           Gaudi::DataHandle::Writer, this};
 
   // unitless counterparts of the input parameters
-  double localDistXY[2], layerDistEtaPhi[2], sectorDist;
-  double minClusterHitEdep, minClusterCenterEdep, minClusterEdep, minClusterNhits;
+  double localDistXY[2]{0,0}, layerDistEtaPhi[2]{0,0}, sectorDist{0};
+  double minClusterHitEdep{0}, minClusterCenterEdep{0}, minClusterEdep{0}, minClusterNhits{0};
 
+public:
   ImagingTopoCluster(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputHitCollection", m_inputHitCollection, "");
     declareProperty("outputProtoClusterCollection", m_outputProtoClusterCollection, "");
@@ -190,7 +191,7 @@ private:
     // layer check
     int ldiff = std::abs(h1.getLayer() - h2.getLayer());
     // same layer, check local positions
-    if (!ldiff) {
+    if (ldiff == 0) {
       return (std::abs(h1.getLocal().x - h2.getLocal().x) <= localDistXY[0]) &&
              (std::abs(h1.getLocal().y - h2.getLocal().y) <= localDistXY[1]);
     } else if (ldiff <= m_neighbourLayersRange) {
@@ -212,7 +213,7 @@ private:
       return;
     }
 
-    group.push_back({idx, hits[idx]});
+    group.emplace_back(idx, hits[idx]);
     visits[idx] = true;
     for (size_t i = 0; i < hits.size(); ++i) {
       // visited, or not a neighbor

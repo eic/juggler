@@ -249,7 +249,7 @@ const IParticleSvc::ParticleMap kParticleMap = {
 ParticleSvc::ParticleSvc(const std::string& name, ISvcLocator* svc)
     : base_class(name, svc), m_particleMap{kParticleMap} {}
 
-ParticleSvc::~ParticleSvc() {}
+ParticleSvc::~ParticleSvc() = default;
 
 StatusCode ParticleSvc::initialize()
 {

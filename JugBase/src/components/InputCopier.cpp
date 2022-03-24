@@ -15,8 +15,7 @@
 #include "edm4hep/SimTrackerHitCollection.h"
 
 
-namespace Jug {
-  namespace Base {
+namespace Jug::Base {
 
     /** Need to fix a bug.
      *
@@ -47,7 +46,7 @@ namespace Jug {
         // input collection
         const T_IN* simhits = m_inputHitCollection.get();
         // output collection
-        auto out_parts = m_outputHitCollection.createAndPut();
+        auto* out_parts = m_outputHitCollection.createAndPut();
         for (const auto& ahit : *simhits) {
           out_parts->push_back(ahit.clone());
         }
@@ -70,6 +69,5 @@ namespace Jug {
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     DECLARE_COMPONENT(MCCopier)
 
-  } // namespace Examples
-} // namespace Gaudi
+} // namespace Jug::Base
 

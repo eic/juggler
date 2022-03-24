@@ -16,7 +16,7 @@ namespace Jug::Reco {
      * \ingroup reco
      */
     class TrackingHitsCollector : public GaudiAlgorithm {
-    public:
+    private:
       DataHandle<eicd::TrackerHitCollection> m_trackerBarrelHits{"trackerBarrelHits", Gaudi::DataHandle::Reader, this};
       DataHandle<eicd::TrackerHitCollection> m_trackerEndcapHits{"trackerEndcapHits", Gaudi::DataHandle::Reader, this};
       DataHandle<eicd::TrackerHitCollection> m_vertexBarrelHits {"vertexBarrelHits" , Gaudi::DataHandle::Reader, this};
@@ -49,10 +49,10 @@ namespace Jug::Reco {
         const eicd::TrackerHitCollection* vtxBarrelHits = m_vertexBarrelHits .get();
         const eicd::TrackerHitCollection* vtxEndcapHits = m_vertexEndcapHits .get();
         const eicd::TrackerHitCollection* gemEndcapHits = m_gemEndcapHits .get();
-        auto outputHits = m_outputHitCollection.createAndPut();
+        auto* outputHits = m_outputHitCollection.createAndPut();
 
         for (const auto* hits : {trkBarrelHits, trkEndcapHits, vtxBarrelHits, vtxEndcapHits, gemEndcapHits}) {
-          if (hits) {
+          if (hits != nullptr) {
             for (const auto& ahit : *hits) {
               auto new_hit = ahit.clone();
               outputHits->push_back(ahit.clone());

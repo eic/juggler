@@ -32,8 +32,8 @@ namespace fkc {
     virtual void            FormClusters(Eigen::MatrixXd& clusters, const Eigen::MatrixXd& data, double q);
 
   protected:
-    int             n_iters;
-    double          variance;
+    int             n_iters{0};
+    double          variance{0};
     Eigen::MatrixXd dists, mems;
   };
 

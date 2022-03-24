@@ -4,7 +4,7 @@
 #include "GaudiKernel/MsgStream.h"
 
 namespace Acts {
-std::unique_ptr<const Logger> getDefaultLogger(const std::string& name, const Logging::Level& lvl, std::ostream*) {
+std::unique_ptr<const Logger> getDefaultLogger(const std::string& name, const Logging::Level& lvl, std::ostream* /* unused */) {
   using namespace Logging;
   //ServiceHandle<IMessageSvc>* msgSvc = new ServiceHandle<IMessageSvc>("MessageSvc", name);
   ServiceHandle<IMessageSvc> msgSvc("MessageSvc", name);

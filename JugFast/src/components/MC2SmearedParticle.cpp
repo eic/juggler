@@ -15,20 +15,22 @@
 namespace Jug::Fast {
 
 class MC2SmearedParticle : public GaudiAlgorithm {
-public:
+private:
   DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
   DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"SmearedReconstructedParticles",
                                                                       Gaudi::DataHandle::Writer, this};
   Rndm::Numbers m_gaussDist;
   Gaudi::Property<double> m_smearing{this, "smearing", 0.01 /* 1 percent*/};
 
+public:
   MC2SmearedParticle(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputParticles", m_inputMCParticles, "MCParticles");
     declareProperty("outputParticles", m_outputParticles, "SmearedReconstructedParticles");
   }
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure())
+    if (GaudiAlgorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
+    }
 
     IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
     StatusCode sc        = m_gaussDist.initialize(randSvc, Rndm::Gauss(1.0, m_smearing.value()));
@@ -39,7 +41,7 @@ public:
   }
   StatusCode execute() override {
     // input collection
-    auto parts = m_inputMCParticles.get();
+    const auto* const parts = m_inputMCParticles.get();
     // output collection
     auto& out_parts = *(m_outputParticles.createAndPut());
     for (const auto& p : *parts) {

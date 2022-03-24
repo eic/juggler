@@ -23,6 +23,7 @@
 namespace Jug::Reco {
 
 class FarForwardParticles : public GaudiAlgorithm {
+private:
   DataHandle<eicd::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHits", Gaudi::DataHandle::Reader, this};
   DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
                                                                      this};
@@ -42,7 +43,7 @@ class FarForwardParticles : public GaudiAlgorithm {
   Gaudi::Property<std::string> m_sectorField{this, "sectorField", ""};
   SmartIF<IGeoSvc> m_geoSvc;
   dd4hep::BitFieldCoder* id_dec = nullptr;
-  size_t sector_idx, layer_idx;
+  size_t sector_idx{0}, layer_idx{0};
 
   Gaudi::Property<std::string> m_localDetElement{this, "localDetElement", ""};
   Gaudi::Property<std::vector<std::string>> u_localDetFields{this, "localDetFields", {}};
@@ -52,8 +53,8 @@ class FarForwardParticles : public GaudiAlgorithm {
   const double aXRP[2][2] = {{2.102403743, 29.11067626}, {0.186640381, 0.192604619}};
   const double aYRP[2][2] = {{0.0000159900, 3.94082098}, {0.0000079946, -0.1402995}};
 
-  double aXRPinv[2][2] = {0.0, 0.0};
-  double aYRPinv[2][2] = {0.0, 0.0};
+  double aXRPinv[2][2] = {{0.0, 0.0}, {0.0, 0.0}};
+  double aYRPinv[2][2] = {{0.0, 0.0}, {0.0, 0.0}};
 
 public:
   FarForwardParticles(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
@@ -87,11 +88,11 @@ public:
     auto id_spec = m_geoSvc->detector()->readout(m_readout).idSpec();
     try {
       id_dec = id_spec.decoder();
-      if (m_sectorField.value().size()) {
+      if (!m_sectorField.value().empty()) {
         sector_idx = id_dec->index(m_sectorField);
         info() << "Find sector field " << m_sectorField.value() << ", index = " << sector_idx << endmsg;
       }
-      if (m_layerField.value().size()) {
+      if (!m_layerField.value().empty()) {
         layer_idx = id_dec->index(m_layerField);
         info() << "Find layer field " << m_layerField.value() << ", index = " << sector_idx << endmsg;
       }
@@ -101,7 +102,7 @@ public:
     }
 
     // local detector name has higher priority
-    if (m_localDetElement.value().size()) {
+    if (!m_localDetElement.value().empty()) {
       try {
         local = m_geoSvc->detector()->detector(m_localDetElement.value());
         info() << "Local coordinate system from DetElement " << m_localDetElement.value() << endmsg;
@@ -113,7 +114,7 @@ public:
     } else {
       std::vector<std::pair<std::string, int>> fields;
       for (auto& f : u_localDetFields.value()) {
-        fields.push_back({f, 0});
+        fields.emplace_back(f, 0);
       }
       local_mask = id_spec.get_mask(fields);
       // use all fields if nothing provided
@@ -223,12 +224,10 @@ public:
         return StatusCode::SUCCESS;
       }
 
-      double Xrp[2], Xip[2] = {0.0, 0.0};
-      Xrp[0] = XL[1];
-      Xrp[1] = (1000 * (XL[1] - XL[0]) / (base)) - local_x_slope_offset; //- _SX0RP_;
-      double Yrp[2], Yip[2] = {0.0, 0.0};
-      Yrp[0] = YL[1];
-      Yrp[1] = (1000 * (YL[1] - YL[0]) / (base)) - local_y_slope_offset; //- _SY0RP_;
+      double Xip[2] = {0.0, 0.0};
+      double Xrp[2] = {XL[1], (1000 * (XL[1] - XL[0]) / (base)) - local_x_slope_offset}; //- _SX0RP_;
+      double Yip[2] = {0.0, 0.0};
+      double Yrp[2] = {YL[1], (1000 * (YL[1] - YL[0]) / (base)) - local_y_slope_offset}; //- _SY0RP_;
 
       // use the hit information and calculated slope at the RP + the transfer matrix inverse to calculate the
       // Polar Angle and deltaP at the IP
@@ -241,7 +240,8 @@ public:
       }
 
       // convert polar angles to radians
-      double rsx = Xip[1] / 1000., rsy = Yip[1] / 1000.;
+      double rsx = Xip[1] / 1000.;
+      double rsy = Yip[1] / 1000.;
 
       // calculate momentum magnitude from measured deltaP – using thin lens optics.
       double p    = nomMomentum * (1 + 0.01 * Xip[0]);

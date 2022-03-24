@@ -9,7 +9,8 @@
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(PodioInput)
 
-PodioInput::PodioInput(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {}
+PodioInput::PodioInput(const std::string& name, ISvcLocator* svcLoc)
+: GaudiAlgorithm(name, svcLoc),m_podioDataSvc(nullptr) {}
 
 StatusCode PodioInput::initialize() {
   if (GaudiAlgorithm::initialize().isFailure()) {
@@ -18,11 +19,11 @@ StatusCode PodioInput::initialize() {
 
   // check whether we have the PodioEvtSvc active
   m_podioDataSvc = dynamic_cast<PodioDataSvc*>(evtSvc().get());
-  if (!m_podioDataSvc) {
+  if (m_podioDataSvc == nullptr) {
     return StatusCode::FAILURE;
   }
 
-  auto idTable = m_podioDataSvc->getCollectionIDs();
+  auto* idTable = m_podioDataSvc->getCollectionIDs();
   for (auto& name : m_collectionNames) {
     debug() << "Finding collection " << name << " in collection registry." << endmsg;
     if (!idTable->present(name)) {
@@ -50,6 +51,8 @@ StatusCode PodioInput::execute() {
 }
 
 StatusCode PodioInput::finalize() {
-  if (GaudiAlgorithm::finalize().isFailure()) return StatusCode::FAILURE;
+  if (GaudiAlgorithm::finalize().isFailure()) {
+    return StatusCode::FAILURE;
+  }
   return StatusCode::SUCCESS;
 }

@@ -23,7 +23,7 @@ enum DetectorTags { kTagB0 = 1, kTagRP = 2, kTagOMD = 3, kTagZDC = 4 };
 namespace Jug::Fast {
 
 class SmearedFarForwardParticles : public GaudiAlgorithm {
-public:
+private:
   DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader, this};
   DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"SmearedFarForwardParticles",
                                                                       Gaudi::DataHandle::Writer, this};
@@ -63,7 +63,6 @@ public:
 
   Rndm::Numbers m_gaussDist;
 
-private:
   using RecPart = eicd::MutableReconstructedParticle;
   using Assoc   = eicd::MutableMCRecoParticleAssociation;
   using RecData = std::pair<RecPart, Assoc>;
@@ -75,9 +74,9 @@ public:
     declareProperty("outputAssociations", m_outputAssocCollection, "MCRecoParticleAssociation");
   }
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure())
+    if (GaudiAlgorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
-
+    }
     IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
     // use 0 for mean and 1 for standard deviation. Can rescale appropriately for the
     // different subsystems
@@ -208,7 +207,7 @@ private:
       assoc.setRec(rec_part);
 
       // rec_part.mcID();
-      rc.push_back({rec_part, assoc});
+      rc.emplace_back(rec_part, assoc);
 
       if (msgLevel(MSG::DEBUG)) {
         const auto& part_p    = part.getMomentum();
@@ -252,7 +251,7 @@ private:
         rc_part.setEnergy(0);
       }
       rc_part.setType(kTagB0);
-      rc.push_back({rc_part, assoc});
+      rc.emplace_back(rc_part, assoc);
       if (msgLevel(MSG::DEBUG)) {
         const auto& part_p      = part.getMomentum();
         const auto part_p_pt    = eicd::magnitudeTransverse(part_p);
@@ -291,7 +290,7 @@ private:
       }
       auto [rc_part, assoc] = smearMomentum(part);
       rc_part.setType(kTagRP);
-      rc.push_back({rc_part, assoc});
+      rc.emplace_back(rc_part, assoc);
       if (msgLevel(MSG::DEBUG)) {
         const auto& part_p      = part.getMomentum();
         const auto part_p_pt    = eicd::magnitudeTransverse(part_p);
@@ -327,7 +326,7 @@ private:
       }
       auto [rc_part, assoc] = smearMomentum(part);
       rc_part.setType(kTagOMD);
-      rc.push_back({rc_part, assoc});
+      rc.emplace_back(rc_part, assoc);
       if (msgLevel(MSG::DEBUG)) {
         const auto& part_p      = part.getMomentum();
         const auto part_p_pt    = eicd::magnitudeTransverse(part_p);
@@ -385,7 +384,6 @@ private:
     return {rec_part, assoc};
   }
 
-private:
   // Rotate 25mrad about the y-axis
   edm4hep::Vector3f rotateLabToIonDirection(const edm4hep::Vector3f& vec) const {
     const auto sth = sin(-m_crossingAngle);

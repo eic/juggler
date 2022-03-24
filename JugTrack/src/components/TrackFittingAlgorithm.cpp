@@ -58,8 +58,9 @@ namespace Jug::Reco {
 
   StatusCode TrackFittingAlgorithm::initialize()
   {
-    if (GaudiAlgorithm::initialize().isFailure())
+    if (GaudiAlgorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
+    }
     m_geoSvc = service("GeoSvc");
     if (!m_geoSvc) {
       error() << "Unable to locate Geometry Service. "
@@ -80,10 +81,10 @@ namespace Jug::Reco {
   StatusCode TrackFittingAlgorithm::execute()
   {
     // Read input data
-    const IndexSourceLinkContainer* sourceLinks       = m_inputSourceLinks.get();
-    const TrackParametersContainer* initialParameters = m_initialTrackParameters.get();
-    const MeasurementContainer*     measurements      = m_inputMeasurements.get();
-    const ProtoTrackContainer*      protoTracks       = m_inputProtoTracks.get();
+    const auto* const sourceLinks       = m_inputSourceLinks.get();
+    const auto* const initialParameters = m_initialTrackParameters.get();
+    const auto* const measurements      = m_inputMeasurements.get();
+    const auto* const protoTracks       = m_inputProtoTracks.get();
     ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("TrackFittingAlgorithm Logger", Acts::Logging::INFO));
 
     // Consistency cross checks
@@ -93,7 +94,7 @@ namespace Jug::Reco {
     }
 
     // TrajectoryContainer trajectories;
-    auto trajectories = m_outputTrajectories.createAndPut();
+    auto* trajectories = m_outputTrajectories.createAndPut();
     trajectories->reserve(initialParameters->size());
 
     // Construct a perigee surface as the target surface
@@ -147,8 +148,8 @@ namespace Jug::Reco {
       for (auto hitIndex : protoTrack) {
         if (auto it = sourceLinks->nth(hitIndex); it != sourceLinks->end()) {
           const IndexSourceLink& sourceLink = *it;
-          auto geoId = sourceLink.geometryId();
           trackSourceLinks.push_back(std::cref(sourceLink));
+          //auto geoId = sourceLink.geometryId();
           //surfSequence.push_back(m_cfg.trackingGeometry->findSurface(geoId));
         } else {
           ACTS_FATAL("Proto track " << itrack << " contains invalid hit index"

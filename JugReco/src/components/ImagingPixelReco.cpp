@@ -36,7 +36,7 @@ namespace Jug::Reco {
  * \ingroup reco
  */
 class ImagingPixelReco : public GaudiAlgorithm {
-public:
+private:
   // geometry service
   Gaudi::Property<std::string> m_geoSvcName{this, "geoServiceName", "GeoSvc"};
   Gaudi::Property<std::string> m_readout{this, "readoutClass", ""};
@@ -54,7 +54,7 @@ public:
   Gaudi::Property<double> m_sampFrac{this, "samplingFraction", 1.0};
 
   // unitless counterparts for the input parameters
-  double dyRangeADC;
+  double dyRangeADC{0};
 
   // hits containers
   DataHandle<eicd::RawCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
@@ -66,8 +66,9 @@ public:
   SmartIF<IGeoSvc> m_geoSvc;
   // visit readout fields
   dd4hep::BitFieldCoder* id_dec;
-  size_t sector_idx, layer_idx;
+  size_t sector_idx{0}, layer_idx{0};
 
+public:
   ImagingPixelReco(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputHitCollection", m_inputHitCollection, "");
     declareProperty("outputHitCollection", m_outputHitCollection, "");

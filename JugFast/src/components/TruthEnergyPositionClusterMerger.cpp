@@ -31,7 +31,7 @@ namespace Jug::Fast {
  * \ingroup reco
  */
 class TruthEnergyPositionClusterMerger : public GaudiAlgorithm {
-public:
+private:
   // Input
   DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
   DataHandle<eicd::ClusterCollection> m_energyClusters{"EnergyClusters", Gaudi::DataHandle::Reader, this};

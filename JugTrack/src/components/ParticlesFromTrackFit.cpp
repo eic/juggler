@@ -39,7 +39,7 @@ namespace Jug::Reco {
    * \ingroup tracking
    */
    class ParticlesFromTrackFit : public GaudiAlgorithm {
-   public:
+   private:
     //DataHandle<eicd::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<TrajectoriesContainer>     m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
     DataHandle<eicd::BasicParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer, this};
@@ -55,25 +55,25 @@ namespace Jug::Reco {
         }
 
     StatusCode initialize() override {
-      if (GaudiAlgorithm::initialize().isFailure())
+      if (GaudiAlgorithm::initialize().isFailure()) {
         return StatusCode::FAILURE;
+      }
       return StatusCode::SUCCESS;
     }
 
     StatusCode execute() override {
       // input collection
-      const TrajectoriesContainer* trajectories = m_inputTrajectories.get();
+      const auto* const trajectories = m_inputTrajectories.get();
       // create output collections
-      auto rec_parts = m_outputParticles.createAndPut();
-      auto track_pars = m_outputTrackParameters.createAndPut();
+      auto* rec_parts = m_outputParticles.createAndPut();
+      auto* track_pars = m_outputTrackParameters.createAndPut();
 
       if (msgLevel(MSG::DEBUG)) {
         debug() << std::size(*trajectories) << " trajectories " << endmsg;
       }
 
       // Loop over the trajectories
-        for (size_t itraj = 0; itraj < trajectories->size(); ++itraj) {
-          const auto& traj = (*trajectories)[itraj];
+        for (const auto& traj : *trajectories) {
 
           // Get the entry index for the single trajectory
           // The trajectory entry indices and the multiTrajectory
@@ -86,7 +86,7 @@ namespace Jug::Reco {
             continue;
           }
 
-          auto& trackTip = trackTips.front();
+          const auto& trackTip = trackTips.front();
 
           // Collect the trajectory summary info
           auto trajState       = Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
@@ -150,8 +150,9 @@ namespace Jug::Reco {
           if (msgLevel(MSG::DEBUG)) {
             debug() << "# fitted parameters : " << tsize << endmsg;
           }
-          if (tsize == 0)
+          if (tsize == 0) {
             continue;
+          }
 
           mj.visitBackwards(tsize - 1, [&](auto&& trackstate) {
             // debug() << trackstate.hasPredicted() << endmsg;

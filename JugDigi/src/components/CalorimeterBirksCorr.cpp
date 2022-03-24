@@ -44,7 +44,7 @@ namespace Jug::Digi {
 
     SmartIF<IParticleSvc> m_pidSvc;
     // unitless conterpart of arguments
-    double birksConstant;
+    double birksConstant{0};
 
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     CalorimeterBirksCorr(const std::string& name, ISvcLocator* svcLoc) 

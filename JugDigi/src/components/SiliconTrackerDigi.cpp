@@ -23,7 +23,7 @@ namespace Jug::Digi {
  * \ingroup digi
  */
 class SiliconTrackerDigi : public GaudiAlgorithm {
-public:
+private:
   Gaudi::Property<double> m_timeResolution{this, "timeResolution", 10}; // todo : add units
   Gaudi::Property<double> m_threshold{this, "threshold", 0. * Gaudi::Units::keV};
   Rndm::Numbers m_gaussDist;
@@ -39,8 +39,9 @@ public:
     declareProperty("outputHitCollection", m_outputHitCollection, "");
   }
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure())
+    if (GaudiAlgorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
+    }
     IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
     StatusCode sc        = m_gaussDist.initialize(randSvc, Rndm::Gauss(0.0, m_timeResolution.value()));
     if (!sc.isSuccess()) {
@@ -50,9 +51,9 @@ public:
   }
   StatusCode execute() override {
     // input collection
-    auto simhits = m_inputHitCollection.get();
+    const auto* const simhits = m_inputHitCollection.get();
     // Create output collections
-    auto rawhits = m_outputHitCollection.createAndPut();
+    auto* rawhits = m_outputHitCollection.createAndPut();
     // eicd::RawTrackerHitCollection* rawHitCollection = new eicd::RawTrackerHitCollection();
     std::map<long long, int> cell_hit_map;
     for (const auto& ahit : *simhits) {

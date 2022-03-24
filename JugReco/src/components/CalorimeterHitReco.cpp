@@ -36,7 +36,7 @@ namespace Jug::Reco {
  * \ingroup reco
  */
 class CalorimeterHitReco : public GaudiAlgorithm {
-public:
+private:
   // length unit from dd4hep, should be fixed
   Gaudi::Property<double> m_lUnit{this, "lengthUnit", dd4hep::mm};
 
@@ -55,9 +55,9 @@ public:
   Gaudi::Property<double> m_sampFrac{this, "samplingFraction", 1.0};
 
   // unitless counterparts of the input parameters
-  double dyRangeADC;
-  double thresholdADC;
-  double stepTDC;
+  double dyRangeADC{0};
+  double thresholdADC{0};
+  double stepTDC{0};
 
   DataHandle<eicd::RawCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                     this};
@@ -71,7 +71,7 @@ public:
   Gaudi::Property<std::string> m_sectorField{this, "sectorField", ""};
   SmartIF<IGeoSvc> m_geoSvc;
   dd4hep::BitFieldCoder* id_dec = nullptr;
-  size_t sector_idx, layer_idx;
+  size_t sector_idx{0}, layer_idx{0};
 
   // name of detelment or fields to find the local detector (for global->local transform)
   // if nothing is provided, the lowest level DetElement (from cellID) will be used
@@ -80,6 +80,7 @@ public:
   dd4hep::DetElement local;
   size_t local_mask = ~0;
 
+public:
   CalorimeterHitReco(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputHitCollection", m_inputHitCollection, "");
     declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -128,7 +129,7 @@ public:
     }
 
     // local detector name has higher priority
-    if (m_localDetElement.value().size()) {
+    if (!m_localDetElement.value().empty()) {
       try {
         local = m_geoSvc->detector()->detector(m_localDetElement.value());
         info() << "Local coordinate system from DetElement " << m_localDetElement.value() << endmsg;
@@ -140,7 +141,7 @@ public:
     } else {
       std::vector<std::pair<std::string, int>> fields;
       for (auto& f : u_localDetFields.value()) {
-        fields.push_back({f, 0});
+        fields.emplace_back(f, 0);
       }
       local_mask = id_spec.get_mask(fields);
       // use all fields if nothing provided
@@ -173,8 +174,8 @@ public:
           (rh.getAmplitude() - m_pedMeanADC) / static_cast<float>(m_capADC.value()) * dyRangeADC / m_sampFrac; 
       const float time  = rh.getTimeStamp() / stepTDC;
       const auto cellID = rh.getCellID();
-      const int lid = id_dec && !m_layerField.value().empty() ? static_cast<int>(id_dec->get(cellID, layer_idx)) : -1;
-      const int sid = id_dec && m_sectorField.value().size() ? static_cast<int>(id_dec->get(cellID, sector_idx)) : -1;
+      const int lid = id_dec != nullptr && !m_layerField.value().empty() ? static_cast<int>(id_dec->get(cellID, layer_idx)) : -1;
+      const int sid = id_dec != nullptr && !m_sectorField.value().empty() ? static_cast<int>(id_dec->get(cellID, sector_idx)) : -1;
       // global positions
       const auto gpos = converter->position(cellID);
       // local positions

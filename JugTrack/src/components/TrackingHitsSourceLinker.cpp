@@ -36,7 +36,7 @@ namespace Jug::Reco {
    * \ingroup tracking
    */
   class TrackingHitsSourceLinker : public GaudiAlgorithm {
-  public:
+  private:
     using TrkHits = eicd::TrackerHitCollection;
 
     Gaudi::Property<std::vector<std::string>> m_inputs{this, "inputTrackerCollections", {}, "List of intput tracker hit collections"};

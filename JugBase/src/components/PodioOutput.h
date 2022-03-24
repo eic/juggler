@@ -8,6 +8,7 @@
 #include "TTree.h"
 
 #include <vector>
+#include <gsl/gsl>
 
 // forward declarations
 class TFile;
@@ -46,12 +47,12 @@ private:
   /// The actual ROOT file
   std::unique_ptr<TFile> m_file;
   /// The tree to be filled with collections
-  TTree* m_datatree;
+  gsl::owner<TTree*> m_datatree;
   /// The tree to be filled with meta data
-  TTree* m_metadatatree;
-  TTree* m_runMDtree;
-  TTree* m_evtMDtree;
-  TTree* m_colMDtree;
+  gsl::owner<TTree*> m_metadatatree;
+  gsl::owner<TTree*> m_runMDtree;
+  gsl::owner<TTree*> m_evtMDtree;
+  gsl::owner<TTree*> m_colMDtree;
   /// The stored collections
   std::vector<podio::CollectionBase*> m_storedCollections;
 };

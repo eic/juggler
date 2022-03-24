@@ -27,7 +27,7 @@
 namespace Jug::Fast {
 
 class MatchClusters : public GaudiAlgorithm {
-public:
+private:
   // input data
   DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
   DataHandle<eicd::ReconstructedParticleCollection> m_inputParticles{"ReconstructedChargedParticles",
@@ -39,6 +39,7 @@ public:
   DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"ReconstructedParticles",
                                                                      Gaudi::DataHandle::Writer, this};
 
+public:
   MatchClusters(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputMCParticles, "MCParticles");

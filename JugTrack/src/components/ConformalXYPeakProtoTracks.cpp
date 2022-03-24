@@ -26,7 +26,7 @@ namespace Jug::Reco {
  *  \ingroup tracking
  */
 class ConformalXYPeakProtoTracks : public GaudiAlgorithm {
-public:
+private:
   DataHandle<eicd::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
   DataHandle<Jug::ProtoTrackContainer> m_outputProtoTracks{"outputProtoTracks", Gaudi::DataHandle::Writer, this};
   DataHandle<int> m_nProtoTracks{"nProtoTracks", Gaudi::DataHandle::Writer, this};
@@ -43,8 +43,9 @@ public:
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure())
+    if (GaudiAlgorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
+    }
     return StatusCode::SUCCESS;
   }
 
@@ -52,7 +53,7 @@ public:
     // input collection
     const eicd::TrackerHitCollection* hits = m_inputTrackerHits.get();
     // Create output collections
-    auto proto_tracks = m_outputProtoTracks.createAndPut();
+    auto* proto_tracks = m_outputProtoTracks.createAndPut();
     int n_proto_tracks = 0;
 
     std::vector<ConformalHit> conformal_hits;
@@ -67,7 +68,7 @@ public:
       double xc = ahit.getPosition().x - ref_hit.x();
       double yc = ahit.getPosition().y - ref_hit.y();
       double r = std::hypot(xc, yc);
-      conformal_hits.push_back({2.0*xc/r,2.0*yc/r});
+      conformal_hits.emplace_back(2.0*xc/r,2.0*yc/r);
       h_phi.Fill(conformal_hits.back().phi());
     }
     // 3. Get location of maxima

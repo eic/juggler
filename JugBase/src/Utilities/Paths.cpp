@@ -106,7 +106,7 @@ std::pair<size_t, size_t> Jug::determineEventFilesRange(
 
   // should only occur if no files matched and the initial values persisted.
   if (eventMax < eventMin) {
-    return std::make_pair(0u, 0u);
+    return std::make_pair(0U, 0U);
   }
   return std::make_pair(eventMin, eventMax + 1);
 }

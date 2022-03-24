@@ -12,4 +12,4 @@ EICDataSvc::EICDataSvc(const std::string& name, ISvcLocator* svc) : PodioDataSvc
 }
 
 /// Standard Destructor
-EICDataSvc::~EICDataSvc() {}
+EICDataSvc::~EICDataSvc() = default;

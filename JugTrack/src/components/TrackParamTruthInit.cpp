@@ -41,7 +41,7 @@ namespace Jug::Reco {
    *  \ingroup tracking
    */
   class TrackParamTruthInit : public GaudiAlgorithm {
-  public:
+  private:
     DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader,
                                                                     this};
     DataHandle<TrackParametersContainer>         m_outputInitialTrackParameters{"outputInitialTrackParameters",
@@ -69,7 +69,7 @@ namespace Jug::Reco {
         return StatusCode::FAILURE;
       }
       IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
-      if (!randSvc) {
+      if (randSvc == nullptr) {
         return StatusCode::FAILURE;
       }
       m_pidSvc = service("ParticleSvc");
@@ -84,9 +84,9 @@ namespace Jug::Reco {
 
     StatusCode execute() override {
       // input collection
-      const edm4hep::MCParticleCollection* mcparts = m_inputMCParticles.get();
+      const auto* const mcparts = m_inputMCParticles.get();
       // Create output collections
-      auto init_trk_params = m_outputInitialTrackParameters.createAndPut();
+      auto* init_trk_params = m_outputInitialTrackParameters.createAndPut();
 
       for(const auto& part : *mcparts) {
 

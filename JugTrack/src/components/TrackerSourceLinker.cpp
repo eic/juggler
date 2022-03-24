@@ -40,7 +40,7 @@ namespace Jug::Reco {
  * \ingroup tracking
  */
 class TrackerSourceLinker : public GaudiAlgorithm {
-public:
+private:
   DataHandle<eicd::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
   DataHandle<std::list<IndexSourceLink>> m_sourceLinkStorage{"sourceLinkStorage", Gaudi::DataHandle::Writer, this};
   DataHandle<IndexSourceLinkContainer> m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};
@@ -57,8 +57,9 @@ public:
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure())
+    if (GaudiAlgorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
+    }
     m_geoSvc = service("GeoSvc");
     if (!m_geoSvc) {
       error() << "Unable to locate Geometry Service. "
@@ -76,9 +77,9 @@ public:
     // input collection
     const eicd::TrackerHitCollection* hits = m_inputHitCollection.get();
     // Create output collections
-    auto linkStorage  = m_sourceLinkStorage.createAndPut();
-    auto sourceLinks  = m_outputSourceLinks.createAndPut();
-    auto measurements = m_outputMeasurements.createAndPut();
+    auto* linkStorage  = m_sourceLinkStorage.createAndPut();
+    auto* sourceLinks  = m_outputSourceLinks.createAndPut();
+    auto* measurements = m_outputMeasurements.createAndPut();
     sourceLinks->reserve(hits->size());
     measurements->reserve(hits->size());
 
@@ -95,8 +96,8 @@ public:
         debug() << "cov matrix:\n" << cov << endmsg;
       }
 
-      auto vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.getCellID());
-      auto vol_id  = vol_ctx->identifier;
+      const auto* vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.getCellID());
+      auto vol_id = vol_ctx->identifier;
 
       const auto is = m_geoSvc->surfaceMap().find(vol_id);
       if (is == m_geoSvc->surfaceMap().end()) {

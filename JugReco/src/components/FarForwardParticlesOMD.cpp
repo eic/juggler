@@ -18,6 +18,7 @@
 namespace Jug::Reco {
 
 class FarForwardParticlesOMD : public GaudiAlgorithm {
+private:
   DataHandle<eicd::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHits", Gaudi::DataHandle::Reader, this};
   DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
                                                                      this};
@@ -34,8 +35,8 @@ class FarForwardParticlesOMD : public GaudiAlgorithm {
   const double aXOMD[2][2] = {{1.6229248, 12.9519653}, {-2.86056525, 0.1830292}};
   const double aYOMD[2][2] = {{0.0000185, -28.599739}, {0.00000925, -2.8795791}};
 
-  double aXOMDinv[2][2] = {0.0, 0.0};
-  double aYOMDinv[2][2] = {0.0, 0.0};
+  double aXOMDinv[2][2] = {{0.0, 0.0}, {0.0, 0.0}};
+  double aYOMDinv[2][2] = {{0.0, 0.0}, {0.0, 0.0}};
 
 public:
   FarForwardParticlesOMD(const std::string& name, ISvcLocator* svcLoc)
@@ -45,9 +46,9 @@ public:
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure())
+    if (GaudiAlgorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
-
+    }
     double det = aXOMD[0][0] * aXOMD[1][1] - aXOMD[0][1] * aXOMD[1][0];
 
     if (det == 0) {
@@ -148,7 +149,8 @@ public:
       }
 
       // convert polar angles to radians
-      double rsx = Xip[1] / 1000., rsy = Yip[1] / 1000.;
+      double rsx = Xip[1] / 1000.;
+      double rsy = Yip[1] / 1000.;
 
       // calculate momentum magnitude from measured deltaP – using thin lens optics.
       double p    = nomMomentum * (1 + 0.01 * Xip[0]);

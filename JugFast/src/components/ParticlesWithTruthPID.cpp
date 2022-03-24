@@ -21,7 +21,7 @@
 namespace Jug::Fast {
 
 class ParticlesWithTruthPID : public GaudiAlgorithm {
-public:
+private:
   DataHandle<edm4hep::MCParticleCollection> m_inputTruthCollection{"inputMCParticles", Gaudi::DataHandle::Reader, this};
   DataHandle<eicd::TrackParametersCollection> m_inputTrackCollection{"inputTrackParameters", Gaudi::DataHandle::Reader,
                                                                      this};
@@ -37,6 +37,7 @@ public:
   // Matchin eta tolerance of 0.1
   Gaudi::Property<double> m_etaTolerance{this, "etaTolerance", {0.2}};
 
+public:
   ParticlesWithTruthPID(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputTruthCollection, "MCParticles");
     declareProperty("inputTrackParameters", m_inputTrackCollection, "outputTrackParameters");
@@ -44,9 +45,9 @@ public:
     declareProperty("outputAssociations", m_outputAssocCollection, "MCRecoParticleAssociation");
   }
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure())
+    if (GaudiAlgorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
-
+    }
     return StatusCode::SUCCESS;
   }
   StatusCode execute() override {

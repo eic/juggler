@@ -189,7 +189,7 @@ private:
 
     bool qe_pass(double ev, double rand) const
     {
-        auto &qeff = u_quantumEfficiency.value();
+        const auto &qeff = u_quantumEfficiency.value();
         auto it = interval_search(qeff.begin(), qeff.end(), ev,
                     [] (const std::pair<double, double> &vals, double val) {
                         return vals.first - val;

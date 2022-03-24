@@ -14,7 +14,7 @@ DECLARE_COMPONENT(TestACTSLogger)
 TestACTSLogger::TestACTSLogger(const std::string& aName, ISvcLocator* aSvcLoc)
     : GaudiAlgorithm(aName, aSvcLoc) {}
 
-TestACTSLogger::~TestACTSLogger() {}
+TestACTSLogger::~TestACTSLogger() = default;
 
 StatusCode TestACTSLogger::initialize() {
   if (GaudiAlgorithm::initialize().isFailure()) {
