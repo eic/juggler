@@ -83,8 +83,8 @@ public:
 
     // concatenate
     if (m_rule.value() == supported_rules[0]) {
-      for (int i = 0; i < (int)inputs.size(); ++i) {
-        const auto* const coll = inputs[i];
+      for (int i = 0; i < (int)inputs.size(); ++i) {                                   
+        auto coll = inputs[i];
         for (auto hit : *coll) {
           eicd::CalorimeterHit h2{
               hit.getCellID(),    hit.getEnergy(),   hit.getEnergyError(), hit.getTime(),
