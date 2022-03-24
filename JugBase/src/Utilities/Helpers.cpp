@@ -11,8 +11,9 @@
 #include <gsl/gsl>
 
 namespace Jug::PlotHelpers {
-TH1F* bookHisto(const char* histName, const char* histTitle,
-                const Binning& varBinning) {
+gsl::owner<TH1F*> bookHisto(
+      const char* histName, const char* histTitle,
+      const Binning& varBinning) {
   gsl::owner<TH1F*> hist = new TH1F(histName, histTitle, varBinning.nBins, varBinning.min,
                                     varBinning.max);
   hist->GetXaxis()->SetTitle(varBinning.title.c_str());
@@ -21,8 +22,9 @@ TH1F* bookHisto(const char* histName, const char* histTitle,
   return hist;
 }
 
-TH2F* bookHisto(const char* histName, const char* histTitle,
-                const Binning& varXBinning, const Binning& varYBinning) {
+gsl::owner<TH2F*> bookHisto(
+      const char* histName, const char* histTitle,
+      const Binning& varXBinning, const Binning& varYBinning) {
   gsl::owner<TH2F*> hist = new TH2F(histName, histTitle, varXBinning.nBins, varXBinning.min,
                                     varXBinning.max, varYBinning.nBins, varYBinning.min,
                                     varYBinning.max);
