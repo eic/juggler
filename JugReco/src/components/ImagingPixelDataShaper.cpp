@@ -68,10 +68,10 @@ public:
     const auto hits = m_inputHits.get();
     
     auto coll = hits;
-    count = 1;
+    int count = 1;
     for (auto hit : *coll) {
       cout << count << endl;
-      cout << hit.getLayer().size() << endl;
+      cout << hit.getLayer().size_t << endl;
       count++;
       // eicd::CalorimeterHit h2{
       //   hit.getEnergy(),  hit.getPosition(), hit.getLayer(),
