@@ -66,9 +66,19 @@ public:
   StatusCode execute() override {
     // input collections
     const auto hits = m_inputHits.get();
-    std::vector<const eicd::CalorimeterHitCollection*> inputs{hits}; 
+    
+    auto coll = hits;
+    count = 1;
+    for (auto hit : *coll) {
+      cout << count << endl;
+      cout << hit.getLayer().size() << endl;
+      count++;
+      // eicd::CalorimeterHit h2{
+      //   hit.getEnergy(),  hit.getPosition(), hit.getLayer(),
+      //   };
+    }
 
-    cout << inputs.size() << endl;
+    
 
     // int layers = 29;
     // int nHits = 20;
@@ -78,9 +88,9 @@ public:
     // for (int i = 0; i < layers; i++) {  // 29 layers
     //   for (int j = 0; j < nHits; j++) {  // 20 most energetic hits
     //     for (int k = 0; k < features; k++){  // 5 features of each hit
-    //       x = hits.getPosition.x;
-    //       y = hits.getPosition.y;
-    //       z = hits.getPosition.z;
+    //       x = hits.getPosition().x;
+    //       y = hits.getPosition().y;
+    //       z = hits.getPosition().z;
 
     //       rc = sqrt(pow(x, 2) + pow(y, 2));
     //       r = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
