@@ -13,8 +13,10 @@
 #include "JugReco/Utilities/Beam.h"
 #include "JugReco/Utilities/Boost.h"
 
-#include "Math/GenVector/PxPyPzE4D.h"
-typedef ROOT::Math::PxPyPzE4D<double> PxPyPzE4D;
+#include "Math/Vector4D.h"
+using ROOT::Math::PxPyPzEVector;
+#include "Math/Functions.h"
+using ROOT::Math::Dot;
 
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
@@ -71,47 +73,46 @@ public:
 
   StatusCode execute() override {
     // input collections
-    const edm4hep::MCParticleCollection& mcparts = *(m_inputMCParticleCollection.get());
-    const eicd::ReconstructedParticleCollection& parts = *(m_inputParticleCollection.get());
+    const auto& mcparts = *(m_inputMCParticleCollection.get());
+    const auto& rcparts = *(m_inputParticleCollection.get());
     // output collection
     auto& out_kinematics = *(m_outputInclusiveKinematicsCollection.createAndPut());
 
     // Get incoming electron beam
-    auto ei_iter = Jug::Reco::Beam::find_first_beam_electron(mcparts);
-    PxPyPzE4D ei;
-    if (ei_iter != mcparts.end()) {
-      ei = Jug::Reco::Beam::round_beam_four_momentum(
-        ei_iter.getMomentum(),
-        m_electron,
-        {-5.0, -10.0, -18.0},
-        0.0);
-    } else {
+    const auto ei_coll = Jug::Reco::Beam::find_first_beam_electron(mcparts);
+    if (ei_coll.size() == 0) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "No beam electron found" << endmsg;
       }
       return StatusCode::SUCCESS;
     }
+    const PxPyPzEVector ei(
+      Jug::Reco::Beam::round_beam_four_momentum(
+        ei_coll[0].getMomentum(),
+        m_electron,
+        {-5.0, -10.0, -18.0},
+        0.0)
+      );
 
     // Get incoming hadron beam
-    auto pi_iter = Jug::Reco::Beam::find_first_beam_hadron(mcparts);
-    PxPyPzE4D pi;
-    if (pi_iter != mcparts.end()) {
-      pi = Jug::Reco::Beam::round_beam_four_momentum(
-        pi_iter.getMomentum(),
-        pi_iter.getPDG() == 2212 ? m_proton : m_neutron,
-        {41.0, 100.0, 275.0},
-        m_crossingAngle);
-    } else {
+    const auto pi_coll = Jug::Reco::Beam::find_first_beam_hadron(mcparts);
+    if (pi_coll.size() == 0) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "No beam hadron found" << endmsg;
       }
       return StatusCode::SUCCESS;
     }
+    const PxPyPzEVector pi(
+      Jug::Reco::Beam::round_beam_four_momentum(
+        pi_coll[0].getMomentum(),
+        pi_coll[0].getPDG() == 2212 ? m_proton : m_neutron,
+        {41.0, 100.0, 275.0},
+        m_crossingAngle)
+      );
 
     // Get first scattered electron
-    auto ef_iter = Jug::Reco::Beam::find_first_scattered_electron(mcparts);
-    if (ef_iter != mcparts.end()) {
-    } else {
+    const auto ef_coll = Jug::Reco::Beam::find_first_scattered_electron(mcparts);
+    if (ef_coll.size() == 0) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "No truth scattered electron found" << endmsg;
       }
@@ -119,30 +120,32 @@ public:
     }
 
     // Loop over reconstructed particles to get outgoing scattered electron
-    // Use the true scattered electron from the MC information
-    const auto rc_ef_iter = Jug::Reco::Beam::find_first_scattered_electron(parts);
-    
-    std::vector<PxPyPzE4D> electrons;
-    auto is_electron = [](const auto &v) { return v.pdg == 11; };
-    for (const auto& p: parts | std::views::filter(is_electron)) {
-      electrons.push_back({p.getMomentum().x, p.getMomentum().y, p.getMomentum().z, p.getEnergy()});
+    // TODO Use the true scattered electron from the MC information
+    std::vector<PxPyPzEVector> electrons;
+    for (const auto& p: rcparts) {
+      if (p.getPDG() == 11) {
+        electrons.push_back({p.getMomentum().x, p.getMomentum().y, p.getMomentum().z, p.getEnergy()});
+      }
     }
-    std::range::sort(electrons, [](PxPyPzE4D a, PxPyPzE4D b) { return a.E() > b.E(); });
+    std::sort(
+      electrons.begin(),
+      electrons.end(),
+      [](const PxPyPzEVector& a, const PxPyPzEVector& b) { return a.E() > b.E(); }
+    );
 
     if (electrons.size() > 0) {
 
       // DIS kinematics calculations
       auto kin = out_kinematics.create();
-      const auto mass = pi_iter.getPDG() == 2212 ? m_proton : m_neutron;
+      const auto mass = pi_coll[0].getPDG() == 2212 ? m_proton : m_neutron;
       const auto ef = electrons.front();
-      const auto q = ei.subtract(ef);
-      const auto q_dot_pi = q.dot(pi);
-      kin.setQ2(-q.dot(q));
-      kin.setY(q_dot_pi / ei.dot(pi));
+      const auto q = ei - ef;
+      const auto q_dot_pi = q.Dot(pi);
+      kin.setQ2(-q.Dot(q));
+      kin.setY(q_dot_pi / ei.Dot(pi));
       kin.setNu(q_dot_pi / m_proton);
-      kin.setX(kin.getQ2() / (2.*q_dot_pi));
-      kin.setW(sqrt( + 2.*q_dot_pi - kin.Q2()));
-      kin.setScat(part);
+      kin.setX(kin.getQ2() / (2. * q_dot_pi));
+      kin.setW(sqrt( + 2.*q_dot_pi - kin.getQ2()));
 
       // Debugging output
       if (msgLevel(MSG::DEBUG)) {
