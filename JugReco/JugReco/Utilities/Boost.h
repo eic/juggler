@@ -1,47 +1,60 @@
 #pragma once
 
-#include "TLorentzVector.h"
-#include "TVector3.h"
+#include "Math/Vector4D.h"
+using ROOT::Math::PxPyPzEVector;
 
-namespace Jug::Reco {
+#include "Math/LorentzRotation.h"
+#include "Math/LorentzVector.h"
+#include "Math/RotationX.h"
+#include "Math/RotationY.h"
+#include "Math/Boost.h"
 
-namespace Boost {
+namespace Jug::Reco::Boost {
 
-  TLorentzVector apply_boost(TLorentzVector ei, TLorentzVector pi, TLorentzVector part){
+  using ROOT::Math::LorentzRotation;
 
-    //Step 1: Find the needed boosts and rotations from the incoming lepton and hadron beams 
-    //(note, this will give you a perfect boost, in principle you will not know the beam momenta exactly and should use an average)
-  
+  static LorentzRotation determine_boost(PxPyPzEVector ei, PxPyPzEVector pi) {
+
+    using ROOT::Math::RotationX;
+    using ROOT::Math::RotationY;
+    using ROOT::Math::Boost;
+
+    // Step 1: Find the needed boosts and rotations from the incoming lepton and hadron beams
+    // (note, this will give you a perfect boost, in principle you will not know the beam momenta exactly and should use an average)
+
     // Define the Boost to make beams back-to-back
-    TLorentzVector cmBoost = (1./ei.E())*ei + (1./pi.E())*pi;
+    const auto cmBoost = (ei + pi).BoostToCM();
 
-    TLorentzVector boost(-cmBoost.Px(),-cmBoost.Py(),-cmBoost.Pz(),cmBoost.E());
-    TVector3 b;
-    b = boost.BoostVector();
+    const Boost boost_to_cm(-cmBoost);
 
-    TLorentzVector boostBack(0.0,0.0,cmBoost.Pz(),cmBoost.E());
-    TVector3 bb;
-    bb = boostBack.BoostVector(); // This will boost beams from a center of momentum frame back to (nearly) their original energies
+    // This will boost beams from a center of momentum frame back to (nearly) their original energies
+    const Boost boost_to_headon(cmBoost); // FIXME
 
     // Boost and rotate the incoming beams to find the proper rotations TLorentzVector
-    pi.Boost(b); // Boost to COM frame
-    ei.Boost(b);
-    double rotAboutY = -1.0*TMath::ATan2(pi.Px(),pi.Pz()); // Rotate to remove x component of beams
-    double rotAboutX = 1.0*TMath::ATan2(pi.Py(),pi.Pz()); // Rotate to remove y component of beams
 
-    //Step 2: Apply boosts and rotations to any particle 4-vector 
-    //(here too, choices will have to be made as to what the 4-vector is for reconstructed particles)
-  
-    //Boost and rotate particle 4-momenta into the headon frame
-    part.Boost(b);
-    part.RotateY(rotAboutY);
-    part.RotateX(rotAboutX);
-    part.Boost(bb);
+    // Boost to COM frame
+    boost_to_cm(pi);
+    boost_to_cm(ei);
+    // Rotate to head-on
+    RotationY rotAboutY(-1.0*atan2(pi.Px(), pi.Pz())); // Rotate to remove x component of beams
+    RotationX rotAboutX(+1.0*atan2(pi.Py(), pi.Pz())); // Rotate to remove y component of beams
 
-    return part;
-
+    LorentzRotation tf;
+    tf *= boost_to_cm;
+    tf *= rotAboutY;
+    tf *= rotAboutX;
+    tf *= boost_to_headon;
+    return tf;
   }
 
-} // namespace Boost
+  static PxPyPzEVector apply_boost(const LorentzRotation& tf, PxPyPzEVector part) {
 
-} // namespace JugReco
+    // Step 2: Apply boosts and rotations to any particle 4-vector
+    // (here too, choices will have to be made as to what the 4-vector is for reconstructed particles)
+  
+    // Boost and rotate particle 4-momenta into the headon frame
+    tf(part);
+    return part;
+  }
+
+} // namespace Jug::Reco::Boost
