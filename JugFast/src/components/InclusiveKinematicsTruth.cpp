@@ -11,7 +11,7 @@
 #include "JugBase/IParticleSvc.h"
 #include "JugBase/DataHandle.h"
 
-#include "JugReco/Utilities/Beam.h"
+#include "JugBase/Utilities/Beam.h"
 
 #include "Math/Vector4D.h"
 using ROOT::Math::PxPyPzEVector;
@@ -19,6 +19,8 @@ using ROOT::Math::PxPyPzEVector;
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
 #include "eicd/InclusiveKinematicsCollection.h"
+
+#include "eicd/vector_utils.h"
 
 namespace Jug::Fast {
 
@@ -85,7 +87,7 @@ public:
       return StatusCode::SUCCESS;
     }
     const auto ei_p = ei_coll[0].getMomentum();
-    const auto ei_p_mag = ei_p.magnitude();
+    const auto ei_p_mag = eicd::magnitude(ei_p);
     const auto ei_mass = m_electron;
     const PxPyPzEVector ei(ei_p.x, ei_p.y, ei_p.z, std::hypot(ei_p_mag, ei_mass));
 
@@ -98,7 +100,7 @@ public:
       return StatusCode::SUCCESS;
     }
     const auto pi_p = pi_coll[0].getMomentum();
-    const auto pi_p_mag = pi_p.magnitude();
+    const auto pi_p_mag = eicd::magnitude(pi_p);
     const auto pi_mass = pi_coll[0].getPDG() == 2212 ? m_proton : m_neutron;
     const PxPyPzEVector pi(pi_p.x, pi_p.y, pi_p.z, std::hypot(pi_p_mag, pi_mass));
 
@@ -115,7 +117,7 @@ public:
       return StatusCode::SUCCESS;
     }
     const auto ef_p = ef_coll[0].getMomentum();
-    const auto ef_p_mag = ef_p.magnitude();
+    const auto ef_p_mag = eicd::magnitude(ef_p);
     const auto ef_mass = m_electron;
     const PxPyPzEVector ef(ef_p.x, ef_p.y, ef_p.z, std::hypot(ef_p_mag, ef_mass));
 
