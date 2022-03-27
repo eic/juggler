@@ -202,7 +202,7 @@ private:
       rec_part.setGoodnessOfPID(1.);
       rec_part.setPDG(part.getPDG());
       Assoc assoc;
-      assoc.setSimID(part.getObjectID().index);
+      assoc.setSimID(part.id());
       assoc.setWeight(1.);
       assoc.setRec(rec_part);
 
@@ -377,7 +377,7 @@ private:
     rec_part.setGoodnessOfPID(1); // perfect PID
     rec_part.setPDG(part.getPDG());
     Assoc assoc;
-    assoc.setSimID(part.getObjectID().index);
+    assoc.setSimID(part.id());
     assoc.setWeight(1.);
     assoc.setRec(rec_part);
 
