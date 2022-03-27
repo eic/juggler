@@ -6,10 +6,10 @@ using ROOT::Math::PxPyPzEVector;
 #include "edm4hep/MCParticleCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
 
-namespace Jug::Reco::Beam {
+namespace Jug::Base::Beam {
 
   template<class collection>
-  static auto find_first_with_pdg(
+  auto find_first_with_pdg(
       const collection& parts,
       const std::set<int32_t>& pdg) {
     collection c;
@@ -23,7 +23,7 @@ namespace Jug::Reco::Beam {
   }
 
   template<class collection>
-  static auto find_first_with_status_pdg(
+  auto find_first_with_status_pdg(
       const collection& parts,
       const std::set<int32_t>& status,
       const std::set<int32_t>& pdg) {
@@ -37,23 +37,23 @@ namespace Jug::Reco::Beam {
     return c;
   }
 
-  static auto find_first_beam_electron(const edm4hep::MCParticleCollection& mcparts) {
+  inline auto find_first_beam_electron(const edm4hep::MCParticleCollection& mcparts) {
     return find_first_with_status_pdg(mcparts, {4}, {11});
   }
 
-  static auto find_first_beam_hadron(const edm4hep::MCParticleCollection& mcparts) {
+  inline auto find_first_beam_hadron(const edm4hep::MCParticleCollection& mcparts) {
     return find_first_with_status_pdg(mcparts, {4}, {2212, 2112});
   }
 
-  static auto find_first_scattered_electron(const edm4hep::MCParticleCollection& mcparts) {
+  inline auto find_first_scattered_electron(const edm4hep::MCParticleCollection& mcparts) {
     return find_first_with_status_pdg(mcparts, {1}, {11});
   }
 
-  static auto find_first_scattered_electron(const eicd::ReconstructedParticleCollection& rcparts) {
+  inline auto find_first_scattered_electron(const eicd::ReconstructedParticleCollection& rcparts) {
     return find_first_with_pdg(rcparts, {11});
   }
 
-  static
+  inline
   PxPyPzEVector
   round_beam_four_momentum(
       const edm4hep::Vector3f& p_in,
@@ -73,4 +73,4 @@ namespace Jug::Reco::Beam {
     return p_out;
   }
 
-} // namespace Jug::Reco::Beam
+} // namespace Jug::Base::Beam

@@ -84,7 +84,7 @@ public:
     auto& out_kinematics = *(m_outputInclusiveKinematicsCollection.createAndPut());
 
     // Get incoming electron beam
-    const auto ei_coll = Jug::Reco::Beam::find_first_beam_electron(mcparts);
+    const auto ei_coll = Jug::Base::Beam::find_first_beam_electron(mcparts);
     if (ei_coll.size() == 0) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "No beam electron found" << endmsg;
@@ -92,7 +92,7 @@ public:
       return StatusCode::SUCCESS;
     }
     const PxPyPzEVector ei(
-      Jug::Reco::Beam::round_beam_four_momentum(
+      Jug::Base::Beam::round_beam_four_momentum(
         ei_coll[0].getMomentum(),
         m_electron,
         {-5.0, -10.0, -18.0},
@@ -100,7 +100,7 @@ public:
       );
 
     // Get incoming hadron beam
-    const auto pi_coll = Jug::Reco::Beam::find_first_beam_hadron(mcparts);
+    const auto pi_coll = Jug::Base::Beam::find_first_beam_hadron(mcparts);
     if (pi_coll.size() == 0) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "No beam hadron found" << endmsg;
@@ -108,7 +108,7 @@ public:
       return StatusCode::SUCCESS;
     }
     const PxPyPzEVector pi(
-      Jug::Reco::Beam::round_beam_four_momentum(
+      Jug::Base::Beam::round_beam_four_momentum(
         pi_coll[0].getMomentum(),
         pi_coll[0].getPDG() == 2212 ? m_proton : m_neutron,
         {41.0, 100.0, 275.0},
@@ -116,7 +116,7 @@ public:
       );
 
     // Get first scattered electron
-    const auto ef_coll = Jug::Reco::Beam::find_first_scattered_electron(mcparts);
+    const auto ef_coll = Jug::Base::Beam::find_first_scattered_electron(mcparts);
     if (ef_coll.size() == 0) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "No truth scattered electron found" << endmsg;
@@ -166,7 +166,7 @@ public:
     double sigma_e = 0;
 
     // Get boost to colinear frame
-    auto boost = Jug::Reco::Boost::determine_boost(ei, pi);
+    auto boost = Jug::Base::Boost::determine_boost(ei, pi);
 
     for(const auto& p: rcparts) {
       // Get the scattered electron index and angle
@@ -174,7 +174,7 @@ public:
         // Lorentz vector in lab frame
         PxPyPzEVector e_lab(p.getMomentum().x, p.getMomentum().y, p.getMomentum().z, p.getEnergy());
         // Boost to colinear frame
-        PxPyPzEVector e_boosted = Jug::Reco::Boost::apply_boost(boost, e_lab);
+        PxPyPzEVector e_boosted = Jug::Base::Boost::apply_boost(boost, e_lab);
 
         pt_e = e_boosted.Pt();
         sigma_e = e_boosted.E() - e_boosted.Pz();
@@ -184,7 +184,7 @@ public:
         // Lorentz vector in lab frame
         PxPyPzEVector hf_lab(p.getMomentum().x, p.getMomentum().y, p.getMomentum().z, p.getEnergy());
         // Boost to colinear frame
-        PxPyPzEVector hf_boosted = Jug::Reco::Boost::apply_boost(boost, hf_lab);
+        PxPyPzEVector hf_boosted = Jug::Base::Boost::apply_boost(boost, hf_lab);
         pxsum += hf_boosted.Px();
         pysum += hf_boosted.Py();
         pzsum += hf_boosted.Pz();

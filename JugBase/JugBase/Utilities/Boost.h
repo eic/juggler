@@ -9,11 +9,11 @@ using ROOT::Math::PxPyPzEVector;
 #include "Math/RotationY.h"
 #include "Math/Boost.h"
 
-namespace Jug::Reco::Boost {
+namespace Jug::Base::Boost {
 
   using ROOT::Math::LorentzRotation;
 
-  static LorentzRotation determine_boost(PxPyPzEVector ei, PxPyPzEVector pi) {
+  inline LorentzRotation determine_boost(PxPyPzEVector ei, PxPyPzEVector pi) {
 
     using ROOT::Math::RotationX;
     using ROOT::Math::RotationY;
@@ -47,7 +47,7 @@ namespace Jug::Reco::Boost {
     return tf;
   }
 
-  static PxPyPzEVector apply_boost(const LorentzRotation& tf, PxPyPzEVector part) {
+  inline PxPyPzEVector apply_boost(const LorentzRotation& tf, PxPyPzEVector part) {
 
     // Step 2: Apply boosts and rotations to any particle 4-vector
     // (here too, choices will have to be made as to what the 4-vector is for reconstructed particles)
@@ -57,4 +57,4 @@ namespace Jug::Reco::Boost {
     return part;
   }
 
-} // namespace Jug::Reco::Boost
+} // namespace Jug::Base::Boost
