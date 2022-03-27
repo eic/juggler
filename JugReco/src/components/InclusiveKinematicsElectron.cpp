@@ -11,8 +11,8 @@
 #include "JugBase/IParticleSvc.h"
 #include "JugBase/DataHandle.h"
 
-#include "JugReco/Utilities/Beam.h"
-#include "JugReco/Utilities/Boost.h"
+#include "JugBase/Utilities/Beam.h"
+#include "JugBase/Utilities/Boost.h"
 
 #include "Math/Vector4D.h"
 using ROOT::Math::PxPyPzEVector;
@@ -133,7 +133,7 @@ public:
     //}
 
     // Get incoming electron beam
-    const auto ei_coll = Jug::Reco::Beam::find_first_beam_electron(mcparts);
+    const auto ei_coll = Jug::Base::Beam::find_first_beam_electron(mcparts);
     if (ei_coll.size() == 0) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "No beam electron found" << endmsg;
@@ -141,7 +141,7 @@ public:
       return StatusCode::SUCCESS;
     }
     const PxPyPzEVector ei(
-      Jug::Reco::Beam::round_beam_four_momentum(
+      Jug::Base::Beam::round_beam_four_momentum(
         ei_coll[0].getMomentum(),
         m_electron,
         {-5.0, -10.0, -18.0},
@@ -149,7 +149,7 @@ public:
       );
 
     // Get incoming hadron beam
-    const auto pi_coll = Jug::Reco::Beam::find_first_beam_hadron(mcparts);
+    const auto pi_coll = Jug::Base::Beam::find_first_beam_hadron(mcparts);
     if (pi_coll.size() == 0) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "No beam hadron found" << endmsg;
@@ -157,7 +157,7 @@ public:
       return StatusCode::SUCCESS;
     }
     const PxPyPzEVector pi(
-      Jug::Reco::Beam::round_beam_four_momentum(
+      Jug::Base::Beam::round_beam_four_momentum(
         pi_coll[0].getMomentum(),
         pi_coll[0].getPDG() == 2212 ? m_proton : m_neutron,
         {41.0, 100.0, 275.0},
@@ -165,7 +165,7 @@ public:
       );
 
     // Get first scattered electron
-    const auto ef_coll = Jug::Reco::Beam::find_first_scattered_electron(mcparts);
+    const auto ef_coll = Jug::Base::Beam::find_first_scattered_electron(mcparts);
     if (ef_coll.size() == 0) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "No truth scattered electron found" << endmsg;
