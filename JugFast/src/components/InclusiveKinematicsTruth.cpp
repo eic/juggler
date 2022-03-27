@@ -11,6 +11,8 @@
 #include "JugBase/IParticleSvc.h"
 #include "JugBase/DataHandle.h"
 
+#include "JugReco/Utilities/Beam.h"
+
 #include "Math/Vector4D.h"
 using ROOT::Math::PxPyPzEVector;
 
