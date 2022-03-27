@@ -119,7 +119,7 @@ public:
       // rec_part.covMatrix()  // @TODO: covariance matrix on 4-momentum
       // Also write MC <--> truth particle association
       auto rec_assoc = assoc.create();
-      rec_assoc.setSimID(best_match);
+      rec_assoc.setSimID(mc[best_match].id());
       rec_assoc.setWeight(1);
       rec_assoc.setRec(rec_part);
 
