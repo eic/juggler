@@ -31,7 +31,7 @@ private:
     Gaudi::DataHandle::Reader,
     this};
   DataHandle<eicd::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{
-    "InclusiveKinematicsTruth",
+    "outputInclusiveKinematics",
     Gaudi::DataHandle::Writer,
     this};
 
@@ -44,7 +44,7 @@ public:
   InclusiveKinematicsTruth(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputMCParticleCollection, "MCParticles");
-    declareProperty("outputData", m_outputInclusiveKinematicsCollection, "InclusiveKinematicsTruth");
+    declareProperty("outputInclusiveKinematics", m_outputInclusiveKinematicsCollection, "InclusiveKinematicsTruth");
   }
 
   StatusCode initialize() override {

@@ -31,15 +31,15 @@ private:
     Gaudi::DataHandle::Reader,
     this};
   DataHandle<eicd::ReconstructedParticleCollection> m_inputParticleCollection{
-    "ReconstructedParticles",
+    "inputReconstructedParticles",
     Gaudi::DataHandle::Reader,
     this};
   DataHandle<eicd::MCRecoParticleAssociationCollection> m_inputParticleAssociation{
-    "MCRecoParticleAssociation",
+    "inputParticleAssociations",
     Gaudi::DataHandle::Reader,
     this};
   DataHandle<eicd::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{
-    "InclusiveKinematicsSigma",
+    "outputInclusiveKinematics",
     Gaudi::DataHandle::Writer,
     this};
 
@@ -52,9 +52,9 @@ public:
   InclusiveKinematicsSigma(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputMCParticleCollection, "MCParticles");
-    declareProperty("inputParticles", m_inputParticleCollection, "ReconstructedParticles");
-    declareProperty("inputAssociations", m_inputParticleAssociation, "MCRecoParticleAssociation");
-    declareProperty("outputData", m_outputInclusiveKinematicsCollection, "InclusiveKinematicsSigma");
+    declareProperty("inputReconstructedParticles", m_inputParticleCollection, "ReconstructedParticles");
+    declareProperty("inputParticleAssociations", m_inputParticleAssociation, "MCRecoParticleAssociation");
+    declareProperty("outputInclusiveKinematics", m_outputInclusiveKinematicsCollection, "InclusiveKinematicsSigma");
   }
 
   StatusCode initialize() override {
