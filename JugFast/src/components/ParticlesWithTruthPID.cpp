@@ -117,12 +117,13 @@ public:
       rec_part.setGoodnessOfPID(1); // perfect PID
       rec_part.setPDG(best_pid);
       // rec_part.covMatrix()  // @TODO: covariance matrix on 4-momentum
-      // Also write MC <--> truth particle association
-      auto rec_assoc = assoc.create();
-      rec_assoc.setSimID(mc[best_match].id());
-      rec_assoc.setWeight(1);
-      rec_assoc.setRec(rec_part);
-
+      // Also write MC <--> truth particle association if match was found
+      if (best_match >= 0) {
+        auto rec_assoc = assoc.create();
+        rec_assoc.setSimID(mc[best_match].id());
+        rec_assoc.setWeight(1);
+        rec_assoc.setRec(rec_part);
+      }
       if (msgLevel(MSG::DEBUG)) {
         if (best_match > 0) {
           const auto& mcpart = mc[best_match];
