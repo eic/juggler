@@ -12,7 +12,7 @@ namespace Jug::Base::Beam {
   auto find_first_with_pdg(
       const collection& parts,
       const std::set<int32_t>& pdg) {
-    collection c;
+    std::vector<decltype(parts[0])> c;
     for (const auto& p: parts) {
       if (pdg.count(p.getPDG()) > 0) {
         c.push_back(p);
@@ -27,9 +27,10 @@ namespace Jug::Base::Beam {
       const collection& parts,
       const std::set<int32_t>& status,
       const std::set<int32_t>& pdg) {
-    collection c;
+    std::vector<decltype(parts[0])> c;
     for (const auto& p: parts) {
-      if (status.count(p.getGeneratorStatus()) > 0 && pdg.count(p.getPDG()) > 0) {
+      if (status.count(p.getGeneratorStatus()) > 0 &&
+          pdg.count(p.getPDG()) > 0) {
         c.push_back(p);
         break;
       }
