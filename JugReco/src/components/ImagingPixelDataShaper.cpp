@@ -69,7 +69,8 @@ public:
 
     // group the hits by layer
     std::vector<std::vector<eicd::CalorimeterHit>> layer_hits;  // create a vector of vector of hits
-    layer_hits.resize(int m_nLayers = 29);  // create 29 layers/rows 
+    int m_nLayers = 29;
+    layer_hits.resize(m_nLayers);  // create 29 layers/rows 
     for (const auto& h : hits) {
       auto k = h.getLayer();
       if ((int)k < m_nLayers) {
@@ -83,7 +84,7 @@ public:
         [] (const eicd::CalorimeterHit &h1, const eicd::CalorimeterHit &h2) {
           return h1.getEnergy() > h2.getEnergy();
         });
-      layer.resize(int topHits = 20);  // get only the 20 most energetic hits for each layer
+      layer.resize(20);  // get only the 20 most energetic hits for each layer
     }
 
     int layers = layer_hits.size();
@@ -101,15 +102,15 @@ public:
           auto rc = sqrt(pow(x, 2) + pow(y, 2)); 
           auto r = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
           auto theta = acos(z/r);
-          auto phi = atan2(y, x)
-          auto eta = -1*log10(tan(theta/2))
+          auto phi = atan2(y, x);
+          auto eta = -1*log10(tan(theta/2));
 
           auto layer_type = floor(layer_hits[i][j].getLayer());
           auto energy = layer_hits[i][j].getEnergy();
              
           output[i][j][0] = layer_type;
           output[i][j][1] = energy;
-          output[i][j][2] = rc};
+          output[i][j][2] = rc;
           output[i][j][3] = eta;
           output[i][j][4] = phi;
         }
