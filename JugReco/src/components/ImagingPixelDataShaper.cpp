@@ -94,18 +94,18 @@ public:
 
     for (int i = 0; i < layers; i++) {  // 29 layers
       for (int j = 0; j < nHits; j++) {  // 20 most energetic hits
-          x = layer_hits[i][j].getPosition().x;
-          y = layer_hits[i][j].getPosition().y;
-          z = layer_hits[i][j].getPosition().z;
+          auto x = layer_hits[i][j].getPosition().x;
+          auto y = layer_hits[i][j].getPosition().y;
+          auto z = layer_hits[i][j].getPosition().z;
 
-          rc = sqrt(pow(x, 2) + pow(y, 2)); 
-          r = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
-          theta = acos(z/r);
-          phi = atan2(y, x)
-          eta = -1*log10(tan(theta/2))
+          auto rc = sqrt(pow(x, 2) + pow(y, 2)); 
+          auto r = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+          auto theta = acos(z/r);
+          auto phi = atan2(y, x)
+          auto eta = -1*log10(tan(theta/2))
 
-          layer_type = floor(layer_hits[i][j].getLayer());
-          energy = layer_hits[i][j].getEnergy();
+          auto layer_type = floor(layer_hits[i][j].getLayer());
+          auto energy = layer_hits[i][j].getEnergy();
              
           output[i][j][0] = layer_type;
           output[i][j][1] = energy;
