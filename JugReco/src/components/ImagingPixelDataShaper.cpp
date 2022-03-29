@@ -86,14 +86,14 @@ public:
       layer.resize(int topHits = 20);  // get only the 20 most energetic hits for each layer
     }
 
-    int layers = 29;
-    int nHits = 20;
+    int layers = layer_hits.size();
+    int nHits = layer_hits[0].size();
     int features = 5;
     
-    float output[layer_hits[0].size()][layer_hits[1].size] = {};
+    float output[layers][nHits][features];
 
-    for (int i = 0; i < layer_hits.size(); i++) {  // 29 layers
-      for (int j = 0; j < layer_hits[0].size(); j++) {  // 20 most energetic hits
+    for (int i = 0; i < layers; i++) {  // 29 layers
+      for (int j = 0; j < nHits; j++) {  // 20 most energetic hits
           x = layer_hits[i][j].getPosition().x;
           y = layer_hits[i][j].getPosition().y;
           z = layer_hits[i][j].getPosition().z;
@@ -107,12 +107,14 @@ public:
           layer_type = floor(layer_hits[i][j].getLayer());
           energy = layer_hits[i][j].getEnergy();
              
-          output[i][j] = {layer_type, energy, rc, eta, phi}
+          output[i][j][0] = layer_type;
+          output[i][j][1] = energy;
+          output[i][j][2] = rc};
+          output[i][j][3] = eta;
+          output[i][j][4] = phi;
         }
       }
     }
-      
-
     return StatusCode::SUCCESS;
   }
 
