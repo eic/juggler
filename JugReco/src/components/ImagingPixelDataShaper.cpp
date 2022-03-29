@@ -90,10 +90,10 @@ public:
     int nHits = 20;
     int features = 5;
     
-    float output[layers][nHits][features];
+    float output[layer_hits[0].size()][layer_hits[1].size][features];
 
-    for (int i = 0; i < layer_hits[0].size(); i++) {  // 29 layers
-      for (int j = 0; j < layer_hits[1].size; j++) {  // 20 most energetic hits
+    for (int i = 0; i < layer_hits.size(); i++) {  // 29 layers
+      for (int j = 0; j < layer_hits[0].size(); j++) {  // 20 most energetic hits
           x = layer_hits[i][j].getPosition().x;
           y = layer_hits[i][j].getPosition().y;
           z = layer_hits[i][j].getPosition().z;
