@@ -95,27 +95,28 @@ public:
 
     for (int i = 0; i < layers; i++) {  // 29 layers
       for (int j = 0; j < nHits; j++) {  // 20 most energetic hits
-          auto x = layer_hits[i][j].getPosition().x;
-          auto y = layer_hits[i][j].getPosition().y;
-          auto z = layer_hits[i][j].getPosition().z;
+        auto x = layer_hits[i][j].getPosition().x;
+        auto y = layer_hits[i][j].getPosition().y;
+        auto z = layer_hits[i][j].getPosition().z;
 
-          auto rc = sqrt(pow(x, 2) + pow(y, 2)); 
-          auto r = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
-          auto theta = acos(z/r);
-          auto phi = atan2(y, x);
-          auto eta = -1*log10(tan(theta/2));
+        auto rc = sqrt(pow(x, 2) + pow(y, 2)); 
+        auto r = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+        auto theta = acos(z/r);
+        auto phi = atan2(y, x);
+        auto eta = -1*log10(tan(theta/2));
 
-          auto layer_type = floor(layer_hits[i][j].getLayer());
-          auto energy = layer_hits[i][j].getEnergy();
-             
-          output[i][j][0] = layer_type;
-          output[i][j][1] = energy;
-          output[i][j][2] = rc;
-          output[i][j][3] = eta;
-          output[i][j][4] = phi;
+        auto layer_type = floor(layer_hits[i][j].getLayer());
+        auto energy = layer_hits[i][j].getEnergy();
+              
+        output[i][j][0] = layer_type;
+        output[i][j][1] = energy;
+        output[i][j][2] = rc;
+        output[i][j][3] = eta;
+        output[i][j][4] = phi;
         }
       }
     }
+      
     return StatusCode::SUCCESS;
   }
 
