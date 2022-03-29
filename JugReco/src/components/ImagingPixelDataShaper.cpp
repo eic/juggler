@@ -90,7 +90,7 @@ public:
     int nHits = 20;
     int features = 5;
     
-    float output[layer_hits[0].size()][layer_hits[1].size][features];
+    float output[layer_hits[0].size()][layer_hits[1].size][features] = {};
 
     for (int i = 0; i < layer_hits.size(); i++) {  // 29 layers
       for (int j = 0; j < layer_hits[0].size(); j++) {  // 20 most energetic hits
