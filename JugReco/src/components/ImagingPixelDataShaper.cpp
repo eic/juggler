@@ -1,8 +1,7 @@
 
 /*
- *  Fix me
- *
- *  Author: Fix me
+ *  Hits level data sorter that extracts and calculates desired information. 
+ *  
  */
 #include <algorithm>
 #include <bitset>
