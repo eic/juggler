@@ -116,7 +116,7 @@ namespace Jug::Reco {
         }
       }
 
-      cnpy::npy_save("data.npy", output,{layers,nHits,features},"w");
+      cnpy::npy_save("data.npy", output,"w");
         
       return StatusCode::SUCCESS;
     }
