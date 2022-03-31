@@ -3,13 +3,14 @@
  *  Hits level data sorter that extracts and calculates desired information. 
  *  
  */
-#include"cnpy.h"
 #include <algorithm>
 #include <bitset>
 #include <fmt/format.h>
 #include <unordered_map>
 #include <cmath>
 #include <iostream>
+#include "cnpy.h"
+
 
 #include "Gaudi/Property.h"
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -115,7 +116,7 @@ namespace Jug::Reco {
         }
       }
 
-      cnpy::npy_save("data.npy",&output[0],{layers,nHits,features},"w");
+      cnpy::npy_save("data.npy", output,{layers,nHits,features},"w");
         
       return StatusCode::SUCCESS;
     }
