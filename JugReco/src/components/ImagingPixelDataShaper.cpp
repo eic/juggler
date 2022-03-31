@@ -3,6 +3,7 @@
  *  Hits level data sorter that extracts and calculates desired information. 
  *  
  */
+#include"cnpy.h"
 #include <algorithm>
 #include <bitset>
 #include <fmt/format.h>
@@ -113,6 +114,8 @@ namespace Jug::Reco {
           output[i][j][4] = phi;
         }
       }
+
+      cnpy::npy_save("data.npy",&output[0],{layers,nHits,features},"w");
         
       return StatusCode::SUCCESS;
     }
