@@ -91,12 +91,16 @@ namespace Jug::Reco {
       int nHits = layer_hits[0].size();
       int features = 5;
       
-      float output[layers][nHits][features];
+      // float output[layers][nHits][features];
 
-      std::vector<std::vector<float>> data;
+      std::vector<std::vector<std::vector<float>>> data;
+      data.resize(layers);
 
       for (int i = 0; i < layers; i++) {  // 29 layers
+        data[i].resize(nHits);
         for (int j = 0; j < nHits; j++) {  // 20 most energetic hits
+          data[i][j].resize(features);
+          
           auto x = layer_hits[i][j].getPosition().x;
           auto y = layer_hits[i][j].getPosition().y;
           auto z = layer_hits[i][j].getPosition().z;
@@ -110,13 +114,13 @@ namespace Jug::Reco {
           auto layer_type = floor(layer_hits[i][j].getLayer());
           auto energy = layer_hits[i][j].getEnergy();
                 
-          output[i][j][0] = layer_type;
-          output[i][j][1] = energy;
-          output[i][j][2] = rc;
-          output[i][j][3] = eta;
-          output[i][j][4] = phi;
+          data[i][j][0] = layer_type;
+          data[i][j][1] = energy;
+          data[i][j][2] = rc;
+          data[i][j][3] = eta;
+          data[i][j][4] = phi;
 
-          data[i][j].push_back(output[i][j])
+          // data[i][j].push_back(output[i][j]);
         }
       }
 
