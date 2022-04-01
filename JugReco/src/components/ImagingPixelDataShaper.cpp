@@ -116,7 +116,7 @@ namespace Jug::Reco {
           output[i][j][3] = eta;
           output[i][j][4] = phi;
 
-          data[i][j] = output[i][j] // push_back(h)
+          data[i][j].push_back(output[i][j])
         }
       }
 
