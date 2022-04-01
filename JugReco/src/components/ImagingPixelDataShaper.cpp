@@ -93,6 +93,8 @@ namespace Jug::Reco {
       
       float output[layers][nHits][features];
 
+      std::vector<std::vector<float>> data;
+
       for (int i = 0; i < layers; i++) {  // 29 layers
         for (int j = 0; j < nHits; j++) {  // 20 most energetic hits
           auto x = layer_hits[i][j].getPosition().x;
@@ -113,10 +115,12 @@ namespace Jug::Reco {
           output[i][j][2] = rc;
           output[i][j][3] = eta;
           output[i][j][4] = phi;
+
+          data[i][j] = output[i][j] // push_back(h)
         }
       }
 
-      cnpy::npy_save("data.npy", output,"w");
+      cnpy::npy_save("data.npy",&data[0],{layers,nHits,features},"w");
         
       return StatusCode::SUCCESS;
     }
