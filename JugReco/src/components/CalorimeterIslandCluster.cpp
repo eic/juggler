@@ -336,7 +336,7 @@ private:
   void split_group(std::vector<std::pair<uint32_t, CaloHit>>& group, const std::vector<CaloHit>& maxima,
                    eicd::ProtoClusterCollection& proto) const {
     // special cases
-    if (maxima.size() == 0) {
+    if (maxima.empty()) {
       if (msgLevel(MSG::VERBOSE)) {
         verbose() << "No maxima found, not building any clusters" << endmsg;
       }
@@ -402,7 +402,6 @@ private:
     if (msgLevel(MSG::VERBOSE)) {
       verbose() << "Multiple (" << maxima.size() << ") maxima found, added a ProtoClusters for each maximum" << endmsg;
     }
-    return;
   }
 };
 

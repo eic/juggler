@@ -86,7 +86,7 @@ GeoSvc::~GeoSvc() {
   if (m_dd4hepGeo != nullptr) {
     try {
       m_dd4hepGeo->destroyInstance();
-      m_dd4hepGeo = 0;
+      m_dd4hepGeo = nullptr;
     } catch (...) {
     }
   }
@@ -229,7 +229,7 @@ StatusCode GeoSvc::buildDD4HepGeo() {
     m_dd4hepGeo->fromCompact(filename);
   }
   m_dd4hepGeo->volumeManager();
-  m_dd4hepGeo->apply("DD4hepVolumeManager", 0, 0);
+  m_dd4hepGeo->apply("DD4hepVolumeManager", 0, nullptr);
   m_cellid_converter = std::make_shared<const dd4hep::rec::CellIDPositionConverter>(*m_dd4hepGeo);
   return StatusCode::SUCCESS;
 }

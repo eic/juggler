@@ -222,9 +222,11 @@ namespace Jug::Digi {
           edep += hits[i].getEnergy();
           if (hits[i].getEnergy() > max_edep) {
             max_edep = hits[i].getEnergy();
-            for (const auto& c : hits[i].getContributions())
-              if (c.getTime() <= time)
+            for (const auto& c : hits[i].getContributions()) {
+              if (c.getTime() <= time) {
                 time = c.getTime();
+              }
+            }
           }
         }
 
