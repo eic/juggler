@@ -402,7 +402,6 @@ private:
     if (msgLevel(MSG::VERBOSE)) {
       verbose() << "Multiple (" << maxima.size() << ") maxima found, added a ProtoClusters for each maximum" << endmsg;
     }
-    return;
   }
 };
 
