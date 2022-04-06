@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright (C) 2022 Chao Peng, Wouter Deconinck, Chao, Whitney Armstrong, Sylvester Joosten, Jihee Kim
+// Copyright (C) 2022 Chao Peng, Wouter Deconinck, Whitney Armstrong, Sylvester Joosten, Jihee Kim
 
 // Apply Birks Law to correct the energy deposit
 // It uses the contributions member in edm4hep::CalorimeterHit, so simulation must enable storeCalorimeterContributions
