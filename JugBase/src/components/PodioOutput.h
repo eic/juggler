@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Whitney Armstrong, Wouter Deconinck
+
 #ifndef JUGBASE_PODIOOUTPUT_H
 #define JUGBASE_PODIOOUTPUT_H
 

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Chao Peng
+
 /*  General PhotoMultiplier Digitization
  *
  *  Apply the given quantum efficiency for photon detection
@@ -215,4 +218,3 @@ private:
 DECLARE_COMPONENT(PhotoMultiplierDigi)
 
 } // namespace Jug::Digi
-

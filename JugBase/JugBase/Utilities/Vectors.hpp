@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Whitney Armstrong
+
 #ifndef JUGBASE_VectorHelpers_HH
 #define JUGBASE_VectorHelpers_HH
 
@@ -27,4 +30,3 @@ namespace Jug::Helpers {
 
 
 #endif
-

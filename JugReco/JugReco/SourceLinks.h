@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Whitney Armstrong
 #ifndef JUG_RECO_SourceLinks_HH
 #define JUG_RECO_SourceLinks_HH
 
@@ -93,4 +95,3 @@ using SourceLinkContainer = GeometryIdMultiset<SourceLink>;
 } // namespace Jug
 
 #endif
-

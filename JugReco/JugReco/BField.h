@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Whitney Armstrong
 #ifndef Jug_BFIELD_HH
 #define Jug_BFIELD_HH 1
 

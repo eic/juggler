@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Chao Peng, Whitney Armstrong, Sylvester Joosten
+
 /*  Clustering Algorithm for Ring Imaging Cherenkov (RICH) events
  *
  *  Author: Chao Peng (ANL)
@@ -112,4 +115,3 @@ public:
 DECLARE_COMPONENT(PhotoRingClusters)
 
 } // namespace Jug::Reco
-

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Chao Peng
+
 /*  Fuzzy K Clustering Algorithms
  *
  *  Author: Chao Peng (ANL)
@@ -201,4 +204,3 @@ void KRings::FormClusters(MatrixXd &clusters, const MatrixXd &data, double q)
 //          https://doi.org/10.1016/0167-8655(95)00030-K.
 // =================================================================================================
 // @TODO
-

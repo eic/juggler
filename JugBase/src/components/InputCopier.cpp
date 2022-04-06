@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Whitney Armstrong, Wouter Deconinck
+
 // Deprecated algorithm, as we can now properly store input collections in our output
 
 #include <algorithm>
@@ -70,4 +73,3 @@ namespace Jug::Base {
     DECLARE_COMPONENT(MCCopier)
 
 } // namespace Jug::Base
-

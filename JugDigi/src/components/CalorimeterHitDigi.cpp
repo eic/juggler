@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Chao Peng, Wouter Deconinck, Sylvester Joosten
+
 // A general digitization for CalorimeterHit from simulation
 // 1. Smear energy deposit with a/sqrt(E/GeV) + b + c/E or a/sqrt(E/GeV) (relative value)
 // 2. Digitize the energy with dynamic ADC range and add pedestal (mean +- sigma)

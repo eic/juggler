@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Chao Peng, Sylvester Joosten, Whitney Armstrong, Chao Peng
+
 /*  General PhotoMultiplier Reconstruction
  *
  *  Estimate the number of photo-electrons and convert getTimeStamp to time
@@ -108,4 +111,3 @@ public:
 DECLARE_COMPONENT(PhotoMultiplierReco)
 
 } // namespace Jug::Reco
-

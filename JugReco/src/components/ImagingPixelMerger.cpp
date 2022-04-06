@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Chao Peng, Sylvester Joosten, Wouter Deconinck, Whitney Armstrong
+
 /*
  *  A hits merger for ecal barrel to prepare dataset for machine learning
  *
@@ -166,4 +169,3 @@ private:
 DECLARE_COMPONENT(ImagingPixelMerger)
 
 } // namespace Jug::Reco
-

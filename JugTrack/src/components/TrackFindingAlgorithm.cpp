@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Whitney Armstrong, Wouter Deconinck
+
 #include "TrackFindingAlgorithm.h"
 
 // Gaudi
@@ -173,4 +176,3 @@ namespace Jug::Reco {
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   DECLARE_COMPONENT(TrackFindingAlgorithm)
 } // namespace Jug::Reco
-

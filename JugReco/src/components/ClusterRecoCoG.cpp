@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Sylvester Joosten, Chao, Chao Peng, Whitney Armstrong
+
 /*
  *  Reconstruct the cluster with Center of Gravity method
  *  Logarithmic weighting is used for mimicing energy deposit in transverse direction
@@ -252,4 +255,3 @@ private:
 DECLARE_COMPONENT(ClusterRecoCoG)
 
 } // namespace Jug::Reco
-

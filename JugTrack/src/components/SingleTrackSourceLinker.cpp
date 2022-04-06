@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Whitney Armstrong, Sylvester Joosten, Wouter Deconinck
+
 // Gaudi
 #include "Gaudi/Property.h"
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -166,4 +169,3 @@ public:
 DECLARE_COMPONENT(SingleTrackSourceLinker)
 
 } // namespace Jug::Reco
-

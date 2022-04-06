@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Sylvester Joosten, Wouter Deconinck
+
 #include <algorithm>
 #include <cmath>
 #include <fmt/format.h>
@@ -411,4 +414,3 @@ private:
 DECLARE_COMPONENT(SmearedFarForwardParticles)
 
 } // namespace Jug::Fast
-
