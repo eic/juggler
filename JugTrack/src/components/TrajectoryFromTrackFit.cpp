@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 wfan, Whitney Armstrong, Sylvester Joosten
 #include <algorithm>
 
 // FIXME needs renaming (TrackProjector) and updating to fix and remove hardcoded numbers

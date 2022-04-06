@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Wouter Deconinck, Whitney Armstrong, Chao
 // Gaudi
 #include "GaudiAlg/GaudiAlgorithm.h"
 #include "Gaudi/Property.h"

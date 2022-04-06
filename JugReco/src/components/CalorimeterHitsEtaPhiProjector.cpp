@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Jihee Kim, Sylvester Joosten, Chao Peng, Whitney Armstrong, Wouter Deconinck, Chao
 /*
  *  A hits converter to prepare dataset for machine learning
  *  It converts hits with (x, y, z, E) to (E, eta, phi) layer by layer
@@ -133,4 +135,3 @@ public:
 DECLARE_COMPONENT(CalorimeterHitsEtaPhiProjector)
 
 } // namespace Jug::Reco
-

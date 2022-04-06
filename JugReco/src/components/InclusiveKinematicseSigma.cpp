@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Wouter Deconinck, Barak Schmookler
 #include "Gaudi/Algorithm.h"
 #include "GaudiAlg/GaudiTool.h"
 #include "GaudiAlg/Producer.h"

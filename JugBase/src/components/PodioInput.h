@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Whitney Armstrong
 #ifndef JUGBASE_PODIOINPUT_H
 #define JUGBASE_PODIOINPUT_H
 // Gaaudi

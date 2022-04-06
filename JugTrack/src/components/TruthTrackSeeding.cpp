@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Whitney Armstrong, Wouter Deconinck, Sylvester Joosten
 #include <cmath>
 // Gaudi
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -120,4 +122,3 @@ namespace Jug::Reco {
   DECLARE_COMPONENT(TruthTrackSeeding)
 
 } // namespace Jug::reco
-

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Whitney Armstrong, Sylvester Joosten
 #include "GenFitTrackFitter.h"
 // Gaudi
 #include "Gaudi/Property.h"

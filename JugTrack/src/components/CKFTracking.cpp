@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Whitney Armstrong, Wouter Deconinck
 #include "CKFTracking.h"
 
 // Gaudi
@@ -171,4 +173,3 @@ namespace Jug::Reco {
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   DECLARE_COMPONENT(CKFTracking)
 } // namespace Jug::Reco
-

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Whitney Armstrong, Sylvester Joosten, Wouter Deconinck
 #include "JugTrack/GeometryContainers.hpp"
 
 // Gaudi
@@ -158,4 +160,3 @@ public:
 DECLARE_COMPONENT(TrackerSourceLinker)
 
 } // namespace Jug::Reco
-

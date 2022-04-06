@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Sylvester Joosten, Wouter Deconinck
 #ifndef PODIO_ROOT_UTILS_H
 #define PODIO_ROOT_UTILS_H
 
@@ -54,4 +56,3 @@ inline void setCollectionAddresses(podio::CollectionBase* collection, const Coll
 }
 
 #endif
-

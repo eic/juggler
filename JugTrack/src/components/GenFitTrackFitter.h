@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Whitney Armstrong
 #ifndef JUGGLER_JUGRECO_GenFitTrackFitter_HH
 #define JUGGLER_JUGRECO_GenFitTrackFitter_HH
 

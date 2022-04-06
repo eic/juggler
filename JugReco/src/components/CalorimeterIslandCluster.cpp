@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Sylvester Joosten, Chao, Chao Peng, Wouter Deconinck, Jihee Kim, Whitney Armstrong
 /*
  *  Island Clustering Algorithm for Calorimeter Blocks
  *  1. group all the adjacent modules
@@ -409,4 +411,3 @@ private:
 DECLARE_COMPONENT(CalorimeterIslandCluster)
 
 } // namespace Jug::Reco
-
