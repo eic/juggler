@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Whitney Armstrong
+
 #ifndef RECTRACKER_ACTSLOGGER_H
 #define RECTRACKER_ACTSLOGGER_H
 

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Chao Peng, Sylvester Joosten, Whitney Armstrong
+
 /*
  *  Topological Cell Clustering Algorithm for Imaging Calorimetry
  *  1. group all the adjacent pixels

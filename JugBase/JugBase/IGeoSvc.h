@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Whitney Armstrong
+
 #ifndef IGEOSVC_H
 #define IGEOSVC_H
 

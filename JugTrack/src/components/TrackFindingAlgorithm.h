@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Whitney Armstrong, Wouter Deconinck
+
 #ifndef JUGGLER_JUGRECO_TrackFindingAlgorithm_HH
 #define JUGGLER_JUGRECO_TrackFindingAlgorithm_HH
 

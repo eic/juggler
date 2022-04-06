@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright (C) 2022 Whitney Armstrong, Sylvester Joosten, Chao
+// Copyright (C) 2022 Whitney Armstrong, Sylvester Joosten, Chao Peng
+
 // Gaudi
 #include "GaudiAlg/GaudiAlgorithm.h"
 #include "Gaudi/Property.h"

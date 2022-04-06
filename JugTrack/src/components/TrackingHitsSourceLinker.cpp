@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Whitney Armstrong, Sylvester Joosten
+
 // This file is part of the Acts project.
 #include "JugTrack/GeometryContainers.hpp"
 

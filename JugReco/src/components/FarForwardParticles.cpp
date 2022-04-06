@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Alex Jentsch, Wouter Deconinck, Sylvester Joosten
+
 #include <algorithm>
 #include <cmath>
 #include <fmt/format.h>

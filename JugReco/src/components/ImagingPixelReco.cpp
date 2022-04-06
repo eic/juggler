@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Chao Peng, Sylvester Joosten, Chao, Whitney Armstrong, Wouter Deconinck, Jihee Kim
+
 // Reconstruct digitized outputs of ImagingCalorimeter
 // It converts digitized ADC/TDC values to energy/time, and looks for geometrical information of the
 // readout pixels Author: Chao Peng Date: 06/02/2021

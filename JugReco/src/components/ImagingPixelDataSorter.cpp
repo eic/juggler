@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Chao Peng, Chao, Sylvester Joosten
+
 /*
  *  A hits-level data sorter to prepare dataset for machine learning
  *

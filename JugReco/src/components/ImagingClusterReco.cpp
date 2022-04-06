@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Sylvester Joosten, Chao Peng, Wouter Deconinck
+
 /*
  *  Reconstruct the cluster/layer info for imaging calorimeter
  *  Logarithmic weighting is used to describe energy deposit in transverse direction
