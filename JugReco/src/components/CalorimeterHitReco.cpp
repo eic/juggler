@@ -168,13 +168,13 @@ public:
     // energy time reconstruction
     for (const auto& rh : rawhits) {
       // did not pass the zero-suppression threshold
-      if ((rh.getAmplitude() - m_pedMeanADC) < thresholdADC) {
+      if ((signed)(rh.getAmplitude() - m_pedMeanADC) < thresholdADC) {
         continue;
       }
 
       // convert ADC -> energy
       const float energy =
-          (rh.getAmplitude() - m_pedMeanADC) / static_cast<float>(m_capADC.value()) * dyRangeADC / m_sampFrac; 
+          (signed)(rh.getAmplitude() - m_pedMeanADC) / static_cast<float>(m_capADC.value()) * dyRangeADC / m_sampFrac; 
       const float time  = rh.getTimeStamp() / stepTDC;
       const auto cellID = rh.getCellID();
       const int lid = id_dec != nullptr && !m_layerField.value().empty() ? static_cast<int>(id_dec->get(cellID, layer_idx)) : -1;
