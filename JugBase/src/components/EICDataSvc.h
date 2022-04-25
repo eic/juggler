@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Whitney Armstrong
 
-#ifndef JUGBASE_FCCDATASVC_H
-#define JUGBASE_FCCDATASVC_H
+#ifndef JUGBASE_EICDATASVC_H
+#define JUGBASE_EICDATASVC_H
 
 #include "JugBase/PodioDataSvc.h"
 
@@ -15,4 +15,4 @@ public:
   /// Standard Destructor
   virtual ~EICDataSvc();
 };
-#endif  // JUGBASE_FCCDATASVC_H
+#endif  // JUGBASE_EICDATASVC_H
