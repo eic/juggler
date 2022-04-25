@@ -13,14 +13,14 @@
 DECLARE_COMPONENT(PodioInput)
 
 PodioInput::PodioInput(const std::string& name, ISvcLocator* svcLoc)
-: GaudiAlgorithm(name, svcLoc),m_podioDataSvc(nullptr) {}
+: GaudiAlgorithm(name, svcLoc), m_podioDataSvc(nullptr) {}
 
 StatusCode PodioInput::initialize() {
   if (GaudiAlgorithm::initialize().isFailure()) {
     return StatusCode::FAILURE;
   }
 
-  // check whether we have the PodioEvtSvc active
+  // check whether we have the PodioDataSvc active
   m_podioDataSvc = dynamic_cast<PodioDataSvc*>(evtSvc().get());
   if (m_podioDataSvc == nullptr) {
     return StatusCode::FAILURE;

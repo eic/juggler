@@ -10,6 +10,7 @@
 
 #include "TTree.h"
 
+/// Service initialization
 StatusCode PodioDataSvc::initialize() {
   // Nothing to do: just call base class initialisation
   StatusCode status = DataSvc::initialize();
@@ -39,12 +40,12 @@ StatusCode PodioDataSvc::initialize() {
   }
   return status;
 }
-
+/// Service reinitialization
 StatusCode PodioDataSvc::reinitialize() {
   // Do nothing for this service
   return StatusCode::SUCCESS;
 }
-
+/// Service finalization
 StatusCode PodioDataSvc::finalize() {
   m_cnvSvc = nullptr; // release
   DataSvc::finalize().ignore();
@@ -90,17 +91,21 @@ void PodioDataSvc::setCollectionIDs(podio::CollectionIDTable* collectionIds) {
 
 /// Standard Constructor
 PodioDataSvc::PodioDataSvc(const std::string& name, ISvcLocator* svc)
-    : DataSvc(name, svc), m_collectionIDs(new podio::CollectionIDTable()) {
-
-      m_eventDataTree = new TTree("events", "Events tree");
-    }
+: DataSvc(name, svc), m_collectionIDs(new podio::CollectionIDTable()) {
+  m_eventDataTree = new TTree("events", "Events tree");
+}
 
 /// Standard Destructor
-PodioDataSvc::~PodioDataSvc() = default;
+PodioDataSvc::~PodioDataSvc() {
+  delete m_collectionIDs;
+}
 
 StatusCode PodioDataSvc::readCollection(const std::string& collectionName, int collectionID) {
   podio::CollectionBase* collection(nullptr);
   m_provider.get(collectionID, collection);
+  if (collection->isSubsetCollection()) {
+    return StatusCode::SUCCESS;
+  }
   auto* wrapper = new DataWrapper<podio::CollectionBase>;
   const int id = m_collectionIDs->add(collectionName);
   collection->setID(id);
