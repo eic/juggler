@@ -44,12 +44,11 @@ namespace {
     TrackFinderFunctionImpl(CKF&& f) : trackFinder(std::move(f)) {}
 
     Jug::Reco::TrackFindingAlgorithm::TrackFinderResult
-    operator()(const Jug::IndexSourceLinkContainer&                        sourcelinks,
-               const Jug::TrackParametersContainer&                        initialParameters,
+    operator()(const Jug::TrackParametersContainer& initialParameters,
                const Jug::Reco::TrackFindingAlgorithm::TrackFinderOptions& options)
                const override
     {
-      return trackFinder.findTracks(sourcelinks, initialParameters, options);
+      return trackFinder.findTracks(initialParameters, options);
     };
   };
 

@@ -141,14 +141,18 @@ namespace Jug::Reco {
     extensions.measurementSelector.connect<&Acts::MeasurementSelector::select>(
         &measSel);
 
+    IndexSourceLinkAccessor slAccessor;
+    slAccessor.container = src_links;
+    Acts::SourceLinkAccessorDelegate<IndexSourceLinkAccessor::Iterator>
+        slAccessorDelegate;
+    slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
+
     // Set the CombinatorialKalmanFilter options
     CKFTracking::TrackFinderOptions options(
-        m_geoctx, m_fieldctx, m_calibctx,
-        IndexSourceLinkAccessor(), extensions,
-        Acts::LoggerWrapper{logger()},
-        pOptions, &(*pSurface));
+        m_geoctx, m_fieldctx, m_calibctx, slAccessorDelegate,
+        extensions, Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
 
-    auto results = (*m_trackFinderFunc)(*src_links, *init_trk_params, options);
+    auto results = (*m_trackFinderFunc)(*init_trk_params, options);
 
     for (std::size_t iseed = 0; iseed < init_trk_params->size(); ++iseed) {
 
