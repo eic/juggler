@@ -44,12 +44,11 @@ namespace {
     CKFTrackingFunctionImpl(CKF&& f) : trackFinder(std::move(f)) {}
 
     Jug::Reco::CKFTracking::TrackFinderResult
-    operator()(const Jug::IndexSourceLinkContainer&                        sourcelinks,
-               const Jug::TrackParametersContainer&                        initialParameters,
+    operator()(const Jug::TrackParametersContainer& initialParameters,
                const Jug::Reco::CKFTracking::TrackFinderOptions& options)
                const override
     {
-      return trackFinder.findTracks(sourcelinks, initialParameters, options);
+      return trackFinder.findTracks(initialParameters, options);
     };
   };
 
