@@ -215,6 +215,8 @@ namespace Jug::Digi {
         }
       }
 
+      info() << "DIGI raw hits" << endmsg;
+
       // signal sum
       for (auto &[id, hits] : merge_map) {
         double edep     = hits[0].getEnergy();
@@ -250,6 +252,9 @@ namespace Jug::Digi {
           tdc
         );
         rawhits->push_back(rawhit);
+
+        info() << rawhit << endmsg;
+
       }
     }
   };

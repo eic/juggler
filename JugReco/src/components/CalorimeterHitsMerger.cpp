@@ -92,8 +92,14 @@ public:
         // use the provided id number to find ref cell, or use 0
         int ref = i < u_refs.size() ? u_refs[i] : 0;
         ref_fields.emplace_back(u_fields[i], ref);
+
+        //info() << "i = "<< i << "\tu_fields[i] = " << u_fields[i] << "\tu_refs[i]" << u_refs[i] << "\tref = " << ref << endmsg;
+        info() << "i = "<< i << "\tu_fields[i] = " << u_fields[i] << "\tref = " << ref << endmsg;
+        info() << "id_mask = "<< id_mask << fmt::format("\tID mask {:#064b}", id_mask) << endmsg;
+
       }
       ref_mask = id_desc.encode(ref_fields);
+       info() << fmt::format("Referece id mask for the fields {:#064b}", ref_mask) << endmsg;
       // debug() << fmt::format("Referece id mask for the fields {:#064b}", ref_mask) << endmsg;
     } catch (...) {
       error() << "Failed to load ID decoder for " << m_readout << endmsg;
@@ -115,6 +121,7 @@ public:
     for (const auto& h : inputs) {
       int64_t id = h.getCellID() & id_mask;
       // use the reference field position
+      info() << fmt::format("IDmerge {:#064b} ", id) << endmsg;
       auto it = merge_map.find(id);
       if (it == merge_map.end()) {
         merge_map[id] = {h};
@@ -122,6 +129,8 @@ public:
         it->second.push_back(h);
       }
     }
+
+    info() << "MERGED hits" << endmsg;
 
     // reconstruct info for merged hits
     // dd4hep decoders
@@ -131,11 +140,14 @@ public:
     for (auto& [id, hits] : merge_map) {
       // reference fields id
       const uint64_t ref_id = id | ref_mask;
+      info() << fmt::format("ID {:#064b} ref_id {:#064b}", id, ref_id) << endmsg;
       // global positions
       const auto gpos = poscon->position(ref_id);
+      info() << "gpos.x() = " << gpos.x() << "\tgpos.y() = " << gpos.y() << "\tgpos.z() = " << gpos.z() << endmsg;
       // local positions
       auto alignment = volman.lookupDetElement(ref_id).nominal();
       const auto pos = alignment.worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));
+      info() << volman.lookupDetElement(ref_id).path() << ", " << volman.lookupDetector(ref_id).path() << endmsg;
       debug() << volman.lookupDetElement(ref_id).path() << ", " << volman.lookupDetector(ref_id).path() << endmsg;
       // sum energy
       float energy      = 0.;
@@ -173,6 +185,8 @@ public:
                               href.getSector(),
                               href.getLayer(),
                               local}); // Can do better here? Right now position is mapped on the central hit
+
+      info() << outputs.at(outputs.size()-1) << endmsg;
     }
 
     if (msgLevel(MSG::DEBUG)) {

@@ -124,7 +124,7 @@ public:
       }
       if (!m_layerField.value().empty()) {
         layer_idx = id_dec->index(m_layerField);
-        info() << "Find layer field " << m_layerField.value() << ", index = " << sector_idx << endmsg;
+        info() << "Find layer field " << m_layerField.value() << ", index = " << layer_idx << endmsg;
       }
     } catch (...) {
       error() << "Failed to load ID decoder for " << m_readout << endmsg;
@@ -164,6 +164,9 @@ public:
     // create output collections
     auto& hits     = *m_outputHitCollection.createAndPut();
     auto converter = m_geoSvc->cellIDPositionConverter();
+
+
+    info() << "RAW hits" << endmsg;
 
     // energy time reconstruction
     for (const auto& rh : rawhits) {
@@ -224,6 +227,8 @@ public:
             lid,
             local,          // local pos
         });
+
+        info() << hits.at(hits.size()-1) << endmsg;
     }
 
     return StatusCode::SUCCESS;
