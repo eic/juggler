@@ -8,7 +8,7 @@ cmake_policy(SET CMP0074 NEW)
 
 project(Juggler VERSION 4.3.0)
 
-set(CMAKE_CXX_STANDARD 20 CACHE STRING "")
+set(CMAKE_CXX_STANDARD 17 CACHE STRING "")
 if(NOT CMAKE_CXX_STANDARD MATCHES "17|20")
   message(FATAL_ERROR "Unsupported C++ standard: ${CMAKE_CXX_STANDARD}")
 endif()
