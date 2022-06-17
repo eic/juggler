@@ -71,7 +71,6 @@ juggler:local:
     matrix:
     - CMAKE_CXX_STANDARD:
       - 17
-      - 20
   script:
     ## first install EICD to ensure the latest version, then build juggler
     - |
@@ -81,7 +80,7 @@ juggler:local:
       cmake --build /tmp/build -j40 -- install
       rm -rf /tmp/build /tmp/eicd
     - |
-      cmake -Bbuild -S.
+      cmake -Bbuild -S. -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} -DCMAKE_INSTALL_PREFIX=/usr/local
       cmake --build build -j20
   artifacts:
     expire_in: 1 hour
