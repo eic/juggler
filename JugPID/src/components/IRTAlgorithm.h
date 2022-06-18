@@ -10,7 +10,6 @@
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/IParticleSvc.h"
-#include "JugBase/UniqueID.h"
 
 #include "dd4pod/Geant4ParticleCollection.h"
 #include "dd4pod/TrackerHitCollection.h"
@@ -47,7 +46,7 @@ namespace Jug::PID {
    *
    * \ingroup reco
    */
-  class IRTAlgorithm : public IRTAlgorithmServices, public GaudiAlgorithm, AlgorithmIDMixin<> {
+  class IRTAlgorithm : public IRTAlgorithmServices, public GaudiAlgorithm {
 
   public:
     // constructor
@@ -70,14 +69,14 @@ namespace Jug::PID {
 	this
 	};
 #ifdef _USE_RECONSTRUCTED_TRACKS_
-    DataHandle<eic::ReconstructedParticleCollection> m_inputRecoParticles {
+    DataHandle<eicd::ReconstructedParticleCollection> m_inputRecoParticles {
       "inputRecoParticles", 
 	Gaudi::DataHandle::Reader, 
 	this
 	};
 #endif
 #ifdef _USE_STORED_TRAJECTORIES_
-    DataHandle<eic::TrajectoryCollection> m_inputTrajectories {
+    DataHandle<eicd::TrajectoryCollection> m_inputTrajectories {
       "inputTrajectories", 
 	Gaudi::DataHandle::Reader, 
 	this
@@ -92,7 +91,7 @@ namespace Jug::PID {
 #endif
 
     // Output collection;
-    std::unique_ptr<DataHandle<eic::CherenkovParticleIDCollection>> m_outputCherenkovPID;
+    std::unique_ptr<DataHandle<eicd::CherenkovParticleIDCollection>> m_outputCherenkovPID;
 
     /// Pointer to the geometry and PDG service;
     SmartIF<IGeoSvc> m_geoSvc;

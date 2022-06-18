@@ -17,7 +17,7 @@ using namespace Gaudi::Units;
 // -------------------------------------------------------------------------------------
 
 Jug::PID::IRTAlgorithm::IRTAlgorithm(const std::string& name, ISvcLocator* svcLoc) 
-  : GaudiAlgorithm(name, svcLoc), AlgorithmIDMixin(name, info()), m_IrtGeo(0), m_IrtDet(0), 
+  : GaudiAlgorithm(name, svcLoc), m_IrtGeo(0), m_IrtDet(0), 
     m_ReadoutCellMask(0x0)
 {
   declareProperty("inputMCParticles",                 m_inputMCParticles,              "");
@@ -165,7 +165,7 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
 									 Gaudi::DataHandle::Reader, this);
     // Output PID info collection;
     m_outputCherenkovPID =
-      std::make_unique<DataHandle<eic::CherenkovParticleIDCollection>>((dname + "PID").c_str(), 
+      std::make_unique<DataHandle<eicd::CherenkovParticleIDCollection>>((dname + "PID").c_str(), 
 								       Gaudi::DataHandle::Writer, this);
   }
 
@@ -279,7 +279,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 #ifdef _USE_STORED_TRAJECTORIES_
   const auto &trajectories = *m_inputTrajectories.get();
   // First populate the trajectory-to-reconstructed (or -to-simulated) mapping table;
-  std::map<eic::Index, const eic::ConstTrajectory*> rc2trajectory;
+  std::map<eic::Index, const eicd::ConstTrajectory*> rc2trajectory;
   for(const auto &trajectory: trajectories)
     rc2trajectory[trajectory.trackID()] = &trajectory;
 #endif
@@ -583,7 +583,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	
 	for(unsigned ip=0; ip<sizeof(pdg_table)/sizeof(pdg_table[0]); ip++) {
 	  auto hypo = pid.GetHypothesis(ip);
-	  eic::CherenkovPdgHypothesis hypothesis;
+	  eicd::CherenkovPdgHypothesis hypothesis;
 	  
 	  // Flip sign if needed; FIXME: use reconstructed one?;
 	  if (m_pidSvc->particle(mctrack.pdgID()).charge < 0.0) pdg_table[ip] *= -1;
@@ -604,7 +604,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	  double ri = 0.0;
 	  double wl = 0.0;
 	  double wtsum = 0.0;
-	  eic::CherenkovThetaAngleMeasurement rdata;
+	  eicd::CherenkovThetaAngleMeasurement rdata;
 
 	  rdata.radiator = ir;
 	  

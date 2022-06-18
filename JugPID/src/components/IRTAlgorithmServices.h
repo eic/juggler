@@ -33,11 +33,11 @@ namespace Jug::PID {
     bool QE_pass(double ev, double rand) const;
 
     // FIXME: this crap needs to be optimized;
-    double GetDistance(const ParametricSurface *surface, const eic::TrajectoryPoint *point) const;
-    bool GetCrossing(const ParametricSurface *surface, const eic::TrajectoryPoint *point, 
+    double GetDistance(const ParametricSurface *surface, const eicd::TrajectoryPoint *point) const;
+    bool GetCrossing(const ParametricSurface *surface, const eicd::TrajectoryPoint *point, 
 		     TVector3 *crs) const;
-    TVector3 GetLocation(const eic::TrajectoryPoint *point) const;
-    TVector3 GetMomentum(const eic::TrajectoryPoint *point) const;
+    TVector3 GetLocation(const eicd::TrajectoryPoint *point) const;
+    TVector3 GetMomentum(const eicd::TrajectoryPoint *point) const;
 
     void findPrimitive(
         const std::string typeName, const dd4hep::Solid sol,
