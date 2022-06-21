@@ -48,8 +48,8 @@ private:
   // length unit (from dd4hep geometry service)
   Gaudi::Property<double> m_lUnit{this, "lengthUnit", dd4hep::mm};
   // digitization parameters
-  Gaudi::Property<int> m_capADC{this, "capacityADC", 8096};
-  Gaudi::Property<int> m_pedMeanADC{this, "pedestalMean", 400};
+  Gaudi::Property<unsigned int> m_capADC{this, "capacityADC", 8096};
+  Gaudi::Property<unsigned int> m_pedMeanADC{this, "pedestalMean", 400};
   Gaudi::Property<double> m_dyRangeADC{this, "dynamicRangeADC", 100 * MeV};
   Gaudi::Property<double> m_pedSigmaADC{this, "pedestalSigma", 3.2};
   Gaudi::Property<double> m_thresholdADC{this, "thresholdFactor", 3.0};
@@ -117,7 +117,7 @@ public:
     // energy time reconstruction
     for (const auto& rh : rawhits) {
       // did not pass the threshold
-      if ((rh.getAmplitude() - m_pedMeanADC) < m_thresholdADC * m_pedSigmaADC) {
+      if ((signed)(rh.getAmplitude() - m_pedMeanADC) < m_thresholdADC * m_pedSigmaADC) {
         continue;
       }
       const double energy =
