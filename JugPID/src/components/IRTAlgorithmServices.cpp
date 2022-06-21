@@ -100,7 +100,7 @@ bool Jug::PID::IRTAlgorithmServices::QE_pass(double ev, double rand) const
 // -------------------------------------------------------------------------------------
 
 double Jug::PID::IRTAlgorithmServices::GetDistance(const ParametricSurface *surface, 
-							const eicd::TrajectoryPoint *point) const
+							const eicd::TrackPoint *point) const
 {
   if (!surface || !point) return 0.0;
 
@@ -112,7 +112,7 @@ double Jug::PID::IRTAlgorithmServices::GetDistance(const ParametricSurface *surf
 // -------------------------------------------------------------------------------------
 
 bool Jug::PID::IRTAlgorithmServices::GetCrossing(const ParametricSurface *surface, 
-						      const eicd::TrajectoryPoint *point, 
+						      const eicd::TrackPoint *point, 
 						      TVector3 *crs) const
 {
   if (!surface || !point) return false;
@@ -122,16 +122,16 @@ bool Jug::PID::IRTAlgorithmServices::GetCrossing(const ParametricSurface *surfac
 
 // -------------------------------------------------------------------------------------
 
-TVector3 Jug::PID::IRTAlgorithmServices::GetLocation(const eicd::TrajectoryPoint *point) const
+TVector3 Jug::PID::IRTAlgorithmServices::GetLocation(const eicd::TrackPoint *point) const
 {
   return TVector3(point->position.x, point->position.y, point->position.z);
 } // Jug::PID::IRTAlgorithmServices::GetLocation()
 
 // -------------------------------------------------------------------------------------
 
-TVector3 Jug::PID::IRTAlgorithmServices::GetMomentum(const eicd::TrajectoryPoint *point) const
+TVector3 Jug::PID::IRTAlgorithmServices::GetMomentum(const eicd::TrackPoint *point) const
 {
-  return TVector3(point->p.x, point->p.y, point->p.z);
+  return TVector3(point->momentum.x, point->momentum.y, point->momentum.z);
 } // Jug::PID::IRTAlgorithmServices::GetMomentum()
 
 // -------------------------------------------------------------------------------------

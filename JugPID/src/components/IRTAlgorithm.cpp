@@ -594,7 +594,8 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	  hypothesis.npe      = hypo->GetNpe   (radiator);
 	  hypothesis.weight   = hypo->GetWeight(radiator);
 	  
-	  cbuffer.addoptions(hypothesis);
+	  cbuffer.getoptions(hypothesis);
+
 	} //for ip
 
 	// Theta angle estimates, per radiator;
@@ -640,7 +641,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	  rdata.rindex     = npe   ? ri    / npe   : 0.0;
 	  rdata.wavelength = npe   ? wl    / npe   : 0.0;
 	  //printf("@@@ %7.2f\n", 1000*rdata.theta);
-	  cbuffer.addangles(rdata);
+	  cbuffer.getangles(rdata);
 	}
       } //for ir
 
