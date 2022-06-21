@@ -44,6 +44,11 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
+# Set all warnings
+if(NOT CMAKE_BUILD_TYPE MATCHES Release)
+  add_compile_options(-Wall -Wextra -Wsign-conversion -Werror)
+endif()
+
 find_package(Microsoft.GSL CONFIG)
 
 find_package(EICD REQUIRED)
