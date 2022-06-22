@@ -178,7 +178,7 @@ public:
 
       // convert ADC -> energy
       const float energy =
-        ((signed)rh.getAmplitude() - m_pedMeanADC) / static_cast<float>(m_capADC.value()) * dyRangeADC / m_sampFrac; 
+        ((signed)rh.getAmplitude() - m_pedMeanADC) / static_cast<float>(m_capADC.value()) * dyRangeADC / m_sampFrac;
       const float time  = rh.getTimeStamp() / stepTDC;
 
       #pragma GCC diagnostic pop
