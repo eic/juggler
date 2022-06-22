@@ -46,7 +46,7 @@ endif()
 
 # Set all warnings
 if(NOT CMAKE_BUILD_TYPE MATCHES Release)
-  add_compile_options(-Wall -Wextra -Wsign-conversion -Werror)
+  add_compile_options(-Wall -Wextra -Werror)
 endif()
 
 find_package(Microsoft.GSL CONFIG)
