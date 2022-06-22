@@ -167,15 +167,22 @@ public:
 
     // energy time reconstruction
     for (const auto& rh : rawhits) {
+
+      #pragma GCC diagnostic push
+      #pragma GCC diagnostic error "-Wsign-conversion"
+
       // did not pass the zero-suppression threshold
-      if ((signed)(rh.getAmplitude() - m_pedMeanADC) < thresholdADC) {
+      if (rh.getAmplitude() < m_pedMeanADC + thresholdADC) {
         continue;
       }
 
       // convert ADC -> energy
       const float energy =
-          (signed)(rh.getAmplitude() - m_pedMeanADC) / static_cast<float>(m_capADC.value()) * dyRangeADC / m_sampFrac; 
+        ((signed)rh.getAmplitude() - m_pedMeanADC) / static_cast<float>(m_capADC.value()) * dyRangeADC / m_sampFrac; 
       const float time  = rh.getTimeStamp() / stepTDC;
+
+      #pragma GCC diagnostic pop
+
       const auto cellID = rh.getCellID();
       const int lid = id_dec != nullptr && !m_layerField.value().empty() ? static_cast<int>(id_dec->get(cellID, layer_idx)) : -1;
       const int sid = id_dec != nullptr && !m_sectorField.value().empty() ? static_cast<int>(id_dec->get(cellID, sector_idx)) : -1;
