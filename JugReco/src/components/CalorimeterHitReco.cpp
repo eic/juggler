@@ -207,7 +207,7 @@ public:
         const decltype(eicd::CalorimeterHitData::dimension) dimension(
           cdim[0] / m_lUnit, cdim[1] / m_lUnit, cdim[2] / m_lUnit
         );
-        const decltype(eicd::CalorimeterHitData::local) local(
+        const decltype(eicd::CalorimeterHitData::local) local_position(
           pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit
         );
 
@@ -222,7 +222,7 @@ public:
             // Local hit info
             sid,
             lid,
-            local,          // local pos
+            local_position, // local pos
         });
     }
 
