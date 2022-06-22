@@ -44,9 +44,9 @@ private:
   Gaudi::Property<double> m_lUnit{this, "lengthUnit", dd4hep::mm};
 
   // digitization settings, must be consistent with digi class
-  Gaudi::Property<int> m_capADC{this, "capacityADC", 8096};
+  Gaudi::Property<unsigned int> m_capADC{this, "capacityADC", 8096};
   Gaudi::Property<double> m_dyRangeADC{this, "dynamicRangeADC", 100. * MeV};
-  Gaudi::Property<int> m_pedMeanADC{this, "pedestalMean", 400};
+  Gaudi::Property<unsigned int> m_pedMeanADC{this, "pedestalMean", 400};
   Gaudi::Property<double> m_pedSigmaADC{this, "pedestalSigma", 3.2};
   Gaudi::Property<double> m_resolutionTDC{this, "resolutionTDC", 10 * ps};
 
@@ -178,7 +178,7 @@ public:
 
       // convert ADC -> energy
       const float energy =
-        ((signed)rh.getAmplitude() - m_pedMeanADC) / static_cast<float>(m_capADC.value()) * dyRangeADC / m_sampFrac;
+        (((signed)rh.getAmplitude() - (signed)m_pedMeanADC)) / static_cast<float>(m_capADC.value()) * dyRangeADC / m_sampFrac;
       const float time  = rh.getTimeStamp() / stepTDC;
 
       #pragma GCC diagnostic pop

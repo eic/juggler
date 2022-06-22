@@ -125,7 +125,7 @@ public:
         continue;
       }
       const double energy =
-        ((signed)rh.getAmplitude() - m_pedMeanADC) / (double)m_capADC * dyRangeADC / m_sampFrac; // convert ADC -> energy
+        (((signed)rh.getAmplitude() - (signed)m_pedMeanADC)) / (double)m_capADC * dyRangeADC / m_sampFrac; // convert ADC -> energy
       const double time = rh.getTimeStamp() * 1.e-6;                                       // ns
 
       #pragma GCC diagnostic pop
