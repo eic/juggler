@@ -116,13 +116,20 @@ public:
 
     // energy time reconstruction
     for (const auto& rh : rawhits) {
+
+      #pragma GCC diagnostic push
+      #pragma GCC diagnostic error "-Wsign-conversion"
+
       // did not pass the threshold
-      if ((signed)(rh.getAmplitude() - m_pedMeanADC) < m_thresholdADC * m_pedSigmaADC) {
+      if (rh.getAmplitude() < m_pedMeanADC + m_thresholdADC * m_pedSigmaADC) {
         continue;
       }
       const double energy =
-          (rh.getAmplitude() - m_pedMeanADC) / (double)m_capADC * dyRangeADC / m_sampFrac; // convert ADC -> energy
+        (((signed)rh.getAmplitude() - (signed)m_pedMeanADC)) / (double)m_capADC * dyRangeADC / m_sampFrac; // convert ADC -> energy
       const double time = rh.getTimeStamp() * 1.e-6;                                       // ns
+
+      #pragma GCC diagnostic pop
+
       const auto id     = rh.getCellID();
       // @TODO remove
       const int lid = (int)id_dec->get(id, layer_idx);

@@ -44,9 +44,9 @@ private:
   Gaudi::Property<double> m_lUnit{this, "lengthUnit", dd4hep::mm};
 
   // digitization settings, must be consistent with digi class
-  Gaudi::Property<int> m_capADC{this, "capacityADC", 8096};
+  Gaudi::Property<unsigned int> m_capADC{this, "capacityADC", 8096};
   Gaudi::Property<double> m_dyRangeADC{this, "dynamicRangeADC", 100. * MeV};
-  Gaudi::Property<int> m_pedMeanADC{this, "pedestalMean", 400};
+  Gaudi::Property<unsigned int> m_pedMeanADC{this, "pedestalMean", 400};
   Gaudi::Property<double> m_pedSigmaADC{this, "pedestalSigma", 3.2};
   Gaudi::Property<double> m_resolutionTDC{this, "resolutionTDC", 10 * ps};
 
@@ -167,15 +167,22 @@ public:
 
     // energy time reconstruction
     for (const auto& rh : rawhits) {
+
+      #pragma GCC diagnostic push
+      #pragma GCC diagnostic error "-Wsign-conversion"
+
       // did not pass the zero-suppression threshold
-      if ((signed)(rh.getAmplitude() - m_pedMeanADC) < thresholdADC) {
+      if (rh.getAmplitude() < m_pedMeanADC + thresholdADC) {
         continue;
       }
 
       // convert ADC -> energy
       const float energy =
-          (signed)(rh.getAmplitude() - m_pedMeanADC) / static_cast<float>(m_capADC.value()) * dyRangeADC / m_sampFrac; 
+        (((signed)rh.getAmplitude() - (signed)m_pedMeanADC)) / static_cast<float>(m_capADC.value()) * dyRangeADC / m_sampFrac;
       const float time  = rh.getTimeStamp() / stepTDC;
+
+      #pragma GCC diagnostic pop
+
       const auto cellID = rh.getCellID();
       const int lid = id_dec != nullptr && !m_layerField.value().empty() ? static_cast<int>(id_dec->get(cellID, layer_idx)) : -1;
       const int sid = id_dec != nullptr && !m_sectorField.value().empty() ? static_cast<int>(id_dec->get(cellID, sector_idx)) : -1;
@@ -207,7 +214,7 @@ public:
         const decltype(eicd::CalorimeterHitData::dimension) dimension(
           cdim[0] / m_lUnit, cdim[1] / m_lUnit, cdim[2] / m_lUnit
         );
-        const decltype(eicd::CalorimeterHitData::local) local(
+        const decltype(eicd::CalorimeterHitData::local) local_position(
           pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit
         );
 
@@ -222,7 +229,7 @@ public:
             // Local hit info
             sid,
             lid,
-            local,          // local pos
+            local_position, // local pos
         });
     }
 

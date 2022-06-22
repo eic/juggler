@@ -214,7 +214,6 @@ public:
     }
 
     // DIS kinematics calculations
-    const auto mass = pi_coll[0].getPDG() == 2212 ? m_proton : m_neutron;
     const auto ef = electrons.front();
     const auto q = ei - ef;
     const auto q_dot_pi = q.Dot(pi);
