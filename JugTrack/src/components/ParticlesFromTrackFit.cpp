@@ -98,9 +98,7 @@ namespace Jug::Reco {
 
           // Get the fitted track parameter
           //
-          bool hasFittedParams = false;
           if (traj.hasTrackParameters(trackTip)) {
-            hasFittedParams      = true;
             const auto& boundParam = traj.trackParameters(trackTip);
             const auto& parameter  = boundParam.parameters();
             const auto& covariance = *boundParam.covariance();

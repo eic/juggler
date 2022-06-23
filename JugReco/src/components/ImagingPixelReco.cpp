@@ -48,8 +48,8 @@ private:
   // length unit (from dd4hep geometry service)
   Gaudi::Property<double> m_lUnit{this, "lengthUnit", dd4hep::mm};
   // digitization parameters
-  Gaudi::Property<int> m_capADC{this, "capacityADC", 8096};
-  Gaudi::Property<int> m_pedMeanADC{this, "pedestalMean", 400};
+  Gaudi::Property<unsigned int> m_capADC{this, "capacityADC", 8096};
+  Gaudi::Property<unsigned int> m_pedMeanADC{this, "pedestalMean", 400};
   Gaudi::Property<double> m_dyRangeADC{this, "dynamicRangeADC", 100 * MeV};
   Gaudi::Property<double> m_pedSigmaADC{this, "pedestalSigma", 3.2};
   Gaudi::Property<double> m_thresholdADC{this, "thresholdFactor", 3.0};
@@ -116,13 +116,20 @@ public:
 
     // energy time reconstruction
     for (const auto& rh : rawhits) {
+
+      #pragma GCC diagnostic push
+      #pragma GCC diagnostic error "-Wsign-conversion"
+
       // did not pass the threshold
-      if ((rh.getAmplitude() - m_pedMeanADC) < m_thresholdADC * m_pedSigmaADC) {
+      if (rh.getAmplitude() < m_pedMeanADC + m_thresholdADC * m_pedSigmaADC) {
         continue;
       }
       const double energy =
-          (rh.getAmplitude() - m_pedMeanADC) / (double)m_capADC * dyRangeADC / m_sampFrac; // convert ADC -> energy
+        (((signed)rh.getAmplitude() - (signed)m_pedMeanADC)) / (double)m_capADC * dyRangeADC / m_sampFrac; // convert ADC -> energy
       const double time = rh.getTimeStamp() * 1.e-6;                                       // ns
+
+      #pragma GCC diagnostic pop
+
       const auto id     = rh.getCellID();
       // @TODO remove
       const int lid = (int)id_dec->get(id, layer_idx);

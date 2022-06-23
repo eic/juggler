@@ -28,6 +28,7 @@ gaudi_add_module(JugTrackPlugins
   src/components/ParticlesFromTrackFit.cpp 
   #src/components/TrajectoryFromTrackFit.cpp 
   src/components/TruthTrackSeeding.cpp 
+  src/components/TrackParamACTSSeeding.cpp 
   LINK
   Gaudi::GaudiAlgLib Gaudi::GaudiKernel
   JugBase

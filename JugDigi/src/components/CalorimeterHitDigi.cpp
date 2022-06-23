@@ -51,9 +51,9 @@ namespace Jug::Digi {
     Gaudi::Property<double>              m_tRes{this, "timeResolution", 0.0 * ns};
 
     // digitization settings
-    Gaudi::Property<int>                m_capADC{this, "capacityADC", 8096};
+    Gaudi::Property<unsigned int>       m_capADC{this, "capacityADC", 8096};
     Gaudi::Property<double>             m_dyRangeADC{this, "dynamicRangeADC", 100 * MeV};
-    Gaudi::Property<int>                m_pedMeanADC{this, "pedestalMean", 400};
+    Gaudi::Property<unsigned int>       m_pedMeanADC{this, "pedestalMean", 400};
     Gaudi::Property<double>             m_pedSigmaADC{this, "pedestalSigma", 3.2};
     Gaudi::Property<double>             m_resolutionTDC{this, "resolutionTDC", 10 * ps};
 
@@ -243,8 +243,8 @@ namespace Jug::Digi {
                       m_normDist() * eRes[2] / edep;
         }
         double    ped     = m_pedMeanADC + m_normDist() * m_pedSigmaADC;
-        long long adc     = std::llround(ped + edep * (1. + eResRel) / dyRangeADC * m_capADC);
-        long long tdc     = std::llround((time + m_normDist() * tRes) * stepTDC);
+        unsigned long long adc     = std::llround(ped + edep * (1. + eResRel) / dyRangeADC * m_capADC);
+        unsigned long long tdc     = std::llround((time + m_normDist() * tRes) * stepTDC);
 
         eicd::RawCalorimeterHit rawhit(
           id,
