@@ -72,10 +72,6 @@ public:
     auto out_traj = m_outputTrajectories.createAndPut();
     auto out_pars = m_outputParameters.createAndPut();
 
-    if (msgLevel(MSG::DEBUG)) {
-      debug() << std::size(*trajectories) << " trajectories " << endmsg;
-    }
-
     // Loop over the trajectories
     for (const auto& traj : acts_traj) {
 
