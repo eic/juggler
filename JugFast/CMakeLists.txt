@@ -5,16 +5,10 @@
 # Package: JugFast
 ################################################################################
 
+file(GLOB JugFastPlugins_sources CONFIGURE_DEPENDS src/components/*.cpp)
 gaudi_add_module(JugFastPlugins
   SOURCES
-  src/components/InclusiveKinematicsTruth.cpp
-  src/components/ClusterMerger.cpp 
-  src/components/MatchClusters.cpp 
-  src/components/MC2SmearedParticle.cpp 
-  src/components/ParticlesWithTruthPID.cpp 
-  src/components/SmearedFarForwardParticles.cpp 
-  src/components/TruthEnergyPositionClusterMerger.cpp
-  src/components/TruthClustering.cpp
+  ${JugFastPlugins_sources}
   LINK
   Gaudi::GaudiAlgLib Gaudi::GaudiKernel
   JugBase
