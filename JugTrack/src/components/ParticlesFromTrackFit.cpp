@@ -43,7 +43,6 @@ namespace Jug::Reco {
    */
    class ParticlesFromTrackFit : public GaudiAlgorithm {
    private:
-    //DataHandle<eicd::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<TrajectoriesContainer>     m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
     DataHandle<eicd::BasicParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer, this};
     DataHandle<eicd::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters", Gaudi::DataHandle::Writer, this};
