@@ -162,7 +162,7 @@ namespace Jug::Reco {
             debug() << " chi2 = " << trajState.chi2Sum << endmsg;
             debug() << " pathlength at reference layer = " << pathlength_at_reflayer << "mm" << endmsg;
           }
-            
+
           eicd::Trajectory traj_par{
             {ID++, algorithmID()},
             {0, 0}, // proto track ID
