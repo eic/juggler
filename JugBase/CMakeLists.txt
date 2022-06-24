@@ -6,9 +6,13 @@
 ################################################################################
 
 file(GLOB JugBase_sources CONFIGURE_DEPENDS src/*.cpp)
+file(GLOB JugBase_plugins CONFIGURE_DEPENDS src/Plugins/*.cpp)
+file(GLOB JugBase_utilities CONFIGURE_DEPENDS src/Utilities/*.cpp)
 gaudi_add_library(JugBase
   SOURCES
   ${JugBase_sources}
+  ${JugBase_plugins}
+  ${JugBase_utilities}
   LINK
   Gaudi::GaudiKernel Gaudi::GaudiAlgLib
   podio::podioRootIO
