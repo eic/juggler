@@ -31,7 +31,7 @@
 
 #include "Acts/Utilities/Helpers.hpp"
 
-#include "eicd/VectorPolar.h"
+#include "eicd/vector_utils.h"
 
 #include <cmath>
 
@@ -177,8 +177,8 @@ public:
 
         eicd::BasicParticle p{
             {-1, 0},
-            eicd::VectorPolar( // 3-momentum vector
-                {1.0 / std::abs(params[Acts::eBoundQOverP]), params[Acts::eBoundTheta], params[Acts::eBoundPhi]}),
+            eicd::sphericalToVector( // 3-momentum vector
+                1.0 / std::abs(params[Acts::eBoundQOverP]), params[Acts::eBoundTheta], params[Acts::eBoundPhi]),
             {0., 0., 0.},                                                        // vectex 3-vector
             0.,                                                                  // time
             0,                                                                   // PDG particle code

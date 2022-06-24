@@ -41,7 +41,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
-#include "eicd/VectorPolar.h"
+#include "eicd/vector_utils.h"
 
 #include <cmath>
 
