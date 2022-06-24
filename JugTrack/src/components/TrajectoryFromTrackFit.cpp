@@ -50,7 +50,7 @@ namespace Jug::Reco {
    *
    * \ingroup tracking
    */
-   class TrajectoryFromTrackFit : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
+   class TrajectoryFromTrackFit : public GaudiAlgorithm {
    public:
     DataHandle<TrajectoriesContainer>     m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
     DataHandle<eicd::TrajectoryCollection> m_outputTrajectory{"outputTrajectoryParameters", Gaudi::DataHandle::Writer, this};
@@ -58,8 +58,7 @@ namespace Jug::Reco {
    public:
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     TrajectoryFromTrackFit(const std::string& name, ISvcLocator* svcLoc)
-        : GaudiAlgorithm(name, svcLoc)
-        , AlgorithmIDMixin(name, info()) {
+        : GaudiAlgorithm(name, svcLoc)) {
           declareProperty("inputTrajectories", m_inputTrajectories,"");
           declareProperty("outputTrajectoryParameters", m_outputTrajectory, "ACTS Trajectory Parameters");
         }
