@@ -130,8 +130,8 @@ namespace Jug::Reco {
           }
 
           // get track state parameters and their covariances
-          const auto& parameter = trackstate.parameters();
-          const auto& covariance = trackstate.covariance();
+          const auto& parameter = trackstate.predicted();
+          const auto& covariance = trackstate.predictedCovariance();
 
           // convert local to global
           auto global = trackstate.referenceSurface().localToGlobal(
