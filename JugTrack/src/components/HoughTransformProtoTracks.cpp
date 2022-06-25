@@ -43,11 +43,9 @@ public:
 
   StatusCode execute() override {
     // input collection
-    const eicd::TrackerHitCollection* hits = m_inputTrackerHits.get();
+    //const eicd::TrackerHitCollection* hits = m_inputTrackerHits.get();
     // Create output collections
-    auto proto_tracks = m_outputProtoTracks.createAndPut();
-
-    //
+    //auto proto_tracks = m_outputProtoTracks.createAndPut();
 
     return StatusCode::SUCCESS;
   }

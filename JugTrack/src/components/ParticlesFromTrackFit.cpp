@@ -43,7 +43,6 @@ namespace Jug::Reco {
    */
    class ParticlesFromTrackFit : public GaudiAlgorithm {
    private:
-    //DataHandle<eicd::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<TrajectoriesContainer>     m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
     DataHandle<eicd::BasicParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer, this};
     DataHandle<eicd::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters", Gaudi::DataHandle::Writer, this};
@@ -134,16 +133,17 @@ namespace Jug::Reco {
               static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc1))};
             const float timeError{sqrt(static_cast<float>(covariance(Acts::eBoundTime, Acts::eBoundTime)))};
 
-                eicd::TrackParameters pars{0, // type: track head --> 0
-                                          loc,
-                                          covPos,
-                                          static_cast<float>(parameter[Acts::eBoundTheta]),
-                                          static_cast<float>(parameter[Acts::eBoundPhi]),
-                                          static_cast<float>(parameter[Acts::eBoundQOverP]),
-                                          covMomentum,
-                                          static_cast<float>(parameter[Acts::eBoundTime]),
-                                          timeError,
-                                          static_cast<float>(boundParam.charge())};
+            eicd::TrackParameters pars{
+              0, // type: track head --> 0
+              loc,
+              covPos,
+              static_cast<float>(parameter[Acts::eBoundTheta]),
+              static_cast<float>(parameter[Acts::eBoundPhi]),
+              static_cast<float>(parameter[Acts::eBoundQOverP]),
+              covMomentum,
+              static_cast<float>(parameter[Acts::eBoundTime]),
+              timeError,
+              static_cast<float>(boundParam.charge())};
             track_pars->push_back(pars);
           }
 
@@ -172,16 +172,17 @@ namespace Jug::Reco {
             }
 
             eicd::BasicParticle p{
-                eicd::sphericalToVector(1.0 / std::abs(params[Acts::eBoundQOverP]), 
-                                        params[Acts::eBoundTheta],
-                                        params[Acts::eBoundPhi]),
-                {0., 0., 0.},                                                        // vectex 3-vector
-                0.,                                                                  // time
-                0,                                                                   // PDG particle code
-                0,                                                                   // status
-                static_cast<int16_t>(std::copysign(1., params[Acts::eBoundQOverP])), // charge
-                1.                                                                   // weight
-            };                                                                       // charge
+              eicd::sphericalToVector(
+                1.0 / std::abs(params[Acts::eBoundQOverP]),
+                params[Acts::eBoundTheta],
+                params[Acts::eBoundPhi]),                                          // momentum 3-vector
+              {0., 0., 0.},                                                        // vectex 3-vector
+              0.,                                                                  // time
+              0,                                                                   // PDG particle code
+              0,                                                                   // status
+              static_cast<int16_t>(std::copysign(1., params[Acts::eBoundQOverP])), // charge
+              1.                                                                   // weight
+            };                                                                     // charge
             rec_parts->push_back(p);
           });
       }
