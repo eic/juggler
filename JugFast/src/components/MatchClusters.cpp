@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Sylvester Joosten
 
-// TODO needs full rework to run off list of mc-cluster relations instead
-#if 0
 // Takes a list of particles (presumed to be from tracking), and all available clusters.
 // 1. Match clusters to their tracks using the mcID field
 // 2. For unmatched clusters create neutrals and add to the particle list
@@ -204,4 +202,3 @@ private:
 DECLARE_COMPONENT(MatchClusters)
 
 } // namespace Jug::Fast
-#endif
