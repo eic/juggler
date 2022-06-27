@@ -14,6 +14,7 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 
 // Gaudi
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -31,9 +32,8 @@
 #include "JugTrack/Track.hpp"
 
 #include "eicd/TrackerHitCollection.h"
-#include "dd4pod/Geant4ParticleCollection.h"
+
 #include "Math/Vector3D.h"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
 
 
   ///// (Reconstructed) track parameters e.g. close to the vertex.
