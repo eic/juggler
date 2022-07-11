@@ -9,7 +9,7 @@
 #include "GaudiAlg/GaudiTool.h"
 #include "Gaudi/Algorithm.h"
 
-// FCCSW
+// JugBase
 #include "JugBase/DataHandle.h"
 
 // Event Model related classes

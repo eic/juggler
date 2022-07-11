@@ -8,7 +8,7 @@
 #include "GaudiAlg/GaudiAlgorithm.h"
 #include "Gaudi/Property.h"
 
-// FCCSW
+// JugBase
 #include "JugBase/DataHandle.h"
 
 /** Logging for ACTS.

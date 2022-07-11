@@ -3,7 +3,7 @@
 
 #include "TestACTSLogger.h"
 
-// FCCSW
+// JugBase
 //#include "DetCommon/DetUtils.h"
 #include "JugBase/IGeoSvc.h"
 
