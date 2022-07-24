@@ -1,0 +1,42 @@
+name: linux-eic-shell
+
+on: [push, pull_request]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: cvmfs-contrib/github-action-cvmfs@v2
+    - uses: eic/run-cvmfs-osg-eic-shell@main
+      with:
+        platform-release: "jug_xl:nightly"
+        run: |
+          PREFIX=${PWD}/install
+          # install this repo
+          cmake -B build -S . -DCMAKE_INSTALL_PREFIX=${PREFIX}
+          cmake --build build -- install
+    - uses: actions/upload-artifact@v3
+      with:
+        name: build-eic-shell
+        path: install/
+        if-no-files-found: error
+
+  clang-tidy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: cvmfs-contrib/github-action-cvmfs@v2
+    - uses: actions/download-artifact@v3
+      with:
+        name: build-eic-shell
+        path: install/
+    - uses: eic/run-cvmfs-osg-eic-shell@main
+      with:
+        platform-release: "jug_xl:nightly"
+        run: |
+          run-clang-tidy-13 -p build -export-fixes clang_tidy_fixes.yml -extra-arg='-std=c++17'    
+    - uses: actions/upload-artifact@v3
+      with:
+        name: clang-tidy-fixes.yml
+        path: clang_tidy_fixes.yml
