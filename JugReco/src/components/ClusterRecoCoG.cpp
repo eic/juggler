@@ -32,9 +32,10 @@
 #include "JugBase/IGeoSvc.h"
 
 // Event Model related classes
+#include "edm4hep/MCParticle.h"
 #include "edm4hep/SimCalorimeterHitCollection.h"
-#include "eicd/CalorimeterHitCollection.h"
 #include "eicd/ClusterCollection.h"
+#include "eicd/MCRecoClusterParticleAssociationCollection.h"
 #include "eicd/ProtoClusterCollection.h"
 #include "eicd/vector_utils.h"
 
@@ -59,7 +60,7 @@ static const std::map<std::string, std::function<double(double, double, double, 
 /** Clustering with center of gravity method.
  *
  *  Reconstruct the cluster with Center of Gravity method
- *  Logarithmic weighting is used for mimicing energy deposit in transverse direction
+ *  Logarithmic weighting is used for mimicking energy deposit in transverse direction
  *
  * \ingroup reco
  */
@@ -75,9 +76,11 @@ private:
   // for endcaps.
   Gaudi::Property<bool> m_enableEtaBounds{this, "enableEtaBounds", false};
 
-  // DataHandle<eicd::CalorimeterHitCollection> m_inputHits{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4hep::SimCalorimeterHitCollection> m_mcHits{"mcHitCollection", Gaudi::DataHandle::Reader, this};
   DataHandle<eicd::ProtoClusterCollection> m_inputProto{"inputProtoClusterCollection", Gaudi::DataHandle::Reader, this};
   DataHandle<eicd::ClusterCollection> m_outputClusters{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
+  DataHandle<eicd::MCRecoClusterParticleAssociationCollection> m_outputAssociations{"outputAssociations",
+                                                                                    Gaudi::DataHandle::Writer, this};
 
   // Pointer to the geometry service
   SmartIF<IGeoSvc> m_geoSvc;
@@ -86,9 +89,10 @@ private:
 
 public:
   ClusterRecoCoG(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
-    // declareProperty("inputHitCollection", m_inputHits, "");
+    declareProperty("mcHitCollection", m_mcHits, "");
     declareProperty("inputProtoClusterCollection", m_inputProto, "");
     declareProperty("outputClusterCollection", m_outputClusters, "");
+    declareProperty("outputAssociations", m_outputAssociations, "");
   }
 
   StatusCode initialize() override {
@@ -125,9 +129,10 @@ public:
 
   StatusCode execute() override {
     // input collections
-    // const auto& hits  = *m_inputHits.get();
-    const auto& proto = *m_inputProto.get();
-    auto& clusters    = *m_outputClusters.createAndPut();
+    const auto& mchits = *m_mcHits.get();
+    const auto& proto  = *m_inputProto.get();
+    auto& clusters     = *m_outputClusters.createAndPut();
+    auto& associations = *m_outputAssociations.createAndPut();
 
     for (const auto& pcl : proto) {
       auto cl = reconstruct(pcl);
@@ -137,6 +142,64 @@ public:
                 << cl.getPosition().y / mm << ", " << cl.getPosition().z / mm << ")" << endmsg;
       }
       clusters.push_back(cl);
+
+      // If mcHits are available, associate cluster with MCParticle
+      // 1. find proto-cluster hit with largest energy deposition
+      // 2. find first mchit with same CellID
+      // 3. assign mchit's MCParticle as cluster truth
+      if (m_mcHits.get() != nullptr && mchits.size() > 0) {
+
+        // 1. find pclhit with largest energy deposition
+        auto pclhits = pcl.getHits();
+        auto pclhit = std::max_element(
+          pclhits.begin(),
+          pclhits.end(),
+          [](const auto& pclhit1, const auto& pclhit2) {
+            return pclhit1.getEnergy() < pclhit2.getEnergy();
+          }
+        );
+
+        // 2. find mchit with same CellID
+        // find_if not working, https://github.com/AIDASoft/podio/pull/273
+        //auto mchit = std::find_if(
+        //  mchits.begin(),
+        //  mchits.end(),
+        //  [&pclhit](const auto& mchit1) {
+        //    return mchit1.getCellID() == pclhit->getCellID();
+        //  }
+        //);
+        auto mchit = mchits.begin();
+        for ( ; mchit != mchits.end(); ++mchit) {
+          // break loop when CellID match found
+          if (mchit->getCellID() == pclhit->getCellID()) {
+            break;
+          }
+        }
+        if (!(mchit != mchits.end())) {
+          // break if no matching hit found for this CellID
+          warning() << "Proto-cluster has highest energy in CellID " << pclhit->getCellID()
+                    << ", but no mc hit with that CellID was found." << endmsg;
+          break;
+        }
+
+        // debug output
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << "cluster has largest energy in cellID: " << pclhit->getCellID() << endmsg;
+          debug() << "pcl hit with highest energy " << pclhit->getEnergy() << " at index " << pclhit->getObjectID().index << endmsg;
+          debug() << "corresponding mc hit energy " << mchit->getEnergy() << " at index " << mchit->getObjectID().index << endmsg;
+        }
+
+        // set association
+        eicd::MutableMCRecoClusterParticleAssociation clusterassoc;
+        clusterassoc.setSimID(mchit->getObjectID().index);
+        clusterassoc.setWeight(1.0);
+        clusterassoc.setRec(cl);
+        associations.push_back(clusterassoc);
+      } else {
+        if (msgLevel(MSG::DEBUG)) {
+          debug() << "No mcHitCollection was provided, so no truth association will be performed." << endmsg;
+        }
+      }
     }
 
     return StatusCode::SUCCESS;
@@ -239,13 +302,6 @@ private:
       cl.addToShapeParameters(radius);
       cl.addToShapeParameters(0 /* skewness */); // skewness not yet calculated
     }
-
-    // Optionally store the MC truth associated with the first hit in this cluster
-    // FIXME no connection between cluster and truth in edm4hep
-    // if (mcHits) {
-    //  const auto& mc_hit    = (*mcHits)[pcl.hits(0).ID.value];
-    //  cl.mcID({mc_hit.truth().trackID, m_kMonteCarloSource});
-    //}
 
     return cl;
   }
