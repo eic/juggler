@@ -182,16 +182,20 @@ public:
           break;
         }
 
+        // 3. find mchit's MCParticle
+        const auto& mcp = mchit->getContributions(0).getParticle();
+
         // debug output
         if (msgLevel(MSG::DEBUG)) {
           debug() << "cluster has largest energy in cellID: " << pclhit->getCellID() << endmsg;
           debug() << "pcl hit with highest energy " << pclhit->getEnergy() << " at index " << pclhit->getObjectID().index << endmsg;
           debug() << "corresponding mc hit energy " << mchit->getEnergy() << " at index " << mchit->getObjectID().index << endmsg;
+          debug() << "from MCParticle index " << mcp.getObjectID().index << ", PDG " << mcp.getPDG() << ", " << eicd::magnitude(mcp.getMomentum()) << endmsg;
         }
 
         // set association
         eicd::MutableMCRecoClusterParticleAssociation clusterassoc;
-        clusterassoc.setSimID(mchit->getObjectID().index);
+        clusterassoc.setSimID(mcp.getObjectID().index);
         clusterassoc.setWeight(1.0);
         clusterassoc.setRec(cl);
         associations.push_back(clusterassoc);
