@@ -8,7 +8,6 @@
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/PhysicalConstants.h"
 #include <algorithm>
-#include <ranges>
 #include <cmath>
 
 #include "JugBase/IParticleSvc.h"
