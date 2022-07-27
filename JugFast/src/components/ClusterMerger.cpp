@@ -45,7 +45,13 @@ public:
     declareProperty("outputAssociations", m_outputAssociations, "Cluster associations with good energy precision");
   }
 
-  StatusCode initialize() override { return StatusCode::SUCCESS; }
+  StatusCode initialize() override {
+    if (GaudiAlgorithm::initialize().isFailure()) {
+      return StatusCode::FAILURE;
+    }
+
+    return StatusCode::SUCCESS;
+  }
 
   StatusCode execute() override {
     if (msgLevel(MSG::DEBUG)) {
