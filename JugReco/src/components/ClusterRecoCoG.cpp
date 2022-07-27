@@ -208,6 +208,14 @@ public:
           // break if no matching hit found for this CellID
           warning() << "Proto-cluster has highest energy in CellID " << pclhit->getCellID()
                     << ", but no mc hit with that CellID was found." << endmsg;
+          info() << "Proto-cluster hits: " << endmsg;
+          for (const auto& pclhit1: pclhits) {
+            info() << pclhit1.getCellID() << ": " << pclhit1.getEnergy() << endmsg;
+          }
+          info() << "MC hits: " << endmsg;
+          for (const auto& mchit1: *mchits) {
+            info() << mchit1.getCellID() << ": " << mchit1.getEnergy() << endmsg;
+          }
           break;
         }
 
