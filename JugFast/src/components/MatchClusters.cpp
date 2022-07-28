@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Sylvester Joosten
 
-// TODO needs full rework to run off list of mc-cluster relations instead
-#if 0
 // Takes a list of particles (presumed to be from tracking), and all available clusters.
 // 1. Match clusters to their tracks using the mcID field
 // 2. For unmatched clusters create neutrals and add to the particle list
@@ -23,6 +21,8 @@
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
 #include "eicd/ClusterCollection.h"
+#include "eicd/MCRecoClusterParticleAssociationCollection.h"
+#include "eicd/MCRecoParticleAssociationCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
 #include "eicd/TrackParametersCollection.h"
 #include "eicd/vector_utils.h"
@@ -35,11 +35,17 @@ private:
   DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
   DataHandle<eicd::ReconstructedParticleCollection> m_inputParticles{"ReconstructedChargedParticles",
                                                                     Gaudi::DataHandle::Reader, this};
+  DataHandle<eicd::MCRecoParticleAssociationCollection> m_inputParticlesAssoc{"ReconstructedChargedParticlesAssoc",
+                                                                    Gaudi::DataHandle::Reader, this};
   Gaudi::Property<std::vector<std::string>> m_inputClusters{this, "inputClusters", {}, "Clusters to be aggregated"};
-  std::vector<DataHandle<eicd::ClusterCollection>*> m_inputClusterCollections;
+  Gaudi::Property<std::vector<std::string>> m_inputClustersAssoc{this, "inputClustersAssoc", {}, "Cluster associations to be aggregated"};
+  std::vector<DataHandle<eicd::ClusterCollection>*> m_inputClustersCollections;
+  std::vector<DataHandle<eicd::MCRecoClusterParticleAssociationCollection>*> m_inputClustersAssocCollections;
 
   // output data
   DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"ReconstructedParticles",
+                                                                     Gaudi::DataHandle::Writer, this};
+  DataHandle<eicd::MCRecoParticleAssociationCollection> m_outputParticlesAssoc{"ReconstructedParticlesAssoc",
                                                                      Gaudi::DataHandle::Writer, this};
 
 public:
@@ -47,14 +53,17 @@ public:
       : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputMCParticles, "MCParticles");
     declareProperty("inputParticles", m_inputParticles, "ReconstructedChargedParticles");
+    declareProperty("inputParticlesAssoc", m_inputParticlesAssoc, "ReconstructedChargedParticlesAssoc");
     declareProperty("outputParticles", m_outputParticles, "ReconstructedParticles");
+    declareProperty("outputParticlesAssoc", m_outputParticlesAssoc, "ReconstructedParticlesAssoc");
   }
 
   StatusCode initialize() override {
     if (GaudiAlgorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
-    m_inputClusterCollections = getClusterCollections(m_inputClusters);
+    m_inputClustersCollections = getClusterCollections(m_inputClusters);
+    m_inputClustersAssocCollections = getClusterAssociations(m_inputClustersAssoc);
     return StatusCode::SUCCESS;
   }
   StatusCode execute() override {
@@ -62,73 +71,109 @@ public:
       debug() << "Processing cluster info for new event" << endmsg;
     }
     // input collection
-    const auto& mcparticles = *(m_inputMCParticles.get());
-    const auto& inparts     = *(m_inputParticles.get());
-    auto& outparts          = *(m_outputParticles.createAndPut());
+    const auto& mcparticles  = *(m_inputMCParticles.get());
+    const auto& inparts      = *(m_inputParticles.get());
+    const auto& inpartsassoc = *(m_inputParticlesAssoc.get());
+    auto& outparts           = *(m_outputParticles.createAndPut());
+    auto& outpartsassoc      = *(m_outputParticlesAssoc.createAndPut());
 
     if (msgLevel(MSG::DEBUG)) {
       debug() << "Step 0/2: Getting indexed list of clusters..." << endmsg;
     }
-    // get an indexed map of all clusters
-    auto clusterMap = indexedClusters(m_inputClusterCollections);
 
-    // loop over all tracks and link matched clusters where applicable
+    // get an indexed map of all clusters
+    auto clusterMap = indexedClusters(m_inputClustersCollections, m_inputClustersAssocCollections);
+
+    // 1. Loop over all tracks and link matched clusters where applicable
     // (removing matched clusters from the cluster maps)
     if (msgLevel(MSG::DEBUG)) {
       debug() << "Step 1/2: Matching clusters to charged particles..." << endmsg;
     }
-    for (size_t trkIdx = 0; trkIdx < inparts.size(); ++trkIdx) {
+    for (const auto& inpart: inparts) {
       if (msgLevel(MSG::DEBUG)) {
-        debug() << " --> Processing charged particle " << trkIdx << ", PID: " << inparts[trkIdx].pid()
-                << ", energy: " << inparts[trkIdx].energy() << endmsg;
+        debug() << " --> Processing charged particle " << inpart.getObjectID().index
+                << ", PDG: " << inpart.getPDG()
+                << ", energy: " << inpart.getEnergy()
+                << endmsg;
       }
-      outparts.push_back(inparts[trkIdx].clone());
-      auto part = outparts[trkIdx];
-      if (!part.mcID()) {
+
+      auto outpart = inpart.clone();
+      outparts.push_back(outpart);
+
+      int mcID = -1;
+
+      // find associated particle
+      for (const auto& assoc: inpartsassoc) {
+        if (assoc.getRec() == inpart) {
+          mcID = assoc.getSimID();
+          break;
+        }
+      }
+
+      if (msgLevel(MSG::VERBOSE)) {
+        verbose() << "    --> Found particle with mcID " << mcID << endmsg;
+      }
+
+      if (mcID < 0) {
         if (msgLevel(MSG::DEBUG)) {
           debug() << "    --> cannot match track without associated mcID" << endmsg;
         }
         continue;
       }
-      if (clusterMap.count(part.mcID())) {
-        const auto& clus = clusterMap[part.mcID()];
+
+      if (clusterMap.count(mcID)) {
+        const auto& clus = clusterMap[mcID];
         if (msgLevel(MSG::DEBUG)) {
-          debug() << "    --> found matching cluster with energy: " << clus.energy() << endmsg;
+          debug() << "    --> found matching cluster with energy: " << clus.getEnergy() << endmsg;
         }
-        clusterMap.erase(part.mcID());
+        clusterMap.erase(mcID);
       }
+
+      // create truth associations
+      auto assoc = outpartsassoc.create();
+      assoc.setSimID(mcID);
+      assoc.setWeight(1.0);
+      assoc.setRec(outpart);
     }
-    // Now loop over all remaining clusters and add neutrals. Also add in Hcal energy
+
+    // 2. Now loop over all remaining clusters and add neutrals. Also add in Hcal energy
     // if a matching cluster is available
     if (msgLevel(MSG::DEBUG)) {
       debug() << "Step 2/2: Creating neutrals for remaining clusters..." << endmsg;
     }
     for (const auto& [mcID, clus] : clusterMap) {
       if (msgLevel(MSG::DEBUG)) {
-        debug() << " --> Processing unmatched cluster with energy: " << clus.energy()
+        debug() << " --> Processing unmatched cluster with energy: " << clus.getEnergy()
                 << endmsg;
       }
 
-      // get mass/PID from mcparticles, 0 (unidentified) in case the matched particle is charged.
-      const auto& mc    = mcparticles[mcID.value];
+      // get mass/PDG from mcparticles, 0 (unidentified) in case the matched particle is charged.
+      const auto& mc    = mcparticles[mcID];
       const double mass = (!mc.getCharge()) ? mc.getMass() : 0;
-      const int32_t pid = (!mc.getCharge()) ? mc.getPDG() : 0;
+      const int32_t pdg = (!mc.getCharge()) ? mc.getPDG() : 0;
       if (msgLevel(MSG::DEBUG)) {
         if (mc.getCharge()) {
-          debug() << "   --> associated mcparticle is not a neutral (PID: " << mc.getPDG()
+          debug() << "   --> associated mcparticle is not a neutral (PDG: " << mc.getPDG()
                   << "), setting the reconstructed particle ID to 0 (unidentified)" << endmsg;
         }
-        debug() << "   --> found matching associated mcparticle with PID: " << pid << ", energy: " << mc.getEnergy()
+        debug() << "   --> found matching associated mcparticle with PDG: " << pdg << ", energy: " << mc.getEnergy()
                 << endmsg;
       }
+
       // Reconstruct our neutrals and add them to the list
-      const auto part = reconstruct_neutral(clus, mass, pid);
+      const auto outpart = reconstruct_neutral(clus, mass, pdg);
       if (msgLevel(MSG::DEBUG)) {
-        debug() << " --> Reconstructed neutral particle with PID: " << part.pid() << ", energy: " << part.energy()
+        debug() << " --> Reconstructed neutral particle with PDG: " << outpart.getPDG()
+                << ", energy: " << outpart.getEnergy()
                 << endmsg;
       }
-      outparts.push_back(part);
-      // That's all!
+      outparts.push_back(outpart);
+
+      // Create truth associations
+      auto assoc = outpartsassoc.create();
+      assoc.setSimID(mcID);
+      assoc.setWeight(1.0);
+      assoc.setRec(outpart);
     }
     return StatusCode::SUCCESS;
   }
@@ -143,34 +188,73 @@ private:
     return ret;
   }
 
+  std::vector<DataHandle<eicd::MCRecoClusterParticleAssociationCollection>*> getClusterAssociations(const std::vector<std::string>& cols) {
+    std::vector<DataHandle<eicd::MCRecoClusterParticleAssociationCollection>*> ret;
+    for (const auto& colname : cols) {
+      debug() << "initializing cluster association collection: " << colname << endmsg;
+      ret.push_back(new DataHandle<eicd::MCRecoClusterParticleAssociationCollection>{colname, Gaudi::DataHandle::Reader, this});
+    }
+    return ret;
+  }
+
   // get a map of mcID --> cluster
   // input: cluster_collections --> list of handles to all cluster collections
-  std::map<eicd::Index, eicd::Cluster>
-  indexedClusters(const std::vector<DataHandle<eicd::ClusterCollection>*>& cluster_collections) const {
-    std::map<eicd::Index, eicd::Cluster> matched = {};
+  std::map<int, eicd::Cluster>
+  indexedClusters(
+      const std::vector<DataHandle<eicd::ClusterCollection>*>& cluster_collections,
+      const std::vector<DataHandle<eicd::MCRecoClusterParticleAssociationCollection>*>& associations_collections
+  ) const {
+    std::map<int, eicd::Cluster> matched = {};
+
+    // loop over cluster collections
     for (const auto& cluster_handle : cluster_collections) {
       const auto& clusters = *(cluster_handle->get());
+
+      // loop over clusters
       for (const auto& cluster : clusters) {
-        if (msgLevel(MSG::VERBOSE)) {
-          verbose() << " --> Found cluster with mcID " << cluster.mcID() << " and energy "
-                    << cluster.energy() << endmsg;
+
+        int mcID = -1;
+
+        // loop over association collections
+        for (const auto& associations_handle : associations_collections) {
+          const auto& associations = *(associations_handle->get());
+
+          // find associated particle
+          for (const auto& assoc : associations) {
+            if (assoc.getRec() == cluster) {
+              mcID = assoc.getSimID();
+              break;
+            }
+          }
+
+          // found associated particle
+          if (mcID != -1) {
+            break;
+          }
         }
-        if (!cluster.mcID()) {
+
+        if (msgLevel(MSG::VERBOSE)) {
+          verbose() << " --> Found cluster with mcID " << mcID << " and energy "
+                    << cluster.getEnergy() << endmsg;
+        }
+
+        if (mcID < 0) {
           if (msgLevel(MSG::VERBOSE)) {
             verbose() << "   --> WARNING: no valid MC truth link found, skipping cluster..." << endmsg;
           }
           continue;
         }
-        const bool duplicate = matched.count(cluster.mcID());
+
+        const bool duplicate = matched.count(mcID);
         if (duplicate) {
           if (msgLevel(MSG::VERBOSE)) {
             verbose() << "   --> WARNING: this is a duplicate mcID, keeping the higher energy cluster" << endmsg;
           }
-          if (cluster.energy() < matched[cluster.mcID()].energy()) {
+          if (cluster.getEnergy() < matched[mcID].getEnergy()) {
             continue;
           }
         }
-        matched[cluster.mcID()] = cluster;
+        matched[mcID] = cluster;
       }
     }
     return matched;
@@ -179,23 +263,18 @@ private:
   // reconstruct a neutral cluster
   // (for now assuming the vertex is at (0,0,0))
   eicd::ReconstructedParticle reconstruct_neutral(const eicd::Cluster& clus, const double mass,
-                                                 const int32_t pid) const {
-    const float energy   = clus.energy();
-    const float momentum = energy < mass ? 0 : std::sqrt(energy * energy - mass * mass);
-    const auto p = eicd::normalizeVector(clus.position(), momentum);
+                                                 const int32_t pdg) const {
+    const float energy = clus.getEnergy();
+    const float p = energy < mass ? 0 : std::sqrt(energy * energy - mass * mass);
+    const auto position = clus.getPosition();
+    const auto momentum = p * (position / eicd::magnitude(position));
     // setup our particle
-    eicd::ReconstructedParticle part;
-    part.p(p);
-    part.time(clus.time());
-    part.pid(pid);
-    part.status(0);
-    part.charge(0);
-    part.theta(p.theta());
-    part.phi(p.phi());
-    part.momentum(momentum);
-    part.energy(energy);
-    part.mass(mass);
-    part.mcID(clus.mcID());
+    eicd::MutableReconstructedParticle part;
+    part.setMomentum(momentum);
+    part.setPDG(pdg);
+    part.setCharge(0);
+    part.setEnergy(energy);
+    part.setMass(mass);
     return part;
   }
 }; // namespace Jug::Fast
@@ -204,4 +283,3 @@ private:
 DECLARE_COMPONENT(MatchClusters)
 
 } // namespace Jug::Fast
-#endif
