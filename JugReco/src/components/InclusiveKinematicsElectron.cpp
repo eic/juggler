@@ -178,10 +178,10 @@ public:
     //const auto ef_assoc = std::find_if(
     //  rcassoc.begin(),
     //  rcassoc.end(),
-    //  [&ef_coll](const auto& a){ return a.getSimID() == ef_coll[0].id(); });
+    //  [&ef_coll](const auto& a){ return a.getSimID() == ef_coll[0].getObjectID().index; });
     auto ef_assoc = rcassoc.begin();
     for (; ef_assoc != rcassoc.end(); ++ef_assoc) {
-      if (ef_assoc->getSimID() == ef_coll[0].id()) {
+      if (ef_assoc->getSimID() == ef_coll[0].getObjectID().index) {
         break;
       }
     }
@@ -192,13 +192,13 @@ public:
       return StatusCode::SUCCESS;
     }
     const auto ef_rc{ef_assoc->getRec()};
-    const auto ef_rc_id{ef_rc.id()};
+    const auto ef_rc_id{ef_rc.getObjectID().index};
 
     // Loop over reconstructed particles to get outgoing scattered electron
     // Use the true scattered electron from the MC information
     std::vector<PxPyPzEVector> electrons;
     for (const auto& p: rcparts) {
-      if (p.id() == ef_rc_id) {
+      if (p.getObjectID().index == ef_rc_id) {
         electrons.emplace_back(p.getMomentum().x, p.getMomentum().y, p.getMomentum().z, p.getEnergy());
         break;
       }
