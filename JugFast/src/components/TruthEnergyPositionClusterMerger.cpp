@@ -158,7 +158,7 @@ public:
       const auto& p = mc.getMomentum();
       const auto phi = std::atan2(p.y, p.x);
       const auto theta = std::atan2(std::hypot(p.x, p.y), p.z);
-      auto new_clus  = merged_clus.create();
+      auto new_clus = merged_clus.create();
       new_clus.setEnergy(eclus.getEnergy());
       new_clus.setEnergyError(eclus.getEnergyError());
       new_clus.setTime(eclus.getTime());
@@ -171,6 +171,13 @@ public:
                 << endmsg;
         debug() << "   --> Created new 'combined' cluster " << new_clus.id() << ", energy: " << new_clus.getEnergy() << endmsg;
       }
+
+      // set association
+      eicd::MutableMCRecoClusterParticleAssociation clusterassoc;
+      clusterassoc.setSimID(mcID);
+      clusterassoc.setWeight(1.0);
+      clusterassoc.setRec(new_clus);
+      merged_assoc.push_back(clusterassoc);
     }
 
     // That's all!
