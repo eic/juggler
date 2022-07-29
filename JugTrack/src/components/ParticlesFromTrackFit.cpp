@@ -22,7 +22,7 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 
 // Event Model related classes
-#include "eicd/BasicParticleCollection.h"
+#include "eicd/ReconstructedParticleCollection.h"
 #include "eicd/TrackerHitCollection.h"
 #include "eicd/TrackParametersCollection.h"
 #include "JugTrack/IndexSourceLink.hpp"
@@ -37,14 +37,14 @@
 
 namespace Jug::Reco {
 
-  /** Extrac the particles form fit trajectories.
+  /** Extract the particles form fit trajectories.
    *
    * \ingroup tracking
    */
    class ParticlesFromTrackFit : public GaudiAlgorithm {
    private:
     DataHandle<TrajectoriesContainer>     m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
-    DataHandle<eicd::BasicParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer, this};
+    DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer, this};
     DataHandle<eicd::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters", Gaudi::DataHandle::Writer, this};
 
    public:
@@ -171,19 +171,14 @@ namespace Jug::Reco {
               return;
             }
 
-            eicd::BasicParticle p{
+            auto rec_part = rec_parts->create();
+            rec_part.setMomentum(
               eicd::sphericalToVector(
                 1.0 / std::abs(params[Acts::eBoundQOverP]),
                 params[Acts::eBoundTheta],
-                params[Acts::eBoundPhi]),                                          // momentum 3-vector
-              {0., 0., 0.},                                                        // vectex 3-vector
-              0.,                                                                  // time
-              0,                                                                   // PDG particle code
-              0,                                                                   // status
-              static_cast<int16_t>(std::copysign(1., params[Acts::eBoundQOverP])), // charge
-              1.                                                                   // weight
-            };                                                                     // charge
-            rec_parts->push_back(p);
+                params[Acts::eBoundPhi])
+            );
+            rec_part.setCharge(static_cast<int16_t>(std::copysign(1., params[Acts::eBoundQOverP])));
           });
       }
 

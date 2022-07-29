@@ -22,7 +22,6 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 
 // Event Model related classes
-#include "eicd/BasicParticleCollection.h"
 #include "eicd/TrackerHitCollection.h"
 #include "eicd/TrackParametersCollection.h"
 #include "eicd/TrajectoryCollection.h"
