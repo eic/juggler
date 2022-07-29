@@ -153,7 +153,7 @@ juggler:default:
     - |
       if [ "$CI_COMMIT_BRANCH" == "master" ]; then
         ./eic_container/gitlab-ci/docker_login.sh                                       \
-            -u $DH_REGISTRY -p $DH_EICWEB_TOKEN                                         \
+            -u $DH_REGISTRY_USER -p $DH_EICWEB_TOKEN                                         \
             -n $DOCKER_NTRIES -t $DOCKER_WAIT_TIME
         ./eic_container/gitlab-ci/docker_push.sh -i ${BUILD_IMAGE} -l ${INTERNAL_TAG}   \
                                                  -n $DOCKER_NTRIES -t $DOCKER_WAIT_TIME \
