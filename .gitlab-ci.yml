@@ -24,8 +24,11 @@ variables:
   DOCKER_BUILDKIT: 1
 
   ## Dockerhub registry
-  DH_REGISTRY: eicweb
+  DH_REGISTRY_USER: eicweb
   DH_PUSH: 1
+  ## GitHub registry
+  GH_REGISTRY: ghcr.io
+  GH_PUSH: 1
 
   ## TLS error resiliency: number of retries and second wait between tries 
   ## (wait time is doubled with each attempt)
