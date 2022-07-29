@@ -109,7 +109,6 @@ public:
         for (const auto& cl : {pclus, eclus}) {
           for (const auto& hit : cl.getHits()) {
             new_clus.addToHits(hit);
-            new_clus.addToHitContributions(hit.getEnergy());
           }
           new_clus.addToSubdetectorEnergies(cl.getEnergy());
         }
