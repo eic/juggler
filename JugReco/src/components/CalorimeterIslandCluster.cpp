@@ -33,11 +33,10 @@
 #include "JugBase/IGeoSvc.h"
 
 // Event Model related classes
+#include "edm4hep/Vector2f.h"
 #include "eicd/CalorimeterHitCollection.h"
 #include "eicd/ClusterCollection.h"
 #include "eicd/ProtoClusterCollection.h"
-#include "eicd/Vector2f.h"
-#include "eicd/Vector3f.h"
 #include "eicd/vector_utils.h"
 
 using namespace Gaudi::Units;
@@ -48,25 +47,25 @@ using CaloHit = eicd::CalorimeterHit;
 using CaloHitCollection = eicd::CalorimeterHitCollection;
 
 // helper functions to get distance between hits
-static eicd::Vector2f localDistXY(const CaloHit& h1, const CaloHit& h2) {
+static edm4hep::Vector2f localDistXY(const CaloHit& h1, const CaloHit& h2) {
   const auto delta = h1.getLocal() - h2.getLocal();
   return {delta.x, delta.y};
 }
-static eicd::Vector2f localDistXZ(const CaloHit& h1, const CaloHit& h2) {
+static edm4hep::Vector2f localDistXZ(const CaloHit& h1, const CaloHit& h2) {
   const auto delta = h1.getLocal() - h2.getLocal();
   return {delta.x, delta.z};
 }
-static eicd::Vector2f localDistYZ(const CaloHit& h1, const CaloHit& h2) {
+static edm4hep::Vector2f localDistYZ(const CaloHit& h1, const CaloHit& h2) {
   const auto delta = h1.getLocal() - h2.getLocal();
   return {delta.y, delta.z};
 }
-static eicd::Vector2f dimScaledLocalDistXY(const CaloHit& h1, const CaloHit& h2) {
+static edm4hep::Vector2f dimScaledLocalDistXY(const CaloHit& h1, const CaloHit& h2) {
   const auto delta = h1.getLocal() - h2.getLocal();
   const auto dimsum = h1.getDimension() + h2.getDimension();
   return {2 * delta.x / dimsum.x, 2 * delta.y / dimsum.y};
 }
-static eicd::Vector2f globalDistRPhi(const CaloHit& h1, const CaloHit& h2) {
-  using vector_type = decltype(eicd::Vector2f::a);
+static edm4hep::Vector2f globalDistRPhi(const CaloHit& h1, const CaloHit& h2) {
+  using vector_type = decltype(edm4hep::Vector2f::a);
   return {
     static_cast<vector_type>(
       eicd::magnitude(h1.getPosition()) - eicd::magnitude(h2.getPosition())
@@ -76,9 +75,9 @@ static eicd::Vector2f globalDistRPhi(const CaloHit& h1, const CaloHit& h2) {
     )
   };
 }
-static eicd::Vector2f globalDistEtaPhi(const CaloHit& h1,
+static edm4hep::Vector2f globalDistEtaPhi(const CaloHit& h1,
                                        const CaloHit& h2) {
-  using vector_type = decltype(eicd::Vector2f::a);
+  using vector_type = decltype(edm4hep::Vector2f::a);
   return {
     static_cast<vector_type>(
       eicd::eta(h1.getPosition()) - eicd::eta(h2.getPosition())
@@ -90,7 +89,7 @@ static eicd::Vector2f globalDistEtaPhi(const CaloHit& h1,
 }
 // name: {method, units}
 static std::map<std::string,
-                std::tuple<std::function<eicd::Vector2f(const CaloHit&, const CaloHit&)>, std::vector<double>>>
+                std::tuple<std::function<edm4hep::Vector2f(const CaloHit&, const CaloHit&)>, std::vector<double>>>
     distMethods{
         {"localDistXY", {localDistXY, {mm, mm}}},        {"localDistXZ", {localDistXZ, {mm, mm}}},
         {"localDistYZ", {localDistYZ, {mm, mm}}},        {"dimScaledLocalDistXY", {dimScaledLocalDistXY, {1., 1.}}},
@@ -130,7 +129,7 @@ private:
   Gaudi::Property<std::vector<double>> u_globalDistEtaPhi{this, "globalDistEtaPhi", {}};
   Gaudi::Property<std::vector<double>> u_dimScaledLocalDistXY{this, "dimScaledLocalDistXY", {1.8, 1.8}};
   // neighbor checking function
-  std::function<eicd::Vector2f(const CaloHit&, const CaloHit&)> hitsDist;
+  std::function<edm4hep::Vector2f(const CaloHit&, const CaloHit&)> hitsDist;
 
   // unitless counterparts of the input parameters
   double minClusterHitEdep{0}, minClusterCenterEdep{0}, sectorDist{0};

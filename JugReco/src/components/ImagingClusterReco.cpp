@@ -171,9 +171,9 @@ public:
 
         // set association
         eicd::MutableMCRecoClusterParticleAssociation clusterassoc;
-        clusterassoc.setSimID(mcp.getObjectID().index);
         clusterassoc.setWeight(1.0);
         clusterassoc.setRec(cl);
+        clusterassoc.setSim(mcp);
         associations->push_back(clusterassoc);
       }
 
@@ -313,7 +313,7 @@ private:
 
   std::pair<double /* polar */, double /* azimuthal */> fit_track(const std::vector<eicd::Cluster>& layers) const {
     int nrows = 0;
-    eicd::Vector3f mean_pos{0, 0, 0};
+    edm4hep::Vector3f mean_pos{0, 0, 0};
     for (const auto& layer : layers) {
       if ((layer.getNhits() > 0) && (layer.getHits(0).getLayer() <= m_trackStopLayer)) {
         mean_pos = mean_pos + layer.getPosition();

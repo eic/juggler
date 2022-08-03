@@ -116,9 +116,9 @@ namespace Jug::Reco {
               debug() << " chi2 = " << trajState.chi2Sum << endmsg;
             }
 
-            const eicd::Vector2f loc {
-              parameter[Acts::eBoundLoc0],
-              parameter[Acts::eBoundLoc1]
+            const edm4hep::Vector2f loc {
+              static_cast<float>(parameter[Acts::eBoundLoc0]),
+              static_cast<float>(parameter[Acts::eBoundLoc1])
             };
             const eicd::Cov3f covMomentum {
               static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundTheta)),

@@ -232,9 +232,9 @@ public:
 
         // set association
         eicd::MutableMCRecoClusterParticleAssociation clusterassoc;
-        clusterassoc.setSimID(mcp.getObjectID().index);
-        clusterassoc.setWeight(1.0);
         clusterassoc.setRec(cl);
+        clusterassoc.setSim(mcp);
+        clusterassoc.setWeight(1.0);
         associations->push_back(clusterassoc);
       } else {
         if (msgLevel(MSG::DEBUG)) {

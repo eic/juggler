@@ -35,6 +35,7 @@
 
 #include "Math/Vector3D.h"
 
+using Vector3f = decltype(eicd::TrackerHitData::position);
 
   ///// (Reconstructed) track parameters e.g. close to the vertex.
   //using TrackParameters = Acts::CurvilinearTrackParameters;
@@ -332,7 +333,7 @@ namespace Jug::Reco {
                     SpacePoint(
                         eicd::TrackerHit(
                             static_cast<uint64_t>(spacePoint.size()),
-                            eicd::Vector3f(v[0], v[1], v[2]),
+                            Vector3f(v[0], v[1], v[2]),
                             eicd::CovDiag3f(25.0e-6 / 3.0,
                                             25.0e-6 / 3.0, 0.0),
                             0.0, 10.0, 0.05, 0.0),

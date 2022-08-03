@@ -2,7 +2,7 @@
 // Copyright (C) 2022 Sylvester Joosten
 
 // Takes a list of particles (presumed to be from tracking), and all available clusters.
-// 1. Match clusters to their tracks using the mcID field
+// 1. Match clusters to their tracks using the mc particle
 // 2. For unmatched clusters create neutrals and add to the particle list
 
 #include <algorithm>
@@ -71,7 +71,7 @@ public:
       debug() << "Processing cluster info for new event" << endmsg;
     }
     // input collection
-    const auto& mcparticles  = *(m_inputMCParticles.get());
+    //const auto& mcparticles  = *(m_inputMCParticles.get());
     const auto& inparts      = *(m_inputParticles.get());
     const auto& inpartsassoc = *(m_inputParticlesAssoc.get());
     auto& outparts           = *(m_outputParticles.createAndPut());
@@ -100,40 +100,40 @@ public:
       auto outpart = inpart.clone();
       outparts.push_back(outpart);
 
-      int mcID = -1;
+      edm4hep::MCParticle mc;
 
       // find associated particle
       for (const auto& assoc: inpartsassoc) {
         if (assoc.getRec() == inpart) {
-          mcID = assoc.getSimID();
+          mc = assoc.getSim();
           break;
         }
       }
 
       if (msgLevel(MSG::VERBOSE)) {
-        verbose() << "    --> Found particle with mcID " << mcID << endmsg;
+        verbose() << "    --> Found particle with mc.id() " << mc.id() << endmsg;
       }
 
-      if (mcID < 0) {
+      if (mc.id() == 0) {
         if (msgLevel(MSG::DEBUG)) {
-          debug() << "    --> cannot match track without associated mcID" << endmsg;
+          debug() << "    --> cannot match track without associated mc particle" << endmsg;
         }
         continue;
       }
 
-      if (clusterMap.count(mcID)) {
-        const auto& clus = clusterMap[mcID];
+      if (clusterMap.count(mc)) {
+        const auto& clus = clusterMap[mc];
         if (msgLevel(MSG::DEBUG)) {
           debug() << "    --> found matching cluster with energy: " << clus.getEnergy() << endmsg;
         }
-        clusterMap.erase(mcID);
+        clusterMap.erase(mc);
       }
 
       // create truth associations
       auto assoc = outpartsassoc.create();
-      assoc.setSimID(mcID);
       assoc.setWeight(1.0);
       assoc.setRec(outpart);
+      assoc.setSim(mc);
     }
 
     // 2. Now loop over all remaining clusters and add neutrals. Also add in Hcal energy
@@ -141,14 +141,13 @@ public:
     if (msgLevel(MSG::DEBUG)) {
       debug() << "Step 2/2: Creating neutrals for remaining clusters..." << endmsg;
     }
-    for (const auto& [mcID, clus] : clusterMap) {
+    for (const auto& [mc, clus] : clusterMap) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << " --> Processing unmatched cluster with energy: " << clus.getEnergy()
                 << endmsg;
       }
 
       // get mass/PDG from mcparticles, 0 (unidentified) in case the matched particle is charged.
-      const auto& mc    = mcparticles[mcID];
       const double mass = (!mc.getCharge()) ? mc.getMass() : 0;
       const int32_t pdg = (!mc.getCharge()) ? mc.getPDG() : 0;
       if (msgLevel(MSG::DEBUG)) {
@@ -171,9 +170,9 @@ public:
 
       // Create truth associations
       auto assoc = outpartsassoc.create();
-      assoc.setSimID(mcID);
       assoc.setWeight(1.0);
       assoc.setRec(outpart);
+      assoc.setSim(mc);
     }
     return StatusCode::SUCCESS;
   }
@@ -197,14 +196,14 @@ private:
     return ret;
   }
 
-  // get a map of mcID --> cluster
+  // get a map of mc --> cluster
   // input: cluster_collections --> list of handles to all cluster collections
-  std::map<int, eicd::Cluster>
+  std::map<edm4hep::MCParticle, eicd::Cluster>
   indexedClusters(
       const std::vector<DataHandle<eicd::ClusterCollection>*>& cluster_collections,
       const std::vector<DataHandle<eicd::MCRecoClusterParticleAssociationCollection>*>& associations_collections
   ) const {
-    std::map<int, eicd::Cluster> matched = {};
+    std::map<edm4hep::MCParticle, eicd::Cluster> matched = {};
 
     // loop over cluster collections
     for (const auto& cluster_handle : cluster_collections) {
@@ -213,7 +212,7 @@ private:
       // loop over clusters
       for (const auto& cluster : clusters) {
 
-        int mcID = -1;
+        edm4hep::MCParticle mcp;
 
         // loop over association collections
         for (const auto& associations_handle : associations_collections) {
@@ -222,39 +221,39 @@ private:
           // find associated particle
           for (const auto& assoc : associations) {
             if (assoc.getRec() == cluster) {
-              mcID = assoc.getSimID();
+              mcp = assoc.getSim();
               break;
             }
           }
 
           // found associated particle
-          if (mcID != -1) {
+          if (mcp.id() > 0) {
             break;
           }
         }
 
         if (msgLevel(MSG::VERBOSE)) {
-          verbose() << " --> Found cluster with mcID " << mcID << " and energy "
+          verbose() << " --> Found cluster with mcp.id() " << mcp.id() << " and energy "
                     << cluster.getEnergy() << endmsg;
         }
 
-        if (mcID < 0) {
+        if (mcp.id() == 0) {
           if (msgLevel(MSG::VERBOSE)) {
             verbose() << "   --> WARNING: no valid MC truth link found, skipping cluster..." << endmsg;
           }
           continue;
         }
 
-        const bool duplicate = matched.count(mcID);
+        const bool duplicate = matched.count(mcp);
         if (duplicate) {
           if (msgLevel(MSG::VERBOSE)) {
-            verbose() << "   --> WARNING: this is a duplicate mcID, keeping the higher energy cluster" << endmsg;
+            verbose() << "   --> WARNING: this is a duplicate mc, keeping the higher energy cluster" << endmsg;
           }
-          if (cluster.getEnergy() < matched[mcID].getEnergy()) {
+          if (cluster.getEnergy() < matched[mcp].getEnergy()) {
             continue;
           }
         }
-        matched[mcID] = cluster;
+        matched[mcp] = cluster;
       }
     }
     return matched;

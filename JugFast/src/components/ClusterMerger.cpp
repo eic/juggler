@@ -21,6 +21,8 @@
 
 using namespace Gaudi::Units;
 
+using Vector3f = decltype(eicd::ClusterData::position);
+
 namespace Jug::Fast {
 
 /** Simple algorithm to merge clusters orinating from the same particle together,
@@ -81,9 +83,9 @@ public:
     if (msgLevel(MSG::DEBUG)) {
       debug() << "Step 1/1: Merging clusters where needed" << endmsg;
     }
-    for (const auto& [mcID, clusters] : clusterMap) {
+    for (const auto& [mcp, clusters] : clusterMap) {
       if (msgLevel(MSG::DEBUG)) {
-        debug() << " --> Processing " << clusters.size() << " clusters for mcID " << mcID << endmsg;
+        debug() << " --> Processing " << clusters.size() << " clusters for mc.id " << mcp.id() << endmsg;
       }
       if (clusters.size() == 1) {
         const auto& clus = clusters[0];
@@ -94,9 +96,9 @@ public:
         auto new_clus = clus.clone();
         merged.push_back(new_clus);
         auto ca = assoc2.create();
-        ca.setSimID(mcID);
         ca.setWeight(1.0);
         ca.setRec(new_clus);
+        ca.setSim(mcp);
       } else {
         auto new_clus = merged.create();
         // calculate aggregate info
@@ -104,7 +106,7 @@ public:
         float energyError = 0;
         float time        = 0;
         int nhits = 0;
-        eicd::Vector3f position;
+        Vector3f position;
         for (const auto& clus : clusters) {
           if (msgLevel(MSG::DEBUG)) {
             debug() << "   --> Adding cluster with energy: " << clus.getEnergy() << endmsg;
@@ -128,9 +130,9 @@ public:
           debug() << "   --> Merged cluster with energy: " << new_clus.getEnergy() << endmsg;
         }
         auto ca = assoc2.create();
-        ca.setSimID(mcID);
         ca.setWeight(1.0);
         ca.setRec(new_clus);
+        ca.setSim(mcp);
       }
     }
 
@@ -140,42 +142,42 @@ public:
   }
 
   // get a map of MCParticle index--> std::vector<Cluster> for clusters that belong together
-  std::map<int, std::vector<eicd::Cluster>> indexedClusterLists(
+  std::map<edm4hep::MCParticle, std::vector<eicd::Cluster>> indexedClusterLists(
       const eicd::ClusterCollection& clusters,
       const eicd::MCRecoClusterParticleAssociationCollection& associations
   ) const {
 
-    std::map<int, std::vector<eicd::Cluster>> matched = {};
+    std::map<edm4hep::MCParticle, std::vector<eicd::Cluster>> matched = {};
 
     // loop over clusters
     for (const auto& cluster : clusters) {
 
-      int mcID = -1;
+      edm4hep::MCParticle mcp;
 
       // find associated particle
       for (const auto& assoc : associations) {
         if (assoc.getRec() == cluster) {
-          mcID = assoc.getSimID();
+          mcp = assoc.getSim();
           break;
         }
       }
 
       if (msgLevel(MSG::VERBOSE)) {
-        verbose() << " --> Found cluster with mcID " << mcID << " and energy "
+        verbose() << " --> Found cluster with mc.id " << mcp.id() << " and energy "
                   << cluster.getEnergy() << endmsg;
       }
 
-      if (mcID < 0) {
+      if (mcp.id() < 10000) {
         if (msgLevel(MSG::VERBOSE)) {
           verbose() << "   --> WARNING: no valid MC truth link found, skipping cluster..." << endmsg;
         }
         continue;
       }
 
-      if (!matched.count(mcID)) {
-        matched[mcID] = {};
+      if (!matched.count(mcp)) {
+        matched[mcp] = {};
       }
-      matched[mcID].push_back(cluster);
+      matched[mcp].push_back(cluster);
     }
     return matched;
   }

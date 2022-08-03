@@ -63,7 +63,6 @@ public:
       debug() << "Merging energy and position clusters for new event" << endmsg;
     }
     // input
-    const auto& mcparticles  = *(m_inputMCParticles.get());
     const auto& energy_clus  = *(m_energyClusters.get());
     const auto& energy_assoc = *(m_energyAssociations.get());
     const auto& pos_clus     = *(m_positionClusters.get());
@@ -90,13 +89,13 @@ public:
     if (msgLevel(MSG::DEBUG)) {
       debug() << "Step 1/2: Matching all position clusters to the available energy clusters..." << endmsg;
     }
-    for (const auto& [mcID, pclus] : posMap) {
+    for (const auto& [mc, pclus] : posMap) {
       if (msgLevel(MSG::DEBUG)) {
-        debug() << " --> Processing position cluster " << pclus.id() << ", mcID: " << mcID << ", energy: " << pclus.getEnergy()
+        debug() << " --> Processing position cluster " << pclus.id() << ", mc.id(): " << mc.id() << ", energy: " << pclus.getEnergy()
                 << endmsg;
       }
-      if (energyMap.count(mcID)) {
-        const auto& eclus = energyMap[mcID];
+      if (energyMap.count(mc)) {
+        const auto& eclus = energyMap[mc];
         auto new_clus = merged_clus.create();
         new_clus.setEnergy(eclus.getEnergy());
         new_clus.setEnergyError(eclus.getEnergyError());
@@ -122,14 +121,14 @@ public:
 
         // set association
         eicd::MutableMCRecoClusterParticleAssociation clusterassoc;
-        clusterassoc.setSimID(mcID);
         clusterassoc.setWeight(1.0);
         clusterassoc.setRec(new_clus);
+        clusterassoc.setSim(mc);
         merged_assoc.push_back(clusterassoc);
 
         // erase the energy cluster from the map, so we can in the end account for all
         // remaining clusters
-        energyMap.erase(mcID);
+        energyMap.erase(mc);
       } else {
         if (msgLevel(MSG::DEBUG)) {
           debug() << "   --> No matching energy cluster found, copying over position cluster" << endmsg;
@@ -140,9 +139,9 @@ public:
 
         // set association
         eicd::MutableMCRecoClusterParticleAssociation clusterassoc;
-        clusterassoc.setSimID(mcID);
         clusterassoc.setWeight(1.0);
         clusterassoc.setRec(new_clus);
+        clusterassoc.setSim(mc);
         merged_assoc.push_back(clusterassoc);
       }
     }
@@ -152,8 +151,7 @@ public:
     if (msgLevel(MSG::DEBUG)) {
       debug() << "Step 2/2: Collecting remaining energy clusters..." << endmsg;
     }
-    for (const auto& [mcID, eclus] : energyMap) {
-      const auto& mc = mcparticles[mcID];
+    for (const auto& [mc, eclus] : energyMap) {
       const auto& p = mc.getMomentum();
       const auto phi = std::atan2(p.y, p.x);
       const auto theta = std::atan2(std::hypot(p.x, p.y), p.z);
@@ -166,16 +164,16 @@ public:
       new_clus.setPosition(eicd::sphericalToVector(110.*cm, theta, phi));
       new_clus.addToClusters(eclus);
       if (msgLevel(MSG::DEBUG)) {
-        debug() << " --> Processing energy cluster " << eclus.id() << ", mcID: " << mcID << ", energy: " << eclus.getEnergy()
+        debug() << " --> Processing energy cluster " << eclus.id() << ", mc.id(): " << mc.id() << ", energy: " << eclus.getEnergy()
                 << endmsg;
         debug() << "   --> Created new 'combined' cluster " << new_clus.id() << ", energy: " << new_clus.getEnergy() << endmsg;
       }
 
       // set association
       eicd::MutableMCRecoClusterParticleAssociation clusterassoc;
-      clusterassoc.setSimID(mcID);
       clusterassoc.setWeight(1.0);
       clusterassoc.setRec(new_clus);
+      clusterassoc.setSim(mc);
       merged_assoc.push_back(clusterassoc);
     }
 
@@ -185,47 +183,47 @@ public:
 
   // get a map of MCParticle index --> cluster
   // input: cluster_collections --> list of handles to all cluster collections
-  std::map<int, eicd::Cluster> indexedClusters(
+  std::map<edm4hep::MCParticle, eicd::Cluster> indexedClusters(
       const eicd::ClusterCollection& clusters,
       const eicd::MCRecoClusterParticleAssociationCollection& associations
   ) const {
 
-    std::map<int, eicd::Cluster> matched = {};
+    std::map<edm4hep::MCParticle, eicd::Cluster> matched = {};
 
     for (const auto& cluster : clusters) {
-      int mcID = -1;
+      edm4hep::MCParticle mc;
 
       // find associated particle
       for (const auto& assoc : associations) {
         if (assoc.getRec() == cluster) {
-          mcID = assoc.getSimID();
+          mc = assoc.getSim();
           break;
         }
       }
 
       if (msgLevel(MSG::VERBOSE)) {
-        verbose() << " --> Found cluster: " << cluster.getObjectID().index << " with mcID " << mcID << " and energy "
+        verbose() << " --> Found cluster: " << cluster.getObjectID().index << " with mc.id() " << mc.id() << " and energy "
                   << cluster.getEnergy() << endmsg;
       }
 
-      if (mcID < 0) {
+      if (mc.id() == 0) {
         if (msgLevel(MSG::VERBOSE)) {
           verbose() << "   --> WARNING: no valid MC truth link found, skipping cluster..." << endmsg;
         }
         continue;
       }
 
-      const bool duplicate = matched.count(mcID);
+      const bool duplicate = matched.count(mc);
       if (duplicate) {
         if (msgLevel(MSG::VERBOSE)) {
-          verbose() << "   --> WARNING: this is a duplicate mcID, keeping the higher energy cluster" << endmsg;
+          verbose() << "   --> WARNING: this is a duplicate mc particle, keeping the higher energy cluster" << endmsg;
         }
-        if (cluster.getEnergy() < matched[mcID].getEnergy()) {
+        if (cluster.getEnergy() < matched[mc].getEnergy()) {
           continue;
         }
       }
 
-      matched[mcID] = cluster;
+      matched[mc] = cluster;
     }
     return matched;
   }

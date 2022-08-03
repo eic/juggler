@@ -140,16 +140,16 @@ namespace Jug::Reco {
             {0, 0, 0}
           );
           // global position
-          const eicd::Vector3f position {
-            global.x(),
-            global.y(),
-            global.z()
+          const edm4hep::Vector3f position {
+            static_cast<float>(global.x()),
+            static_cast<float>(global.y()),
+            static_cast<float>(global.z())
           };
 
           // local position
-          const eicd::Vector2f loc {
-            parameter[Acts::eBoundLoc0],
-            parameter[Acts::eBoundLoc1]
+          const edm4hep::Vector2f loc {
+            static_cast<float>(parameter[Acts::eBoundLoc0]),
+            static_cast<float>(parameter[Acts::eBoundLoc1])
           };
           const eicd::Cov2f covLoc {
             static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
@@ -157,7 +157,7 @@ namespace Jug::Reco {
             static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc1))
           };
           const eicd::Cov3f positionError{0, 0, 0};
-          const eicd::Vector3f momentum = eicd::sphericalToVector(
+          const edm4hep::Vector3f momentum = eicd::sphericalToVector(
             1.0 / std::abs(parameter[Acts::eBoundQOverP]),
             parameter[Acts::eBoundTheta],
             parameter[Acts::eBoundPhi]

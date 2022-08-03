@@ -123,9 +123,9 @@ public:
       // Also write MC <--> truth particle association if match was found
       if (best_match >= 0) {
         auto rec_assoc = assoc.create();
-        rec_assoc.setSimID(mc[best_match].getObjectID().index);
         rec_assoc.setWeight(1);
         rec_assoc.setRec(rec_part);
+        rec_assoc.setSim(mc[best_match]);
       }
       if (msgLevel(MSG::DEBUG)) {
         if (best_match > 0) {
@@ -152,7 +152,7 @@ public:
 
     return StatusCode::SUCCESS;
   }
-}; // namespace Jug::Fast
+};
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(ParticlesWithTruthPID)
