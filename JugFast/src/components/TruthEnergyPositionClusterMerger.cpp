@@ -122,7 +122,7 @@ public:
 
         // set association
         eicd::MutableMCRecoClusterParticleAssociation clusterassoc;
-        clusterassoc.setRedID(new_clus.getObjectID().index);
+        clusterassoc.setRecID(new_clus.getObjectID().index);
         clusterassoc.setSimID(mcID);
         clusterassoc.setWeight(1.0);
         clusterassoc.setRec(new_clus);
@@ -142,7 +142,7 @@ public:
 
         // set association
         eicd::MutableMCRecoClusterParticleAssociation clusterassoc;
-        clusterassoc.setRedID(new_clus.getObjectID().index);
+        clusterassoc.setRecID(new_clus.getObjectID().index);
         clusterassoc.setSimID(mcID);
         clusterassoc.setWeight(1.0);
         clusterassoc.setRec(new_clus);
@@ -181,7 +181,7 @@ public:
       clusterassoc.setSimID(mcID);
       clusterassoc.setWeight(1.0);
       clusterassoc.setRec(new_clus);
-      clusterassoc.setSim(mc);
+      //clusterassoc.setSim(mc);
       merged_assoc.push_back(clusterassoc);
     }
 
