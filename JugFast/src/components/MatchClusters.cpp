@@ -173,7 +173,7 @@ public:
 
       // Create truth associations
       auto assoc = outpartsassoc.create();
-      assoc.setRecID(output.getObjectID().index);
+      assoc.setRecID(outpart.getObjectID().index);
       assoc.setSimID(mcID);
       assoc.setWeight(1.0);
       assoc.setRec(outpart);
