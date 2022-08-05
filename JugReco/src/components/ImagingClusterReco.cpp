@@ -171,9 +171,11 @@ public:
 
         // set association
         eicd::MutableMCRecoClusterParticleAssociation clusterassoc;
+        clusterassoc.setRecID(cl.getObjectID().index);
         clusterassoc.setSimID(mcp.getObjectID().index);
         clusterassoc.setWeight(1.0);
         clusterassoc.setRec(cl);
+        //clusterassoc.setSim(mcp);
         associations->push_back(clusterassoc);
       }
 

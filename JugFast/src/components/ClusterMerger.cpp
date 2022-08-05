@@ -94,9 +94,11 @@ public:
         auto new_clus = clus.clone();
         merged.push_back(new_clus);
         auto ca = assoc2.create();
+        ca.setRecID(new_clus.getObjectID().index);
         ca.setSimID(mcID);
         ca.setWeight(1.0);
         ca.setRec(new_clus);
+        //ca.setSim(//FIXME);
       } else {
         auto new_clus = merged.create();
         // calculate aggregate info
