@@ -131,9 +131,11 @@ public:
 
       // create truth associations
       auto assoc = outpartsassoc.create();
+      assoc.setRecID(outpart.getObjectID().index);
       assoc.setSimID(mcID);
       assoc.setWeight(1.0);
       assoc.setRec(outpart);
+      //assoc.setSim(mcparticles[mcID]);
     }
 
     // 2. Now loop over all remaining clusters and add neutrals. Also add in Hcal energy
@@ -171,9 +173,11 @@ public:
 
       // Create truth associations
       auto assoc = outpartsassoc.create();
+      assoc.setRecID(outpart.getObjectID().index);
       assoc.setSimID(mcID);
       assoc.setWeight(1.0);
       assoc.setRec(outpart);
+      //assoc.setSim(mcparticles[mcID]);
     }
     return StatusCode::SUCCESS;
   }

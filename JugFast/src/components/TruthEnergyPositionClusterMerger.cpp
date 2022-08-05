@@ -122,9 +122,11 @@ public:
 
         // set association
         eicd::MutableMCRecoClusterParticleAssociation clusterassoc;
+        clusterassoc.setRecID(new_clus.getObjectID().index);
         clusterassoc.setSimID(mcID);
         clusterassoc.setWeight(1.0);
         clusterassoc.setRec(new_clus);
+        //clusterassoc.setSim(mcparticles[mcID]);
         merged_assoc.push_back(clusterassoc);
 
         // erase the energy cluster from the map, so we can in the end account for all
@@ -140,9 +142,11 @@ public:
 
         // set association
         eicd::MutableMCRecoClusterParticleAssociation clusterassoc;
+        clusterassoc.setRecID(new_clus.getObjectID().index);
         clusterassoc.setSimID(mcID);
         clusterassoc.setWeight(1.0);
         clusterassoc.setRec(new_clus);
+        //clusterassoc.setSim(mcparticles[mcID]);
         merged_assoc.push_back(clusterassoc);
       }
     }
@@ -173,9 +177,11 @@ public:
 
       // set association
       eicd::MutableMCRecoClusterParticleAssociation clusterassoc;
+      clusterassoc.setRecID(new_clus.getObjectID().index);
       clusterassoc.setSimID(mcID);
       clusterassoc.setWeight(1.0);
       clusterassoc.setRec(new_clus);
+      //clusterassoc.setSim(mc);
       merged_assoc.push_back(clusterassoc);
     }
 
