@@ -84,7 +84,3 @@ add_subdirectory(JugPID)
 add_subdirectory(JugReco)
 add_subdirectory(JugTrack)
 gaudi_install(CMAKE)
-
-# create and install Juggler.xenv file as it still has a use-case
-# TODO: update workflow to not need xenv files anymore
-include(cmake/xenv.cmake)
