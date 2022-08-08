@@ -101,8 +101,8 @@ namespace Jug::Reco {
             constexpr float x() const { return position.x; }
             constexpr float y() const { return position.y; }
             constexpr float z() const { return position.z; }
-            constexpr float r() const { return std::hypot(x(), y()); }
-            constexpr float varianceR() const
+            float r() const { return std::hypot(x(), y()); }
+            float varianceR() const
             {
                 return (std::pow(x(), 2) * positionError.xx +
                         std::pow(y(), 2) * positionError.yy) /
