@@ -145,6 +145,9 @@ namespace Jug::Reco {
             global.z()
           };
 
+          // skip steps before crossing firstSmallerThanZ
+          if (firstSmallerThanZ != 0 && position.z > firstSmallerThanZ) continue;
+
           // local position
           const eicd::Vector2f loc {
             parameter[Acts::eBoundLoc0],
