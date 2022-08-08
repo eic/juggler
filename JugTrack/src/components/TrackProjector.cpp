@@ -146,7 +146,7 @@ namespace Jug::Reco {
           };
 
           // skip steps before crossing firstSmallerThanZ
-          if (m_firstSmallerThanZ != 0 && position.z > m_firstSmallerThanZ) continue;
+          if (m_firstSmallerThanZ != 0 && position.z > m_firstSmallerThanZ) return;
 
           // local position
           const eicd::Vector2f loc {
