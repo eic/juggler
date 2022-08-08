@@ -5,19 +5,20 @@
 # Package: JugDigi
 ################################################################################
 
-file(GLOB JugDigiPlugins_sources CONFIGURE_DEPENDS src/components/*.cpp)
-gaudi_add_module(JugDigiPlugins
-  SOURCES
-  ${JugDigiPlugins_sources}
-  LINK
-  Gaudi::GaudiAlgLib Gaudi::GaudiKernel
-  JugBase
+#file(GLOB JugDigiPlugins_sources CONFIGURE_DEPENDS src/components/*.cpp)
+set(JugDigiPlugins_sources
+  src/CalorimeterHitDigi.cpp
+)
+message(STATUS "${JugDigiPlugins_sources}")
+add_library(JugDigiPlugins ${JugDigiPlugins_sources})
+target_link_libraries(JugDigiPlugins
   ROOT::Core ROOT::RIO ROOT::Tree
   EDM4HEP::edm4hep
   EICD::eicd
 )
 
 target_include_directories(JugDigiPlugins PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/JugBase>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
