@@ -21,6 +21,11 @@ jobs:
         name: build-eic-shell
         path: install/
         if-no-files-found: error
+    - uses: actions/upload-artifact@v3
+      with:
+        name: build-compile-commands-json
+        path: build/compile_commands.json
+        if-no-files-found: error
 
   clang-tidy:
     runs-on: ubuntu-latest
@@ -30,8 +35,8 @@ jobs:
     - uses: cvmfs-contrib/github-action-cvmfs@v2
     - uses: actions/download-artifact@v3
       with:
-        name: build-eic-shell
-        path: install/
+        name: build-compile-commands-json
+        path: build/compile_commands.json
     - uses: eic/run-cvmfs-osg-eic-shell@main
       with:
         platform-release: "jug_xl:nightly"
