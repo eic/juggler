@@ -36,7 +36,7 @@ jobs:
     - uses: actions/download-artifact@v3
       with:
         name: build-compile-commands-json
-        path: build/compile_commands.json
+        path: build/
     - uses: eic/run-cvmfs-osg-eic-shell@main
       with:
         platform-release: "jug_xl:nightly"
