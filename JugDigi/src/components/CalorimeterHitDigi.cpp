@@ -86,13 +86,13 @@ namespace Jug::Digi {
       if (!u_fields.value().empty()) {
         // sanity checks
         if (!detector) {
-          std::cerr << "Unable to locate Geometry Service. "
+          error() << "Unable to locate Geometry Service. "
                   << "Make sure you have GeoSvc and SimSvc in the right order in the configuration."
                   << std::endl;;
           return false;
         }
         if (m_readout.value().empty()) {
-          std::cerr << "readoutClass is not provided, it is needed to know the fields in readout ids"
+          error() << "readoutClass is not provided, it is needed to know the fields in readout ids"
                   << std::endl;;
           return false;
         }
@@ -111,11 +111,11 @@ namespace Jug::Digi {
           ref_mask = id_desc.encode(ref_fields);
           // debug() << fmt::format("Referece id mask for the fields {:#064b}", ref_mask) << std::endl;;
         } catch (...) {
-          std::cerr << "Failed to load ID decoder for " << m_readout.value() << std::endl;;
+          error() << "Failed to load ID decoder for " << m_readout.value() << std::endl;;
           return false;
         }
         id_mask = ~id_mask;
-        std::cout << fmt::format("ID mask in {:s}: {:#064b}", m_readout.value(), id_mask) << std::endl;;
+        info() << fmt::format("ID mask in {:s}: {:#064b}", m_readout.value(), id_mask) << std::endl;;
         return true;
       }
 
