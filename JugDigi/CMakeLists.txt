@@ -7,7 +7,7 @@
 
 #file(GLOB JugDigiPlugins_sources CONFIGURE_DEPENDS src/components/*.cpp)
 set(JugDigiPlugins_sources
-  src/CalorimeterHitDigi.cpp
+  src/components/CalorimeterHitDigi.cpp
 )
 message(STATUS "${JugDigiPlugins_sources}")
 add_library(JugDigiPlugins ${JugDigiPlugins_sources})
