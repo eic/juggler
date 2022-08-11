@@ -42,7 +42,6 @@ public:
   }
 
   StatusCode initialize() override {
-    m_outputMCScatteredElectron->setSubsetCollection();
     return GaudiAlgorithm::initialize();
   }
 
@@ -51,6 +50,7 @@ public:
     const auto& mcparts = *(m_inputMCParticleCollection.get());
     // output collection
     auto& out_electron = *(m_outputMCScatteredElectron.createAndPut());
+    out_electron.setSubsetCollection();
 
     // Determine scattered electron
     //
