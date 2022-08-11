@@ -18,13 +18,13 @@ jobs:
           cmake --build build -- install
     - uses: actions/upload-artifact@v3
       with:
-        name: build-eic-shell
+        name: install-eic-shell
         path: install/
         if-no-files-found: error
     - uses: actions/upload-artifact@v3
       with:
-        name: build-compile-commands-json
-        path: build/compile_commands.json
+        name: build-eic-shell
+        path: build/
         if-no-files-found: error
 
   clang-tidy:
@@ -35,8 +35,8 @@ jobs:
     - uses: cvmfs-contrib/github-action-cvmfs@v2
     - uses: actions/download-artifact@v3
       with:
-        name: build-compile-commands-json
-        path: build/compile_commands.json
+        name: build-eic-shell
+        path: build/
     - uses: eic/run-cvmfs-osg-eic-shell@main
       with:
         platform-release: "jug_xl:nightly"
