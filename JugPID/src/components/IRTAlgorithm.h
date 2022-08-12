@@ -11,8 +11,8 @@
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/IParticleSvc.h"
 
-#include "dd4pod/Geant4ParticleCollection.h"
-#include "dd4pod/TrackerHitCollection.h"
+#include "edm4hep/MCParticleCollection.h"
+#include "edm4hep/SimTrackerHitCollection.h"
 
 #include "eicd/TrajectoryCollection.h"
 #include "eicd/ReconstructedParticleCollection.h"
@@ -62,8 +62,8 @@ namespace Jug::PID {
     StatusCode finalize( void ) override;
 
     // Input collections;
-    std::unique_ptr<DataHandle<dd4pod::TrackerHitCollection>> m_inputHitCollection;
-    DataHandle<dd4pod::Geant4ParticleCollection> m_inputMCParticles {
+    std::unique_ptr<DataHandle<edm4hep::SimTrackerHitCollection>> m_inputHitCollection;
+    DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles {
       "inputMCParticles", 
 	Gaudi::DataHandle::Reader, 
 	this

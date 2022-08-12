@@ -161,7 +161,7 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
 	  
     // Input hit collection;
     m_inputHitCollection =
-      std::make_unique<DataHandle<dd4pod::TrackerHitCollection>>((dname + "Hits").c_str(), 
+      std::make_unique<DataHandle<edm4hep::SimTrackerHitCollection>>((dname + "Hits").c_str(), 
 									 Gaudi::DataHandle::Reader, this);
     // Output PID info collection;
     m_outputCherenkovPID =
@@ -309,15 +309,15 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
     // At this point have a reference to a 'mctrack', either this or that way;
     // Now just follow the logic of TrackParamTruthInit.cpp; 
 
-    // genStatus = 1 means thrown G4Primary, but dd4gun uses genStatus == 0
-    if (mctrack.genStatus() > 1 ) {
+    // generatorStatus = 1 means thrown G4Primary, but dd4gun uses generatorStatus == 0
+    if (mctrack.getGeneratorStatus() > 1 ) {
       if (msgLevel(MSG::DEBUG)) {
-	debug() << "ignoring particle with genStatus = " << mctrack.genStatus() << endmsg;
+	debug() << "ignoring particle with generatorStatus = " << mctrack.getGeneratorStatus() << endmsg;
       }
       continue;
     } //if
 
-    const double charge = m_pidSvc->particle(mctrack.pdgID()).charge;
+    const double charge = m_pidSvc->particle(mctrack.getPDG()).charge;
     if (abs(charge) < std::numeric_limits<double>::epsilon()) {
       if (msgLevel(MSG::DEBUG)) {
 	debug() << "ignoring neutral particle" << endmsg;
@@ -326,12 +326,12 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
     } //if
 
       // FIXME: consider only primaries for the time being;
-    if (mctrack.g4Parent()) continue;
-    //printf("@@@ %d %3d %d\n", mctrack.ID(), mctrack.pdgID(), mctrack.g4Parent());
+    if (mctrack.parents_size()>0) continue;
+    //printf("@@@ %d %3d %d\n", mctrack.ID(), mctrack.getPDG(), mctrack.parents_size());
     // FIXME: a hack; remove muons;
-    if (mctrack.pdgID() == 13) continue;
+    if (mctrack.getPDG() == 13) continue;
 
-    auto particle = new ChargedParticle(mctrack.pdgID());
+    auto particle = new ChargedParticle(mctrack.getPDG());
     event->AddChargedParticle(particle);
 
     // Start radiator history for all known radiators;
@@ -344,16 +344,14 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
     //printf("%3d\n", mctracks.size());
     for(const auto &hit: hits) {
       // FIXME: range checks;
-      const auto &phtrack = mctracks[hit.truth().trackID];
-      //const auto &phtrack = mctracks[hit.truth().trackID-1];
+      const auto &phtrack = hit.getMCParticle();
 
       // FIXME: yes, use MC truth here; not really needed I guess;
       // FIXME: range checks;
-      //printf("Here: %d %d %3d!\n", phtrack.parents()[0], mctrack.ID(), hit.truth().trackID);
       //if (phtrack.parents()[0] != mctrack.ID()) continue;
       
       // Vertex where photon was created;
-      const auto &vs = phtrack.vs();
+      const auto &vs = phtrack.getVertex();
       TVector3 vtx(vs.x, vs.y, vs.z);
       //printf("@@@ %f %f %f\n", vs.x, vs.y, vs.z);
       {
@@ -375,7 +373,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       // Simulate QE & geometric sensor efficiency; FIXME: hit.energy() is numerically 
       // in GeV units, but Gaudi::Units::GeV = 1000; prefer to convert photon energies 
       // to [eV] in all places by hand;
-      double eVenergy = 1E9*hit.energyDeposit();
+      double eVenergy = 1E9*hit.getEDep();
       //printf("%f\n", eVenergy);
       if (!QE_pass(eVenergy, m_rngUni()) || 
 	  m_rngUni() > /*m_GeometricEfficiency.value()**/m_SafetyFactor.value()) {
@@ -387,7 +385,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 
 	// Add the point to the radiator history buffer; FIXME: all this is not 
 	// needed if ACTS trajectory parameterization is used;
-	particle->FindRadiatorHistory(radiator)->AddStepBufferPoint(phtrack.time(), vtx);
+	particle->FindRadiatorHistory(radiator)->AddStepBufferPoint(phtrack.getTime(), vtx);
 
 	//printf("Here-2A\n");
 	continue;
@@ -402,13 +400,13 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       // FIXME: '0' - for now assume a single photon detector type for the whole ERICH (DRICH),
       // which must be a reasonable assumption; eventually may want to generalize;
       const auto pd = m_IrtDet->m_PhotonDetectors[0];
-      uint64_t vcopy = hit.cellID() & m_ReadoutCellMask;
+      uint64_t vcopy = hit.getCellID() & m_ReadoutCellMask;
       {
 	const auto irt = pd->GetIRT(vcopy);
 	auto sensor = dynamic_cast<const FlatSurface*>(irt->tail()->GetSurface());
 
 	double pitch = m_SensorPixelPitch.value(), sens = m_SensorPixelSize.value();//pitch - gap;
-	const auto &x = hit.position();
+	const auto &x = hit.getPosition();
 	TVector3 lpt(x.x, x.y, x.z);
 	double lxy[2] = {sensor->GetLocalX(lpt), sensor->GetLocalY(lpt)}, lxyPixels[2] = {0.0};
 	//printf("%7.2f %7.2f\n", lxy[0], lxy[1]);
@@ -438,7 +436,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	// Start vertex and momentum; 
 	photon->SetVertexPosition(vtx);
 	{
-	  const auto &p = phtrack.ps();
+	  const auto &p = phtrack.getMomentum();
 	  photon->SetVertexMomentum(TVector3(p.x, p.y, p.z));
 	}
 	
@@ -486,7 +484,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       // FIXME: need it not at vertex, but in the radiator; as coded here, this can 
       // hardly work once the magnetic field is turned on; but this is a best guess 
       // if nothing else is available;
-      const auto &p = mctrack.ps();
+      const auto &p = mctrack.getMomentum();
       
       p0 = TVector3(p.x, p.y, p.z);
       
@@ -586,7 +584,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	  eicd::CherenkovPdgHypothesis hypothesis;
 	  
 	  // Flip sign if needed; FIXME: use reconstructed one?;
-	  if (m_pidSvc->particle(mctrack.pdgID()).charge < 0.0) pdg_table[ip] *= -1;
+	  if (m_pidSvc->particle(mctrack.getPDG()).charge < 0.0) pdg_table[ip] *= -1;
 	  
 	  // Storage model is not exactly efficient, but it is simple for users;
 	  hypothesis.radiator = ir;
@@ -594,7 +592,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	  hypothesis.npe      = hypo->GetNpe   (radiator);
 	  hypothesis.weight   = hypo->GetWeight(radiator);
 	  
-	  cbuffer.addoptions(hypothesis);
+	  cbuffer.addToOptions(hypothesis);
 
 	} //for ip
 
@@ -641,18 +639,18 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	  rdata.rindex     = npe   ? ri    / npe   : 0.0;
 	  rdata.wavelength = npe   ? wl    / npe   : 0.0;
 	  //printf("@@@ %7.2f\n", 1000*rdata.theta);
-	  cbuffer.addangles(rdata);
+	  cbuffer.addToAngles(rdata);
 	}
       } //for ir
 
       // FIXME: well, and what does go here instead of 0?;
-      cbuffer.ID({0, algorithmID()});
+      // cbuffer.ID({0, algorithmID()});
 	
       // Reference to either MC track or a reconstructed track;
 #ifdef _USE_RECONSTRUCTED_TRACKS_
-      cbuffer.recID(rctrack.ID());
+      cbuffer.recID(rctrack.ID()); // do not use, out of date
 #else
-      cbuffer.recID(mctrack.ID());
+      //cbuffer.setAssociatedParticle(mctrack); // TODO: wait for https://eicweb.phy.anl.gov/EIC/eicd/-/merge_requests/86 merge
 #endif
     }  
   } //for rctrack (mctrack)
