@@ -8,14 +8,6 @@
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 
-#if 0
-#include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/Navigator.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
-#include "Acts/TrackFitting/GainMatrixUpdater.hpp"
-#endif
-
 #include "TrackFindingAlgorithm.h"
 
 #include "JugBase/BField/DD4hepBField.h"

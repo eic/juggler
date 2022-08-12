@@ -123,9 +123,11 @@ public:
       // Also write MC <--> truth particle association if match was found
       if (best_match >= 0) {
         auto rec_assoc = assoc.create();
-        rec_assoc.setSimID(mc[best_match].id());
+        rec_assoc.setRecID(rec_part.getObjectID().index);
+        rec_assoc.setSimID(mc[best_match].getObjectID().index);
         rec_assoc.setWeight(1);
         rec_assoc.setRec(rec_part);
+        //rec_assoc.setSim(mc[best_match]);
       }
       if (msgLevel(MSG::DEBUG)) {
         if (best_match > 0) {

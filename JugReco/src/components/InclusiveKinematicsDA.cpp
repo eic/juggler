@@ -130,10 +130,10 @@ public:
     //const auto ef_assoc = std::find_if(
     //  rcassoc.begin(),
     //  rcassoc.end(),
-    //  [&ef_coll](const auto& a){ return a.getSimID() == ef_coll[0].id(); });
+    //  [&ef_coll](const auto& a){ return a.getSimID() == ef_coll[0].getObjectID().index; });
     auto ef_assoc = rcassoc.begin();
     for (; ef_assoc != rcassoc.end(); ++ef_assoc) {
-      if (ef_assoc->getSimID() == ef_coll[0].id()) {
+      if (ef_assoc->getSimID() == (unsigned) ef_coll[0].getObjectID().index) {
         break;
       }
     }
@@ -144,7 +144,7 @@ public:
       return StatusCode::SUCCESS;
     }
     const auto ef_rc{ef_assoc->getRec()};
-    const auto ef_rc_id{ef_rc.id()};
+    const auto ef_rc_id{ef_rc.getObjectID().index};
 
     // Loop over reconstructed particles to get all outgoing particles
     // ----------------------------------------------------------------- 
@@ -171,7 +171,7 @@ public:
 
     for(const auto& p : rcparts) {
       // Get the scattered electron index and angle
-      if (p.id() == ef_rc_id) {
+      if (p.getObjectID().index == ef_rc_id) {
         // Lorentz vector in lab frame
         PxPyPzEVector e_lab(p.getMomentum().x, p.getMomentum().y, p.getMomentum().z, p.getEnergy());
         // Boost to colinear frame

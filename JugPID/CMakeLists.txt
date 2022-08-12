@@ -5,12 +5,10 @@
 # Package: JugPID
 ################################################################################
 
+file(GLOB JugPIDPlugins_sources CONFIGURE_DEPENDS src/components/*.cpp)
 gaudi_add_module(JugPIDPlugins
   SOURCES
-  src/components/FuzzyKClusters.cpp 
-  src/components/PhotoRingClusters.cpp
-  src/components/IRTAlgorithmServices.cpp
-  src/components/IRTAlgorithm.cpp
+  ${JugPIDPlugins_sources}
   LINK
   Gaudi::GaudiAlgLib Gaudi::GaudiKernel
   JugBase

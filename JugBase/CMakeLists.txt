@@ -5,14 +5,14 @@
 # Package: JugBase
 ################################################################################
 
+file(GLOB JugBase_sources CONFIGURE_DEPENDS src/*.cpp)
+file(GLOB JugBase_plugins CONFIGURE_DEPENDS src/Plugins/*.cpp)
+file(GLOB JugBase_utilities CONFIGURE_DEPENDS src/Utilities/*.cpp)
 gaudi_add_library(JugBase
   SOURCES
-  src/ACTSLogger.cpp
-  src/PodioDataSvc.cpp
-  src/KeepDropSwitch.cpp
-  src/Utilities/Helpers.cpp
-  src/Utilities/Paths.cpp
-  src/Plugins/DD4hepBField.cpp
+  ${JugBase_sources}
+  ${JugBase_plugins}
+  ${JugBase_utilities}
   LINK
   Gaudi::GaudiKernel Gaudi::GaudiAlgLib
   podio::podioRootIO
@@ -30,16 +30,10 @@ target_include_directories(JugBase PUBLIC
 
 target_compile_options(JugBase PRIVATE -Wno-suggest-override)
 
-file(GLOB JugBasePlugins_sources src/components/*.cpp)
+file(GLOB JugBasePlugins_sources CONFIGURE_DEPENDS src/components/*.cpp)
 gaudi_add_module(JugBasePlugins
   SOURCES
-  src/components/EICDataSvc.cpp
-  src/components/GeoSvc.cpp
-  src/components/ParticleSvc.cpp
-  src/components/InputCopier.cpp
-  src/components/PodioInput.cpp
-  src/components/PodioOutput.cpp
-  src/components/ReadTestConsumer.cxx
+  ${JugBasePlugins_sources}
   LINK
   Gaudi::GaudiKernel Gaudi::GaudiAlgLib
   ROOT::Core ROOT::RIO ROOT::Tree

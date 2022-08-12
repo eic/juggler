@@ -123,6 +123,13 @@ public:
       }
     }
 
+    // sort hits by energy from large to small
+    std::for_each(merge_map.begin(), merge_map.end(), [](auto& it) {
+      std::sort(it.second.begin(), it.second.end(), [](const auto& h1, const auto& h2) {
+        return h1.getEnergy() > h2.getEnergy();
+      });
+    });
+
     // reconstruct info for merged hits
     // dd4hep decoders
     auto poscon = m_geoSvc->cellIDPositionConverter();
@@ -163,7 +170,7 @@ public:
       );
 
       outputs.push_back(
-          eicd::CalorimeterHit{ref_id,
+          eicd::CalorimeterHit{href.getCellID(),
                               energy,
                               energyError,
                               time,

@@ -5,14 +5,10 @@
 # Package: JugDigi
 ################################################################################
 
-file(GLOB JugDigiPlugins_sources src/components/*.cpp)
+file(GLOB JugDigiPlugins_sources CONFIGURE_DEPENDS src/components/*.cpp)
 gaudi_add_module(JugDigiPlugins
   SOURCES
-  src/components/CalorimeterHitDigi.cpp 
-  src/components/CalorimeterBirksCorr.cpp
-  src/components/PhotoMultiplierDigi.cpp 
-  src/components/SiliconTrackerDigi.cpp 
-  src/components/SimTrackerHitsCollector.cpp 
+  ${JugDigiPlugins_sources}
   LINK
   Gaudi::GaudiAlgLib Gaudi::GaudiKernel
   JugBase

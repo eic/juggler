@@ -33,6 +33,7 @@
 #include "edm4hep/SimCalorimeterHitCollection.h"
 #include "eicd/CalorimeterHitCollection.h"
 #include "eicd/ClusterCollection.h"
+#include "eicd/MCRecoClusterParticleAssociationCollection.h"
 #include "eicd/ProtoClusterCollection.h"
 #include "eicd/vector_utils.h"
 
@@ -59,7 +60,12 @@ private:
   // Collection for MC hits when running on MC
   Gaudi::Property<std::string> m_mcHits{this, "mcHits", ""};
   // Optional handle to MC hits
-  std::unique_ptr<DataHandle<edm4hep::SimCalorimeterHitCollection>> m_inputMC;
+  std::unique_ptr<DataHandle<edm4hep::SimCalorimeterHitCollection>> m_mcHits_ptr;
+
+  // Collection for associations when running on MC
+  Gaudi::Property<std::string> m_outputAssociations{this, "outputAssociations", ""};
+  // Optional handle to MC hits
+  std::unique_ptr<DataHandle<eicd::MCRecoClusterParticleAssociationCollection>> m_outputAssociations_ptr;
 
 public:
   ImagingClusterReco(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
@@ -72,13 +78,20 @@ public:
     if (GaudiAlgorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
-    // TODO move to own algo
-    // Initialize the MC input hit collection if requested
-    // if (m_mcHits != "") {
-    //  m_inputMC =
-    //      std::make_unique<DataHandle<edm4hep::SimCalorimeterHitCollection>>(m_mcHits, Gaudi::DataHandle::Reader,
-    //      this);
-    //}
+
+    // Initialize the optional MC input hit collection if requested
+    if (m_mcHits != "") {
+      m_mcHits_ptr =
+        std::make_unique<DataHandle<edm4hep::SimCalorimeterHitCollection>>(m_mcHits, Gaudi::DataHandle::Reader,
+        this);
+    }
+
+    // Initialize the optional association collection if requested
+    if (m_outputAssociations != "") {
+      m_outputAssociations_ptr =
+        std::make_unique<DataHandle<eicd::MCRecoClusterParticleAssociationCollection>>(m_outputAssociations, Gaudi::DataHandle::Writer,
+        this);
+    }
 
     return StatusCode::SUCCESS;
   }
@@ -89,12 +102,18 @@ public:
     // output collections
     auto& layers   = *m_outputLayers.createAndPut();
     auto& clusters = *m_outputClusters.createAndPut();
-    // Optional MC data
-    // TODO remove to other algo
-    // const edm4hep::SimCalorimeterHitCollection* mcHits = nullptr;
-    // if (m_inputMC) {
-    //  mcHits = m_inputMC->get();
-    //}
+
+    // Optional input MC data
+    const edm4hep::SimCalorimeterHitCollection* mcHits = nullptr;
+    if (m_mcHits_ptr) {
+      mcHits = m_mcHits_ptr->get();
+    }
+
+    // Optional output associations
+    eicd::MCRecoClusterParticleAssociationCollection* associations = nullptr;
+    if (m_outputAssociations_ptr) {
+      associations = m_outputAssociations_ptr->createAndPut();
+    }
 
     for (const auto& pcl : proto) {
       if (!pcl.getHits().empty() && !pcl.getHits(0).isAvailable()) {
@@ -117,6 +136,49 @@ public:
         cl.addToClusters(layer);
       }
       clusters.push_back(cl);
+
+
+      // If mcHits are available, associate cluster with MCParticle
+      if (m_mcHits_ptr.get() != nullptr && m_outputAssociations_ptr.get() != nullptr) {
+
+        // 1. find pclhit with largest energy deposition
+        auto pclhits = pcl.getHits();
+        auto pclhit = std::max_element(
+          pclhits.begin(),
+          pclhits.end(),
+          [](const auto& pclhit1, const auto& pclhit2) {
+            return pclhit1.getEnergy() < pclhit2.getEnergy();
+          }
+        );
+
+        // 2. find mchit with same CellID
+        auto mchit = mcHits->begin();
+        for ( ; mchit != mcHits->end(); ++mchit) {
+          // break loop when CellID match found
+          if (mchit->getCellID() == pclhit->getCellID()) {
+            break;
+          }
+        }
+        if (!(mchit != mcHits->end())) {
+          // break if no matching hit found for this CellID
+          warning() << "Proto-cluster has highest energy in CellID " << pclhit->getCellID()
+                    << ", but no mc hit with that CellID was found." << endmsg;
+          break;
+        }
+
+        // 3. find mchit's MCParticle
+        const auto& mcp = mchit->getContributions(0).getParticle();
+
+        // set association
+        eicd::MutableMCRecoClusterParticleAssociation clusterassoc;
+        clusterassoc.setRecID(cl.getObjectID().index);
+        clusterassoc.setSimID(mcp.getObjectID().index);
+        clusterassoc.setWeight(1.0);
+        clusterassoc.setRec(cl);
+        //clusterassoc.setSim(mcp);
+        associations->push_back(clusterassoc);
+      }
+
     }
 
     // debug output
