@@ -650,7 +650,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 #ifdef _USE_RECONSTRUCTED_TRACKS_
       cbuffer.recID(rctrack.ID()); // do not use, out of date
 #else
-      //cbuffer.setAssociatedParticle(mctrack); // TODO: wait for https://eicweb.phy.anl.gov/EIC/eicd/-/merge_requests/86 merge
+      cbuffer.setAssociatedParticle(mctrack);
 #endif
     }  
   } //for rctrack (mctrack)
