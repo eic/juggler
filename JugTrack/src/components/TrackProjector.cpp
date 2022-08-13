@@ -118,8 +118,6 @@ namespace Jug::Reco {
 
         // visit the track points
         mj.visitBackwards(trackTip, [&](auto&& trackstate) {
-          auto pathLength = trackstate.pathLength();
-
           // get volume info
           auto geoID = trackstate.referenceSurface().geometryId();
           auto volume = geoID.volume();
@@ -139,7 +137,7 @@ namespace Jug::Reco {
             {0, 0, 0}
           );
           // global position
-          const eicd::Vector3f position {
+          const decltype(eicd::TrackPoint::position) position {
             global.x(),
             global.y(),
             global.z()
@@ -156,7 +154,7 @@ namespace Jug::Reco {
             static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc1))
           };
           const eicd::Cov3f positionError{0, 0, 0};
-          const eicd::Vector3f momentum = eicd::sphericalToVector(
+          const decltype(eicd::TrackPoint::momentum) momentum = eicd::sphericalToVector(
             1.0 / std::abs(parameter[Acts::eBoundQOverP]),
             parameter[Acts::eBoundTheta],
             parameter[Acts::eBoundPhi]
@@ -178,6 +176,7 @@ namespace Jug::Reco {
             static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundPhi)),
             static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundPhi))
           };
+          const float pathLength = static_cast<float>(trackstate.pathLength());
           const float pathLengthError = 0;
 
           // Store track point
@@ -191,7 +190,7 @@ namespace Jug::Reco {
             theta,
             phi,
             directionError,
-            static_cast<float>(pathLength),
+            pathLength,
             pathLengthError
           });
 
