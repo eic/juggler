@@ -338,7 +338,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
     // Start radiator history for all known radiators;
     for(auto rptr: m_IrtDet->Radiators()) {
       particle->StartRadiatorHistory(std::make_pair(rptr.second, new RadiatorHistory()));
-      printf("found radiator %s\n",rptr.second->GetAlternativeMaterialName());
+      // printf("found radiator %s\n",rptr.second->GetAlternativeMaterialName());
     }
       
     // Distribute photons over radiators where they were presumably produced, to 
@@ -348,7 +348,11 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
     for(const auto &hit: hits) {
       // FIXME: range checks;
       const auto &phtrack = hit.getMCParticle();
-      printf("here0\n");
+      // printf("here0\n");
+      if(phtrack.getPDG()!=-22) {
+        fprintf(stderr,"ERROR: this hit was not from an optical photon: PDG = %d\n",phtrack.getPDG());
+        continue;
+      }
 
       // FIXME: yes, use MC truth here; not really needed I guess;
       // FIXME: range checks;
@@ -357,31 +361,30 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       // Vertex where photon was created;
       const auto &vs = phtrack.getVertex();
       TVector3 vtx(vs.x, vs.y, vs.z);
-      printf("@@@ photon vtx: %f %f %f\n", vs.x, vs.y, vs.z);
+      // printf("@@@ photon vtx: %f %f %f\n", vs.x, vs.y, vs.z);
       {
-	const auto &ps = phtrack.getMomentum();
-	double phi = TVector3(ps.x, ps.y, ps.z).Phi();
-	double theta = TVector3(ps.x, ps.y, ps.z).Theta();
-	printf("@@@ theta, phi = %7.2f %7.2f\n",theta,phi);
-        if(phtrack.getPDG()!=-22) fprintf(stderr,"ERROR: this was not an optical photon\n");
-	//if (fabs(phi - M_PI/2) > M_PI/4 && fabs(phi + M_PI/2) > M_PI/4) continue;
+        // const auto &ps = phtrack.getMomentum();
+        // double phi = TVector3(ps.x, ps.y, ps.z).Phi();
+        // double theta = TVector3(ps.x, ps.y, ps.z).Theta();
+        // printf("@@@ theta, phi = %7.2f %7.2f\n",theta,phi);
+        //if (fabs(phi - M_PI/2) > M_PI/4 && fabs(phi + M_PI/2) > M_PI/4) continue;
       }
       //if (vs.z < 2500 || vs.z > 2700) continue;
       
       // FIXME: this is in general correct, but needs refinement;
       TVector3 ip(0,0,0);
       // FIXME: unify with the code below;
-      printf("guessing radiator..\n");
+      // printf("guessing radiator..\n");
       auto radiator = m_IrtDet->GuessRadiator(vtx, (vtx - ip).Unit());
       // FIXME: do it better later;
       if (!radiator) continue;
-      printf("Here-1\n");
+      // printf("Here-1\n");
 
       // Simulate QE & geometric sensor efficiency; FIXME: hit.energy() is numerically 
       // in GeV units, but Gaudi::Units::GeV = 1000; prefer to convert photon energies 
       // to [eV] in all places by hand;
       double eVenergy = 1E9*hit.getEDep();
-      printf("%f\n", eVenergy);
+      // printf("%f\n", eVenergy);
       if (!QE_pass(eVenergy, m_rngUni()) || 
 	  m_rngUni() > /*m_GeometricEfficiency.value()**/m_SafetyFactor.value()) {
 
@@ -394,10 +397,10 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	// needed if ACTS trajectory parameterization is used;
 	particle->FindRadiatorHistory(radiator)->AddStepBufferPoint(phtrack.getTime(), vtx);
 
-	printf("Here-2A\n");
+	// printf("Here-2A\n");
 	continue;
       } //if
-      printf("Here-2B\n");
+      // printf("Here-2B\n");
 
       //if (vs.z < 2500 || vs.z > 2700) continue;
       //if (vs.z < 2200 || vs.z > 2400) continue;
