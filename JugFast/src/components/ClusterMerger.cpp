@@ -106,7 +106,7 @@ public:
         float energyError = 0;
         float time        = 0;
         int nhits = 0;
-        eicd::Vector3f position;
+        auto position = new_clus.getPosition();
         for (const auto& clus : clusters) {
           if (msgLevel(MSG::DEBUG)) {
             debug() << "   --> Adding cluster with energy: " << clus.getEnergy() << endmsg;
