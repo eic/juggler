@@ -116,18 +116,18 @@ namespace Jug::Reco {
               debug() << " chi2 = " << trajState.chi2Sum << endmsg;
             }
 
-            const eicd::Vector2f loc {
+            const decltype(eicd::TrackParametersData::loc) loc {
               parameter[Acts::eBoundLoc0],
               parameter[Acts::eBoundLoc1]
             };
-            const eicd::Cov3f covMomentum {
+            const decltype(eicd::TrackParametersData::momentumError) momentumError {
               static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundTheta)),
               static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundPhi)),
               static_cast<float>(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)),
               static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundPhi)),
               static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundQOverP)),
               static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundQOverP))};
-            const eicd::Cov2f covPos {
+            const decltype(eicd::TrackParametersData::locError) locError {
               static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
               static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)),
               static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc1))};
@@ -136,11 +136,11 @@ namespace Jug::Reco {
             eicd::TrackParameters pars{
               0, // type: track head --> 0
               loc,
-              covPos,
+              locError,
               static_cast<float>(parameter[Acts::eBoundTheta]),
               static_cast<float>(parameter[Acts::eBoundPhi]),
               static_cast<float>(parameter[Acts::eBoundQOverP]),
-              covMomentum,
+              momentumError,
               static_cast<float>(parameter[Acts::eBoundTime]),
               timeError,
               static_cast<float>(boundParam.charge())};
