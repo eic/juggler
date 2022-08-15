@@ -130,7 +130,7 @@ version:
 juggler:default:
   stage: docker
   tags: 
-   - docker
+   - docker-new
   rules:
     - if:  '$CI_SERVER_HOST == "eicweb.phy.anl.gov"'
   needs:
