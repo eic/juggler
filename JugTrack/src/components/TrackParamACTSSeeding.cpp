@@ -332,9 +332,9 @@ namespace Jug::Reco {
                     SpacePoint(
                         eicd::TrackerHit(
                             static_cast<uint64_t>(spacePoint.size()),
-                            eicd::Vector3f(v[0], v[1], v[2]),
-                            eicd::CovDiag3f(25.0e-6 / 3.0,
-                                            25.0e-6 / 3.0, 0.0),
+                            {v[0], v[1], v[2]},
+                            {25.0e-6 / 3.0,
+                             25.0e-6 / 3.0, 0.0},
                             0.0, 10.0, 0.05, 0.0),
                         static_cast<int32_t>(spacePoint.size())));
                 spacePointPtrs.push_back(&spacePoint.back());
