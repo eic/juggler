@@ -144,22 +144,22 @@ namespace Jug::Reco {
           };
 
           // local position
-          const eicd::Vector2f loc {
+          const decltype(eicd::TrackParametersData::loc) loc {
             parameter[Acts::eBoundLoc0],
             parameter[Acts::eBoundLoc1]
           };
-          const eicd::Cov2f covLoc {
+          const decltype(eicd::TrackParametersData::locError) locError {
             static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
             static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)),
             static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc1))
           };
-          const eicd::Cov3f positionError{0, 0, 0};
+          const decltype(eicd::TrackPoint::positionError) positionError{0, 0, 0};
           const decltype(eicd::TrackPoint::momentum) momentum = eicd::sphericalToVector(
             1.0 / std::abs(parameter[Acts::eBoundQOverP]),
             parameter[Acts::eBoundTheta],
             parameter[Acts::eBoundPhi]
           );
-          const eicd::Cov3f covMomentum {
+          const decltype(eicd::TrackPoint::momentumError) momentumError {
             static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundTheta)),
             static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundPhi)),
             static_cast<float>(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)),
@@ -171,7 +171,7 @@ namespace Jug::Reco {
           const float timeError{sqrt(static_cast<float>(covariance(Acts::eBoundTime, Acts::eBoundTime)))};
           const float theta(parameter[Acts::eBoundTheta]);
           const float phi(parameter[Acts::eBoundPhi]);
-          const eicd::Cov2f directionError {
+          const decltype(eicd::TrackPoint::directionError) directionError {
             static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundTheta)),
             static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundPhi)),
             static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundPhi))
@@ -184,7 +184,7 @@ namespace Jug::Reco {
             position,
             positionError,
             momentum,
-            covMomentum,
+            momentumError,
             time,
             timeError,
             theta,
