@@ -34,6 +34,10 @@
 #include "eicd/RawCalorimeterHitCollection.h"
 #include "eicd/RawCalorimeterHitData.h"
 
+// Algorithms library
+#ifdef USE_ALGORITHMS
+#include "JugDigi/CalorimeterHitDigi.h"
+#endif
 
 using namespace Gaudi::Units;
 
