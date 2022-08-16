@@ -87,6 +87,10 @@ namespace Jug::Digi {
     DataHandle<eicd::RawCalorimeterHitCollection> m_outputHitCollection{
       "outputHitCollection", Gaudi::DataHandle::Writer, this};
 
+#ifdef USE_ALGORITHMS
+    algorithms::digi::CalorimeterHitDigi m_algorithm;
+#endif
+
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
     CalorimeterHitDigi(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc) {
@@ -99,6 +103,10 @@ namespace Jug::Digi {
       if (GaudiAlgorithm::initialize().isFailure()) {
         return StatusCode::FAILURE;
       }
+#ifdef USE_ALGORITHMS
+      m_algorithm.initialize();
+#endif
+
       // random number generator from service
       auto randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
       auto sc      = m_normDist.initialize(randSvc, Rndm::Gauss(0.0, 1.0));
@@ -158,12 +166,25 @@ namespace Jug::Digi {
 
     StatusCode execute() override
     {
+#ifdef USE_ALGORITHMS
+      // input collections
+      const auto* const simhits = m_inputHitCollection.get();
+      // output collections
+      auto* rawhits = m_outputHitCollection.createAndPut();
+
+      // apply algorithms
+      *rawhits = m_algorithm(*simhits);
+
+      return StatusCode::SUCCESS;
+#else
+
       if (!u_fields.value().empty()) {
         signal_sum_digi();
       } else {
         single_hits_digi();
       }
       return StatusCode::SUCCESS;
+#endif
     }
 
   private:

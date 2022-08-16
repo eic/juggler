@@ -24,6 +24,10 @@
 #include "eicd/RawCalorimeterHitCollection.h"
 #include "eicd/RawCalorimeterHitData.h"
 
+// Algorithms library
+#ifdef USE_ALGORITHMS
+#include "JugDigi/CalorimeterBirksCorr.h"
+#endif
 
 using namespace Gaudi::Units;
 
@@ -44,6 +48,10 @@ namespace Jug::Digi {
                                                                       this};
     DataHandle<edm4hep::SimCalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                        this};
+
+#ifdef USE_ALGORITHMS
+    algorithms::digi::CalorimeterBirksCorr m_algorithm;
+#endif
 
     SmartIF<IParticleSvc> m_pidSvc;
     // unitless conterpart of arguments
@@ -71,6 +79,10 @@ namespace Jug::Digi {
         return StatusCode::FAILURE;
       }
 
+#ifdef USE_ALGORITHMS
+      //m_algorithm.setService("particleService", [&m_pidSvc](int pdg){ return m_pidSvc->particle(pdg); });
+#endif
+
       // using juggler internal units (GeV, mm, radian, ns)
       birksConstant = m_birksConstant.value() / mm * GeV;
 
@@ -79,6 +91,12 @@ namespace Jug::Digi {
 
     StatusCode execute() override
     {
+#ifdef USE_ALGORITHMS
+      const auto* const input = m_inputHitCollection.get();
+      auto* output = m_outputHitCollection.createAndPut();
+      *output = m_algorithm(*input);
+      return StatusCode::SUCCESS;
+#else
       auto& ohits = *m_outputHitCollection.createAndPut();
       for (const auto& hit : *m_inputHitCollection.get()) {
         auto ohit = ohits->create(hit.getCellID(), hit.getEnergy(), hit.getPosition());
@@ -98,6 +116,7 @@ namespace Jug::Digi {
         ohit.setEnergy(energy);
       }
       return StatusCode::SUCCESS;
+#endif
     }
   };
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
