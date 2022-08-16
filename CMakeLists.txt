@@ -61,6 +61,7 @@ if(${algorithms_FOUND})
   set(algorithms "algorithms::JugDigiPlugins")
 else()
   message(STATUS "algorithms library not found.")
+  set(algorithms "")
 endif()
 
 find_package(podio 0.14.1 REQUIRED)
