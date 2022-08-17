@@ -96,6 +96,14 @@ namespace Jug::Digi {
       : GaudiAlgorithm(name, svcLoc) {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
+
+#ifdef USE_ALGORITHMS
+      // Connecting Gaudi properties to algorithm
+      m_algorithm.setProperty("pedestalMean", m_pedMeanADC);
+
+      // Connecting Gaudi services to algorithm
+      m_algorithm.setService("geoSvc", m_normDist);
+#endif
     }
 
     StatusCode initialize() override

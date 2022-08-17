@@ -63,6 +63,10 @@ namespace Jug::Digi {
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
+
+#ifdef USE_ALGORITHMS
+      m_algorithms->registerProperty{"birksConstant", m_birksConstant};
+#endif
     }
 
     StatusCode initialize() override
