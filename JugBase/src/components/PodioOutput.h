@@ -58,6 +58,7 @@ private:
   gsl::owner<TTree*> m_colMDtree;
   /// The stored collections
   std::vector<podio::CollectionBase*> m_storedCollections;
+  std::vector<std::tuple<int, std::string, bool>> m_collectionInfo;
 };
 
 #endif

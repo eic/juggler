@@ -76,10 +76,6 @@ void PodioOutput::resetBranches(const std::vector<std::pair<std::string, podio::
 }
 
 void PodioOutput::createBranches(const std::vector<std::pair<std::string, podio::CollectionBase*>>& collections) {
-  // collectionID, collection type, subset collection
-  auto* collectionInfo = new std::vector<std::tuple<int, std::string, bool>>();
-  collectionInfo->reserve(collections.size());
-
   for (const auto& [collName, collBuffers] : collections) {
     auto buffers = collBuffers->getBuffers();
     auto* data = buffers.data;
@@ -116,22 +112,22 @@ void PodioOutput::createBranches(const std::vector<std::pair<std::string, podio:
 
     const auto collID = m_podioDataSvc->getCollectionIDs()->collectionID(collName);
     const auto collType = collBuffers->getValueTypeName() + "Collection";
-    collectionInfo->emplace_back(collID, std::move(collType), collBuffers->isSubsetCollection());
+    m_collectionInfo.emplace_back(collID, std::move(collType), collBuffers->isSubsetCollection());
 
     debug() << isOn << " Registering collection " << collClassName << " " << collName.c_str() << " containing type "
             << className << endmsg;
     collBuffers->prepareForWrite();
   }
-
-  m_metadatatree->Branch("CollectionTypeInfo", collectionInfo);
 }
 
 StatusCode PodioOutput::execute() {
   // for now assume identical content for every event
   // register for writing
   if (m_firstEvent) {
+    m_collectionInfo.clear();
     createBranches(m_podioDataSvc->getCollections());
     createBranches(m_podioDataSvc->getReadCollections());
+    m_metadatatree->Branch("CollectionTypeInfo", &m_collectionInfo);
   } else {
     resetBranches(m_podioDataSvc->getCollections());
     resetBranches(m_podioDataSvc->getReadCollections());
