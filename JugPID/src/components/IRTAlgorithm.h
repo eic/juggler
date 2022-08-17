@@ -64,7 +64,7 @@ namespace Jug::PID {
     // Input collections;
     std::unique_ptr<DataHandle<edm4hep::SimTrackerHitCollection>> m_inputHitCollection;
     DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles {
-      "inputMCParticles", 
+      "MCParticles", 
 	Gaudi::DataHandle::Reader, 
 	this
 	};

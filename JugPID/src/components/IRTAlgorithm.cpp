@@ -20,7 +20,7 @@ Jug::PID::IRTAlgorithm::IRTAlgorithm(const std::string& name, ISvcLocator* svcLo
   : GaudiAlgorithm(name, svcLoc), m_IrtGeo(0), m_IrtDet(0), 
     m_ReadoutCellMask(0x0)
 {
-  declareProperty("inputMCParticles",                 m_inputMCParticles,              "");
+  declareProperty("inputMCParticles",                 m_inputMCParticles,              "MCParticles");
 #ifdef _USE_RECONSTRUCTED_TRACKS_
   declareProperty("inputRecoParticles",               m_inputRecoParticles,            "");
 #endif

@@ -69,7 +69,12 @@ irtrec = IRTAlgorithm(
         )
 
 # Output ROOT file; keep the input collections as well, append DRICH PID tables;
-out = PodioOutput("out", filename=out_file)
+out = PodioOutput(
+        "out",
+        filename=out_file,
+        OutputLevel=DEBUG
+        )
+
 out.outputCommands = ["keep *"]
 
 ApplicationMgr(
