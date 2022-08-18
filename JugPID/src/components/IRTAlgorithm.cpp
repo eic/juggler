@@ -402,6 +402,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       //if (vs.z < 2200 || vs.z > 2400) continue;
 
       // Hit location after pixelization;
+      // FIXME: use cellID decoder, but we need gaps... see https://github.com/AIDASoft/DD4hep/issues/958
       TVector3 lxyPixel;
       // FIXME: '0' - for now assume a single photon detector type for the whole ERICH (DRICH),
       // which must be a reasonable assumption; eventually may want to generalize;
