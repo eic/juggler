@@ -311,7 +311,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 
     // generatorStatus = 1 means thrown G4Primary, but dd4gun uses generatorStatus == 0
     //if(mctrack.getPDG()>0) printf("@@@@ PDG: %d MomZ : %7.2f; GenStat %d, size: %d\n", mctrack.getPDG(), (mctrack.getMomentum()).z ,mctrack.getGeneratorStatus(),mctrack.parents_size());
-    if (mctrack.getGeneratorStatus() > 1 ) {
+    if (mctrack.getGeneratorStatus() != 1 ) {
       //printf("@@@@ PDG: %d MomZ : %7.2f; GenStat %d\n", mctrack.getPDG(), (mctrack.getMomentum()).z ,mctrack.getGeneratorStatus());
       if (msgLevel(MSG::DEBUG)) {
 	debug() << "ignoring particle with generatorStatus = " << mctrack.getGeneratorStatus() << endmsg;
@@ -328,7 +328,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
     } //if
 
       // FIXME: consider only primaries for the time being;
-    if (mctrack.parents_size()!=2) continue;
+    //if (mctrack.parents_size()!=2) continue;
     //printf("@@@  %3d %d\n", mctrack.getPDG(), mctrack.parents_size());
     // FIXME: a hack; remove muons;
     if (mctrack.getPDG() == 13) continue;
