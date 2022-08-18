@@ -72,7 +72,7 @@ irtrec = IRTAlgorithm(
 out = PodioOutput(
         "out",
         filename=out_file,
-        OutputLevel=DEBUG
+        # OutputLevel=DEBUG
         )
 
 out.outputCommands = ["keep *"]
