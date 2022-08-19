@@ -34,8 +34,6 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
-#include "eicd/VectorPolar.h"
-
 #include <cmath>
 
 namespace Jug::Reco {
