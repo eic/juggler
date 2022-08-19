@@ -14,7 +14,6 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugBase/UniqueID.h"
 
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -47,7 +46,6 @@ namespace Jug::Reco {
    * \ingroup tracking
    */
    class TrajectoriesFromTrackFinding : public GaudiAlgorithm {
-   // class TrajectoriesFromTrackFinding : public GaudiAlgorithm, AlgorithmIDMixin<int32_t> {
    public:
       DataHandle<TrajectoriesContainer>     m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
     DataHandle<eic::TrajectoryCollection> m_outputTrajectory{"outputTrajectoryParameters", Gaudi::DataHandle::Writer, this};
@@ -56,7 +54,6 @@ namespace Jug::Reco {
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
    TrajectoriesFromTrackFinding(const std::string& name, ISvcLocator* svcLoc)
         : GaudiAlgorithm(name, svcLoc)
-        // , AlgorithmIDMixin(name, info()) 
         {
           declareProperty("inputTrajectories", m_inputTrajectories,"");
           declareProperty("outputTrajectoryParameters", m_outputTrajectory, "ACTS Trajectory Parameters");
