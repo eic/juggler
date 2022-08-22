@@ -127,13 +127,18 @@ namespace Jug::Reco {
     Acts::GainMatrixSmoother kfSmoother;
     Acts::MeasurementSelector measSel{m_sourcelinkSelectorCfg};
 
-    Acts::CombinatorialKalmanFilterExtensions extensions;
+    Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>
+        extensions;
     extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
-    extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
-    extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
+    extensions.updater.connect<
+        &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
+        &kfUpdater);
+    extensions.smoother.connect<
+        &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
         &kfSmoother);
-    extensions.measurementSelector.connect<&Acts::MeasurementSelector::select>(
-        &measSel);
+    extensions.measurementSelector
+        .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
+            &measSel);
 
     IndexSourceLinkAccessor slAccessor;
     slAccessor.container = src_links;
@@ -154,7 +159,7 @@ namespace Jug::Reco {
 
       if (result.ok()) {
         // Get the track finding output object
-        const auto& trackFindingOutput = result.value();
+        auto& trackFindingOutput = result.value();
         // Create a SimMultiTrajectory
         trajectories->emplace_back(std::move(trackFindingOutput.fittedStates), 
                                    std::move(trackFindingOutput.lastMeasurementIndices),
