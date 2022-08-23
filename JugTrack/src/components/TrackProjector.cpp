@@ -138,15 +138,15 @@ namespace Jug::Reco {
           );
           // global position
           const decltype(eicd::TrackPoint::position) position {
-            global.x(),
-            global.y(),
-            global.z()
+            static_cast<float>(global.x()),
+            static_cast<float>(global.y()),
+            static_cast<float>(global.z())
           };
 
           // local position
           const decltype(eicd::TrackParametersData::loc) loc {
-            parameter[Acts::eBoundLoc0],
-            parameter[Acts::eBoundLoc1]
+            static_cast<float>(parameter[Acts::eBoundLoc0]),
+            static_cast<float>(parameter[Acts::eBoundLoc1])
           };
           const decltype(eicd::TrackParametersData::locError) locError {
             static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
@@ -155,9 +155,9 @@ namespace Jug::Reco {
           };
           const decltype(eicd::TrackPoint::positionError) positionError{0, 0, 0};
           const decltype(eicd::TrackPoint::momentum) momentum = eicd::sphericalToVector(
-            1.0 / std::abs(parameter[Acts::eBoundQOverP]),
-            parameter[Acts::eBoundTheta],
-            parameter[Acts::eBoundPhi]
+            static_cast<float>(1.0 / std::abs(parameter[Acts::eBoundQOverP])),
+            static_cast<float>(parameter[Acts::eBoundTheta]),
+            static_cast<float>(parameter[Acts::eBoundPhi])
           );
           const decltype(eicd::TrackPoint::momentumError) momentumError {
             static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundTheta)),
