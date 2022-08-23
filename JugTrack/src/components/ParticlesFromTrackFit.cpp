@@ -117,8 +117,8 @@ namespace Jug::Reco {
             }
 
             const decltype(eicd::TrackParametersData::loc) loc {
-              parameter[Acts::eBoundLoc0],
-              parameter[Acts::eBoundLoc1]
+              static_cast<float>(parameter[Acts::eBoundLoc0]),
+              static_cast<float>(parameter[Acts::eBoundLoc1])
             };
             const decltype(eicd::TrackParametersData::momentumError) momentumError {
               static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundTheta)),
