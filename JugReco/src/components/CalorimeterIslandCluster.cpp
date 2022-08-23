@@ -58,8 +58,8 @@ using CaloHitCollection = eicd::CalorimeterHitCollection;
 
 using Vector2f = std::conditional_t<
   std::is_same_v<decltype(eicd::CalorimeterHitData::position), edm4hep::Vector3f>,
-  edm4hep::Vector2f,
-  eicd::Vector2f
+  std::conditional_t<std::is_class_v<edm4hep::Vector2f>, edm4hep::Vector2f, void>,
+  std::conditional_t<std::is_class_v<eicd::Vector2f>, eicd::Vector2f, void>
 >;
 
 // helper functions to get distance between hits
