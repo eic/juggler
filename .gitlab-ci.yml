@@ -192,7 +192,10 @@ juggler:default:
 jug_xl:master:
   stage: deploy
   rules:
-    - if: '$CI_COMMIT_BRANCH == "master" && $TRIGGERED_BY_NIGHTLY == "0" && $CI_SERVER_HOST == "eicweb.phy.anl.gov"'
+    - if: '$CI_COMMIT_BRANCH == "master"
+        && $TRIGGERED_BY_NIGHTLY == "0"
+        && $CI_SERVER_HOST == "eicweb.phy.anl.gov"
+        && $CI_PIPELINE_TRIGGERED != "true"'
       when: on_success
     - when: never
   needs:
