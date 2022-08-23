@@ -37,8 +37,17 @@
 #include "eicd/ClusterCollection.h"
 #include "eicd/ProtoClusterCollection.h"
 #include "eicd/vector_utils.h"
-#include "eicd/Vector2f.h"
+#include "edm4hep/Vector3f.h"
 #include "edm4hep/Vector2f.h"
+
+#if defined __has_include
+#  if __has_include ("eicd/Vector3f.h")
+#    include "eicd/Vector3f.h"
+#  endif
+#  if __has_include ("eicd/Vector2f.h")
+#    include "eicd/Vector2f.h"
+#  endif
+#endif
 
 using namespace Gaudi::Units;
 
@@ -48,9 +57,9 @@ using CaloHit = eicd::CalorimeterHit;
 using CaloHitCollection = eicd::CalorimeterHitCollection;
 
 using Vector2f = std::conditional_t<
-  std::is_same_v<decltype(eicd::CalorimeterHitData::position), eicd::Vector3f>,
-  eicd::Vector2f,
-  edm4hep::Vector2f
+  std::is_same_v<decltype(eicd::CalorimeterHitData::position), edm4hep::Vector3f>,
+  edm4hep::Vector2f,
+  eicd::Vector2f
 >;
 
 // helper functions to get distance between hits
