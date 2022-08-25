@@ -315,7 +315,7 @@ private:
 
   std::pair<double /* polar */, double /* azimuthal */> fit_track(const std::vector<eicd::Cluster>& layers) const {
     int nrows = 0;
-    eicd::Vector3f mean_pos{0, 0, 0};
+    decltype(eicd::ClusterData::position) mean_pos{0, 0, 0};
     for (const auto& layer : layers) {
       if ((layer.getNhits() > 0) && (layer.getHits(0).getLayer() <= m_trackStopLayer)) {
         mean_pos = mean_pos + layer.getPosition();
