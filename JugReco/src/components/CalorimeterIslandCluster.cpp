@@ -33,23 +33,23 @@
 #include "JugBase/IGeoSvc.h"
 
 // Event Model related classes
-#include "eicd/CalorimeterHitCollection.h"
-#include "eicd/ClusterCollection.h"
-#include "eicd/ProtoClusterCollection.h"
-#include "eicd/vector_utils.h"
+#include "edm4eic/CalorimeterHitCollection.h"
+#include "edm4eic/ClusterCollection.h"
+#include "edm4eic/ProtoClusterCollection.h"
+#include "edm4eic/vector_utils.h"
 #include "edm4hep/Vector3f.h"
 #include "edm4hep/Vector2f.h"
 
 #if defined __has_include
-#  if __has_include ("eicd/Vector3f.h")
-#    include "eicd/Vector3f.h"
+#  if __has_include ("edm4eic/Vector3f.h")
+#    include "edm4eic/Vector3f.h"
 #  endif
-#  if __has_include ("eicd/Vector2f.h")
-#    include "eicd/Vector2f.h"
+#  if __has_include ("edm4eic/Vector2f.h")
+#    include "edm4eic/Vector2f.h"
 #  endif
 #endif
 
-namespace eicd {
+namespace edm4eic {
   class Vector2f;
   class Vector3f;
 }
@@ -58,13 +58,13 @@ using namespace Gaudi::Units;
 
 namespace {
 
-using CaloHit = eicd::CalorimeterHit;
-using CaloHitCollection = eicd::CalorimeterHitCollection;
+using CaloHit = edm4eic::CalorimeterHit;
+using CaloHitCollection = edm4eic::CalorimeterHitCollection;
 
 using Vector2f = std::conditional_t<
-  std::is_same_v<decltype(eicd::CalorimeterHitData::position), edm4hep::Vector3f>,
+  std::is_same_v<decltype(edm4eic::CalorimeterHitData::position), edm4hep::Vector3f>,
   edm4hep::Vector2f,
-  eicd::Vector2f
+  edm4eic::Vector2f
 >;
 
 // helper functions to get distance between hits
@@ -89,10 +89,10 @@ static Vector2f globalDistRPhi(const CaloHit& h1, const CaloHit& h2) {
   using vector_type = decltype(Vector2f::a);
   return {
     static_cast<vector_type>(
-      eicd::magnitude(h1.getPosition()) - eicd::magnitude(h2.getPosition())
+      edm4eic::magnitude(h1.getPosition()) - edm4eic::magnitude(h2.getPosition())
     ),
     static_cast<vector_type>(
-      eicd::angleAzimuthal(h1.getPosition()) - eicd::angleAzimuthal(h2.getPosition())
+      edm4eic::angleAzimuthal(h1.getPosition()) - edm4eic::angleAzimuthal(h2.getPosition())
     )
   };
 }
@@ -101,10 +101,10 @@ static Vector2f globalDistEtaPhi(const CaloHit& h1,
   using vector_type = decltype(Vector2f::a);
   return {
     static_cast<vector_type>(
-      eicd::eta(h1.getPosition()) - eicd::eta(h2.getPosition())
+      edm4eic::eta(h1.getPosition()) - edm4eic::eta(h2.getPosition())
     ),
     static_cast<vector_type>(
-      eicd::angleAzimuthal(h1.getPosition()) - eicd::angleAzimuthal(h2.getPosition())
+      edm4eic::angleAzimuthal(h1.getPosition()) - edm4eic::angleAzimuthal(h2.getPosition())
     )
   };
 }
@@ -138,7 +138,7 @@ private:
   Gaudi::Property<double> m_minClusterHitEdep{this, "minClusterHitEdep", 0.};
   Gaudi::Property<double> m_minClusterCenterEdep{this, "minClusterCenterEdep", 50.0 * MeV};
   DataHandle<CaloHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::ProtoClusterCollection> m_outputProtoCollection{"outputProtoClusterCollection",
+  DataHandle<edm4eic::ProtoClusterCollection> m_outputProtoCollection{"outputProtoClusterCollection",
                                                                   Gaudi::DataHandle::Writer, this};
 
   // neighbour checking distances
@@ -273,7 +273,7 @@ private:
       // different sector, local coordinates do not work, using global coordinates
     } else {
       // sector may have rotation (barrel), so z is included
-      return (eicd::magnitude(h1.getPosition() - h2.getPosition()) <= sectorDist);
+      return (edm4eic::magnitude(h1.getPosition() - h2.getPosition()) <= sectorDist);
     }
   }
 
@@ -357,7 +357,7 @@ private:
 
   // split a group of hits according to the local maxima
   void split_group(std::vector<std::pair<uint32_t, CaloHit>>& group, const std::vector<CaloHit>& maxima,
-                   eicd::ProtoClusterCollection& proto) const {
+                   edm4eic::ProtoClusterCollection& proto) const {
     // special cases
     if (maxima.empty()) {
       if (msgLevel(MSG::VERBOSE)) {
@@ -365,7 +365,7 @@ private:
       }
       return;
     } else if (maxima.size() == 1) {
-      eicd::MutableProtoCluster pcl;
+      edm4eic::MutableProtoCluster pcl;
       for (auto& [idx, hit] : group) {
         pcl.addToHits(hit);
         pcl.addToWeights(1.);
@@ -380,7 +380,7 @@ private:
     // split between maxima
     // TODO, here we can implement iterations with profile, or even ML for better splits
     std::vector<double> weights(maxima.size(), 1.);
-    std::vector<eicd::MutableProtoCluster> pcls;
+    std::vector<edm4eic::MutableProtoCluster> pcls;
     for (size_t k = 0; k < maxima.size(); ++k) {
       pcls.emplace_back();
     }
@@ -392,7 +392,7 @@ private:
       for (const auto& chit : maxima) {
         double dist_ref = chit.getDimension().x;
         double energy   = chit.getEnergy();
-        double dist     = eicd::magnitude(hitsDist(chit, hit));
+        double dist     = edm4eic::magnitude(hitsDist(chit, hit));
         weights[j]      = std::exp(-dist / dist_ref) * energy;
         j += 1;
       }

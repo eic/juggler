@@ -10,7 +10,7 @@
 #include "JugBase/DataHandle.h"
 
 // Event Model related classes
-#include "eicd/ReconstructedParticleCollection.h"
+#include "edm4eic/ReconstructedParticleCollection.h"
 
 namespace Jug::Reco {
 
@@ -24,10 +24,10 @@ namespace Jug::Reco {
 class ParticleCollector : public GaudiAlgorithm {
 private:
   Gaudi::Property<std::vector<std::string>> m_inputParticles{this, "inputParticles", {}, "Particles to be aggregated"};
-  DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
+  DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
                                                                      this};
 
-  std::vector<DataHandle<eicd::ReconstructedParticleCollection>*> m_particleCollections;
+  std::vector<DataHandle<edm4eic::ReconstructedParticleCollection>*> m_particleCollections;
 
 public:
   ParticleCollector(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
@@ -46,7 +46,7 @@ public:
     for (auto colname : m_inputParticles) {
       debug() << "initializing collection: " << colname << endmsg;
       m_particleCollections.push_back(
-          new DataHandle<eicd::ReconstructedParticleCollection>{colname, Gaudi::DataHandle::Reader, this});
+          new DataHandle<edm4eic::ReconstructedParticleCollection>{colname, Gaudi::DataHandle::Reader, this});
     }
     return StatusCode::SUCCESS;
   }

@@ -34,10 +34,10 @@
 // Event Model related classes
 #include "edm4hep/MCParticle.h"
 #include "edm4hep/SimCalorimeterHitCollection.h"
-#include "eicd/ClusterCollection.h"
-#include "eicd/MCRecoClusterParticleAssociationCollection.h"
-#include "eicd/ProtoClusterCollection.h"
-#include "eicd/vector_utils.h"
+#include "edm4eic/ClusterCollection.h"
+#include "edm4eic/MCRecoClusterParticleAssociationCollection.h"
+#include "edm4eic/ProtoClusterCollection.h"
+#include "edm4eic/vector_utils.h"
 
 using namespace Gaudi::Units;
 
@@ -76,8 +76,8 @@ private:
   // for endcaps.
   Gaudi::Property<bool> m_enableEtaBounds{this, "enableEtaBounds", false};
 
-  DataHandle<eicd::ProtoClusterCollection> m_inputProto{"inputProtoClusterCollection", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::ClusterCollection> m_outputClusters{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
+  DataHandle<edm4eic::ProtoClusterCollection> m_inputProto{"inputProtoClusterCollection", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::ClusterCollection> m_outputClusters{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
 
   // Collection for MC hits when running on MC
   Gaudi::Property<std::string> m_mcHits{this, "mcHits", ""};
@@ -87,7 +87,7 @@ private:
   // Collection for associations when running on MC
   Gaudi::Property<std::string> m_outputAssociations{this, "outputAssociations", ""};
   // Optional handle to MC hits
-  std::unique_ptr<DataHandle<eicd::MCRecoClusterParticleAssociationCollection>> m_outputAssociations_ptr;
+  std::unique_ptr<DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>> m_outputAssociations_ptr;
 
   // Pointer to the geometry service
   SmartIF<IGeoSvc> m_geoSvc;
@@ -115,7 +115,7 @@ public:
     // Initialize the optional association collection if requested
     if (m_outputAssociations != "") {
       m_outputAssociations_ptr =
-        std::make_unique<DataHandle<eicd::MCRecoClusterParticleAssociationCollection>>(m_outputAssociations, Gaudi::DataHandle::Writer,
+        std::make_unique<DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>>(m_outputAssociations, Gaudi::DataHandle::Writer,
         this);
     }
 
@@ -158,7 +158,7 @@ public:
     }
 
     // Optional output associations
-    eicd::MCRecoClusterParticleAssociationCollection* associations = nullptr;
+    edm4eic::MCRecoClusterParticleAssociationCollection* associations = nullptr;
     if (m_outputAssociations_ptr) {
       associations = m_outputAssociations_ptr->createAndPut();
     }
@@ -227,11 +227,11 @@ public:
           debug() << "cluster has largest energy in cellID: " << pclhit->getCellID() << endmsg;
           debug() << "pcl hit with highest energy " << pclhit->getEnergy() << " at index " << pclhit->getObjectID().index << endmsg;
           debug() << "corresponding mc hit energy " << mchit->getEnergy() << " at index " << mchit->getObjectID().index << endmsg;
-          debug() << "from MCParticle index " << mcp.getObjectID().index << ", PDG " << mcp.getPDG() << ", " << eicd::magnitude(mcp.getMomentum()) << endmsg;
+          debug() << "from MCParticle index " << mcp.getObjectID().index << ", PDG " << mcp.getPDG() << ", " << edm4eic::magnitude(mcp.getMomentum()) << endmsg;
         }
 
         // set association
-        eicd::MutableMCRecoClusterParticleAssociation clusterassoc;
+        edm4eic::MutableMCRecoClusterParticleAssociation clusterassoc;
         clusterassoc.setRecID(cl.getObjectID().index);
         clusterassoc.setSimID(mcp.getObjectID().index);
         clusterassoc.setWeight(1.0);
@@ -249,8 +249,8 @@ public:
   }
 
 private:
-  eicd::MutableCluster reconstruct(const eicd::ProtoCluster& pcl) const {
-    eicd::MutableCluster cl;
+  edm4eic::MutableCluster reconstruct(const edm4eic::ProtoCluster& pcl) const {
+    edm4eic::MutableCluster cl;
     cl.setNhits(pcl.hits_size());
 
     // no hits
@@ -279,7 +279,7 @@ private:
       totalE += energy;
       if (energy > maxE) {
       }
-      const float eta = eicd::eta(hit.getPosition());
+      const float eta = edm4eic::eta(hit.getPosition());
       if (eta < minHitEta) {
         minHitEta = eta;
       }
@@ -310,14 +310,14 @@ private:
 
     // Optionally constrain the cluster to the hit eta values
     if (m_enableEtaBounds) {
-      const bool overflow  = (eicd::eta(cl.getPosition()) > maxHitEta);
-      const bool underflow = (eicd::eta(cl.getPosition()) < minHitEta);
+      const bool overflow  = (edm4eic::eta(cl.getPosition()) > maxHitEta);
+      const bool underflow = (edm4eic::eta(cl.getPosition()) < minHitEta);
       if (overflow || underflow) {
         const double newEta   = overflow ? maxHitEta : minHitEta;
-        const double newTheta = eicd::etaToAngle(newEta);
-        const double newR     = eicd::magnitude(cl.getPosition());
-        const double newPhi   = eicd::angleAzimuthal(cl.getPosition());
-        cl.setPosition(eicd::sphericalToVector(newR, newTheta, newPhi));
+        const double newTheta = edm4eic::etaToAngle(newEta);
+        const double newR     = edm4eic::magnitude(cl.getPosition());
+        const double newPhi   = edm4eic::angleAzimuthal(cl.getPosition());
+        cl.setPosition(edm4eic::sphericalToVector(newR, newTheta, newPhi));
         if (msgLevel(MSG::DEBUG)) {
           debug() << "Bound cluster position to contributing hits due to " << (overflow ? "overflow" : "underflow")
                   << endmsg;
@@ -329,8 +329,8 @@ private:
 
     // best estimate on the cluster direction is the cluster position
     // for simple 2D CoG clustering
-    cl.setIntrinsicTheta(eicd::anglePolar(cl.getPosition()));
-    cl.setIntrinsicPhi(eicd::angleAzimuthal(cl.getPosition()));
+    cl.setIntrinsicTheta(edm4eic::anglePolar(cl.getPosition()));
+    cl.setIntrinsicPhi(edm4eic::angleAzimuthal(cl.getPosition()));
     // TODO errors
 
     // Calculate radius

@@ -7,7 +7,7 @@
 using ROOT::Math::PxPyPzEVector;
 
 #include "edm4hep/MCParticleCollection.h"
-#include "eicd/ReconstructedParticleCollection.h"
+#include "edm4eic/ReconstructedParticleCollection.h"
 
 namespace Jug::Base::Beam {
 
@@ -53,7 +53,7 @@ namespace Jug::Base::Beam {
     return find_first_with_status_pdg(mcparts, {1}, {11});
   }
 
-  inline auto find_first_scattered_electron(const eicd::ReconstructedParticleCollection& rcparts) {
+  inline auto find_first_scattered_electron(const edm4eic::ReconstructedParticleCollection& rcparts) {
     return find_first_with_pdg(rcparts, {11});
   }
 

@@ -22,8 +22,8 @@
 #include "JugTrack/Measurement.hpp"
 #include "JugTrack/Track.hpp"
 
-#include "eicd/TrackerHitCollection.h"
-#include "eicd/vector_utils.h"
+#include "edm4eic/TrackerHitCollection.h"
+#include "edm4eic/vector_utils.h"
 
 #include <functional>
 #include <random>
@@ -90,7 +90,7 @@ StatusCode GenFitTrackFitter::initialize() {
 
 StatusCode GenFitTrackFitter::execute() {
   // Read input data
-  const eicd::TrackerHitCollection* hits            = m_inputHitCollection.get();
+  const edm4eic::TrackerHitCollection* hits            = m_inputHitCollection.get();
   const TrackParametersContainer* initialParameters = m_initialTrackParameters.get();
   const ProtoTrackContainer* protoTracks            = m_inputProtoTracks.get();
 
@@ -127,7 +127,7 @@ StatusCode GenFitTrackFitter::execute() {
 
     ROOT::Math::XYZVector tp(track_param.momentum()[0], track_param.momentum()[1], track_param.momentum()[2]);
     auto first_hit       = (*hits)[proto_track[0]];
-    auto first_hit_phi   = eicd::angleAzimuthal(first_hit.getPosition());
+    auto first_hit_phi   = edm4eic::angleAzimuthal(first_hit.getPosition());
     auto track_param_phi = tp.phi();
     if (msgLevel(MSG::DEBUG)) {
       debug() << " first hit phi:  " << first_hit_phi << endmsg;
@@ -291,10 +291,10 @@ StatusCode GenFitTrackFitter::execute() {
       continue;
     }
 
-    // eicd::TrackParameters electron_track_params({ID++, algorithmID()}, {0.0,0.0},{0.0,0.0},{0.0,0.0},{0.0,0.0},
+    // edm4eic::TrackParameters electron_track_params({ID++, algorithmID()}, {0.0,0.0},{0.0,0.0},{0.0,0.0},{0.0,0.0},
 
-    // TrackParameters(eicd::Index ID, eicd::FloatPair loc, eicd::FloatPair locError, eicd::Direction direction,
-    // eicd::Direction directionError, float qOverP, float qOverPError, float time, float timeError);
+    // TrackParameters(edm4eic::Index ID, edm4eic::FloatPair loc, edm4eic::FloatPair locError, edm4eic::Direction direction,
+    // edm4eic::Direction directionError, float qOverP, float qOverPError, float time, float timeError);
     // tracks->push_back(electron_track_params);
 
     // delete fitter;

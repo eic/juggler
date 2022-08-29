@@ -32,7 +32,7 @@
 #include "JugBase/IGeoSvc.h"
 
 // Event Model related classes
-#include "eicd/CalorimeterHitCollection.h"
+#include "edm4eic/CalorimeterHitCollection.h"
 
 using namespace Gaudi::Units;
 
@@ -53,8 +53,8 @@ private:
   Gaudi::Property<std::vector<std::string>> u_fields{this, "fields", {"layer"}};
   // reference field numbers to locate position for each merged hits group
   Gaudi::Property<std::vector<int>> u_refs{this, "fieldRefNumbers", {}};
-  DataHandle<eicd::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+  DataHandle<edm4eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                   this};
 
   SmartIF<IGeoSvc> m_geoSvc;
@@ -111,7 +111,7 @@ public:
     auto& outputs = *m_outputHitCollection.createAndPut();
 
     // find the hits that belong to the same group (for merging)
-    std::unordered_map<long long, std::vector<eicd::CalorimeterHit>> merge_map;
+    std::unordered_map<long long, std::vector<edm4eic::CalorimeterHit>> merge_map;
     for (const auto& h : inputs) {
       int64_t id = h.getCellID() & id_mask;
       // use the reference field position
@@ -162,15 +162,15 @@ public:
       const auto& href = hits.front();
 
       // create const vectors for passing to hit initializer list
-      const decltype(eicd::CalorimeterHitData::position) position(
+      const decltype(edm4eic::CalorimeterHitData::position) position(
         gpos.x() / dd4hep::mm, gpos.y() / dd4hep::mm, gpos.z() / dd4hep::mm
       );
-      const decltype(eicd::CalorimeterHitData::local) local(
+      const decltype(edm4eic::CalorimeterHitData::local) local(
         pos.x(), pos.y(), pos.z()
       );
 
       outputs.push_back(
-          eicd::CalorimeterHit{href.getCellID(),
+          edm4eic::CalorimeterHit{href.getCellID(),
                               energy,
                               energyError,
                               time,

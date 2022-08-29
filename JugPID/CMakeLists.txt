@@ -14,7 +14,7 @@ gaudi_add_module(JugPIDPlugins
   JugBase
   ROOT::Core ROOT::RIO ROOT::Tree
   EDM4HEP::edm4hep
-  EICD::eicd
+  EDM4EIC::edm4eic
   IRT
 )
 

@@ -21,8 +21,8 @@
 
 // Event Model related classes
 #include "edm4hep/SimCalorimeterHitCollection.h"
-#include "eicd/RawCalorimeterHitCollection.h"
-#include "eicd/RawCalorimeterHitData.h"
+#include "edm4eic/RawCalorimeterHitCollection.h"
+#include "edm4eic/RawCalorimeterHitData.h"
 
 
 using namespace Gaudi::Units;

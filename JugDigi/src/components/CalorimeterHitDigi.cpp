@@ -31,8 +31,8 @@
 
 // Event Model related classes
 #include "edm4hep/SimCalorimeterHitCollection.h"
-#include "eicd/RawCalorimeterHitCollection.h"
-#include "eicd/RawCalorimeterHitData.h"
+#include "edm4eic/RawCalorimeterHitCollection.h"
+#include "edm4eic/RawCalorimeterHitData.h"
 
 
 using namespace Gaudi::Units;
@@ -80,7 +80,7 @@ namespace Jug::Digi {
 
     DataHandle<edm4hep::SimCalorimeterHitCollection> m_inputHitCollection{
       "inputHitCollection", Gaudi::DataHandle::Reader, this};
-    DataHandle<eicd::RawCalorimeterHitCollection> m_outputHitCollection{
+    DataHandle<edm4eic::RawCalorimeterHitCollection> m_outputHitCollection{
       "outputHitCollection", Gaudi::DataHandle::Writer, this};
 
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
@@ -189,7 +189,7 @@ namespace Jug::Digi {
         }
         const long long tdc = std::llround((time + m_normDist() * tRes) * stepTDC);
 
-        eicd::RawCalorimeterHit rawhit(
+        edm4eic::RawCalorimeterHit rawhit(
           ahit.getCellID(),
           (adc > m_capADC.value() ? m_capADC.value() : adc),
           tdc
@@ -244,7 +244,7 @@ namespace Jug::Digi {
         unsigned long long adc     = std::llround(ped + edep * (1. + eResRel) / dyRangeADC * m_capADC);
         unsigned long long tdc     = std::llround((time + m_normDist() * tRes) * stepTDC);
 
-        eicd::RawCalorimeterHit rawhit(
+        edm4eic::RawCalorimeterHit rawhit(
           id,
           (adc > m_capADC.value() ? m_capADC.value() : adc),
           tdc

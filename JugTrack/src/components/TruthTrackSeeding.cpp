@@ -20,7 +20,7 @@
 //#include "Acts/EventData/Charge.hpp"
 
 #include "edm4hep/MCParticleCollection.h"
-#include "eicd/TrackParametersCollection.h"
+#include "edm4eic/TrackParametersCollection.h"
 #include "Math/Vector3D.h"
 
 
@@ -28,7 +28,7 @@ namespace Jug::Reco {
 
   /** Track seeding using MC truth.
    *
-   *  \note "Seeding" algorithms are required to output a eicd::TrackParametersCollection, as opposed to the legacy "init"
+   *  \note "Seeding" algorithms are required to output a edm4eic::TrackParametersCollection, as opposed to the legacy "init"
    *  algorithms, such as  TrackParamTruthInit.
    *
    *  \ingroup tracking
@@ -37,7 +37,7 @@ namespace Jug::Reco {
   private:
     DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader,
                                                                     this};
-    DataHandle<eicd::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters",
+    DataHandle<edm4eic::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters",
                                                                        Gaudi::DataHandle::Writer, this};
     SmartIF<IParticleSvc> m_pidSvc;
 
@@ -93,7 +93,7 @@ namespace Jug::Reco {
 
         const auto q_over_p = charge / p;
 
-        eicd::TrackParameters params{-1,                // type --> seed (-1)
+        edm4eic::TrackParameters params{-1,                // type --> seed (-1)
                                      {0.0F, 0.0F},      // location on surface
                                      {0.1, 0.1, 0.1},   // Covariance on location
                                      theta,             // theta (rad)

@@ -21,10 +21,10 @@
 // Event Model related classes
 #include "edm4hep/MCParticle.h"
 #include "edm4hep/SimCalorimeterHitCollection.h"
-#include "eicd/CalorimeterHitCollection.h"
-#include "eicd/ClusterCollection.h"
-#include "eicd/ProtoClusterCollection.h"
-#include "eicd/RawCalorimeterHitCollection.h"
+#include "edm4eic/CalorimeterHitCollection.h"
+#include "edm4eic/ClusterCollection.h"
+#include "edm4eic/ProtoClusterCollection.h"
+#include "edm4eic/RawCalorimeterHitCollection.h"
 
 using namespace Gaudi::Units;
 
@@ -36,9 +36,9 @@ namespace Jug::Fast {
  */
 class TruthClustering : public GaudiAlgorithm {
 private:
-  DataHandle<eicd::CalorimeterHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::CalorimeterHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
   DataHandle<edm4hep::SimCalorimeterHitCollection> m_mcHits{"mcHits", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::ProtoClusterCollection> m_outputProtoClusters{"outputProtoClusters", Gaudi::DataHandle::Writer, this};
+  DataHandle<edm4eic::ProtoClusterCollection> m_outputProtoClusters{"outputProtoClusters", Gaudi::DataHandle::Writer, this};
 
 public:
   TruthClustering(const std::string& name, ISvcLocator* svcLoc)

@@ -30,7 +30,7 @@
 #include "JugTrack/IndexSourceLink.hpp"
 #include "JugTrack/Measurement.hpp"
 
-#include "eicd/TrackerHitCollection.h"
+#include "edm4eic/TrackerHitCollection.h"
 
 namespace Jug::Reco {
 
@@ -44,7 +44,7 @@ namespace Jug::Reco {
  */
 class TrackerSourceLinker : public GaudiAlgorithm {
 private:
-  DataHandle<eicd::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
   DataHandle<std::list<IndexSourceLink>> m_sourceLinkStorage{"sourceLinkStorage", Gaudi::DataHandle::Writer, this};
   DataHandle<IndexSourceLinkContainer> m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};
   DataHandle<MeasurementContainer> m_outputMeasurements{"outputMeasurements", Gaudi::DataHandle::Writer, this};
@@ -78,7 +78,7 @@ public:
     constexpr double mm_conv = mm_acts / dd4hep::mm; // = 1/0.1
 
     // input collection
-    const eicd::TrackerHitCollection* hits = m_inputHitCollection.get();
+    const edm4eic::TrackerHitCollection* hits = m_inputHitCollection.get();
     // Create output collections
     auto* linkStorage  = m_sourceLinkStorage.createAndPut();
     auto* sourceLinks  = m_outputSourceLinks.createAndPut();

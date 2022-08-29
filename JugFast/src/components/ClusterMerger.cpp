@@ -15,9 +15,9 @@
 #include "JugBase/DataHandle.h"
 
 // Event Model related classes
-#include "eicd/ClusterCollection.h"
-#include "eicd/MCRecoClusterParticleAssociationCollection.h"
-#include "eicd/vector_utils.h"
+#include "edm4eic/ClusterCollection.h"
+#include "edm4eic/MCRecoClusterParticleAssociationCollection.h"
+#include "edm4eic/vector_utils.h"
 
 using namespace Gaudi::Units;
 
@@ -31,11 +31,11 @@ namespace Jug::Fast {
 class ClusterMerger : public GaudiAlgorithm {
 private:
   // Input
-  DataHandle<eicd::ClusterCollection> m_inputClusters{"InputClusters", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::MCRecoClusterParticleAssociationCollection> m_inputAssociations{"InputAssociations", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::ClusterCollection> m_inputClusters{"InputClusters", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_inputAssociations{"InputAssociations", Gaudi::DataHandle::Reader, this};
   // Output
-  DataHandle<eicd::ClusterCollection> m_outputClusters{"OutputClusters", Gaudi::DataHandle::Writer, this};
-  DataHandle<eicd::MCRecoClusterParticleAssociationCollection> m_outputAssociations{"OutputAssociations", Gaudi::DataHandle::Writer, this};
+  DataHandle<edm4eic::ClusterCollection> m_outputClusters{"OutputClusters", Gaudi::DataHandle::Writer, this};
+  DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_outputAssociations{"OutputAssociations", Gaudi::DataHandle::Writer, this};
 public:
   ClusterMerger(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc) {
@@ -142,12 +142,12 @@ public:
   }
 
   // get a map of MCParticle index--> std::vector<Cluster> for clusters that belong together
-  std::map<int, std::vector<eicd::Cluster>> indexedClusterLists(
-      const eicd::ClusterCollection& clusters,
-      const eicd::MCRecoClusterParticleAssociationCollection& associations
+  std::map<int, std::vector<edm4eic::Cluster>> indexedClusterLists(
+      const edm4eic::ClusterCollection& clusters,
+      const edm4eic::MCRecoClusterParticleAssociationCollection& associations
   ) const {
 
-    std::map<int, std::vector<eicd::Cluster>> matched = {};
+    std::map<int, std::vector<edm4eic::Cluster>> matched = {};
 
     // loop over clusters
     for (const auto& cluster : clusters) {

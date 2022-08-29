@@ -10,7 +10,7 @@
 #include "JugBase/DataHandle.h"
 
 // Event Model related classes
-#include "eicd/TrackerHitCollection.h"
+#include "edm4eic/TrackerHitCollection.h"
 
 namespace Jug::Reco {
 
@@ -20,12 +20,12 @@ namespace Jug::Reco {
      */
     class TrackingHitsCollector : public GaudiAlgorithm {
     private:
-      DataHandle<eicd::TrackerHitCollection> m_trackerBarrelHits{"trackerBarrelHits", Gaudi::DataHandle::Reader, this};
-      DataHandle<eicd::TrackerHitCollection> m_trackerEndcapHits{"trackerEndcapHits", Gaudi::DataHandle::Reader, this};
-      DataHandle<eicd::TrackerHitCollection> m_vertexBarrelHits {"vertexBarrelHits" , Gaudi::DataHandle::Reader, this};
-      DataHandle<eicd::TrackerHitCollection> m_vertexEndcapHits {"vertexEndcapHits" , Gaudi::DataHandle::Reader, this};
-      DataHandle<eicd::TrackerHitCollection> m_gemEndcapHits {"gemEndcapHits" , Gaudi::DataHandle::Reader, this};
-      DataHandle<eicd::TrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
+      DataHandle<edm4eic::TrackerHitCollection> m_trackerBarrelHits{"trackerBarrelHits", Gaudi::DataHandle::Reader, this};
+      DataHandle<edm4eic::TrackerHitCollection> m_trackerEndcapHits{"trackerEndcapHits", Gaudi::DataHandle::Reader, this};
+      DataHandle<edm4eic::TrackerHitCollection> m_vertexBarrelHits {"vertexBarrelHits" , Gaudi::DataHandle::Reader, this};
+      DataHandle<edm4eic::TrackerHitCollection> m_vertexEndcapHits {"vertexEndcapHits" , Gaudi::DataHandle::Reader, this};
+      DataHandle<edm4eic::TrackerHitCollection> m_gemEndcapHits {"gemEndcapHits" , Gaudi::DataHandle::Reader, this};
+      DataHandle<edm4eic::TrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
 
     public:
       TrackingHitsCollector(const std::string& name, ISvcLocator* svcLoc)
@@ -47,11 +47,11 @@ namespace Jug::Reco {
 
       StatusCode execute() override
       {
-        const eicd::TrackerHitCollection* trkBarrelHits = m_trackerBarrelHits.get();
-        const eicd::TrackerHitCollection* trkEndcapHits = m_trackerEndcapHits.get();
-        const eicd::TrackerHitCollection* vtxBarrelHits = m_vertexBarrelHits .get();
-        const eicd::TrackerHitCollection* vtxEndcapHits = m_vertexEndcapHits .get();
-        const eicd::TrackerHitCollection* gemEndcapHits = m_gemEndcapHits .get();
+        const edm4eic::TrackerHitCollection* trkBarrelHits = m_trackerBarrelHits.get();
+        const edm4eic::TrackerHitCollection* trkEndcapHits = m_trackerEndcapHits.get();
+        const edm4eic::TrackerHitCollection* vtxBarrelHits = m_vertexBarrelHits .get();
+        const edm4eic::TrackerHitCollection* vtxEndcapHits = m_vertexEndcapHits .get();
+        const edm4eic::TrackerHitCollection* gemEndcapHits = m_gemEndcapHits .get();
         auto* outputHits = m_outputHitCollection.createAndPut();
 
         for (const auto* hits : {trkBarrelHits, trkEndcapHits, vtxBarrelHits, vtxEndcapHits, gemEndcapHits}) {

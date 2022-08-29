@@ -14,16 +14,16 @@
 #include "JugBase/DataHandle.h"
 
 // Event Model related classes
-#include "eicd/ReconstructedParticleCollection.h"
-#include "eicd/TrackerHitCollection.h"
-#include <eicd/vector_utils.h>
+#include "edm4eic/ReconstructedParticleCollection.h"
+#include "edm4eic/TrackerHitCollection.h"
+#include <edm4eic/vector_utils.h>
 
 namespace Jug::Reco {
 
 class FarForwardParticlesOMD : public GaudiAlgorithm {
 private:
-  DataHandle<eicd::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHits", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
+  DataHandle<edm4eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHits", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
                                                                      this};
 
   //----- Define constants here ------
@@ -75,7 +75,7 @@ public:
   }
 
   StatusCode execute() override {
-    const eicd::TrackerHitCollection* rawhits = m_inputHitCollection.get();
+    const edm4eic::TrackerHitCollection* rawhits = m_inputHitCollection.get();
     auto& rc                                 = *(m_outputParticles.createAndPut());
 
     // for (const auto& part : mc) {
@@ -164,10 +164,10 @@ public:
 
       //----- end RP reconstruction code ------
 
-      eicd::MutableReconstructedParticle rpTrack;
+      edm4eic::MutableReconstructedParticle rpTrack;
       rpTrack.setType(0);
       rpTrack.setMomentum({prec});
-      rpTrack.setEnergy(std::hypot(eicd::magnitude(rpTrack.getMomentum()), .938272));
+      rpTrack.setEnergy(std::hypot(edm4eic::magnitude(rpTrack.getMomentum()), .938272));
       rpTrack.setReferencePoint({0, 0, 0});
       rpTrack.setCharge(1);
       rpTrack.setMass(.938272);

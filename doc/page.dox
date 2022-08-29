@@ -22,7 +22,7 @@
  * \brief Global geometry service
  * 
  * \defgroup datasvc Data Services
- * \brief Data services for using eicd/podio 
+ * \brief Data services for using edm4eic/podio 
  *
  */
 

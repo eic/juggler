@@ -16,9 +16,9 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Definitions/Common.hpp"
 
-#include "eicd/TrackerHitCollection.h"
-#include "eicd/ClusterCollection.h"
-#include "eicd/vector_utils.h"
+#include "edm4eic/TrackerHitCollection.h"
+#include "edm4eic/ClusterCollection.h"
+#include "edm4eic/vector_utils.h"
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
@@ -44,7 +44,7 @@ namespace Jug::Reco {
    */
   class TrackParamImagingClusterInit : public GaudiAlgorithm {
   private:
-    using ImagingClusters =  eicd::ClusterCollection;
+    using ImagingClusters =  edm4eic::ClusterCollection;
 
     DataHandle<ImagingClusters>          m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
     DataHandle<TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
@@ -86,8 +86,8 @@ namespace Jug::Reco {
         if( p < 0.1*GeV) {
           continue;
         }
-        const double theta = eicd::anglePolar(c.getPosition());
-        const double phi = eicd::angleAzimuthal(c.getPosition());
+        const double theta = edm4eic::anglePolar(c.getPosition());
+        const double phi = edm4eic::angleAzimuthal(c.getPosition());
 
         Acts::BoundVector  params;
         params(Acts::eBoundLoc0)   = 0.0 * mm ;

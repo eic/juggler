@@ -20,11 +20,11 @@
 
 // Event Model related classes
 #include "edm4hep/SimCalorimeterHitCollection.h"
-#include "eicd/CalorimeterHitCollection.h"
-#include "eicd/ClusterCollection.h"
-#include "eicd/ProtoClusterCollection.h"
-#include "eicd/RawCalorimeterHitCollection.h"
-#include "eicd/vector_utils.h"
+#include "edm4eic/CalorimeterHitCollection.h"
+#include "edm4eic/ClusterCollection.h"
+#include "edm4eic/ProtoClusterCollection.h"
+#include "edm4eic/RawCalorimeterHitCollection.h"
+#include "edm4eic/vector_utils.h"
 
 using namespace Gaudi::Units;
 
@@ -36,9 +36,9 @@ namespace Jug::Reco {
    */
   class SimpleClustering : public GaudiAlgorithm {
   private:
-    using RecHits  = eicd::CalorimeterHitCollection;
-    using ProtoClusters = eicd::ProtoClusterCollection;
-    using Clusters = eicd::ClusterCollection;
+    using RecHits  = edm4eic::CalorimeterHitCollection;
+    using ProtoClusters = edm4eic::ProtoClusterCollection;
+    using Clusters = edm4eic::ClusterCollection;
 
     DataHandle<RecHits>       m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     DataHandle<ProtoClusters> m_outputProtoClusters{"outputProtoCluster", Gaudi::DataHandle::Writer, this};
@@ -97,13 +97,13 @@ namespace Jug::Reco {
       //  mcHits = m_inputMC->get();
       //}
 
-      std::vector<std::pair<uint32_t, eicd::CalorimeterHit>> the_hits;
-      std::vector<std::pair<uint32_t, eicd::CalorimeterHit>> remaining_hits;
+      std::vector<std::pair<uint32_t, edm4eic::CalorimeterHit>> the_hits;
+      std::vector<std::pair<uint32_t, edm4eic::CalorimeterHit>> remaining_hits;
 
       double max_dist   = m_maxDistance.value() / mm;
       double min_energy = m_minModuleEdep.value() / GeV;
 
-      eicd::CalorimeterHit ref_hit;
+      edm4eic::CalorimeterHit ref_hit;
       bool have_ref = false;
       // Collect all our hits, and get the highest energy hit
       {
@@ -124,10 +124,10 @@ namespace Jug::Reco {
 
       while (have_ref && ref_hit.getEnergy() > min_energy) {
 
-        std::vector<std::pair<uint32_t, eicd::CalorimeterHit>> cluster_hits;
+        std::vector<std::pair<uint32_t, edm4eic::CalorimeterHit>> cluster_hits;
 
         for (const auto& [idx, h] : the_hits) {
-          if (eicd::magnitude(h.getPosition() - ref_hit.getPosition()) < max_dist) {
+          if (edm4eic::magnitude(h.getPosition() - ref_hit.getPosition()) < max_dist) {
             cluster_hits.emplace_back(idx, h);
           } else {
             remaining_hits.emplace_back(idx, h);
@@ -136,7 +136,7 @@ namespace Jug::Reco {
 
         double total_energy = std::accumulate(
             std::begin(cluster_hits), std::end(cluster_hits), 0.0,
-            [](double t, const std::pair<uint32_t, eicd::CalorimeterHit>& h1) { return (t + h1.second.getEnergy()); });
+            [](double t, const std::pair<uint32_t, edm4eic::CalorimeterHit>& h1) { return (t + h1.second.getEnergy()); });
 
         if (msgLevel(MSG::DEBUG)) {
           debug() << " total_energy = " << total_energy << endmsg;

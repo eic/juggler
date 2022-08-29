@@ -13,14 +13,14 @@
 
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
-#include "eicd/ReconstructedParticleCollection.h"
+#include "edm4eic/ReconstructedParticleCollection.h"
 
 namespace Jug::Fast {
 
 class MC2SmearedParticle : public GaudiAlgorithm {
 private:
   DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"SmearedReconstructedParticles",
+  DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"SmearedReconstructedParticles",
                                                                       Gaudi::DataHandle::Writer, this};
   Rndm::Numbers m_gaussDist;
   Gaudi::Property<double> m_smearing{this, "smearing", 0.01 /* 1 percent*/};
@@ -62,7 +62,7 @@ public:
       const auto pgen     = std::hypot(pvec.x, pvec.y, pvec.z);
       const auto momentum = pgen * m_gaussDist();
       // make sure we keep energy consistent
-      using MomType        = decltype(eicd::ReconstructedParticle().getMomentum().x);
+      using MomType        = decltype(edm4eic::ReconstructedParticle().getMomentum().x);
       const MomType energy = std::sqrt(p.getEnergy() * p.getEnergy() - pgen * pgen + momentum * momentum);
       const MomType px     = p.getMomentum().x * momentum / pgen;
       const MomType py     = p.getMomentum().y * momentum / pgen;
