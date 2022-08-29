@@ -14,9 +14,9 @@
 #include "edm4hep/MCParticleCollection.h"
 #include "edm4hep/SimTrackerHitCollection.h"
 
-#include "eicd/TrajectoryCollection.h"
-#include "eicd/ReconstructedParticleCollection.h"
-#include "eicd/CherenkovParticleIDCollection.h"
+#include "edm4eic/TrajectoryCollection.h"
+#include "edm4eic/ReconstructedParticleCollection.h"
+#include "edm4eic/CherenkovParticleIDCollection.h"
 
 #ifdef _USE_ON_THE_FLY_TRAJECTORIES_
 #include "JugBase/BField/DD4hepBField.h"
@@ -69,14 +69,14 @@ namespace Jug::PID {
 	this
 	};
 #ifdef _USE_RECONSTRUCTED_TRACKS_
-    DataHandle<eicd::ReconstructedParticleCollection> m_inputRecoParticles {
+    DataHandle<edm4eic::ReconstructedParticleCollection> m_inputRecoParticles {
       "inputRecoParticles", 
 	Gaudi::DataHandle::Reader, 
 	this
 	};
 #endif
 #ifdef _USE_STORED_TRAJECTORIES_
-    DataHandle<eicd::TrajectoryCollection> m_inputTrajectories {
+    DataHandle<edm4eic::TrajectoryCollection> m_inputTrajectories {
       "inputTrajectories", 
 	Gaudi::DataHandle::Reader, 
 	this
@@ -91,7 +91,7 @@ namespace Jug::PID {
 #endif
 
     // Output collection;
-    std::unique_ptr<DataHandle<eicd::CherenkovParticleIDCollection>> m_outputCherenkovPID;
+    std::unique_ptr<DataHandle<edm4eic::CherenkovParticleIDCollection>> m_outputCherenkovPID;
 
     /// Pointer to the geometry and PDG service;
     SmartIF<IGeoSvc> m_geoSvc;
