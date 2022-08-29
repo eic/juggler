@@ -12,8 +12,8 @@ variables:
   ## Other versions to be included in the container. In general these should be "master"
   ## to keep the container functionally identical to jug_xl:nightly
   JUGGLER_NPDET_VERSION: "master"
-  JUGGLER_EICD_VERSION: "master"
-  JUGGLER_EICD_REPOSITORYURL: "https://github.com/eic/EDM4eic.git"
+  JUGGLER_EDM4EIC_VERSION: "master"
+  JUGGLER_EDM4EIC_REPOSITORYURL: "https://github.com/eic/EDM4eic.git"
 
   ## We have:
   ##   - Juggler triggers eic_container on a master pipeline
@@ -78,8 +78,8 @@ juggler:local:
   script:
     ## first install EDM4EIC to ensure the latest version, then build juggler
     - |
-      git clone ${JUGGLER_EICD_REPOSITORYURL} /tmp/EDM4eic
-      cd /tmp/EDM4eic && git checkout ${JUGGLER_EICD_VERSION} && cd -
+      git clone ${JUGGLER_EDM4EIC_REPOSITORYURL} /tmp/EDM4eic
+      cd /tmp/EDM4eic && git checkout ${JUGGLER_EDM4EIC_VERSION} && cd -
       cmake -B /tmp/build -S /tmp/EDM4eic -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} -DCMAKE_INSTALL_PREFIX=/usr/local
       cmake --build /tmp/build -j40 -- install
       rm -rf /tmp/build /tmp/EDM4eic
@@ -146,8 +146,8 @@ juggler:default:
                    --build-arg INTERNAL_TAG=${EIC_DEV_TAG}
                    --build-arg JUGGLER_VERSION=${CI_COMMIT_REF_NAME}
                    --build-arg NPDET_VERSION=${JUGGLER_NPDET_VERSION}
-                   --build-arg EICD_REPOSITORYURL=${JUGGLER_EICD_REPOSITORYURL}
-                   --build-arg EICD_VERSION=${JUGGLER_EICD_VERSION}
+                   --build-arg EDM4EIC_REPOSITORYURL=${JUGGLER_EDM4EIC_REPOSITORYURL}
+                   --build-arg EDM4EIC_VERSION=${JUGGLER_EDM4EIC_VERSION}
                    --build-arg DETECTOR_VERSION=${JUGGLER_DETECTOR_VERSION}
                    --build-arg IP6_VERSION=${JUGGLER_IP6_VERSION}
                    --build-arg JUG_VERSION=juggler-${INTERNAL_TAG}-$(date +%Y-%m-%d_%H-%M-%S)-$(git rev-parse HEAD)
