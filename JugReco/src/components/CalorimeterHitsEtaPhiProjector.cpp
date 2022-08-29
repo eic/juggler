@@ -32,8 +32,8 @@
 #include "JugBase/Utilities/Utils.hpp"
 
 // Event Model related classes
-#include "eicd/CalorimeterHitCollection.h"
-#include "eicd/vector_utils.h"
+#include "edm4eic/CalorimeterHitCollection.h"
+#include "edm4eic/vector_utils.h"
 
 using namespace Gaudi::Units;
 using Point3D = ROOT::Math::XYZPoint;
@@ -60,9 +60,9 @@ namespace Jug::Reco {
 class CalorimeterHitsEtaPhiProjector : public GaudiAlgorithm {
 private:
   Gaudi::Property<std::vector<double>> u_gridSizes{this, "gridSizes", {0.001, 0.001 * rad}};
-  DataHandle<eicd::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+  DataHandle<edm4eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                   this};
-  DataHandle<eicd::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+  DataHandle<edm4eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                    this};
 
   double gridSizes[2]{0.0, 0.0};
@@ -93,25 +93,25 @@ public:
     auto& mhits = *m_outputHitCollection.createAndPut();
 
     // container
-    std::unordered_map<std::pair<int64_t, int64_t>, std::vector<eicd::CalorimeterHit>, pair_hash> merged_hits;
+    std::unordered_map<std::pair<int64_t, int64_t>, std::vector<edm4eic::CalorimeterHit>, pair_hash> merged_hits;
 
     for (const auto h : *m_inputHitCollection.get()) {
       auto bins =
-          std::make_pair(static_cast<int64_t>(pos2bin(eicd::eta(h.getPosition()), gridSizes[0], 0.)),
-                         static_cast<int64_t>(pos2bin(eicd::angleAzimuthal(h.getPosition()), gridSizes[1], 0.)));
+          std::make_pair(static_cast<int64_t>(pos2bin(edm4eic::eta(h.getPosition()), gridSizes[0], 0.)),
+                         static_cast<int64_t>(pos2bin(edm4eic::angleAzimuthal(h.getPosition()), gridSizes[1], 0.)));
       merged_hits[bins].push_back(h);
     }
 
     for (const auto& [bins, hits] : merged_hits) {
       const auto ref = hits.front();
-      eicd::MutableCalorimeterHit hit;
+      edm4eic::MutableCalorimeterHit hit;
       hit.setCellID(ref.getCellID());
       // TODO, we can do timing cut to reject noises
       hit.setTime(ref.getTime());
-      double r   = eicd::magnitude(ref.getPosition());
+      double r   = edm4eic::magnitude(ref.getPosition());
       double eta = bin2pos(bins.first, gridSizes[0], 0.);
       double phi = bin2pos(bins.second, gridSizes[1], 1.);
-      hit.setPosition(eicd::sphericalToVector(r, eicd::etaToAngle(eta), phi));
+      hit.setPosition(edm4eic::sphericalToVector(r, edm4eic::etaToAngle(eta), phi));
       hit.setDimension({static_cast<float>(gridSizes[0]), static_cast<float>(gridSizes[1]), 0.});
       // merge energy
       hit.setEnergy(0.);

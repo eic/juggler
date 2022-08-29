@@ -20,12 +20,12 @@
 
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
-#include "eicd/ClusterCollection.h"
-#include "eicd/MCRecoClusterParticleAssociationCollection.h"
-#include "eicd/MCRecoParticleAssociationCollection.h"
-#include "eicd/ReconstructedParticleCollection.h"
-#include "eicd/TrackParametersCollection.h"
-#include "eicd/vector_utils.h"
+#include "edm4eic/ClusterCollection.h"
+#include "edm4eic/MCRecoClusterParticleAssociationCollection.h"
+#include "edm4eic/MCRecoParticleAssociationCollection.h"
+#include "edm4eic/ReconstructedParticleCollection.h"
+#include "edm4eic/TrackParametersCollection.h"
+#include "edm4eic/vector_utils.h"
 
 namespace Jug::Fast {
 
@@ -33,19 +33,19 @@ class MatchClusters : public GaudiAlgorithm {
 private:
   // input data
   DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::ReconstructedParticleCollection> m_inputParticles{"ReconstructedChargedParticles",
+  DataHandle<edm4eic::ReconstructedParticleCollection> m_inputParticles{"ReconstructedChargedParticles",
                                                                     Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::MCRecoParticleAssociationCollection> m_inputParticlesAssoc{"ReconstructedChargedParticlesAssoc",
+  DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_inputParticlesAssoc{"ReconstructedChargedParticlesAssoc",
                                                                     Gaudi::DataHandle::Reader, this};
   Gaudi::Property<std::vector<std::string>> m_inputClusters{this, "inputClusters", {}, "Clusters to be aggregated"};
   Gaudi::Property<std::vector<std::string>> m_inputClustersAssoc{this, "inputClustersAssoc", {}, "Cluster associations to be aggregated"};
-  std::vector<DataHandle<eicd::ClusterCollection>*> m_inputClustersCollections;
-  std::vector<DataHandle<eicd::MCRecoClusterParticleAssociationCollection>*> m_inputClustersAssocCollections;
+  std::vector<DataHandle<edm4eic::ClusterCollection>*> m_inputClustersCollections;
+  std::vector<DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>*> m_inputClustersAssocCollections;
 
   // output data
-  DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"ReconstructedParticles",
+  DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"ReconstructedParticles",
                                                                      Gaudi::DataHandle::Writer, this};
-  DataHandle<eicd::MCRecoParticleAssociationCollection> m_outputParticlesAssoc{"ReconstructedParticlesAssoc",
+  DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_outputParticlesAssoc{"ReconstructedParticlesAssoc",
                                                                      Gaudi::DataHandle::Writer, this};
 
 public:
@@ -183,32 +183,32 @@ public:
   }
 
 private:
-  std::vector<DataHandle<eicd::ClusterCollection>*> getClusterCollections(const std::vector<std::string>& cols) {
-    std::vector<DataHandle<eicd::ClusterCollection>*> ret;
+  std::vector<DataHandle<edm4eic::ClusterCollection>*> getClusterCollections(const std::vector<std::string>& cols) {
+    std::vector<DataHandle<edm4eic::ClusterCollection>*> ret;
     for (const auto& colname : cols) {
       debug() << "initializing cluster collection: " << colname << endmsg;
-      ret.push_back(new DataHandle<eicd::ClusterCollection>{colname, Gaudi::DataHandle::Reader, this});
+      ret.push_back(new DataHandle<edm4eic::ClusterCollection>{colname, Gaudi::DataHandle::Reader, this});
     }
     return ret;
   }
 
-  std::vector<DataHandle<eicd::MCRecoClusterParticleAssociationCollection>*> getClusterAssociations(const std::vector<std::string>& cols) {
-    std::vector<DataHandle<eicd::MCRecoClusterParticleAssociationCollection>*> ret;
+  std::vector<DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>*> getClusterAssociations(const std::vector<std::string>& cols) {
+    std::vector<DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>*> ret;
     for (const auto& colname : cols) {
       debug() << "initializing cluster association collection: " << colname << endmsg;
-      ret.push_back(new DataHandle<eicd::MCRecoClusterParticleAssociationCollection>{colname, Gaudi::DataHandle::Reader, this});
+      ret.push_back(new DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>{colname, Gaudi::DataHandle::Reader, this});
     }
     return ret;
   }
 
   // get a map of mcID --> cluster
   // input: cluster_collections --> list of handles to all cluster collections
-  std::map<int, eicd::Cluster>
+  std::map<int, edm4eic::Cluster>
   indexedClusters(
-      const std::vector<DataHandle<eicd::ClusterCollection>*>& cluster_collections,
-      const std::vector<DataHandle<eicd::MCRecoClusterParticleAssociationCollection>*>& associations_collections
+      const std::vector<DataHandle<edm4eic::ClusterCollection>*>& cluster_collections,
+      const std::vector<DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>*>& associations_collections
   ) const {
-    std::map<int, eicd::Cluster> matched = {};
+    std::map<int, edm4eic::Cluster> matched = {};
 
     // loop over cluster collections
     for (const auto& cluster_handle : cluster_collections) {
@@ -266,14 +266,14 @@ private:
 
   // reconstruct a neutral cluster
   // (for now assuming the vertex is at (0,0,0))
-  eicd::ReconstructedParticle reconstruct_neutral(const eicd::Cluster& clus, const double mass,
+  edm4eic::ReconstructedParticle reconstruct_neutral(const edm4eic::Cluster& clus, const double mass,
                                                  const int32_t pdg) const {
     const float energy = clus.getEnergy();
     const float p = energy < mass ? 0 : std::sqrt(energy * energy - mass * mass);
     const auto position = clus.getPosition();
-    const auto momentum = p * (position / eicd::magnitude(position));
+    const auto momentum = p * (position / edm4eic::magnitude(position));
     // setup our particle
-    eicd::MutableReconstructedParticle part;
+    edm4eic::MutableReconstructedParticle part;
     part.setMomentum(momentum);
     part.setPDG(pdg);
     part.setCharge(0);

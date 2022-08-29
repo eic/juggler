@@ -28,8 +28,8 @@
 #include "JugBase/IGeoSvc.h"
 
 // Event Model related classes
-#include "eicd/PMTHitCollection.h"
-#include "eicd/RawPMTHitCollection.h"
+#include "edm4eic/PMTHitCollection.h"
+#include "edm4eic/RawPMTHitCollection.h"
 
 using namespace Gaudi::Units;
 
@@ -44,8 +44,8 @@ namespace Jug::Reco {
  */
 class PhotoMultiplierReco : public GaudiAlgorithm {
 private:
-  DataHandle<eicd::RawPMTHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::PMTHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
+  DataHandle<edm4eic::RawPMTHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::PMTHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
   Gaudi::Property<double> m_timeStep{this, "timeStep", 0.0625 * ns};
   Gaudi::Property<double> m_minNpe{this, "minNpe", 0.0};
   Gaudi::Property<double> m_speMean{this, "speMean", 80.0};
@@ -91,7 +91,7 @@ public:
         auto pos = m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().position();
         // cell dimension
         auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
-        hits.push_back(eicd::PMTHit{
+        hits.push_back(edm4eic::PMTHit{
             rh.getCellID(),
             npe,
             time,

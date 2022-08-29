@@ -28,8 +28,8 @@
 #include "JugBase/Utilities/Utils.hpp"
 
 // Event Model related classes
-#include "eicd/CalorimeterHitCollection.h"
-#include "eicd/vector_utils.h"
+#include "edm4eic/CalorimeterHitCollection.h"
+#include "edm4eic/vector_utils.h"
 
 using namespace Gaudi::Units;
 
@@ -48,9 +48,9 @@ class ImagingPixelDataCombiner : public GaudiAlgorithm {
 private:
   Gaudi::Property<int> m_layerIncrement{this, "layerIncrement", 0};
   Gaudi::Property<std::string> m_rule{this, "rule", "concatenate"};
-  DataHandle<eicd::CalorimeterHitCollection> m_inputHits1{"inputHits1", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::CalorimeterHitCollection> m_inputHits2{"inputHits2", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::CalorimeterHitCollection> m_outputHits{"outputHits", Gaudi::DataHandle::Writer, this};
+  DataHandle<edm4eic::CalorimeterHitCollection> m_inputHits1{"inputHits1", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::CalorimeterHitCollection> m_inputHits2{"inputHits2", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::CalorimeterHitCollection> m_outputHits{"outputHits", Gaudi::DataHandle::Writer, this};
   std::vector<std::string> supported_rules{"concatenate", "interlayer"};
 
 public:
@@ -80,7 +80,7 @@ public:
     // input collections
     const auto* const hits1 = m_inputHits1.get();
     const auto* const hits2 = m_inputHits2.get();
-    std::vector<const eicd::CalorimeterHitCollection*> inputs{hits1, hits2};
+    std::vector<const edm4eic::CalorimeterHitCollection*> inputs{hits1, hits2};
     // Create output collections
     auto* mhits = m_outputHits.createAndPut();
 
@@ -89,7 +89,7 @@ public:
       for (int i = 0; i < (int)inputs.size(); ++i) {
         const auto* const coll = inputs[i];
         for (auto hit : *coll) {
-          eicd::CalorimeterHit h2{
+          edm4eic::CalorimeterHit h2{
               hit.getCellID(),    hit.getEnergy(),   hit.getEnergyError(), hit.getTime(),
               hit.getTimeError(), hit.getPosition(), hit.getDimension(),   hit.getLayer() + m_layerIncrement * i,
               hit.getSector(),    hit.getLocal(),
@@ -140,7 +140,7 @@ public:
         }
 
         // push hit, increment of index
-        eicd::CalorimeterHit h2{
+        edm4eic::CalorimeterHit h2{
             hit.getCellID(),    hit.getEnergy(),   hit.getEnergyError(), hit.getTime(),
             hit.getTimeError(), hit.getPosition(), hit.getDimension(),   hit.getLayer() + m_layerIncrement * curr_coll,
             hit.getSector(),    hit.getLocal()};

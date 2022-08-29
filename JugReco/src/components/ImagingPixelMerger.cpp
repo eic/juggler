@@ -31,8 +31,8 @@
 #include "JugBase/Utilities/Utils.hpp"
 
 // Event Model related classes
-#include "eicd/CalorimeterHitCollection.h"
-#include <eicd/vector_utils.h>
+#include "edm4eic/CalorimeterHitCollection.h"
+#include <edm4eic/vector_utils.h>
 
 using namespace Gaudi::Units;
 
@@ -56,8 +56,8 @@ class ImagingPixelMerger : public GaudiAlgorithm {
 private:
   Gaudi::Property<float> m_etaSize{this, "etaSize", 0.001};
   Gaudi::Property<float> m_phiSize{this, "phiSize", 0.001};
-  DataHandle<eicd::CalorimeterHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::CalorimeterHitCollection> m_outputHits{"outputHits", Gaudi::DataHandle::Writer, this};
+  DataHandle<edm4eic::CalorimeterHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::CalorimeterHitCollection> m_outputHits{"outputHits", Gaudi::DataHandle::Writer, this};
 
 public:
   ImagingPixelMerger(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
@@ -102,9 +102,9 @@ public:
       const auto& pos = h.getPosition();
 
       // cylindrical r
-      const float rc   = eicd::magnitudeTransverse(pos);
-      const double eta = eicd::eta(pos);
-      const double phi = eicd::angleAzimuthal(pos);
+      const float rc   = edm4eic::magnitudeTransverse(pos);
+      const double eta = edm4eic::eta(pos);
+      const double phi = edm4eic::angleAzimuthal(pos);
 
       const auto grid = std::pair<int, int>{pos2grid(eta, m_etaSize), pos2grid(phi, m_phiSize)};
       auto it         = layer.find(grid);
@@ -132,10 +132,10 @@ public:
       for (const auto& [grid, data] : layer) {
         const double eta   = grid2pos(grid.first, m_etaSize);
         const double phi   = grid2pos(grid.second, m_phiSize);
-        const double theta = eicd::etaToAngle(eta);
+        const double theta = edm4eic::etaToAngle(eta);
         const double z     = cotan(theta) * data.rc;
         const float r      = std::hypot(data.rc, z);
-        const auto pos     = eicd::sphericalToVector(r, theta, phi);
+        const auto pos     = edm4eic::sphericalToVector(r, theta, phi);
         auto oh            = ohits.create();
         oh.setEnergy(data.energy);
         oh.setEnergyError(std::sqrt(data.energyError));

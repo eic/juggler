@@ -27,9 +27,9 @@
 #include "JugBase/Utilities/Utils.hpp"
 
 // Event Model related classes
-#include <eicd/vector_utils.h>
-#include "eicd/CalorimeterHit.h"
-#include "eicd/CalorimeterHitCollection.h"
+#include <edm4eic/vector_utils.h>
+#include "edm4eic/CalorimeterHit.h"
+#include "edm4eic/CalorimeterHitCollection.h"
 
 using namespace Gaudi::Units;
 
@@ -48,9 +48,9 @@ namespace Jug::Reco {
   private:
     Gaudi::Property<int>                        m_nLayers{this, "numberOfLayers", 9};
     Gaudi::Property<int>                        m_nHits{this, "numberOfHits", 50};
-    DataHandle<eicd::CalorimeterHitCollection>   m_inputHitCollection{"inputHitCollection",
+    DataHandle<edm4eic::CalorimeterHitCollection>   m_inputHitCollection{"inputHitCollection",
                                                                      Gaudi::DataHandle::Reader, this};
-    DataHandle<eicd::CalorimeterHitCollection>   m_outputHitCollection{"outputHitCollection",
+    DataHandle<edm4eic::CalorimeterHitCollection>   m_outputHitCollection{"outputHitCollection",
                                                                       Gaudi::DataHandle::Writer, this};
 
   public:
@@ -78,7 +78,7 @@ namespace Jug::Reco {
       auto& mhits = *m_outputHitCollection.createAndPut();
 
       // group the hits by layer
-      std::vector<std::vector<eicd::CalorimeterHit>> layer_hits;
+      std::vector<std::vector<edm4eic::CalorimeterHit>> layer_hits;
       layer_hits.resize(m_nLayers);
       for (const auto& h : hits) {
         auto k = h.getLayer();
@@ -90,7 +90,7 @@ namespace Jug::Reco {
       // sort by energy
       for (auto &layer : layer_hits) {
         std::sort(layer.begin(), layer.end(),
-          [] (const eicd::CalorimeterHit &h1, const eicd::CalorimeterHit &h2) {
+          [] (const edm4eic::CalorimeterHit &h1, const edm4eic::CalorimeterHit &h2) {
             return h1.getEnergy() > h2.getEnergy();
           });
       }

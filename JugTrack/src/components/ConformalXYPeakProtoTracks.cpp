@@ -18,7 +18,7 @@
 #include "Math/Vector3D.h"
 #include "Math/Vector2D.h"
 
-#include "eicd/TrackerHitCollection.h"
+#include "edm4eic/TrackerHitCollection.h"
 
 namespace Jug::Reco {
 
@@ -30,7 +30,7 @@ namespace Jug::Reco {
  */
 class ConformalXYPeakProtoTracks : public GaudiAlgorithm {
 private:
-  DataHandle<eicd::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
   DataHandle<Jug::ProtoTrackContainer> m_outputProtoTracks{"outputProtoTracks", Gaudi::DataHandle::Writer, this};
   DataHandle<int> m_nProtoTracks{"nProtoTracks", Gaudi::DataHandle::Writer, this};
 
@@ -54,7 +54,7 @@ public:
 
   StatusCode execute() override {
     // input collection
-    const eicd::TrackerHitCollection* hits = m_inputTrackerHits.get();
+    const edm4eic::TrackerHitCollection* hits = m_inputTrackerHits.get();
     // Create output collections
     auto* proto_tracks = m_outputProtoTracks.createAndPut();
     int n_proto_tracks = 0;

@@ -23,7 +23,7 @@
 #include "JugTrack/Track.hpp"
 #include "JugTrack/Trajectories.hpp"
 
-#include "eicd/TrackerHitCollection.h"
+#include "edm4eic/TrackerHitCollection.h"
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"

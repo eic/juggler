@@ -19,9 +19,9 @@
 #include "JugTrack/Track.hpp"
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "eicd/ClusterCollection.h"
-#include "eicd/TrackerHitCollection.h"
-#include "eicd/vector_utils.h"
+#include "edm4eic/ClusterCollection.h"
+#include "edm4eic/TrackerHitCollection.h"
+#include "edm4eic/vector_utils.h"
 
 using namespace Gaudi::Units;
 
@@ -37,8 +37,8 @@ namespace Jug::Reco {
  */
 class TrackParamVertexClusterInit : public GaudiAlgorithm {
 private:
-  using Clusters   = eicd::ClusterCollection;
-  using VertexHits = eicd::TrackerHitCollection;
+  using Clusters   = edm4eic::ClusterCollection;
+  using VertexHits = edm4eic::TrackerHitCollection;
 
   DataHandle<VertexHits> m_inputVertexHits{"inputVertexHits", Gaudi::DataHandle::Reader, this};
   DataHandle<Clusters> m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
@@ -101,8 +101,8 @@ public:
         Acts::BoundVector params;
         params(Acts::eBoundLoc0)   = 0.0 * mm;
         params(Acts::eBoundLoc1)   = 0.0 * mm;
-        params(Acts::eBoundPhi)    = eicd::angleAzimuthal(momentum);
-        params(Acts::eBoundTheta)  = eicd::anglePolar(momentum);
+        params(Acts::eBoundPhi)    = edm4eic::angleAzimuthal(momentum);
+        params(Acts::eBoundTheta)  = edm4eic::anglePolar(momentum);
         params(Acts::eBoundQOverP) = 1 / p_cluster;
         params(Acts::eBoundTime)   = 0 * ns;
 
@@ -114,8 +114,8 @@ public:
         Acts::BoundVector params2;
         params2(Acts::eBoundLoc0)   = 0.0 * mm;
         params2(Acts::eBoundLoc1)   = 0.0 * mm;
-        params2(Acts::eBoundPhi)    = eicd::angleAzimuthal(momentum);
-        params2(Acts::eBoundTheta)  = eicd::anglePolar(momentum);
+        params2(Acts::eBoundPhi)    = edm4eic::angleAzimuthal(momentum);
+        params2(Acts::eBoundTheta)  = edm4eic::anglePolar(momentum);
         params2(Acts::eBoundQOverP) = -1 / p_cluster;
         params2(Acts::eBoundTime)   = 0 * ns;
         init_trk_params->push_back({pSurface, params2, -1});

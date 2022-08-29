@@ -16,9 +16,9 @@
 
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
-#include "eicd/ClusterCollection.h"
-#include "eicd/MCRecoClusterParticleAssociationCollection.h"
-#include <eicd/vector_utils.h>
+#include "edm4eic/ClusterCollection.h"
+#include "edm4eic/MCRecoClusterParticleAssociationCollection.h"
+#include <edm4eic/vector_utils.h>
 
 using namespace Gaudi::Units;
 
@@ -36,13 +36,13 @@ class TruthEnergyPositionClusterMerger : public GaudiAlgorithm {
 private:
   // Input
   DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::ClusterCollection> m_energyClusters{"EnergyClusters", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::MCRecoClusterParticleAssociationCollection> m_energyAssociations{"EnergyAssociations", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::ClusterCollection> m_positionClusters{"PositionClusters", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::MCRecoClusterParticleAssociationCollection> m_positionAssociations{"PositionAssociations", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::ClusterCollection> m_energyClusters{"EnergyClusters", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_energyAssociations{"EnergyAssociations", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::ClusterCollection> m_positionClusters{"PositionClusters", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_positionAssociations{"PositionAssociations", Gaudi::DataHandle::Reader, this};
   // Output
-  DataHandle<eicd::ClusterCollection> m_outputClusters{"OutputClusters", Gaudi::DataHandle::Writer, this};
-  DataHandle<eicd::MCRecoClusterParticleAssociationCollection> m_outputAssociations{"OutputAssociations", Gaudi::DataHandle::Writer, this};
+  DataHandle<edm4eic::ClusterCollection> m_outputClusters{"OutputClusters", Gaudi::DataHandle::Writer, this};
+  DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_outputAssociations{"OutputAssociations", Gaudi::DataHandle::Writer, this};
 
 public:
   TruthEnergyPositionClusterMerger(const std::string& name, ISvcLocator* svcLoc)
@@ -121,7 +121,7 @@ public:
         }
 
         // set association
-        eicd::MutableMCRecoClusterParticleAssociation clusterassoc;
+        edm4eic::MutableMCRecoClusterParticleAssociation clusterassoc;
         clusterassoc.setRecID(new_clus.getObjectID().index);
         clusterassoc.setSimID(mcID);
         clusterassoc.setWeight(1.0);
@@ -141,7 +141,7 @@ public:
         merged_clus.push_back(new_clus);
 
         // set association
-        eicd::MutableMCRecoClusterParticleAssociation clusterassoc;
+        edm4eic::MutableMCRecoClusterParticleAssociation clusterassoc;
         clusterassoc.setRecID(new_clus.getObjectID().index);
         clusterassoc.setSimID(mcID);
         clusterassoc.setWeight(1.0);
@@ -167,7 +167,7 @@ public:
       new_clus.setTime(eclus.getTime());
       new_clus.setNhits(eclus.getNhits());
       // use nominal radius of 110cm, and use start vertex theta and phi
-      new_clus.setPosition(eicd::sphericalToVector(110.*cm, theta, phi));
+      new_clus.setPosition(edm4eic::sphericalToVector(110.*cm, theta, phi));
       new_clus.addToClusters(eclus);
       if (msgLevel(MSG::DEBUG)) {
         debug() << " --> Processing energy cluster " << eclus.id() << ", mcID: " << mcID << ", energy: " << eclus.getEnergy()
@@ -176,7 +176,7 @@ public:
       }
 
       // set association
-      eicd::MutableMCRecoClusterParticleAssociation clusterassoc;
+      edm4eic::MutableMCRecoClusterParticleAssociation clusterassoc;
       clusterassoc.setRecID(new_clus.getObjectID().index);
       clusterassoc.setSimID(mcID);
       clusterassoc.setWeight(1.0);
@@ -191,12 +191,12 @@ public:
 
   // get a map of MCParticle index --> cluster
   // input: cluster_collections --> list of handles to all cluster collections
-  std::map<int, eicd::Cluster> indexedClusters(
-      const eicd::ClusterCollection& clusters,
-      const eicd::MCRecoClusterParticleAssociationCollection& associations
+  std::map<int, edm4eic::Cluster> indexedClusters(
+      const edm4eic::ClusterCollection& clusters,
+      const edm4eic::MCRecoClusterParticleAssociationCollection& associations
   ) const {
 
-    std::map<int, eicd::Cluster> matched = {};
+    std::map<int, edm4eic::Cluster> matched = {};
 
     for (const auto& cluster : clusters) {
       int mcID = -1;

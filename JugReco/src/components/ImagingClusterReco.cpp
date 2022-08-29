@@ -31,11 +31,11 @@
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
 #include "edm4hep/SimCalorimeterHitCollection.h"
-#include "eicd/CalorimeterHitCollection.h"
-#include "eicd/ClusterCollection.h"
-#include "eicd/MCRecoClusterParticleAssociationCollection.h"
-#include "eicd/ProtoClusterCollection.h"
-#include "eicd/vector_utils.h"
+#include "edm4eic/CalorimeterHitCollection.h"
+#include "edm4eic/ClusterCollection.h"
+#include "edm4eic/MCRecoClusterParticleAssociationCollection.h"
+#include "edm4eic/ProtoClusterCollection.h"
+#include "edm4eic/vector_utils.h"
 
 using namespace Gaudi::Units;
 using namespace Eigen;
@@ -53,9 +53,9 @@ class ImagingClusterReco : public GaudiAlgorithm {
 private:
   Gaudi::Property<int> m_trackStopLayer{this, "trackStopLayer", 9};
 
-  DataHandle<eicd::ProtoClusterCollection> m_inputProtoClusters{"inputProtoClusters", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::ClusterCollection> m_outputLayers{"outputLayers", Gaudi::DataHandle::Writer, this};
-  DataHandle<eicd::ClusterCollection> m_outputClusters{"outputClusters", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::ProtoClusterCollection> m_inputProtoClusters{"inputProtoClusters", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::ClusterCollection> m_outputLayers{"outputLayers", Gaudi::DataHandle::Writer, this};
+  DataHandle<edm4eic::ClusterCollection> m_outputClusters{"outputClusters", Gaudi::DataHandle::Reader, this};
 
   // Collection for MC hits when running on MC
   Gaudi::Property<std::string> m_mcHits{this, "mcHits", ""};
@@ -65,7 +65,7 @@ private:
   // Collection for associations when running on MC
   Gaudi::Property<std::string> m_outputAssociations{this, "outputAssociations", ""};
   // Optional handle to MC hits
-  std::unique_ptr<DataHandle<eicd::MCRecoClusterParticleAssociationCollection>> m_outputAssociations_ptr;
+  std::unique_ptr<DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>> m_outputAssociations_ptr;
 
 public:
   ImagingClusterReco(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
@@ -89,7 +89,7 @@ public:
     // Initialize the optional association collection if requested
     if (m_outputAssociations != "") {
       m_outputAssociations_ptr =
-        std::make_unique<DataHandle<eicd::MCRecoClusterParticleAssociationCollection>>(m_outputAssociations, Gaudi::DataHandle::Writer,
+        std::make_unique<DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>>(m_outputAssociations, Gaudi::DataHandle::Writer,
         this);
     }
 
@@ -110,7 +110,7 @@ public:
     }
 
     // Optional output associations
-    eicd::MCRecoClusterParticleAssociationCollection* associations = nullptr;
+    edm4eic::MCRecoClusterParticleAssociationCollection* associations = nullptr;
     if (m_outputAssociations_ptr) {
       associations = m_outputAssociations_ptr->createAndPut();
     }
@@ -170,7 +170,7 @@ public:
         const auto& mcp = mchit->getContributions(0).getParticle();
 
         // set association
-        eicd::MutableMCRecoClusterParticleAssociation clusterassoc;
+        edm4eic::MutableMCRecoClusterParticleAssociation clusterassoc;
         clusterassoc.setRecID(cl.getObjectID().index);
         clusterassoc.setSimID(mcp.getObjectID().index);
         clusterassoc.setWeight(1.0);
@@ -197,11 +197,11 @@ public:
 private:
   template <typename T> static inline T pow2(const T& x) { return x * x; }
 
-  static std::vector<eicd::Cluster> reconstruct_cluster_layers(const eicd::ProtoCluster& pcl) {
+  static std::vector<edm4eic::Cluster> reconstruct_cluster_layers(const edm4eic::ProtoCluster& pcl) {
     const auto& hits    = pcl.getHits();
     const auto& weights = pcl.getWeights();
     // using map to have hits sorted by layer
-    std::map<int, std::vector<std::pair<eicd::CalorimeterHit, float>>> layer_map;
+    std::map<int, std::vector<std::pair<edm4eic::CalorimeterHit, float>>> layer_map;
     for (unsigned i = 0; i < hits.size(); ++i) {
       const auto hit = hits[i];
       auto lid       = hit.getLayer();
@@ -212,7 +212,7 @@ private:
     }
 
     // create layers
-    std::vector<eicd::Cluster> cl_layers;
+    std::vector<edm4eic::Cluster> cl_layers;
     for (const auto& [lid, layer_hits] : layer_map) {
       auto layer = reconstruct_layer(layer_hits);
       cl_layers.push_back(layer);
@@ -220,8 +220,8 @@ private:
     return cl_layers;
   }
 
-  static eicd::Cluster reconstruct_layer(const std::vector<std::pair<eicd::CalorimeterHit, float>>& hits) {
-    eicd::MutableCluster layer;
+  static edm4eic::Cluster reconstruct_layer(const std::vector<std::pair<edm4eic::CalorimeterHit, float>>& hits) {
+    edm4eic::MutableCluster layer;
     layer.setType(ClusterType::kClusterSlice);
     // Calculate averages
     double energy{0};
@@ -251,7 +251,7 @@ private:
     // Calculate radius as the standard deviation of the hits versus the cluster center
     double radius = 0.;
     for (const auto& [hit, weight] : hits) {
-      radius += std::pow(eicd::magnitude(hit.getPosition() - layer.getPosition()), 2);
+      radius += std::pow(edm4eic::magnitude(hit.getPosition() - layer.getPosition()), 2);
     }
     layer.addToShapeParameters(std::sqrt(radius / layer.getNhits()));
     // TODO Skewedness
@@ -259,8 +259,8 @@ private:
     return layer;
   }
 
-  eicd::MutableCluster reconstruct_cluster(const eicd::ProtoCluster& pcl) {
-    eicd::MutableCluster cluster;
+  edm4eic::MutableCluster reconstruct_cluster(const edm4eic::ProtoCluster& pcl) {
+    edm4eic::MutableCluster cluster;
 
     const auto& hits    = pcl.getHits();
     const auto& weights = pcl.getWeights();
@@ -282,9 +282,9 @@ private:
       const double energyWeight = hit.getEnergy() * weight;
       time += hit.getTime() * energyWeight;
       timeError += std::pow(hit.getTimeError() * energyWeight, 2);
-      meta += eicd::eta(hit.getPosition()) * energyWeight;
-      mphi += eicd::angleAzimuthal(hit.getPosition()) * energyWeight;
-      r = std::min(eicd::magnitude(hit.getPosition()), r);
+      meta += edm4eic::eta(hit.getPosition()) * energyWeight;
+      mphi += edm4eic::angleAzimuthal(hit.getPosition()) * energyWeight;
+      r = std::min(edm4eic::magnitude(hit.getPosition()), r);
       cluster.addToHits(hit);
     }
     cluster.setEnergy(energy);
@@ -292,13 +292,13 @@ private:
     cluster.setTime(time / energy);
     cluster.setTimeError(std::sqrt(timeError) / energy);
     cluster.setNhits(hits.size());
-    cluster.setPosition(eicd::sphericalToVector(r, eicd::etaToAngle(meta / energy), mphi / energy));
+    cluster.setPosition(edm4eic::sphericalToVector(r, edm4eic::etaToAngle(meta / energy), mphi / energy));
 
     // shower radius estimate (eta-phi plane)
     double radius = 0.;
     for (const auto& hit : hits) {
-      radius += pow2(eicd::eta(hit.getPosition()) - eicd::eta(cluster.getPosition())) +
-                pow2(eicd::angleAzimuthal(hit.getPosition()) - eicd::angleAzimuthal(cluster.getPosition()));
+      radius += pow2(edm4eic::eta(hit.getPosition()) - edm4eic::eta(cluster.getPosition())) +
+                pow2(edm4eic::angleAzimuthal(hit.getPosition()) - edm4eic::angleAzimuthal(cluster.getPosition()));
     }
     cluster.addToShapeParameters(std::sqrt(radius / cluster.getNhits()));
     // Skewedness not calculated TODO
@@ -313,9 +313,9 @@ private:
     return cluster;
   }
 
-  std::pair<double /* polar */, double /* azimuthal */> fit_track(const std::vector<eicd::Cluster>& layers) const {
+  std::pair<double /* polar */, double /* azimuthal */> fit_track(const std::vector<edm4eic::Cluster>& layers) const {
     int nrows = 0;
-    decltype(eicd::ClusterData::position) mean_pos{0, 0, 0};
+    decltype(edm4eic::ClusterData::position) mean_pos{0, 0, 0};
     for (const auto& layer : layers) {
       if ((layer.getNhits() > 0) && (layer.getHits(0).getLayer() <= m_trackStopLayer)) {
         mean_pos = mean_pos + layer.getPosition();

@@ -24,8 +24,8 @@
 #include "JugBase/IGeoSvc.h"
 
 // Event Model related classes
-#include "eicd/CalorimeterHitCollection.h"
-#include "eicd/RawCalorimeterHitCollection.h"
+#include "edm4eic/CalorimeterHitCollection.h"
+#include "edm4eic/RawCalorimeterHitCollection.h"
 
 using namespace Gaudi::Units;
 
@@ -60,9 +60,9 @@ private:
   double dyRangeADC{0};
 
   // hits containers
-  DataHandle<eicd::RawCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+  DataHandle<edm4eic::RawCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                     this};
-  DataHandle<eicd::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+  DataHandle<edm4eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                   this};
 
   // Pointer to the geometry service
@@ -145,14 +145,14 @@ public:
 
 
       // create const vectors for passing to hit initializer list
-      const decltype(eicd::CalorimeterHitData::position) position(
+      const decltype(edm4eic::CalorimeterHitData::position) position(
         gpos.x() / m_lUnit, gpos.y() / m_lUnit, gpos.z() / m_lUnit
       );
-      const decltype(eicd::CalorimeterHitData::local) local(
+      const decltype(edm4eic::CalorimeterHitData::local) local(
         pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit
       );
 
-      hits.push_back(eicd::CalorimeterHit{id,                         // cellID
+      hits.push_back(edm4eic::CalorimeterHit{id,                         // cellID
                                           static_cast<float>(energy), // energy
                                           0,                          // energyError
                                           static_cast<float>(time),   // time
