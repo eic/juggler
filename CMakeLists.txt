@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.19)
 # CMP0074: find_package() uses <PackageName>_ROOT variables
 cmake_policy(SET CMP0074 NEW)
 
-project(Juggler VERSION 4.3.0)
+project(Algorithms VERSION 1.0.0)
 
 set(CMAKE_CXX_STANDARD 17 CACHE STRING "")
 if(NOT CMAKE_CXX_STANDARD MATCHES "17|20")
