@@ -59,6 +59,7 @@ namespace detail {
       virtual int sync() {
         // report should deal with concurrency (the minimal version does)
         m_logger.report(m_mylevel, m_caller, this->str());
+        this->str("");
         return 0;
       }
     private:
