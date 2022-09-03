@@ -10,7 +10,7 @@
 #include <array>
 
 #include <algorithms/service.h>
-#include <fmt/core.h>
+//#include <fmt/core.h>
 
 // Simple thread-safe logger with optional overrides by the calling framework
 namespace algorithms {
@@ -45,8 +45,8 @@ class LogSvc : public ServiceMixin<LogSvc> {
     LogAction m_action = [](const LogLevel l, std::string_view caller, std::string_view msg) {
       static std::mutex m;
       std::lock_guard<std::mutex> lock(m);
-      fmt::print("%s [%s] %s\n", kLogLevelNames[l], caller, msg);
-      //std::cout << kLogLevelNames[static_cast<unsigned>(l)] << " [" << caller << "] " << msg << std::endl;
+      //fmt::print("%s [%s] %s\n", kLogLevelNames[l], caller, msg);
+      std::cout << kLogLevelNames[static_cast<unsigned>(l)] << " [" << caller << "] " << msg << std::endl;
     };
   ALGORITHMS_DEFINE_SERVICE(LogSvc)
 };
