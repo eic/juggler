@@ -37,10 +37,10 @@ class ServiceSvc {
     void add(std::string_view name, PropertyMixin* svcConfig) {
       m_services[name] = svcConfig;
     }
-    PropertyMixin* get(std::string_view name) const {
+    PropertyMixin* service(std::string_view name) const {
       return m_services.at(name);
     }
-    const ServiceMapType& get() const {
+    const ServiceMapType& services() const {
       return m_services;
     }
 
