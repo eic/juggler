@@ -67,7 +67,7 @@ public:
     Property(const Property&)       = delete;
     void operator=(const Property&) = delete;
 
-    // Only settable by explicitly calling the value operator
+    // Only settable by explicitly calling the ::set() member functio n
     // as we want the Property to mostly act as if it is constant
     virtual void set(std::any v) {
       m_value     = std::any_cast<T>(v);
@@ -77,6 +77,9 @@ public:
     // version that does not go through std::any
     // Get const reference to the value
     virtual std::any get() const { return m_value; }
+
+    // Direct access to the value. Use this one whenever possible (or go through the
+    // automatic casting)
     const ValueType& value() const { return m_value; }
 
     // automatically cast to T

@@ -21,10 +21,10 @@ namespace algorithms {
 
 
 // Service service --> keeps track of all services :)
-//                 --> exposes the underlying property mixin of the service so
+//                 --> exposes the underlying Configurable object of the service so
 //                     we can configure the services by name in the framework 
 //                     boundary plugin
-//                 --> Special service (does not use the service mixin to avoid
+//                 --> Special service (does not use the Service base class to avoid
 //                     circularity)
 class ServiceSvc {
   public:
@@ -57,7 +57,7 @@ class ServiceSvc {
 };
 
 // Thread-safe lazy-evaluated minimal service system
-// CRTP mixin to add the instance method
+// CRTP base class to add the instance method
 // This could have been part of DEFINE_SERVICE macro, but I think it is better
 // to keep the macro magic to a minimum to maximize transparency
 template <class SvcType> class Service : public PropertyMixin {
@@ -67,8 +67,8 @@ template <class SvcType> class Service : public PropertyMixin {
       static SvcType svc;
       return svc;
     }
-    // constructor for the service mixin registers the service, except
-    // for the ServiceSvc which is its own thing (and that would be ciricular)
+    // constructor for the service base class registers the service, except
+    // for the ServiceSvc which is its own thing (avoid circularity)
     Service(std::string_view name) {
       ServiceSvc::instance().add(name, this);
     }
