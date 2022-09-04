@@ -12,7 +12,7 @@ variables:
   ## Other versions to be included in the container. In general these should be "master"
   ## to keep the container functionally identical to jug_xl:nightly
   JUGGLER_NPDET_VERSION: "master"
-  JUGGLER_EDM4EIC_VERSION: "master"
+  JUGGLER_EDM4EIC_VERSION: "main"
   JUGGLER_EDM4EIC_REPOSITORYURL: "https://github.com/eic/EDM4eic.git"
 
   ## We have:
