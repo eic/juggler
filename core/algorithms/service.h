@@ -28,20 +28,23 @@ namespace algorithms {
 //                     circularity)
 class ServiceSvc {
   public:
-    using ServiceMapType = std::map<std::string_view, PropertyMixin*>;
+    using ServiceMapType = std::map<std::string_view, Configurable*>;
     static ServiceSvc& instance() {
       // This is guaranteed to be thread-safe from C++11 onwards.
       static ServiceSvc svc;
       return svc;
     }
-    void add(std::string_view name, PropertyMixin* svcConfig) {
-      m_services[name] = svcConfig;
+    void add(std::string_view name, Configurable* svc) {
+      m_services[name] = svc;
     }
-    PropertyMixin* service(std::string_view name) const {
+    Configurable* service(std::string_view name) const {
       return m_services.at(name);
     }
     const ServiceMapType& services() const {
       return m_services;
+    }
+    bool active(std::string_view name) const {
+      return m_services.count(name);
     }
 
   private: 

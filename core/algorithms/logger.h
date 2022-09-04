@@ -22,8 +22,16 @@ enum class LogLevel : unsigned {
   kWarning = 3,
   kError = 4
 };
-constexpr std::array<const char*, 5> kLogLevelNames{
-    "JUNK", "DEBUG", "INFO", "WARNING", "ERROR"};
+constexpr std::string_view logLevelName(LogLevel level) {
+  // Compiler will warn if not all of the enum is covered
+  switch (level) {
+    case LogLevel::kJunk: return "JUNK";
+    case LogLevel::kDebug: return "DEBUG";
+    case LogLevel::kInfo: return "INFO";
+    case LogLevel::kWarning: return "WARNING";
+    case LogLevel::kError: return "ERROR";
+  }
+}
 
 // TODO: integrate proper properties to configure the default level
 // Note: the log action is responsible for dealing with concurrent calls
@@ -45,8 +53,8 @@ class LogSvc : public ServiceMixin<LogSvc> {
     LogAction m_action = [](const LogLevel l, std::string_view caller, std::string_view msg) {
       static std::mutex m;
       std::lock_guard<std::mutex> lock(m);
-      //fmt::print("%s [%s] %s\n", kLogLevelNames[l], caller, msg);
-      std::cout << kLogLevelNames[static_cast<unsigned>(l)] << " [" << caller << "] " << msg << std::endl;
+      //fmt::print("%s [%s] %s\n", logLevelName(l), caller, msg);
+      std::cout << logLevelName(l) << " [" << caller << "] " << msg << std::endl;
     };
   ALGORITHMS_DEFINE_SERVICE(LogSvc)
 };
