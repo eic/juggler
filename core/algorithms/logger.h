@@ -33,7 +33,7 @@ constexpr std::string_view logLevelName(LogLevel level) {
 
 // Note: the log action is responsible for dealing with concurrent calls
 //       the default LogAction is a thread-safe example
-class LogSvc : public ServiceMixin<LogSvc> {
+class LogSvc : public Service<LogSvc> {
 public:
   using LogAction = std::function<void(LogLevel, std::string_view, std::string_view)>;
   void defaultLevel(const LogLevel l) { m_level.set(l); }

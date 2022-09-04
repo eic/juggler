@@ -11,9 +11,9 @@
 //    (mostly needed for the service base class)
 #define ALGORITHMS_DEFINE_SERVICE(className) \
   protected: \
-     className() : ServiceMixin<className>(#className) {} \
+     className() : Service<className>(#className) {} \
   public: \
-     friend class ServiceMixin<className>; \
+     friend class Service<className>; \
      className(const className&) = delete; \
      void operator=(const className&) = delete;
      
@@ -60,7 +60,7 @@ class ServiceSvc {
 // CRTP mixin to add the instance method
 // This could have been part of DEFINE_SERVICE macro, but I think it is better
 // to keep the macro magic to a minimum to maximize transparency
-template <class SvcType> class ServiceMixin : public PropertyMixin {
+template <class SvcType> class Service : public PropertyMixin {
   public:
     static SvcType& instance() {
       // This is guaranteed to be thread-safe from C++11 onwards.
@@ -69,7 +69,7 @@ template <class SvcType> class ServiceMixin : public PropertyMixin {
     }
     // constructor for the service mixin registers the service, except
     // for the ServiceSvc which is its own thing (and that would be ciricular)
-    ServiceMixin(std::string_view name) {
+    Service(std::string_view name) {
       ServiceSvc::instance().add(name, this);
     }
 };
