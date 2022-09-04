@@ -140,8 +140,12 @@ using PropertyMixin = Configurable;
 // operator== overload not needed in C++20 as it will call the member version
 #if __cpp_impl_three_way_comparison < 201711
 template <class T, class U>
-bool operator==(const U& rhs, algorithms::Configurable::Property<T>& p) {
+bool operator==(const U& rhs, const algorithms::Configurable::Property<T>& p) {
   return p == rhs;
+}
+template <class T>
+std::ostream& operator<<(std::ostream& os, const algorithms::Configurable::Property<T>& p) {
+  return os << p.value();
 }
 #endif
 // others needed??? TODO

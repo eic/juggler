@@ -2,9 +2,6 @@
 
 using namespace algorithms;
 
-// TODO implement PropertyBase? or use boost::any? need something better for setProperty
-// so we don't need to repeat the type unnecessarily. Hard without type erasure though...
-
 class testLogger : public LoggerMixin {
   public:
   testLogger() 
@@ -32,13 +29,13 @@ class propTest : public PropertyMixin, LoggerMixin {
   public:
     propTest() : LoggerMixin("propTest") {}
     void print() const {
-      info() << "integer property: " << getProperty<int>("integer") << endmsg;
-      info() << "foo property: " << getProperty<std::string>("foo") << endmsg;
+      info() << "integer property: " << m_int << endmsg;
+      info() << "foo property: " << m_foo << endmsg;
       if (hasProperty("bar")) {
-        info() << "bar property: " << getProperty<std::string>("bar") << endmsg;
+        info() << "bar property: " << m_bar << endmsg;
       }
       if (hasProperty("double")) {
-        info() << "double (non-def.) property: " << getProperty<double>("double") << endmsg;
+        info() << "double (non-def.) property: " << m_double << endmsg;
       }
     }
   private:
@@ -69,7 +66,6 @@ int main() {
   tp.setProperty<std::string>("bar", "bar_value");
   tp.setProperty<double>("double", 3.1415f);
   tp.print();
-
 
   return 0;
 }
