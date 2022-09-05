@@ -23,9 +23,9 @@
 #include "JugTrack/Trajectories.hpp"
 #include "JugTrack/ProtoTrack.hpp"
 
-#include "eicd/TrackerHitCollection.h"
-#include "eicd/TrajectoryCollection.h"
-#include "eicd/TrackParametersCollection.h"
+#include "edm4eic/TrackerHitCollection.h"
+#include "edm4eic/TrajectoryCollection.h"
+#include "edm4eic/TrackParametersCollection.h"
 
 //genfitk
 #include "FieldManager.h"
@@ -77,11 +77,11 @@ namespace Jug::Reco {
   };
 
 public:
-  DataHandle<eicd::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
   DataHandle<TrackParametersContainer>  m_initialTrackParameters{"initialTrackParameters", Gaudi::DataHandle::Reader, this};
   DataHandle<ProtoTrackContainer>       m_inputProtoTracks{"inputProtoTracks", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::TrackParametersCollection> m_foundTracks{"trackParameters", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::TrajectoryCollection> m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
+  DataHandle<edm4eic::TrackParametersCollection> m_foundTracks{"trackParameters", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::TrajectoryCollection> m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
 
   SmartIF<IGeoSvc> m_geoSvc;
   // Acts::GeometryContext                 m_geoctx;

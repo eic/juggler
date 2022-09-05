@@ -16,7 +16,7 @@
 
 #include "Math/Vector3D.h"
 
-#include "eicd/TrackerHitCollection.h"
+#include "edm4eic/TrackerHitCollection.h"
 
 namespace Jug::Reco {
 
@@ -26,7 +26,7 @@ namespace Jug::Reco {
  */
 class ProtoTrackMatching : public GaudiAlgorithm {
 private:
-  DataHandle<eicd::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
   DataHandle<TrackParametersContainer> m_initialTrackParameters{"initialTrackParameters", Gaudi::DataHandle::Reader, this};
   DataHandle<ProtoTrackContainer> m_inputProtoTracks{"inputProtoTracks", Gaudi::DataHandle::Reader, this};
   DataHandle<ProtoTrackContainer> m_outputProtoTracks{"matchedProtoTracks", Gaudi::DataHandle::Writer, this};

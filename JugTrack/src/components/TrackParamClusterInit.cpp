@@ -16,9 +16,9 @@
 #include "JugBase/IGeoSvc.h"
 #include "JugTrack/Track.hpp"
 
-#include "eicd/ClusterCollection.h"
-#include "eicd/TrackerHitCollection.h"
-#include "eicd/vector_utils.h"
+#include "edm4eic/ClusterCollection.h"
+#include "edm4eic/TrackerHitCollection.h"
+#include "edm4eic/vector_utils.h"
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
@@ -44,7 +44,7 @@ namespace Jug::Reco {
  */
 class TrackParamClusterInit : public GaudiAlgorithm {
 private:
-  using Clusters = eicd::ClusterCollection;
+  using Clusters = edm4eic::ClusterCollection;
 
   DataHandle<Clusters> m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
   DataHandle<TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
@@ -84,14 +84,14 @@ public:
       if (p < 0.1 * GeV) {
         continue;
       }
-      double len    = eicd::magnitude(c.getPosition());
+      double len    = edm4eic::magnitude(c.getPosition());
       auto momentum = c.getPosition() * p / len;
 
       Acts::BoundVector params;
       params(Acts::eBoundLoc0)   = 0.0 * mm;
       params(Acts::eBoundLoc1)   = 0.0 * mm;
-      params(Acts::eBoundPhi)    = eicd::angleAzimuthal(momentum);
-      params(Acts::eBoundTheta)  = eicd::anglePolar(momentum);
+      params(Acts::eBoundPhi)    = edm4eic::angleAzimuthal(momentum);
+      params(Acts::eBoundTheta)  = edm4eic::anglePolar(momentum);
       params(Acts::eBoundQOverP) = 1 / p;
       params(Acts::eBoundTime)   = 0 * ns;
 
@@ -107,8 +107,8 @@ public:
       Acts::BoundVector params2;
       params2(Acts::eBoundLoc0)   = 0.0 * mm;
       params2(Acts::eBoundLoc1)   = 0.0 * mm;
-      params2(Acts::eBoundPhi)    = eicd::angleAzimuthal(momentum);
-      params2(Acts::eBoundTheta)  = eicd::anglePolar(momentum);
+      params2(Acts::eBoundPhi)    = edm4eic::angleAzimuthal(momentum);
+      params2(Acts::eBoundTheta)  = edm4eic::anglePolar(momentum);
       params2(Acts::eBoundQOverP) = -1 / p;
       params2(Acts::eBoundTime)   = 0 * ns;
       init_trk_params->push_back({pSurface, params2, -1});

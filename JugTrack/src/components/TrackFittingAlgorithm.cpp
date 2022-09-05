@@ -36,7 +36,7 @@
 #include "JugTrack/Track.hpp"
 #include "JugTrack/Measurement.hpp"
 
-#include "eicd/TrackerHitCollection.h"
+#include "edm4eic/TrackerHitCollection.h"
 
 #include <functional>
 #include <stdexcept>

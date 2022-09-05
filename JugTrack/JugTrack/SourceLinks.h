@@ -10,7 +10,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "eicd/TrackerHitCollection.h"
+#include "edm4eic/TrackerHitCollection.h"
 
 
 namespace Jug {
@@ -34,7 +34,7 @@ class SourceLink {
   // need to store pointers to make the object copyable
   const Acts::Surface* m_surface;
   //const ActsFatras::Hit* m_truthHit;
-  const eicd::TrackerHit* m_Hit ;
+  const edm4eic::TrackerHit* m_Hit ;
 
  public:
   SourceLink(const Acts::Surface& surface, //const ActsFatras::Hit& truthHit,

@@ -30,9 +30,9 @@
 #include "JugReco/ClusterTypes.h"
 
 // Event Model related classes
-#include "eicd/CalorimeterHitCollection.h"
-#include "eicd/ProtoClusterCollection.h"
-#include "eicd/vector_utils.h"
+#include "edm4eic/CalorimeterHitCollection.h"
+#include "edm4eic/ProtoClusterCollection.h"
+#include "edm4eic/vector_utils.h"
 
 using namespace Gaudi::Units;
 
@@ -68,10 +68,10 @@ private:
   // minimum number of hits (to save this cluster)
   Gaudi::Property<int> m_minClusterNhits{this, "minClusterNhits", 10};
   // input hits collection
-  DataHandle<eicd::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+  DataHandle<edm4eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                   this};
   // output clustered hits
-  DataHandle<eicd::ProtoClusterCollection> m_outputProtoClusterCollection{"outputProtoClusterCollection",
+  DataHandle<edm4eic::ProtoClusterCollection> m_outputProtoClusterCollection{"outputProtoClusterCollection",
                                                                           Gaudi::DataHandle::Writer, this};
 
   // unitless counterparts of the input parameters
@@ -135,7 +135,7 @@ public:
 
     // group neighboring hits
     std::vector<bool> visits(hits.size(), false);
-    std::vector<std::vector<std::pair<uint32_t, eicd::CalorimeterHit>>> groups;
+    std::vector<std::vector<std::pair<uint32_t, edm4eic::CalorimeterHit>>> groups;
     for (size_t i = 0; i < hits.size(); ++i) {
       if (msgLevel(MSG::DEBUG)) {
         debug() << fmt::format("hit {:d}: local position = ({}, {}, {}), global position = ({}, {}, {})", i + 1,
@@ -184,7 +184,7 @@ private:
   template <typename T> static inline T pow2(const T& x) { return x * x; }
 
   // helper function to group hits
-  bool is_neighbor(const eicd::CalorimeterHit& h1, const eicd::CalorimeterHit& h2) const {
+  bool is_neighbor(const edm4eic::CalorimeterHit& h1, const edm4eic::CalorimeterHit& h2) const {
     // different sectors, simple distance check
     if (h1.getSector() != h2.getSector()) {
       return std::sqrt(pow2(h1.getPosition().x - h2.getPosition().x) + pow2(h1.getPosition().y - h2.getPosition().y) +
@@ -198,8 +198,8 @@ private:
       return (std::abs(h1.getLocal().x - h2.getLocal().x) <= localDistXY[0]) &&
              (std::abs(h1.getLocal().y - h2.getLocal().y) <= localDistXY[1]);
     } else if (ldiff <= m_neighbourLayersRange) {
-      return (std::abs(eicd::eta(h1.getPosition()) - eicd::eta(h2.getPosition())) <= layerDistEtaPhi[0]) &&
-             (std::abs(eicd::angleAzimuthal(h1.getPosition()) - eicd::angleAzimuthal(h2.getPosition())) <=
+      return (std::abs(edm4eic::eta(h1.getPosition()) - edm4eic::eta(h2.getPosition())) <= layerDistEtaPhi[0]) &&
+             (std::abs(edm4eic::angleAzimuthal(h1.getPosition()) - edm4eic::angleAzimuthal(h2.getPosition())) <=
               layerDistEtaPhi[1]);
     }
 
@@ -208,8 +208,8 @@ private:
   }
 
   // grouping function with Depth-First Search
-  void dfs_group(std::vector<std::pair<uint32_t, eicd::CalorimeterHit>>& group, int idx,
-                 const eicd::CalorimeterHitCollection& hits, std::vector<bool>& visits) const {
+  void dfs_group(std::vector<std::pair<uint32_t, edm4eic::CalorimeterHit>>& group, int idx,
+                 const edm4eic::CalorimeterHitCollection& hits, std::vector<bool>& visits) const {
     // not a qualified hit to participate in clustering, stop here
     if (hits[idx].getEnergy() < minClusterHitEdep) {
       visits[idx] = true;

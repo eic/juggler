@@ -22,10 +22,10 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 
 // Event Model related classes
-#include "eicd/TrackerHitCollection.h"
-#include "eicd/TrackParametersCollection.h"
-#include "eicd/TrajectoryCollection.h"
-#include "eicd/TrackSegmentCollection.h"
+#include "edm4eic/TrackerHitCollection.h"
+#include "edm4eic/TrackParametersCollection.h"
+#include "edm4eic/TrajectoryCollection.h"
+#include "edm4eic/TrackSegmentCollection.h"
 #include "JugTrack/IndexSourceLink.hpp"
 #include "JugTrack/Track.hpp"
 #include "JugTrack/Trajectories.hpp"
@@ -38,7 +38,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
-#include "eicd/vector_utils.h"
+#include "edm4eic/vector_utils.h"
 
 #include <cmath>
 
@@ -51,7 +51,7 @@ namespace Jug::Reco {
    class TrackProjector : public GaudiAlgorithm {
    private:
     DataHandle<TrajectoriesContainer>        m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
-    DataHandle<eicd::TrackSegmentCollection> m_outputTrackSegments{"outputTrackSegments", Gaudi::DataHandle::Writer, this};
+    DataHandle<edm4eic::TrackSegmentCollection> m_outputTrackSegments{"outputTrackSegments", Gaudi::DataHandle::Writer, this};
 
     Gaudi::Property<unsigned int> m_firstInVolumeID{this, "firstInVolumeID", 0};
     Gaudi::Property<std::string> m_firstInVolumeName{this, "firstInVolumeName", ""};
@@ -114,7 +114,7 @@ namespace Jug::Reco {
           debug() << "n state in trajectory " << m_nStates << endmsg;
         }
 
-        eicd::MutableTrackSegment track_segment;
+        edm4eic::MutableTrackSegment track_segment;
 
         // visit the track points
         mj.visitBackwards(trackTip, [&](auto&& trackstate) {
@@ -137,29 +137,29 @@ namespace Jug::Reco {
             {0, 0, 0}
           );
           // global position
-          const decltype(eicd::TrackPoint::position) position {
+          const decltype(edm4eic::TrackPoint::position) position {
             static_cast<float>(global.x()),
             static_cast<float>(global.y()),
             static_cast<float>(global.z())
           };
 
           // local position
-          const decltype(eicd::TrackParametersData::loc) loc {
+          const decltype(edm4eic::TrackParametersData::loc) loc {
             static_cast<float>(parameter[Acts::eBoundLoc0]),
             static_cast<float>(parameter[Acts::eBoundLoc1])
           };
-          const decltype(eicd::TrackParametersData::locError) locError {
+          const decltype(edm4eic::TrackParametersData::locError) locError {
             static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
             static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)),
             static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc1))
           };
-          const decltype(eicd::TrackPoint::positionError) positionError{0, 0, 0};
-          const decltype(eicd::TrackPoint::momentum) momentum = eicd::sphericalToVector(
+          const decltype(edm4eic::TrackPoint::positionError) positionError{0, 0, 0};
+          const decltype(edm4eic::TrackPoint::momentum) momentum = edm4eic::sphericalToVector(
             static_cast<float>(1.0 / std::abs(parameter[Acts::eBoundQOverP])),
             static_cast<float>(parameter[Acts::eBoundTheta]),
             static_cast<float>(parameter[Acts::eBoundPhi])
           );
-          const decltype(eicd::TrackPoint::momentumError) momentumError {
+          const decltype(edm4eic::TrackPoint::momentumError) momentumError {
             static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundTheta)),
             static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundPhi)),
             static_cast<float>(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)),
@@ -171,7 +171,7 @@ namespace Jug::Reco {
           const float timeError{sqrt(static_cast<float>(covariance(Acts::eBoundTime, Acts::eBoundTime)))};
           const float theta(parameter[Acts::eBoundTheta]);
           const float phi(parameter[Acts::eBoundPhi]);
-          const decltype(eicd::TrackPoint::directionError) directionError {
+          const decltype(edm4eic::TrackPoint::directionError) directionError {
             static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundTheta)),
             static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundPhi)),
             static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundPhi))

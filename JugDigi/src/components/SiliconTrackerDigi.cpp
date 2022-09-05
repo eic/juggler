@@ -16,8 +16,8 @@
 // edm4hep's tracker hit is the input collectiopn
 #include "edm4hep/MCParticle.h"
 #include "edm4hep/SimTrackerHitCollection.h"
-// eicd's RawTrackerHit is the output
-#include "eicd/RawTrackerHitCollection.h"
+// edm4eic's RawTrackerHit is the output
+#include "edm4eic/RawTrackerHitCollection.h"
 
 namespace Jug::Digi {
 
@@ -32,7 +32,7 @@ private:
   Rndm::Numbers m_gaussDist;
   DataHandle<edm4hep::SimTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                     this};
-  DataHandle<eicd::RawTrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+  DataHandle<edm4eic::RawTrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                   this};
 
 public:
@@ -57,7 +57,7 @@ public:
     const auto* const simhits = m_inputHitCollection.get();
     // Create output collections
     auto* rawhits = m_outputHitCollection.createAndPut();
-    // eicd::RawTrackerHitCollection* rawHitCollection = new eicd::RawTrackerHitCollection();
+    // edm4eic::RawTrackerHitCollection* rawHitCollection = new edm4eic::RawTrackerHitCollection();
     std::map<long long, int> cell_hit_map;
     for (const auto& ahit : *simhits) {
       if (msgLevel(MSG::DEBUG)) {
@@ -82,7 +82,7 @@ public:
       }
       if (cell_hit_map.count(ahit.getCellID()) == 0) {
         cell_hit_map[ahit.getCellID()] = rawhits->size();
-        eicd::RawTrackerHit rawhit(ahit.getCellID(),
+        edm4eic::RawTrackerHit rawhit(ahit.getCellID(),
                                    ahit.getMCParticle().getTime() * 1e6 + m_gaussDist() * 1e3, // ns->fs
                                    std::llround(ahit.getEDep() * 1e6));
         rawhits->push_back(rawhit);

@@ -27,8 +27,8 @@
 
 // Event Model related classes
 #include "FuzzyKClusters.h"
-#include "eicd/PMTHitCollection.h"
-#include "eicd/RingImageCollection.h"
+#include "edm4eic/PMTHitCollection.h"
+#include "edm4eic/RingImageCollection.h"
 
 using namespace Gaudi::Units;
 using namespace Eigen;
@@ -41,8 +41,8 @@ namespace Jug::Reco {
  */
 class PhotoRingClusters : public GaudiAlgorithm {
 private:
-  DataHandle<eicd::PMTHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::RingImageCollection> m_outputClusterCollection{"outputClusterCollection", Gaudi::DataHandle::Writer,
+  DataHandle<edm4eic::PMTHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::RingImageCollection> m_outputClusterCollection{"outputClusterCollection", Gaudi::DataHandle::Writer,
                                                                   this};
   // @TODO
   // A more realistic way is to have tracker info as the input to determine how much clusters should be found

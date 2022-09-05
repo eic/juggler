@@ -18,7 +18,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Definitions/Common.hpp"
 
-#include "eicd/TrackerHitCollection.h"
+#include "edm4eic/TrackerHitCollection.h"
 #include "edm4hep/MCParticleCollection.h"
 #include "Math/Vector3D.h"
 #include "Acts/Surfaces/PerigeeSurface.hpp"

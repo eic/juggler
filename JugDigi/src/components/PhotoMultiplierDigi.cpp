@@ -23,7 +23,7 @@
 #include "JugBase/DataHandle.h"
 
 // Event Model related classes
-#include "eicd/RawPMTHitCollection.h"
+#include "edm4eic/RawPMTHitCollection.h"
 #include "edm4hep/MCParticleCollection.h"
 #include "edm4hep/SimTrackerHitCollection.h"
 
@@ -41,7 +41,7 @@ class PhotoMultiplierDigi : public GaudiAlgorithm
 public:
     DataHandle<edm4hep::SimTrackerHitCollection>
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-    DataHandle<eicd::RawPMTHitCollection>
+    DataHandle<edm4eic::RawPMTHitCollection>
         m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
     Gaudi::Property<std::vector<std::pair<double, double>>>
         u_quantumEfficiency{this, "quantumEfficiency", {{2.6*eV, 0.3}, {7.0*eV, 0.3}}};
@@ -124,7 +124,7 @@ public:
         // build hit
         for (auto &it : hit_groups) {
             for (auto &data : it.second) {
-                eicd::RawPMTHit hit{
+                edm4eic::RawPMTHit hit{
                   it.first,
                   static_cast<uint32_t>(data.signal), 
                   static_cast<uint32_t>(data.time/(m_timeStep/ns))};

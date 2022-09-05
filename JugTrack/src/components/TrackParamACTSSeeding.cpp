@@ -31,7 +31,7 @@
 #include "JugTrack/Measurement.hpp"
 #include "JugTrack/Track.hpp"
 
-#include "eicd/TrackerHitCollection.h"
+#include "edm4eic/TrackerHitCollection.h"
 
 #include "Math/Vector3D.h"
 
@@ -63,7 +63,7 @@ namespace Jug::Reco {
         DataHandle<MeasurementContainer>
         m_inputMeasurements { "inputMeasurements",
             Gaudi::DataHandle::Reader, this};
-        DataHandle<eicd::TrackerHitCollection>
+        DataHandle<edm4eic::TrackerHitCollection>
         m_inputHitCollection { "inputHitCollection",
             Gaudi::DataHandle::Reader, this };
         DataHandle<TrackParametersContainer>
@@ -86,12 +86,12 @@ namespace Jug::Reco {
 
         /// Space point representation of eic::TrackerHitData suitable
         /// for ACTS track seeding.
-        class SpacePoint : eicd::TrackerHitData {
+        class SpacePoint : edm4eic::TrackerHitData {
         public:
             int32_t _measurementIndex;
             // Constructor to circumvent the fact that eic::TrackerHit
             // and associated classes are all non-polymorphic
-            SpacePoint(const eicd::TrackerHit h,
+            SpacePoint(const edm4eic::TrackerHit h,
                        const int32_t measurementIndex)
                 : _measurementIndex(measurementIndex)
             {
@@ -212,7 +212,7 @@ namespace Jug::Reco {
 
         void
         findSeed(SeedContainer &seeds,
-                 const eicd::TrackerHitCollection *hits,
+                 const edm4eic::TrackerHitCollection *hits,
                  const IndexSourceLinkContainer *sourceLinks,
                  const MeasurementContainer *measurements,
                  Acts::Seedfinder<SpacePoint>::State &state);
@@ -291,7 +291,7 @@ namespace Jug::Reco {
 
     void TrackParamACTSSeeding::
     findSeed(SeedContainer &seeds,
-             const eicd::TrackerHitCollection *hits,
+             const edm4eic::TrackerHitCollection *hits,
              const IndexSourceLinkContainer *sourceLinks,
              const MeasurementContainer *measurements,
              Acts::Seedfinder<SpacePoint>::State &state)
@@ -330,7 +330,7 @@ namespace Jug::Reco {
 #ifdef USE_LOCAL_COORD
                 spacePoint.push_back(
                     SpacePoint(
-                        eicd::TrackerHit(
+                        edm4eic::TrackerHit(
                             static_cast<uint64_t>(spacePoint.size()),
                             {v[0], v[1], v[2]},
                             {25.0e-6 / 3.0,
@@ -443,7 +443,7 @@ namespace Jug::Reco {
 
     StatusCode TrackParamACTSSeeding::execute()
     {
-        const eicd::TrackerHitCollection *hits =
+        const edm4eic::TrackerHitCollection *hits =
             m_inputHitCollection.get();
         const IndexSourceLinkContainer *sourceLinks =
             m_inputSourceLinks.get();

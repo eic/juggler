@@ -21,9 +21,9 @@ using ROOT::Math::PxPyPzEVector;
 
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"
-#include "eicd/MCRecoParticleAssociationCollection.h"
-#include "eicd/ReconstructedParticleCollection.h"
-#include "eicd/InclusiveKinematicsCollection.h"
+#include "edm4eic/MCRecoParticleAssociationCollection.h"
+#include "edm4eic/ReconstructedParticleCollection.h"
+#include "edm4eic/InclusiveKinematicsCollection.h"
 
 namespace Jug::Reco {
 
@@ -33,15 +33,15 @@ private:
     "inputMCParticles",
     Gaudi::DataHandle::Reader,
     this};
-  DataHandle<eicd::ReconstructedParticleCollection> m_inputParticleCollection{
+  DataHandle<edm4eic::ReconstructedParticleCollection> m_inputParticleCollection{
     "inputReconstructedParticles",
     Gaudi::DataHandle::Reader,
     this};
-  DataHandle<eicd::MCRecoParticleAssociationCollection> m_inputParticleAssociation{
+  DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_inputParticleAssociation{
     "inputParticleAssociations",
     Gaudi::DataHandle::Reader,
     this};
-  DataHandle<eicd::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{
+  DataHandle<edm4eic::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{
     "outputInclusiveKinematics",
     Gaudi::DataHandle::Writer,
     this};

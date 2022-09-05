@@ -21,8 +21,8 @@
 
 // Event Model related classes
 //#include "GaudiExamples/MyTrack.h"
-#include "eicd/RawTrackerHitCollection.h"
-#include "eicd/TrackerHitCollection.h"
+#include "edm4eic/RawTrackerHitCollection.h"
+#include "edm4eic/TrackerHitCollection.h"
 
 #include "DD4hep/DD4hepUnits.h"
 
@@ -46,9 +46,9 @@ namespace Jug::Reco {
   class TrackerHitReconstruction : public GaudiAlgorithm {
   private:
     Gaudi::Property<float> m_timeResolution{this, "timeResolution", 10}; // in ns
-    DataHandle<eicd::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+    DataHandle<edm4eic::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                    this};
-    DataHandle<eicd::TrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+    DataHandle<edm4eic::TrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                  this};
 
     /// Pointer to the geometry service
@@ -106,7 +106,7 @@ namespace Jug::Reco {
         //      - XYZ segmentation: xx -> sigma_x, yy-> sigma_y, zz -> sigma_z, tt -> 0
         //    This is properly in line with how we get the local coordinates for the hit
         //    in the TrackerSourceLinker.
-        eicd::TrackerHit hit{ahit.getCellID(), // Raw DD4hep cell ID
+        edm4eic::TrackerHit hit{ahit.getCellID(), // Raw DD4hep cell ID
                              {static_cast<float>(pos.x() / mm), static_cast<float>(pos.y() / mm),
                               static_cast<float>(pos.z() / mm)},                    // mm
                              {get_variance(dim[0] / mm), get_variance(dim[1] / mm), // variance (see note above)

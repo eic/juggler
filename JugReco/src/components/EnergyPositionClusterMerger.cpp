@@ -15,8 +15,8 @@
 #include "JugBase/DataHandle.h"
 
 // Event Model related classes
-#include "eicd/ClusterCollection.h"
-#include "eicd/vector_utils.h"
+#include "edm4eic/ClusterCollection.h"
+#include "edm4eic/vector_utils.h"
 
 using namespace Gaudi::Units;
 
@@ -37,10 +37,10 @@ namespace Jug::Reco {
 class EnergyPositionClusterMerger : public GaudiAlgorithm {
 private:
   // Input
-  DataHandle<eicd::ClusterCollection> m_energyClusters{"energyClusters", Gaudi::DataHandle::Reader, this};
-  DataHandle<eicd::ClusterCollection> m_positionClusters{"positionClusters", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::ClusterCollection> m_energyClusters{"energyClusters", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::ClusterCollection> m_positionClusters{"positionClusters", Gaudi::DataHandle::Reader, this};
   // Output
-  DataHandle<eicd::ClusterCollection> m_outputClusters{"outputClusters", Gaudi::DataHandle::Writer, this};
+  DataHandle<edm4eic::ClusterCollection> m_outputClusters{"outputClusters", Gaudi::DataHandle::Writer, this};
   // Negative values mean the tolerance check is disabled
   Gaudi::Property<double> m_zToleranceUnits{this, "zTolerance", -1 * cm};
   Gaudi::Property<double> m_phiToleranceUnits{this, "phiTolerance", 20 * degree};
@@ -83,7 +83,7 @@ public:
         const auto& ec = e_clus[ie];
         // 1. stop if not within tolerance
         //    (make sure to handle rollover of phi properly)
-        double dphi = eicd::angleAzimuthal(pc.getPosition()) - eicd::angleAzimuthal(ec.getPosition());
+        double dphi = edm4eic::angleAzimuthal(pc.getPosition()) - edm4eic::angleAzimuthal(ec.getPosition());
         if (std::abs(dphi) > M_PI) {
           dphi = std::abs(dphi) - M_PI;
         }
@@ -120,13 +120,13 @@ public:
         if (msgLevel(MSG::DEBUG)) {
           debug() << fmt::format("Matched position cluster {} with energy cluster {}\n", pc.id(), ec.id()) << endmsg;
           debug() << fmt::format("  - Position cluster: (E: {}, phi: {}, z: {})", pc.getEnergy(),
-                                 eicd::angleAzimuthal(pc.getPosition()), pc.getPosition().z)
+                                 edm4eic::angleAzimuthal(pc.getPosition()), pc.getPosition().z)
                   << endmsg;
           debug() << fmt::format("  - Energy cluster: (E: {}, phi: {}, z: {})", ec.getEnergy(),
-                                 eicd::angleAzimuthal(ec.getPosition()), ec.getPosition().z)
+                                 edm4eic::angleAzimuthal(ec.getPosition()), ec.getPosition().z)
                   << endmsg;
           debug() << fmt::format("  ---> Merged cluster: (E: {}, phi: {}, z: {})", new_clus.getEnergy(),
-                                 eicd::angleAzimuthal(new_clus.getPosition()), new_clus.getPosition().z)
+                                 edm4eic::angleAzimuthal(new_clus.getPosition()), new_clus.getPosition().z)
                   << endmsg;
         }
       }

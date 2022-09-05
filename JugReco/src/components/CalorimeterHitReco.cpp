@@ -26,8 +26,8 @@
 #include "JugBase/IGeoSvc.h"
 
 // Event Model related classes
-#include "eicd/CalorimeterHitCollection.h"
-#include "eicd/RawCalorimeterHitCollection.h"
+#include "edm4eic/CalorimeterHitCollection.h"
+#include "edm4eic/RawCalorimeterHitCollection.h"
 
 using namespace Gaudi::Units;
 
@@ -62,9 +62,9 @@ private:
   double thresholdADC{0};
   double stepTDC{0};
 
-  DataHandle<eicd::RawCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+  DataHandle<edm4eic::RawCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                     this};
-  DataHandle<eicd::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+  DataHandle<edm4eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                   this};
 
   // geometry service to get ids, ignored if no names provided
@@ -208,13 +208,13 @@ public:
         }
 
         // create const vectors for passing to hit initializer list
-        const decltype(eicd::CalorimeterHitData::position) position(
+        const decltype(edm4eic::CalorimeterHitData::position) position(
           gpos.x() / m_lUnit, gpos.y() / m_lUnit, gpos.z() / m_lUnit
         );
-        const decltype(eicd::CalorimeterHitData::dimension) dimension(
+        const decltype(edm4eic::CalorimeterHitData::dimension) dimension(
           cdim[0] / m_lUnit, cdim[1] / m_lUnit, cdim[2] / m_lUnit
         );
-        const decltype(eicd::CalorimeterHitData::local) local_position(
+        const decltype(edm4eic::CalorimeterHitData::local) local_position(
           pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit
         );
 

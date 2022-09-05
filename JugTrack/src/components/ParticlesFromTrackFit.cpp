@@ -22,16 +22,16 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 
 // Event Model related classes
-#include "eicd/ReconstructedParticleCollection.h"
-#include "eicd/TrackerHitCollection.h"
-#include "eicd/TrackParametersCollection.h"
+#include "edm4eic/ReconstructedParticleCollection.h"
+#include "edm4eic/TrackerHitCollection.h"
+#include "edm4eic/TrackParametersCollection.h"
 #include "JugTrack/IndexSourceLink.hpp"
 #include "JugTrack/Track.hpp"
 #include "JugTrack/Trajectories.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
 
-#include "eicd/vector_utils.h"
+#include "edm4eic/vector_utils.h"
 
 #include <cmath>
 
@@ -44,8 +44,8 @@ namespace Jug::Reco {
    class ParticlesFromTrackFit : public GaudiAlgorithm {
    private:
     DataHandle<TrajectoriesContainer>     m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
-    DataHandle<eicd::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer, this};
-    DataHandle<eicd::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters", Gaudi::DataHandle::Writer, this};
+    DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer, this};
+    DataHandle<edm4eic::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters", Gaudi::DataHandle::Writer, this};
 
    public:
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
@@ -116,24 +116,24 @@ namespace Jug::Reco {
               debug() << " chi2 = " << trajState.chi2Sum << endmsg;
             }
 
-            const decltype(eicd::TrackParametersData::loc) loc {
+            const decltype(edm4eic::TrackParametersData::loc) loc {
               static_cast<float>(parameter[Acts::eBoundLoc0]),
               static_cast<float>(parameter[Acts::eBoundLoc1])
             };
-            const decltype(eicd::TrackParametersData::momentumError) momentumError {
+            const decltype(edm4eic::TrackParametersData::momentumError) momentumError {
               static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundTheta)),
               static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundPhi)),
               static_cast<float>(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)),
               static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundPhi)),
               static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundQOverP)),
               static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundQOverP))};
-            const decltype(eicd::TrackParametersData::locError) locError {
+            const decltype(edm4eic::TrackParametersData::locError) locError {
               static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
               static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)),
               static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc1))};
             const float timeError{sqrt(static_cast<float>(covariance(Acts::eBoundTime, Acts::eBoundTime)))};
 
-            eicd::TrackParameters pars{
+            edm4eic::TrackParameters pars{
               0, // type: track head --> 0
               loc,
               locError,
@@ -173,7 +173,7 @@ namespace Jug::Reco {
 
             auto rec_part = rec_parts->create();
             rec_part.setMomentum(
-              eicd::sphericalToVector(
+              edm4eic::sphericalToVector(
                 1.0 / std::abs(params[Acts::eBoundQOverP]),
                 params[Acts::eBoundTheta],
                 params[Acts::eBoundPhi])
