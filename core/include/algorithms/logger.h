@@ -10,6 +10,7 @@
 #include <string>
 
 #include <algorithms/service.h>
+#include <fmt/format.h>
 
 // Simple thread-safe logger with optional overrides by the calling framework
 namespace algorithms {
@@ -48,8 +49,8 @@ private:
   LogAction m_action = [](const LogLevel l, std::string_view caller, std::string_view msg) {
     static std::mutex m;
     std::lock_guard<std::mutex> lock(m);
-    // fmt::print("%s [%s] %s\n", logLevelName(l), caller, msg);
-    std::cout << logLevelName(l) << " [" << caller << "] " << msg << std::endl;
+    fmt::print("{} [{}] {}\n", logLevelName(l), caller, msg);
+    //std::cout << logLevelName(l) << " [" << caller << "] " << msg << std::endl;
   };
   ALGORITHMS_DEFINE_SERVICE(LogSvc)
 };

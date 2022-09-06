@@ -42,7 +42,7 @@ public:
     std::string_view name() const { return m_name; }
 
   protected:
-    std::string_view m_name;
+    const std::string m_name;
     bool m_has_value = false;
   };
 
