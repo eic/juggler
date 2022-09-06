@@ -12,7 +12,7 @@ variables:
   ## Other versions to be included in the container. In general these should be "master"
   ## to keep the container functionally identical to jug_xl:nightly
   JUGGLER_NPDET_VERSION: "master"
-  JUGGLER_EDM4EIC_VERSION: "master"
+  JUGGLER_EDM4EIC_VERSION: "main"
   JUGGLER_EDM4EIC_REPOSITORYURL: "https://github.com/eic/EDM4eic.git"
   JUGGLER_IRT_VERSION: "main"
 
@@ -99,7 +99,7 @@ analysis:clang-tidy:
     - juggler:local
   script:
     - |
-      run-clang-tidy-13 -p build -j20 -export-fixes clang_tidy_fixes.yml -extra-arg='-std=c++17'
+      run-clang-tidy-14 -p build -j20 -export-fixes clang_tidy_fixes.yml -extra-arg='-std=c++17'
   artifacts:
     expire_in: 1 week
     paths:
