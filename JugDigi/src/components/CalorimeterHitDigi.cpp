@@ -173,7 +173,7 @@ namespace Jug::Digi {
         const double eDep    = ahit.getEnergy();
 
         // apply additional calorimeter noise to corrected energy deposit
-        const double eResRel = (eDep > 1e-6)
+        const double eResRel = (eDep > 5e-3)
                                    ? m_normDist() * std::sqrt(std::pow(eRes[0] / std::sqrt(eDep), 2) +
                                                               std::pow(eRes[1], 2) + std::pow(eRes[2] / (eDep), 2))
                                    : 0;
