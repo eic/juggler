@@ -63,11 +63,11 @@ public:
   }
   // constructor for the service base class registers the service, except
   // for the ServiceSvc which is its own thing (avoid circularity)
-  Service(std::string_view name) m_name{name} { ServiceSvc::instance().add(name, this); }
+  Service(std::string_view name) : m_name{name} { ServiceSvc::instance().add(name, this); }
   std::string_view name() const { return m_name; }
 
 private:
-  const std::string& m_name;
+  const std::string m_name;
 };
 
 } // namespace algorithms

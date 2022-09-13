@@ -143,9 +143,9 @@ template <class T, class U>
 bool operator==(const U& rhs, const algorithms::Configurable::Property<T>& p) {
   return p == rhs;
 }
+#endif
 template <class T>
 std::ostream& operator<<(std::ostream& os, const algorithms::Configurable::Property<T>& p) {
   return os << p.value();
 }
-#endif
 // others needed??? TODO

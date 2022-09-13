@@ -9,18 +9,21 @@
 #include <sstream>
 #include <string>
 
+#include <algorithms/error.h>
 #include <algorithms/service.h>
 #include <fmt/format.h>
+
+#define endmsg std::flush
 
 // Simple thread-safe logger with optional overrides by the calling framework
 namespace algorithms {
 
 enum class LogLevel : unsigned { kJunk = 0, kDebug = 1, kInfo = 2, kWarning = 3, kError = 4 };
 constexpr std::string_view logLevelName(LogLevel level) {
-  // Compiler will warn if not all of the enum is covered
+  // Compiler can warn if not all of the enum is covered
   switch (level) {
-  case LogLevel::kJunk:
-    return "JUNK";
+  //case LogLevel::kJunk:
+  //  return "JUNK";
   case LogLevel::kDebug:
     return "DEBUG";
   case LogLevel::kInfo:
@@ -30,6 +33,8 @@ constexpr std::string_view logLevelName(LogLevel level) {
   case LogLevel::kError:
     return "ERROR";
   }
+  // Default return to make gcc happy, will never happen
+  return "UNKNOWN";
 }
 
 // Note: the log action is responsible for dealing with concurrent calls
@@ -50,7 +55,6 @@ private:
     static std::mutex m;
     std::lock_guard<std::mutex> lock(m);
     fmt::print("{} [{}] {}\n", logLevelName(l), caller, msg);
-    //std::cout << logLevelName(l) << " [" << caller << "] " << msg << std::endl;
   };
   ALGORITHMS_DEFINE_SERVICE(LogSvc)
 };
@@ -151,6 +155,15 @@ protected:
   detail::LoggerStream& debug() const { return m_debug; }
   detail::LoggerStream& junk() const { return m_junk; }
 
+  // LoggerMixin also provides nice error raising
+  // ErrorTypes needs to derive from Error, and needs to have a constructor that takes two
+  // strings --> TODO add C++20 Concept version
+  template <class ErrorType = Error>
+  void raise(std::string_view msg, std::string_view type = "algorithms::Error") const {
+    error() << msg << endmsg;
+    throw ErrorType(msg, type);
+  }
+
 private:
   const std::string m_caller;
   LogLevel m_level;
@@ -163,4 +176,4 @@ private:
 
 } // namespace algorithms
 
-#define endmsg std::flush
+//#define endmsg std::flush
