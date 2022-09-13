@@ -5,7 +5,16 @@
 #include <string>
 #include <vector>
 
+#include <fmt/core.h>
+
+#include <algorithms/error.h>
+
 namespace algorithms {
+
+class PropertyError : public Error {
+public:
+  PropertyError(std::string_view msg) : Error{msg, "algorithms::PropertyError"} {}
+};
 
 // Configuration/property handling
 class Configurable {
@@ -26,7 +35,9 @@ public:
 
 private:
   void registerProperty(PropertyBase& prop) {
-    // TODO ensure we have unique property names
+    if (m_props.count(prop.name())) {
+      throw PropertyError(fmt::format("Duplicate property name: {}", prop.name()));
+    }
     m_props.emplace(prop.name(), prop);
   }
 
@@ -53,9 +64,11 @@ public:
     using ValueType = T;
 
     Property(Configurable* owner, std::string_view name) : PropertyBase{name} {
-      // TODO what if we have no owner? warn? error?
       if (owner) {
         owner->registerProperty(*this);
+      } else {
+        throw PropertyError(
+            fmt::format("Attempting to create Property '{}' without valid owner", name));
       }
     }
     Property(Configurable* owner, std::string_view name, const ValueType& v)
@@ -83,7 +96,7 @@ public:
     const ValueType& value() const { return m_value; }
 
     // automatically cast to T
-    operator T() const {return m_value;}
+    operator T() const { return m_value; }
 
     // act as if this is a const T
     template <typename U> bool operator==(const U& rhs) const { return m_value == rhs; }
