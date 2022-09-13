@@ -73,8 +73,12 @@ add_definitions("-DActs_VERSION_MAJOR=${Acts_VERSION_MAJOR}")
 add_definitions("-DActs_VERSION_MINOR=${Acts_VERSION_MINOR}")
 add_definitions("-DActs_VERSION_PATCH=${Acts_VERSION_PATCH}")
 
+## algorithms dependency
+add_subdirectory(external/algorithms)
+
 find_package(Gaudi)
 add_subdirectory(JugBase)
+add_subdirectory(JugAlgo)
 add_subdirectory(JugDigi)
 add_subdirectory(JugFast)
 add_subdirectory(JugPID)
@@ -82,7 +86,6 @@ add_subdirectory(JugReco)
 add_subdirectory(JugTrack)
 gaudi_install(CMAKE)
 
-add_subdirectory(external/algorithms)
 
 # create and install Juggler.xenv file as it still has a use-case
 # TODO: update workflow to not need xenv files anymore

@@ -13,7 +13,9 @@
 #include <algorithms/service.h>
 #include <fmt/format.h>
 
+#ifndef endmsg
 #define endmsg std::flush
+#endif
 
 // Simple thread-safe logger with optional overrides by the calling framework
 namespace algorithms {
