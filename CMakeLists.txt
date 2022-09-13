@@ -33,7 +33,7 @@ endif()
 # Set default build type
 set(default_build_type "Release")
 if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
-  set(default_build_type "Debug")
+  set(default_build_type "RelWithDebInfo")
 endif()
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
