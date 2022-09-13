@@ -34,8 +34,7 @@ public:
   using InputNames  = std::array<const std::string, kInputLength>;
   using OutputNames = std::array<const std::string, kOutputLength>;
 
-  Algorithm(std::string_view name, const std::array<const std::string, kInputLength>& input_names,
-            const std::array<const std::string, kInputLength>& output_names)
+  Algorithm(std::string_view name, const InputNames& input_names, const OutputNames& output_names)
       : LoggerMixin(name), m_input_names{input_names}, m_output_names{output_names} {}
 
   void init();
