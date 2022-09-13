@@ -239,10 +239,10 @@ namespace Jug::Digi {
         }
 
         // safety check
-        const double eResRel = (eDep > m_threshold)
-            ? m_normDist() * eRes[0] / std::sqrt(eDep) +
+        const double eResRel = (edep > m_threshold)
+            ? m_normDist() * eRes[0] / std::sqrt(edep) +
               m_normDist() * eRes[1] +
-              m_normDist() * eRes[2] / eDep
+              m_normDist() * eRes[2] / edep
             : 0;
 
         double    ped     = m_pedMeanADC + m_normDist() * m_pedSigmaADC;
