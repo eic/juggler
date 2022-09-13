@@ -22,8 +22,8 @@ enum class LogLevel : unsigned { kJunk = 0, kDebug = 1, kInfo = 2, kWarning = 3,
 constexpr std::string_view logLevelName(LogLevel level) {
   // Compiler can warn if not all of the enum is covered
   switch (level) {
-  //case LogLevel::kJunk:
-  //  return "JUNK";
+  // case LogLevel::kJunk:
+  //   return "JUNK";
   case LogLevel::kDebug:
     return "DEBUG";
   case LogLevel::kInfo:
@@ -158,10 +158,9 @@ protected:
   // LoggerMixin also provides nice error raising
   // ErrorTypes needs to derive from Error, and needs to have a constructor that takes two
   // strings --> TODO add C++20 Concept version
-  template <class ErrorType = Error>
-  void raise(std::string_view msg, std::string_view type = "algorithms::Error") const {
+  template <class ErrorType = Error> void raise(std::string_view msg) const {
     error() << msg << endmsg;
-    throw ErrorType(msg, type);
+    throw ErrorType(msg);
   }
 
 private:
