@@ -29,7 +29,7 @@ struct upcast_type<String, std::enable_if_t<std::is_convertible_v<String, std::s
 
 template <class T> using upcast_type_t = typename upcast_type<T>::type;
 
-template <class T> upcast_type_t<T> upcast(const T& value) { return value; }
+template <class T> upcast_type_t<T> upcast(T&& value) { return value; }
 
 } // namespace algorithms::detail
 
