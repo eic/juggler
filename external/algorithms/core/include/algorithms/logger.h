@@ -13,10 +13,6 @@
 #include <algorithms/service.h>
 #include <fmt/format.h>
 
-#ifndef endmsg
-#define endmsg std::flush
-#endif
-
 // Simple thread-safe logger with optional overrides by the calling framework
 namespace algorithms {
 
@@ -190,6 +186,12 @@ protected:
   template <class ErrorType = Error> void raise(std::string_view msg) const {
     error() << msg << endmsg;
     throw ErrorType(msg);
+  }
+
+  // Endmsg (flush) support to initiate a sync() action
+  static std::ostream& endmsg(std::ostream& os) {
+    os.flush();
+    return os;
   }
 
 private:
