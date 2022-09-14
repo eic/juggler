@@ -9,13 +9,13 @@
 //  - singleton --> no public constructor, no copy constructor, no assigmnent operator
 //  - constructor should be protected so we can actually inherit from this class if needed
 //    (mostly needed for the service base class)
-#define ALGORITHMS_DEFINE_SERVICE(className)                                                       \
-protected:                                                                                         \
-  className() : Service<className>(#className) {}                                                  \
-                                                                                                   \
-public:                                                                                            \
-  friend class Service<className>;                                                                 \
-  className(const className&)      = delete;                                                       \
+#define ALGORITHMS_DEFINE_SERVICE(className)                                                                           \
+protected:                                                                                                             \
+  className() : Service<className>(#className) {}                                                                      \
+                                                                                                                       \
+public:                                                                                                                \
+  friend class Service<className>;                                                                                     \
+  className(const className&) = delete;                                                                                \
   void operator=(const className&) = delete;
 
 namespace algorithms {
@@ -43,7 +43,7 @@ private:
   ServiceSvc() = default;
 
 public:
-  ServiceSvc(const ServiceSvc&)     = delete;
+  ServiceSvc(const ServiceSvc&) = delete;
   void operator=(const ServiceSvc&) = delete;
 
 private:

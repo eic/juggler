@@ -30,11 +30,15 @@ StatusCode AlgoServiceSvc::initialize() {
   auto& serviceSvc = algorithms::ServiceSvc::instance();
   info() << "ServiceSvc declared " << serviceSvc.services().size() << " services" << endmsg;
   // loop over all services and handle each properly
+  // Note: this code is kind of dangerous, as getting the types wrong will lead to
+  // undefined runtime behavior.
   for (auto [name, svc] : serviceSvc.services()) {
     if (name == "LogSvc") {
       // TODO register action here
-      info() << "LogSvc requested" << static_cast<unsigned>(static_cast<algorithms::LogSvc*>(svc)->defaultLevel())
-             << endmsg;
+      auto* logger = static_cast<algorithms::LogSvc*>(svc);
+      if (logger) {
+        info() << "LogSvc requested " << static_cast<unsigned>(logger->defaultLevel()) << endmsg;
+      }
     }
   }
 
