@@ -20,12 +20,20 @@
 // Simple thread-safe logger with optional overrides by the calling framework
 namespace algorithms {
 
-enum class LogLevel : unsigned { kJunk = 0, kDebug = 1, kInfo = 2, kWarning = 3, kError = 4 };
+enum class LogLevel : unsigned {
+  kTrace    = 0,
+  kDebug    = 1,
+  kInfo     = 2,
+  kWarning  = 3,
+  kError    = 4,
+  kCritical = 5,
+  kOff      = 6
+};
 constexpr std::string_view logLevelName(LogLevel level) {
   // Compiler can warn if not all of the enum is covered
   switch (level) {
-  case LogLevel::kJunk:
-    return "JUNK";
+  case LogLevel::kTrace:
+    return "TRACE";
   case LogLevel::kDebug:
     return "DEBUG";
   case LogLevel::kInfo:
@@ -34,6 +42,10 @@ constexpr std::string_view logLevelName(LogLevel level) {
     return "WARNING";
   case LogLevel::kError:
     return "ERROR";
+  case LogLevel::kCritical:
+    return "CRITICAL";
+  case LogLevel::kOff:
+    return "OFF";
   }
   // Default return to make gcc happy, will never happen
   return "UNKNOWN";
@@ -142,20 +154,22 @@ public:
   // Not done through Properties, as that is the responsible of the base Algo or Service
   void level(const LogLevel threshold) {
     m_level = threshold;
+    m_critical.threshold(m_level);
     m_error.threshold(m_level);
     m_warning.threshold(m_level);
     m_info.threshold(m_level);
     m_debug.threshold(m_level);
-    m_junk.threshold(m_level);
+    m_trace.threshold(m_level);
   }
   LogLevel level() const { return m_level; }
 
 protected:
+  detail::LoggerStream& critical() const { return m_critical; }
   detail::LoggerStream& error() const { return m_error; }
   detail::LoggerStream& warning() const { return m_warning; }
   detail::LoggerStream& info() const { return m_info; }
   detail::LoggerStream& debug() const { return m_debug; }
-  detail::LoggerStream& junk() const { return m_junk; }
+  detail::LoggerStream& trace() const { return m_trace; }
 
   // LoggerMixin also provides nice error raising
   // ErrorTypes needs to derive from Error, and needs to have a constructor that takes two
@@ -168,11 +182,12 @@ protected:
 private:
   const std::string m_caller;
   LogLevel m_level;
+  mutable detail::LoggerStream m_critical{m_caller, LogLevel::kCritical};
   mutable detail::LoggerStream m_error{m_caller, LogLevel::kError};
   mutable detail::LoggerStream m_warning{m_caller, LogLevel::kWarning};
   mutable detail::LoggerStream m_info{m_caller, LogLevel::kInfo};
   mutable detail::LoggerStream m_debug{m_caller, LogLevel::kDebug};
-  mutable detail::LoggerStream m_junk{m_caller, LogLevel::kJunk};
+  mutable detail::LoggerStream m_trace{m_caller, LogLevel::kTrace};
 };
 
 } // namespace algorithms

@@ -13,8 +13,8 @@ public:
     info() << "1" << endmsg;
     std::cout << "next debug message should not display" << std::endl;
     debug() << "2" << endmsg;
-    level(LogLevel::kJunk);
-    std::cout << "Changed the log level to junk, so the following message should display"
+    level(LogLevel::kTrace);
+    std::cout << "Changed the log level to trace, so the following message should display"
               << std::endl;
     debug() << "3" << endmsg;
     std::cout << "error message should display" << std::endl;
