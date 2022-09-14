@@ -57,4 +57,6 @@ find_package(EDM4HEP 0.4.1 REQUIRED)
 find_package(DD4hep COMPONENTS DDRec REQUIRED)
 find_package(fmt REQUIRED)
 
+include(GNUInstallDirs)
+
 add_subdirectory(core)
