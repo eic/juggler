@@ -57,10 +57,10 @@ int dummy() {
                "as it does not have a default value\n";
   propTest tp;
   tp.print();
-  tp.setProperty<int>("integer", 10);
+  tp.setProperty("integer", 10);
   tp.print();
   try {
-    tp.setProperty<int>("foo", 1.);
+    tp.setProperty("foo", 1.);
     std::cout << "Should not have been reached, as foo does not exist" << std::endl;
     return 1;
   } catch (...) {
@@ -69,8 +69,8 @@ int dummy() {
   std::cout
       << "Let's now also set a value for the third and fourth property so it gets printed as well"
       << std::endl;
-  tp.setProperty<std::string>("bar", "bar_value");
-  tp.setProperty<double>("double", 3.1415f);
+  tp.setProperty("bar", "bar_value");
+  tp.setProperty("double", 3.1415f);
   tp.print();
 
   Algorithm<Input<int, double>, Output<double, std::vector<double>>> a{

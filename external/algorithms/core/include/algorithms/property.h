@@ -7,6 +7,7 @@
 
 #include <fmt/core.h>
 
+#include <algorithms/detail/upcast.h>
 #include <algorithms/error.h>
 
 namespace algorithms {
@@ -22,11 +23,11 @@ public:
   class PropertyBase;
   using PropertyMap = std::map<std::string_view, PropertyBase&>;
 
-  template <typename T, typename U> void setProperty(std::string_view name, U&& value) {
-    m_props.at(name).set(T(std::forward<U>(value)));
+  template <typename T> void setProperty(std::string_view name, T&& value) {
+    m_props.at(name).set(detail::UpcastType_t<T>(std::forward<T&&>(value)));
   }
   template <typename T> T getProperty(std::string_view name) const {
-    return std::any_cast<T>(m_props.at(name).get());
+    return static_cast<T>(std::any_cast<detail::UpcastType_t<T>>(m_props.at(name).get()));
   }
   const PropertyMap& getProperties() const { return m_props; }
   bool hasProperty(std::string_view name) const {
@@ -73,17 +74,17 @@ public:
     }
     Property(Configurable* owner, std::string_view name, const ValueType& v)
         : Property(owner, name) {
-      set(v);
+      set(detail::UpcastType_t<T>(v));
     }
 
-    Property()                      = delete;
-    Property(const Property&)       = delete;
+    Property()                = delete;
+    Property(const Property&) = delete;
     void operator=(const Property&) = delete;
 
     // Only settable by explicitly calling the ::set() member functio n
     // as we want the Property to mostly act as if it is constant
     virtual void set(std::any v) {
-      m_value     = std::any_cast<T>(v);
+      m_value     = static_cast<T>(std::any_cast<detail::UpcastType_t<T>>(v));
       m_has_value = true;
     }
     // virtual getter for use from PropertyBase - use ::value() instead for a quick
