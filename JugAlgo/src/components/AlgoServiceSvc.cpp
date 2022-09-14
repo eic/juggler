@@ -18,6 +18,8 @@ public:
   virtual StatusCode finalize() final { return StatusCode::SUCCESS; }
 };
 
+DECLARE_COMPONENT(AlgoServiceSvc)
+
 // Implementation
 
 StatusCode AlgoServiceSvc::initialize() {
@@ -34,11 +36,10 @@ StatusCode AlgoServiceSvc::initialize() {
   // undefined runtime behavior.
   for (auto [name, svc] : serviceSvc.services()) {
     if (name == "LogSvc") {
-      // TODO register action here
       auto* logger = static_cast<algorithms::LogSvc*>(svc);
-      if (logger) {
-        info() << "LogSvc requested " << static_cast<unsigned>(logger->defaultLevel()) << endmsg;
-      }
+      const algorithms::LogLevel level{static_cast<algorithms::LogLevel>(msgLevel() > 0 ? msgLevel() - 1 : 0)};
+      info() << "Setting up algorithms::LogSvc with default level " << algorithms::logLevelName(level) << endmsg;
+      logger->defaultLevel(level);
     }
   }
 
