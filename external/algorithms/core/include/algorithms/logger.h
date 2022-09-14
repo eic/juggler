@@ -151,7 +151,9 @@ public:
   }
 
 public:
-  // Not done through Properties, as that is the responsible of the base Algo or Service
+  // Not done through Properties, as that would require entanglement with the
+  // PropertyMixin which is not appropriate here. It's the FW responsibility to set this
+  // on the algorithm level if desired, before or during the init() stage.
   void level(const LogLevel threshold) {
     m_level = threshold;
     m_critical.threshold(m_level);
