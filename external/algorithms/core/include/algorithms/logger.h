@@ -27,7 +27,6 @@ enum class LogLevel : unsigned {
   kWarning  = 3,
   kError    = 4,
   kCritical = 5,
-  kOff      = 6
 };
 constexpr std::string_view logLevelName(LogLevel level) {
   // Compiler can warn if not all of the enum is covered
@@ -44,8 +43,6 @@ constexpr std::string_view logLevelName(LogLevel level) {
     return "ERROR";
   case LogLevel::kCritical:
     return "CRITICAL";
-  case LogLevel::kOff:
-    return "OFF";
   }
   // Default return to make gcc happy, will never happen
   return "UNKNOWN";
@@ -78,7 +75,7 @@ namespace detail {
   class LoggerBuffer : public std::stringbuf {
   public:
     LoggerBuffer(const LogLevel l, std::string_view caller)
-        : m_mylevel{l}, m_caller{caller}, m_logger{algorithms::LogSvc::instance()} {}
+        : m_mylevel{l}, m_caller{caller}, m_logger{LogSvc::instance()} {}
     virtual int sync() {
       // report should deal with concurrency (the minimal version does)
       m_logger.report(m_mylevel, m_caller, this->str());
@@ -146,7 +143,7 @@ namespace detail {
 class LoggerMixin {
 public:
   LoggerMixin(std::string_view caller, const LogLevel threshold = LogSvc::instance().defaultLevel())
-      : m_caller{caller} {
+      : m_caller{caller}, m_logger{LogSvc::instance()} {
     level(threshold);
   }
 
@@ -173,6 +170,20 @@ protected:
   detail::LoggerStream& debug() const { return m_debug; }
   detail::LoggerStream& trace() const { return m_trace; }
 
+  void critical(std::string_view msg) { report<LogLevel::kCritical>(msg); }
+  void error(std::string_view msg) { report<LogLevel::kError>(msg); }
+  void warning(std::string_view msg) { report<LogLevel::kWarning>(msg); }
+  void info(std::string_view msg) { report<LogLevel::kInfo>(msg); }
+  void debug(std::string_view msg) { report<LogLevel::kDebug>(msg); }
+  void trace(std::string_view msg) { report<LogLevel::kTrace>(msg); }
+
+  bool aboveCriticalThreshold() const { return m_level >= LogLevel::kCritical; }
+  bool aboveErrorThreshold() const { return m_level >= LogLevel::kError; }
+  bool aboveWarningThreshold() const { return m_level >= LogLevel::kWarning; }
+  bool aboveInfoThreshold() const { return m_level >= LogLevel::kInfo; }
+  bool aboveDebugThreshold() const { return m_level >= LogLevel::kDebug; }
+  bool aboveTraceThreshold() const { return m_level >= LogLevel::kTrace; }
+
   // LoggerMixin also provides nice error raising
   // ErrorTypes needs to derive from Error, and needs to have a constructor that takes two
   // strings --> TODO add C++20 Concept version
@@ -182,6 +193,12 @@ protected:
   }
 
 private:
+  template <LogLevel l> void report(std::string_view msg) {
+    if (l >= m_level) {
+      m_logger.report(l, m_caller, msg);
+    }
+  }
+
   const std::string m_caller;
   LogLevel m_level;
   mutable detail::LoggerStream m_critical{m_caller, LogLevel::kCritical};
@@ -190,6 +207,8 @@ private:
   mutable detail::LoggerStream m_info{m_caller, LogLevel::kInfo};
   mutable detail::LoggerStream m_debug{m_caller, LogLevel::kDebug};
   mutable detail::LoggerStream m_trace{m_caller, LogLevel::kTrace};
+
+  const LogSvc& m_logger;
 };
 
 } // namespace algorithms
