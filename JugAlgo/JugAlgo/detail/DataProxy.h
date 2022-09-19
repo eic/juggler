@@ -15,9 +15,9 @@ namespace Jug::Algo::detail {
 // Generate properties for each of the data arguments
 template <class T, bool kIsInput> class DataElement {
 public:
-  using value_type =
-      std::conditional_t<algorithms::is_input_v<T>, algorithms::input_type_t<T>, algorithms::output_type_t<T>>;
-  using data_type = algorithms::data_type_t<T>;
+  using value_type = std::conditional_t<algorithms::is_input_v<T>, algorithms::input_type_t<T>,
+                                        algorithms::output_type_t<T>>;
+  using data_type  = algorithms::data_type_t<T>;
 
   DataElement(gsl::not_null<GaudiAlgorithm*> owner, std::string_view name)
       : m_owner{owner}, m_data_name(m_owner, name, "") {}
@@ -52,9 +52,9 @@ private:
 // Specialization for vectors
 template <class T, class A, bool kIsInput> class DataElement<std::vector<T, A>, kIsInput> {
 public:
-  using value_type =
-      std::conditional_t<algorithms::is_input_v<T>, algorithms::input_type_t<T>, algorithms::output_type_t<T>>;
-  using data_type = algorithms::data_type_t<T>;
+  using value_type = std::conditional_t<algorithms::is_input_v<T>, algorithms::input_type_t<T>,
+                                        algorithms::output_type_t<T>>;
+  using data_type  = algorithms::data_type_t<T>;
 
   DataElement(gsl::not_null<GaudiAlgorithm*> owner, std::string_view name)
       : m_owner{owner}, m_data_names(m_owner, name, "") {}
@@ -94,7 +94,8 @@ private:
 };
 
 template <bool kIsInput, class NamesArray, class Tuple, size_t... I>
-auto createElements(GaudiAlgorithm* owner, const NamesArray& names, const Tuple&, std::index_sequence<I...>)
+auto createElements(GaudiAlgorithm* owner, const NamesArray& names, const Tuple&,
+                    std::index_sequence<I...>)
     -> std::tuple<DataElement<std::tuple_element_t<I, Tuple>, kIsInput>...> {
   return {{owner, std::get<I>(names)}...};
 }
@@ -108,22 +109,27 @@ ReturnTuple getElements(HandleTuple& handles, std::index_sequence<I...>) {
 
 // Create data handle structure for all members
 
-template <class Data, bool kIsInput> class DataProxy {
+template <class Data> class DataProxy {
 public:
-  using value_type              = Data;
-  using data_type               = typename Data::data_type;
-  constexpr static size_t kSize = Data::kSize;
-  using names_type              = typename Data::DataNames;
-  using elements_type = decltype(createElements<kIsInput>(std::declval<GaudiAlgorithm*>(), names_type(), data_type(),
-                                                          std::make_index_sequence<kSize>()));
+  static constexpr bool kIsInput = algorithms::is_input_v<Data>;
+  using value_type               = Data;
+  using data_type                = typename Data::data_type;
+  constexpr static size_t kSize  = Data::kSize;
+  using names_type               = typename Data::DataNames;
+  using elements_type =
+      decltype(createElements<kIsInput>(std::declval<GaudiAlgorithm*>(), names_type(), data_type(),
+                                        std::make_index_sequence<kSize>()));
 
   DataProxy(gsl::not_null<GaudiAlgorithm*> owner, const names_type& names)
       : m_owner{owner}
-      , m_elements{createElements<kIsInput>(m_owner, names, data_type(), std::make_index_sequence<kSize>())} {}
+      , m_elements{createElements<kIsInput>(m_owner, names, data_type(),
+                                            std::make_index_sequence<kSize>())} {}
   void init() {
     std::apply([](auto el) { el.init(); }, m_elements);
   }
-  value_type get() const { return getElements<value_type>(m_elements, std::make_index_sequence<kSize>()); }
+  value_type get() const {
+    return getElements<value_type>(m_elements, std::make_index_sequence<kSize>());
+  }
 
 private:
   GaudiAlgorithm* m_owner;

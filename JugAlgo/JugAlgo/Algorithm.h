@@ -13,9 +13,7 @@
 
 namespace Jug::Algo {
 
-namespace detail {
-
-} // namespace detail
+namespace detail {} // namespace detail
 
 template <class AlgoImpl> class Algorithm : public GaudiAlgorithm {
 public:
@@ -23,11 +21,17 @@ public:
   using InputType  = typename AlgoType::InputType;
   using OutputType = typename AlgoType::OutputType;
 
+  Algorithm(const std::string& name, ISvcLocator* svcLoc)
+      : GaudiAlgorithm(name, svcLoc)
+      , m_input{this, m_algo.inputNames()}
+      , m_output{this, m_algo.outputNames()} {}
+
   StatusCode initialize() override {
     debug() << "Initializing " << name() << endmsg;
 
     // Forward the log level of this algorithm
-    const algorithms::LogLevel level{static_cast<algorithms::LogLevel>(msgLevel() > 0 ? msgLevel() - 1 : 0)};
+    const algorithms::LogLevel level{
+        static_cast<algorithms::LogLevel>(msgLevel() > 0 ? msgLevel() - 1 : 0)};
     debug() << "Setting the logger level to " << algorithms::logLevelName(level) << endmsg;
     m_algo->level(level);
 
@@ -45,7 +49,7 @@ public:
   }
 
   StatusCode execute() override {
-    ;
+    m_algo.process(m_input.get(), m_output.get());
     return StatusCode::SUCCESS;
   }
 
@@ -55,16 +59,15 @@ protected:
   template <typename T, typename U> void setAlgoProp(std::string_view name, U&& value) {
     m_algo.template setProperty<T>(name, value);
   }
-  template <typename T> T getAlgoProp(std::string name) const { return m_algo.template getProperty<T>(name); }
+  template <typename T> T getAlgoProp(std::string name) const {
+    return m_algo.template getProperty<T>(name);
+  }
   bool hasAlgoProp(std::string_view name) const { return m_algo.hasProperty(name); }
 
 private:
-  InputType getInput() const {}
-
-  // template <class Function, class RefTuple, std::size_t... I>
-  // RefTuple initialize
-
   AlgoType m_algo;
+  detail::DataProxy<InputType> m_input;
+  detail::DataProxy<OutputType> m_output;
 };
 
 } // namespace Jug::Algo
