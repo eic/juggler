@@ -40,19 +40,19 @@ StatusCode AlgoServiceSvc::initialize() {
       const algorithms::LogLevel level{static_cast<algorithms::LogLevel>(msgLevel() > 0 ? msgLevel() - 1 : 0)};
       info() << "Setting up algorithms::LogSvc with default level " << algorithms::logLevelName(level) << endmsg;
       logger->defaultLevel(level);
-      logger->action([this](const algorithms::LogLevel level, std::string_view caller, std::string_view msg) {
+      logger->action([this](const algorithms::LogLevel l, std::string_view caller, std::string_view msg) {
         const std::string text = fmt::format("[{}] {}", caller, msg);
-        if (level == algorithms::LogLevel::kCritical) {
+        if (l == algorithms::LogLevel::kCritical) {
           this->fatal() << text << endmsg;
-        } else if (level == algorithms::LogLevel::kError) {
+        } else if (l == algorithms::LogLevel::kError) {
           this->error() << text << endmsg;
-        } else if (level == algorithms::LogLevel::kWarning) {
+        } else if (l == algorithms::LogLevel::kWarning) {
           this->warning() << text << endmsg;
-        } else if (level == algorithms::LogLevel::kInfo) {
+        } else if (l == algorithms::LogLevel::kInfo) {
           this->info() << text << endmsg;
-        } else if (level == algorithms::LogLevel::kDebug) {
+        } else if (l == algorithms::LogLevel::kDebug) {
           this->debug() << text << endmsg;
-        } else if (level == algorithms::LogLevel::kTrace) {
+        } else if (l == algorithms::LogLevel::kTrace) {
           this->verbose() << text << endmsg;
         }
       });
