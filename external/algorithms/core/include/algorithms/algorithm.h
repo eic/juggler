@@ -6,6 +6,7 @@
 #include <tuple>
 #include <vector>
 
+#include <algorithms/detail/deduce_type.h>
 #include <algorithms/logger.h>
 #include <algorithms/property.h>
 
@@ -13,14 +14,14 @@ namespace algorithms {
 
 // T should either be the desired input type, a std::vector<> of the desired input type,
 // or a std::optional<> of the desired input type
-template <class... T> struct Input : std::tuple<const T&...> {
+template <class... T> struct Input : std::tuple<input_type_t<T>...> {
   constexpr static const size_t kSize = sizeof...(T);
-  using Type                          = std::tuple<const T&...>;
+  using Type                          = std::tuple<input_type_t<T>...>;
   using ValueType                     = std::tuple<T...>;
 };
-template <class... T> struct Output : std::tuple<T&...> {
+template <class... T> struct Output : std::tuple<output_type_t<T>...> {
   constexpr static const size_t kSize = sizeof...(T);
-  using Type                          = std::tuple<T&...>;
+  using Type                          = std::tuple<output_type_t<T>...>;
   using ValueType                     = std::tuple<T...>;
 };
 
@@ -38,7 +39,7 @@ public:
       : LoggerMixin(name), m_input_names{input_names}, m_output_names{output_names} {}
 
   void init();
-  void process(const InputType& input, OutputType& output);
+  void process(const InputType& input, const OutputType& output);
 
   const InputNames& inputNames() const { return m_input_names; }
   const OutputNames& outputNames() const { return m_output_names; }
