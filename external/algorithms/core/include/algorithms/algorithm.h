@@ -15,26 +15,26 @@ namespace algorithms {
 // T should either be the desired input type, a std::vector<> of the desired input type,
 // or a std::optional<> of the desired input type
 template <class... T> struct Input : std::tuple<input_type_t<T>...> {
+  constexpr static const size_t kSize = sizeof...(T);
   using value_type                    = std::tuple<input_type_t<T>...>;
   using data_type                     = std::tuple<T...>;
-  constexpr static const size_t kSize = sizeof...(T);
+  using index_type                    = std::array<const std::string, kSize>;
 };
 template <class... T> struct Output : std::tuple<output_type_t<T>...> {
+  constexpr static const size_t kSize = sizeof...(T);
   using value_type                    = std::tuple<output_type_t<T>...>;
   using data_type                     = std::tuple<T...>;
-  constexpr static const size_t kSize = sizeof...(T);
+  using index_type                    = std::array<const std::string, kSize>;
 };
-
-template <class Data> using data_name = std::array<const std::string, Data::kSize>;
 
 // TODO: C++20 Concepts version for better error handling
 template <class InputType, class OutputType>
 class Algorithm : public PropertyMixin, public LoggerMixin {
 public:
-  using Input       = InputType;
-  using Output      = OutputType;
-  using InputNames  = data_name<Input>;
-  using OutputNames = data_name<Output>;
+  using Input       = typename InputType::value_type;
+  using Output      = typename OutputType::value_type;
+  using InputNames  = typename InputType::index_type;
+  using OutputNames = typename OutputType::index_type;
 
   Algorithm(std::string_view name, const InputNames& input_names, const OutputNames& output_names)
       : LoggerMixin(name), m_input_names{input_names}, m_output_names{output_names} {}

@@ -78,8 +78,8 @@ public:
     }
 
     Property()                = delete;
-    Property(const Property&) = delete;
-    void operator=(const Property&) = delete;
+    Property(const Property&) = default;
+    Property& operator=(const Property&) = default;
 
     // Only settable by explicitly calling the ::set() member functio n
     // as we want the Property to mostly act as if it is constant
@@ -162,4 +162,8 @@ template <class T>
 std::ostream& operator<<(std::ostream& os, const algorithms::Configurable::Property<T>& p) {
   return os << p.value();
 }
+
+// Make Property formateble
+template <class T>
+struct fmt::formatter<algorithms::Configurable::Property<T>> : fmt::formatter<T> {};
 // others needed??? TODO

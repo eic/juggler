@@ -60,3 +60,4 @@ find_package(fmt REQUIRED)
 include(GNUInstallDirs)
 
 add_subdirectory(core)
+add_subdirectory(calorimetry)
