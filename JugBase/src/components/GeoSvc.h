@@ -136,6 +136,8 @@ public:
   {
     return m_dd4hepGeo->field().magneticField({0, 0, 0}).z() * (Acts::UnitConstants::T / dd4hep::tesla);
   }
+
+  virtual const VolumeSurfaceMap& surfaceMap() const { return m_surfaces; }
 };
 
 inline std::shared_ptr<const Acts::TrackingGeometry> GeoSvc::trackingGeometry() const
