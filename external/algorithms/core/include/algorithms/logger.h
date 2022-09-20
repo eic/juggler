@@ -213,6 +213,22 @@ private:
   const LogSvc& m_logger;
 };
 
+// A Service base class with logger functionality
+template <class SvcType> class LoggedService : public Service<SvcType>, public LoggerMixin {
+protected:
+  LoggedService(std::string_view name) : Service<SvcType>(name), LoggerMixin(name) {}
+};
+
 } // namespace algorithms
+
+#define ALGORITHMS_DEFINE_LOGGED_SERVICE(className)                                                \
+protected:                                                                                         \
+  className() : LoggedService<className>(#className) {}                                            \
+                                                                                                   \
+public:                                                                                            \
+  friend class Service<className>;                                                                 \
+  className(const className&) = delete;                                                            \
+  void operator=(const className&)   = delete;                                                     \
+  constexpr static const char* kName = #className;
 
 //#define endmsg std::flush

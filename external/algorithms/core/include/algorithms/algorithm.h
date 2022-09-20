@@ -25,20 +25,22 @@ template <class... T> struct Output : std::tuple<output_type_t<T>...> {
   constexpr static const size_t kSize = sizeof...(T);
 };
 
-template <class Data> using DataNames = std::array<const std::string, Data::kSize>;
+template <class Data> using data_name = std::array<const std::string, Data::kSize>;
 
 // TODO: C++20 Concepts version for better error handling
 template <class InputType, class OutputType>
 class Algorithm : public PropertyMixin, public LoggerMixin {
 public:
-  using InputNames  = DataNames<InputType>;
-  using OutputNames = DataNames<OutputType>;
+  using Input       = InputType;
+  using Output      = OutputType;
+  using InputNames  = data_name<Input>;
+  using OutputNames = data_name<Output>;
 
   Algorithm(std::string_view name, const InputNames& input_names, const OutputNames& output_names)
       : LoggerMixin(name), m_input_names{input_names}, m_output_names{output_names} {}
 
   void init();
-  void process(const InputType& input, const OutputType& output);
+  void process(const Input& input, const Output& output);
 
   const InputNames& inputNames() const { return m_input_names; }
   const OutputNames& outputNames() const { return m_output_names; }
