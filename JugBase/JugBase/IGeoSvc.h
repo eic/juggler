@@ -22,10 +22,6 @@ namespace Acts {
   class MagneticFieldProvider;
 }
 
-namespace genfit {
-  class DetPlane;
-}
-
 /** Geometry service interface.
  *
  * \ingroup base
@@ -48,13 +44,6 @@ public:
   virtual double centralMagneticField() const = 0;
 
   virtual const VolumeSurfaceMap& surfaceMap() const = 0;
-
-  // Note this hsould return a const& but is just copied for the moment to get around genfit's api
-  /// Genfit DetPlane map
-  virtual std::map<int64_t, std::shared_ptr<genfit::DetPlane>> getDetPlaneMap() const = 0;
-  virtual std::map< int64_t, dd4hep::rec::Surface* > getDD4hepSurfaceMap() const =0;
-
-  //virtual std::map< int64_t, dd4hep::rec::Surface* > getDetPlaneMap() const = 0 ;
 
   virtual ~IGeoSvc() {}
 };
