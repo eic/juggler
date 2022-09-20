@@ -19,13 +19,11 @@ gaudi_add_library(JugBase
   ROOT::Core ROOT::RIO ROOT::Tree
   DD4hep::DDG4IO DD4hep::DDRec
   ActsCore ActsPluginDD4hep
-  ${genfit2}
 )
 
 target_include_directories(JugBase PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-  ${genfit2_INCLUDE_DIR}
 )
 
 target_compile_options(JugBase PRIVATE -Wno-suggest-override)
@@ -42,13 +40,11 @@ gaudi_add_module(JugBasePlugins
   DD4hep::DDRec
   ActsCore ActsPluginDD4hep ActsPluginJson
   EDM4EIC::edm4eic
-  ${genfit2}
 )
 
 target_include_directories(JugBasePlugins PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-  ${genfit2_INCLUDE_DIR}
 )
 
 target_compile_options(JugBasePlugins PRIVATE -Wno-suggest-override)
