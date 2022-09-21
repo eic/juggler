@@ -74,10 +74,6 @@ add_definitions("-DActs_VERSION_MINOR=${Acts_VERSION_MINOR}")
 add_definitions("-DActs_VERSION_PATCH=${Acts_VERSION_PATCH}")
 
 find_package(IRT REQUIRED)
-
-find_library(genfit2 genfit2 /usr/local/lib REQUIRED)
-find_path(genfit2_INCLUDE_DIR NAMES GFGbl.h PATHS /usr/local/include ${genfit2}/../include REQUIRED)
-
 find_package(Gaudi)
 add_subdirectory(JugBase)
 add_subdirectory(JugDigi)

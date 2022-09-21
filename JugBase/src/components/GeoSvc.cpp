@@ -18,20 +18,6 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 
-// genfit
-#include "ConstField.h"
-#include "DAF.h"
-#include "Exception.h"
-#include "FieldManager.h"
-#include "KalmanFitterRefTrack.h"
-#include "StateOnPlane.h"
-#include "Track.h"
-#include "TrackPoint.h"
-#include "MaterialEffects.h"
-#include "RKTrackRep.h"
-#include "TGeoMaterialInterface.h"
-#include "PlanarMeasurement.h"
-
 static const std::map<int, Acts::Logging::Level> s_msgMap = {
     {MSG::DEBUG, Acts::Logging::DEBUG},
     {MSG::VERBOSE, Acts::Logging::VERBOSE},
@@ -111,29 +97,6 @@ StatusCode GeoSvc::initialize() {
     m_log << MSG::ERROR << "Could not build DD4Hep geometry" << endmsg;
   } else {
     m_log << MSG::INFO << "DD4Hep geometry SUCCESSFULLY built" << endmsg;
-  }
-
-  // Genfit
-  genfit::FieldManager::getInstance()->init(new genfit::ConstField(
-      0., 0., this->centralMagneticField() * 10.0)); // gentfit uses kilo-Gauss
-  genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
-
-  // create a list of all surfaces in the detector:
-  dd4hep::rec::SurfaceManager surfMan( *m_dd4hepGeo ) ;
-  debug() << " surface manager " << endmsg;
-  const auto* const sM = surfMan.map("tracker") ;
-  if (sM != nullptr) {
-    debug() << " surface map  size: " << sM->size() << endmsg;
-    // setup  dd4hep surface map
-    //for( dd4hep::rec::SurfaceMap::const_iterator it = sM->begin() ; it != sM->end() ; ++it ){
-    for( const auto& [id, s] :   *sM) {
-      //dd4hep::rec::Surface* surf = s ;
-      m_surfaceMap[ id ] = dynamic_cast<dd4hep::rec::Surface*>(s) ;
-      debug() << " surface : " << *s << endmsg;
-      m_detPlaneMap[id] = std::shared_ptr<genfit::DetPlane>(
-          new genfit::DetPlane({s->origin().x(), s->origin().y(), s->origin().z()}, {s->u().x(), s->u().y(), s->u().z()},
-                               {s->v().x(), s->v().y(), s->v().z()}));
-    }
   }
 
   // Set ACTS logging level

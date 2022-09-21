@@ -49,6 +49,8 @@ namespace Jug::Digi {
     // additional smearing resolutions
     Gaudi::Property<std::vector<double>> u_eRes{this, "energyResolutions", {}}; // a/sqrt(E/GeV) + b + c/(E/GeV)
     Gaudi::Property<double>              m_tRes{this, "timeResolution", 0.0 * ns};
+    // single hit energy deposition threshold
+    Gaudi::Property<double>              m_threshold{this, "threshold", 1. * keV};
 
     // digitization settings
     Gaudi::Property<unsigned int>       m_capADC{this, "capacityADC", 8096};
@@ -173,13 +175,16 @@ namespace Jug::Digi {
         const double eDep    = ahit.getEnergy();
 
         // apply additional calorimeter noise to corrected energy deposit
-        const double eResRel = (eDep > 1e-6)
-                                   ? m_normDist() * std::sqrt(std::pow(eRes[0] / std::sqrt(eDep), 2) +
-                                                              std::pow(eRes[1], 2) + std::pow(eRes[2] / (eDep), 2))
-                                   : 0;
+        const double eResRel = (eDep > m_threshold)
+            ? m_normDist() * std::sqrt(
+                  std::pow(eRes[0] / std::sqrt(eDep), 2) +
+                  std::pow(eRes[1], 2) +
+                  std::pow(eRes[2] / (eDep), 2)
+              )
+            : 0;
 
         const double ped    = m_pedMeanADC + m_normDist() * m_pedSigmaADC;
-        const long long adc = std::llround(ped +  m_corrMeanScale * eDep * (1. + eResRel) / dyRangeADC * m_capADC);
+        const long long adc = std::llround(ped +  eDep * (m_corrMeanScale + eResRel) / dyRangeADC * m_capADC);
 
         double time = std::numeric_limits<double>::max();
         for (const auto& c : ahit.getContributions()) {
@@ -233,13 +238,13 @@ namespace Jug::Digi {
           }
         }
 
-        double eResRel = 0.;
         // safety check
-        if (edep > 1e-6) {
-            eResRel = m_normDist() * eRes[0] / std::sqrt(edep) +
-                      m_normDist() * eRes[1] +
-                      m_normDist() * eRes[2] / edep;
-        }
+        const double eResRel = (edep > m_threshold)
+            ? m_normDist() * eRes[0] / std::sqrt(edep) +
+              m_normDist() * eRes[1] +
+              m_normDist() * eRes[2] / edep
+            : 0;
+
         double    ped     = m_pedMeanADC + m_normDist() * m_pedSigmaADC;
         unsigned long long adc     = std::llround(ped + edep * (1. + eResRel) / dyRangeADC * m_capADC);
         unsigned long long tdc     = std::llround((time + m_normDist() * tRes) * stepTDC);

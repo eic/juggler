@@ -17,14 +17,12 @@ gaudi_add_module(JugTrackPlugins
   EDM4EIC::edm4eic
   DD4hep::DDRec
   ActsCore
-  ${genfit2}
 )
 
 target_include_directories(JugTrackPlugins PUBLIC
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/JugBase>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-  ${genfit2_INCLUDE_DIR}
 )
 
 target_compile_options(JugTrackPlugins PRIVATE -Wno-suggest-override)
