@@ -614,6 +614,8 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	  double ri = 0.0;
 	  double wl = 0.0;
 	  double wtsum = 0.0;
+          std::vector<double> thphot;
+          std::vector<double> phiphot;
 	  edm4eic::CherenkovThetaAngleMeasurement rdata;
 
 	  rdata.radiator = ir;
@@ -629,7 +631,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 		break;
 	      } //if
 
-	    //double phi = photon->m_Phi[radiator];
+	     phiphot.push_back(photon->m_Phi[radiator]);
 	    //printf("PHI ANGLE: ###  %f\n", phi);
 	    if (selected) {
 	      //if (selected &&
@@ -638,17 +640,32 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	      double wt = 1.0;//fabs(sin(photon->m_Phi[radiator]));
 	      wtsum += wt;
 	      theta += wt*photon->_m_PDF[radiator].GetAverage();
+              thphot.push_back(photon->_m_PDF[radiator].GetAverage());
+
+              cbuffer.addToThetaPhoton(photon->_m_PDF[radiator].GetAverage());
+              cbuffer.addToPhiPhoton(photon->m_Phi[radiator]);
+
 	      ri    +=    photon->GetVertexRefractiveIndex();
 	      // FIXME: hardcoded;
 	      wl    +=    1239.8/(1E9*photon->GetVertexMomentum().Mag());
 	    } //if
 	  } //for photon
+          /*double phiph=0.;
+          if(phiphot.size()!= thphot.size()) printf("Phot theta phi size mismatch! \n");
+          for(unsigned int i=0; i<thphot.size(); i++){
+            if(57.29*phiphot[i]<0)  phiph = 360+ 57.29*phiphot[i];
+             else phiph = 57.29*phiphot[i];
+            if(wtsum>0) printf("@@ Npe: %d Ring Theta: %7.2f %d th Photon theta %7.2f phi: %7.2f \n",npe, 1000*theta / wtsum,i,1000*thphot[i], phiph  );
 
+          }
+          */
 	  rdata.npe        = npe;
 	  //rdata.theta  = npe ? theta / npe : 0.0;
 	  rdata.theta      = wtsum ? theta / wtsum : 0.0;
 	  rdata.rindex     = npe   ? ri    / npe   : 0.0;
 	  rdata.wavelength = npe   ? wl    / npe   : 0.0;
+          //rdata.thetaphoton = thphot;
+          //rdata.phiphoton = phiphot;
 	  //printf("PHOTON ANGLE : @@@ %7.2f\n", 1000*rdata.theta);
 	  cbuffer.addToAngles(rdata);
 	}
