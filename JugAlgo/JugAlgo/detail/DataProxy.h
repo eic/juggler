@@ -12,31 +12,41 @@
 
 namespace Jug::Algo::detail {
 
+enum class DataMode : unsigned { kInput, kOutput };
+
 // Generate properties for each of the data arguments
-template <class T, bool kIsInput> class DataElement {
+template <class T, DataMode kMode> class DataElement {
+
 public:
-  using value_type = std::conditional_t<algorithms::is_input_v<T>, algorithms::input_type_t<T>,
+  using value_type = std::conditional_t<kMode == DataMode::kInput, algorithms::input_type_t<T>,
                                         algorithms::output_type_t<T>>;
   using data_type  = algorithms::data_type_t<T>;
+  constexpr static const bool kIsOptional = algorithms::is_optional_v<T>;
 
-  DataElement(gsl::not_null<GaudiAlgorithm*> owner, std::string_view name)
-      : m_owner{owner}, m_data_name(m_owner, name, "") {}
+  template <class Owner>
+  DataElement(Owner* owner, std::string_view name)
+      : m_data_name{std::make_unique<Gaudi::Property<std::string>>(owner, std::string(name), "")}
+      , m_owner{owner} {}
   void init() {
     if (m_handle) {
       // treat error: already initialized
     }
-    if (!m_data_name.empty()) {
+    if (!m_data_name->empty()) {
       m_handle = std::make_unique<DataHandle<data_type>>(
-          m_data_name, (kIsInput ? Gaudi::DataHandle::Reader : Gaudi::DataHandle::Writer), m_owner);
+          *m_data_name,
+          ((kMode == DataMode::kInput) ? Gaudi::DataHandle::Reader : Gaudi::DataHandle::Writer),
+          m_owner);
     } else if (!algorithms::is_optional_v<T>) {
       // treat error: member not optional but no collection name given
     }
   }
   value_type get() const {
-    if (!m_handle) {
-      return nullptr;
+    if constexpr (kIsOptional) {
+      if (!m_handle) {
+        return nullptr;
+      }
     }
-    if constexpr (kIsInput) {
+    if constexpr (kMode == DataMode::kInput) {
       return m_handle->get();
     } else {
       return m_handle->createAndPut();
@@ -44,29 +54,37 @@ public:
   }
 
 private:
-  GaudiAlgorithm* m_owner;
-  Gaudi::Property<std::string> m_data_name;
-  std::unique_ptr<DataHandle<T>> m_handle;
+  std::unique_ptr<Gaudi::Property<std::string>>
+      m_data_name; // This needs to be a pointer, else things go wrong once we go through
+                   // createElements - probably something about passing the Property through an
+                   // rvalue (or copy) constructor
+  std::unique_ptr<DataHandle<data_type>> m_handle;
+  gsl::not_null<Gaudi::Algorithm*> m_owner;
 };
 
 // Specialization for vectors
-template <class T, class A, bool kIsInput> class DataElement<std::vector<T, A>, kIsInput> {
+template <class T, class A, DataMode kMode> class DataElement<std::vector<T, A>, kMode> {
 public:
-  using value_type = std::conditional_t<algorithms::is_input_v<T>, algorithms::input_type_t<T>,
+  using value_type = std::conditional_t<kMode == DataMode::kInput, algorithms::input_type_t<T>,
                                         algorithms::output_type_t<T>>;
   using data_type  = algorithms::data_type_t<T>;
 
-  DataElement(gsl::not_null<GaudiAlgorithm*> owner, std::string_view name)
-      : m_owner{owner}, m_data_names(m_owner, name, "") {}
+  template <class Owner>
+  DataElement(Owner* owner, std::string_view name)
+      : m_data_names{std::make_unique<Gaudi::Property<std::vector<std::string>>>(
+            owner, std::string(name), {})}
+      , m_owner{owner} {}
   void init() {
     if (!m_handles.empty()) {
       // treat error: already initialized
     }
-    if (!m_data_names.empty()) {
-      for (const auto& name : m_data_names) {
+    if (!m_data_names->empty()) {
+      for (const auto& name : *m_data_names) {
         if (!name.empty()) {
           m_handles.emplace_back(std::make_unique<DataHandle<data_type>>(
-              name, (kIsInput ? Gaudi::DataHandle::Reader : Gaudi::DataHandle::Writer), m_owner));
+              name,
+              (kMode == DataMode::kInput ? Gaudi::DataHandle::Reader : Gaudi::DataHandle::Writer),
+              m_owner));
         } else {
           // treat error: empty name
         }
@@ -78,7 +96,7 @@ public:
   std::vector<value_type> get() const {
     std::vector<value_type> ret;
     for (auto& handle : m_handles) {
-      if constexpr (kIsInput) {
+      if constexpr (kMode == DataMode::kInput) {
         ret.emplace_back(handle->get());
       } else {
         ret.emplace_back(handle->createAndPut());
@@ -88,16 +106,15 @@ public:
   }
 
 private:
-  GaudiAlgorithm* m_owner;
-  Gaudi::Property<std::vector<std::string>> m_data_names;
+  std::unique_ptr<Gaudi::Property<std::vector<std::string>>> m_data_names;
   std::vector<std::unique_ptr<DataHandle<T>>> m_handles;
+  gsl::not_null<Gaudi::Algorithm*> m_owner;
 };
 
-template <bool kIsInput, class NamesArray, class Tuple, size_t... I>
-auto createElements(GaudiAlgorithm* owner, const NamesArray& names, const Tuple&,
-                    std::index_sequence<I...>)
-    -> std::tuple<DataElement<std::tuple_element_t<I, Tuple>, kIsInput>...> {
-  return {{owner, std::get<I>(names)}...};
+template <DataMode kMode, class Owner, class NamesArray, class Tuple, size_t... I>
+auto createElements(Owner* owner, const NamesArray& names, const Tuple&, std::index_sequence<I...>)
+    -> std::tuple<DataElement<std::tuple_element_t<I, Tuple>, kMode>...> {
+  return {DataElement<std::tuple_element_t<I, Tuple>, kMode>(owner, std::get<I>(names))...};
 }
 
 // Call ::get() on each element of the HandleTuple, and return the result in the format of
@@ -111,28 +128,28 @@ ReturnTuple getElements(HandleTuple& handles, std::index_sequence<I...>) {
 
 template <class Data> class DataProxy {
 public:
-  static constexpr bool kIsInput = algorithms::is_input_v<Data>;
-  using value_type               = Data;
-  using data_type                = typename Data::data_type;
-  constexpr static size_t kSize  = Data::kSize;
-  using names_type               = typename Data::DataNames;
+  static constexpr DataMode kMode =
+      (algorithms::is_input_v<Data> ? DataMode::kInput : DataMode::kOutput);
+  using value_type              = typename Data::value_type;
+  using data_type               = typename Data::data_type;
+  constexpr static size_t kSize = Data::kSize;
+  using names_type              = typename Data::key_type;
   using elements_type =
-      decltype(createElements<kIsInput>(std::declval<GaudiAlgorithm*>(), names_type(), data_type(),
-                                        std::make_index_sequence<kSize>()));
+      decltype(createElements<kMode>(std::declval<GaudiAlgorithm*>(), names_type(), data_type(),
+                                     std::make_index_sequence<kSize>()));
 
-  DataProxy(gsl::not_null<GaudiAlgorithm*> owner, const names_type& names)
-      : m_owner{owner}
-      , m_elements{createElements<kIsInput>(m_owner, names, data_type(),
-                                            std::make_index_sequence<kSize>())} {}
+  template <class Owner>
+  DataProxy(Owner* owner, const names_type& names)
+      : m_elements{
+            createElements<kMode>(owner, names, data_type(), std::make_index_sequence<kSize>())} {}
   void init() {
-    std::apply([](auto el) { el.init(); }, m_elements);
+    std::apply([](auto&&... el) { (el.init(), ...); }, m_elements);
   }
   value_type get() const {
     return getElements<value_type>(m_elements, std::make_index_sequence<kSize>());
   }
 
 private:
-  GaudiAlgorithm* m_owner;
   elements_type m_elements;
 };
 

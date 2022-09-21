@@ -13,18 +13,19 @@
 
 namespace Jug::Algo {
 
-namespace detail {} // namespace detail
-
 template <class AlgoImpl> class Algorithm : public GaudiAlgorithm {
 public:
-  using AlgoType   = AlgoImpl;
-  using InputType  = typename AlgoType::InputType;
-  using OutputType = typename AlgoType::OutputType;
+  using algo_type   = AlgoImpl;
+  using input_type  = typename algo_type::input_type;
+  using output_type = typename algo_type::output_type;
+  using Input       = typename algo_type::Input;
+  using Output      = typename algo_type::Output;
 
   Algorithm(const std::string& name, ISvcLocator* svcLoc)
       : GaudiAlgorithm(name, svcLoc)
-      , m_input{this, m_algo.inputNames()}
-      , m_output{this, m_algo.outputNames()} {}
+      , m_algo{name}
+      , m_output{this, m_algo.outputNames()}
+      , m_input{this, m_algo.inputNames()} {}
 
   StatusCode initialize() override {
     debug() << "Initializing " << name() << endmsg;
@@ -33,7 +34,12 @@ public:
     const algorithms::LogLevel level{
         static_cast<algorithms::LogLevel>(msgLevel() > 0 ? msgLevel() - 1 : 0)};
     debug() << "Setting the logger level to " << algorithms::logLevelName(level) << endmsg;
-    m_algo->level(level);
+    m_algo.level(level);
+
+    // Init our data structures
+    debug() << "Initializing data structures" << endmsg;
+    m_input.init();
+    m_output.init();
 
     // call configure function that passes properties
     debug() << "Configuring properties" << endmsg;
@@ -56,8 +62,8 @@ public:
   virtual StatusCode configure() = 0;
 
 protected:
-  template <typename T, typename U> void setAlgoProp(std::string_view name, U&& value) {
-    m_algo.template setProperty<T>(name, value);
+  template <typename T> void setAlgoProp(std::string_view name, T&& value) {
+    m_algo.template setProperty(name, value);
   }
   template <typename T> T getAlgoProp(std::string name) const {
     return m_algo.template getProperty<T>(name);
@@ -65,9 +71,9 @@ protected:
   bool hasAlgoProp(std::string_view name) const { return m_algo.hasProperty(name); }
 
 private:
-  AlgoType m_algo;
-  detail::DataProxy<InputType> m_input;
-  detail::DataProxy<OutputType> m_output;
+  algo_type m_algo;
+  detail::DataProxy<output_type> m_output;
+  detail::DataProxy<input_type> m_input;
 };
 
 } // namespace Jug::Algo

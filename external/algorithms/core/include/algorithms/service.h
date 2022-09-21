@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 
+#include <algorithms/name.h>
 #include <algorithms/property.h>
 
 // Add boilerplate to service class definitions
@@ -55,7 +56,7 @@ private:
 // CRTP base class to add the instance method
 // This could have been part of DEFINE_SERVICE macro, but I think it is better
 // to keep the macro magic to a minimum to maximize transparency
-template <class SvcType> class Service : public PropertyMixin {
+template <class SvcType> class Service : public PropertyMixin, public NameMixin {
 public:
   static SvcType& instance() {
     // This is guaranteed to be thread-safe from C++11 onwards.
@@ -64,11 +65,7 @@ public:
   }
   // constructor for the service base class registers the service, except
   // for the ServiceSvc which is its own thing (avoid circularity)
-  Service(std::string_view name) : m_name{name} { ServiceSvc::instance().add(name, this); }
-  std::string_view name() const { return m_name; }
-
-private:
-  const std::string m_name;
+  Service(std::string_view name) : NameMixin{name} { ServiceSvc::instance().add(name, this); }
 };
 
 } // namespace algorithms

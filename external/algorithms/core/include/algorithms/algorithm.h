@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <algorithms/logger.h>
+#include <algorithms/name.h>
 #include <algorithms/property.h>
 #include <algorithms/type_traits.h>
 
@@ -18,26 +19,31 @@ template <class... T> struct Input : std::tuple<input_type_t<T>...> {
   constexpr static const size_t kSize = sizeof...(T);
   using value_type                    = std::tuple<input_type_t<T>...>;
   using data_type                     = std::tuple<T...>;
-  using index_type                    = std::array<const std::string, kSize>;
+  using key_type                      = std::array<const std::string, kSize>;
 };
 template <class... T> struct Output : std::tuple<output_type_t<T>...> {
   constexpr static const size_t kSize = sizeof...(T);
   using value_type                    = std::tuple<output_type_t<T>...>;
   using data_type                     = std::tuple<T...>;
-  using index_type                    = std::array<const std::string, kSize>;
+  using key_type                      = std::array<const std::string, kSize>;
 };
 
 // TODO: C++20 Concepts version for better error handling
 template <class InputType, class OutputType>
-class Algorithm : public PropertyMixin, public LoggerMixin {
+class Algorithm : public PropertyMixin, public LoggerMixin, public NameMixin {
 public:
-  using Input       = typename InputType::value_type;
-  using Output      = typename OutputType::value_type;
-  using InputNames  = typename InputType::index_type;
-  using OutputNames = typename OutputType::index_type;
+  using input_type  = InputType;
+  using output_type = OutputType;
+  using Input       = typename input_type::value_type;
+  using Output      = typename output_type::value_type;
+  using InputNames  = typename input_type::key_type;
+  using OutputNames = typename output_type::key_type;
 
   Algorithm(std::string_view name, const InputNames& input_names, const OutputNames& output_names)
-      : LoggerMixin(name), m_input_names{input_names}, m_output_names{output_names} {}
+      : LoggerMixin(name)
+      , NameMixin(name)
+      , m_input_names{input_names}
+      , m_output_names{output_names} {}
 
   void init();
   void process(const Input& input, const Output& output);
