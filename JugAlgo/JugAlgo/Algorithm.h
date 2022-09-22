@@ -8,6 +8,7 @@
 #include <algorithms/type_traits.h>
 
 #include <GaudiAlg/GaudiAlgorithm.h>
+#include <GaudiKernel/Service.h>
 #include <JugAlgo/IAlgoServiceSvc.h>
 #include <JugAlgo/detail/DataProxy.h>
 
@@ -29,6 +30,13 @@ public:
 
   StatusCode initialize() override {
     debug() << "Initializing " << name() << endmsg;
+
+    // Grab the AlgoServiceSvc
+    m_algo_svc = service("AlgoServiceSvc");
+    if (!m_algo_svc) {
+      error() << "Unable to get an instance of the AlgoServiceSvc" << endmsg;
+      return StatusCode::FAILURE;
+    }
 
     // Forward the log level of this algorithm
     const algorithms::LogLevel level{
@@ -55,7 +63,12 @@ public:
   }
 
   StatusCode execute() override {
-    m_algo.process(m_input.get(), m_output.get());
+    try {
+      m_algo.process(m_input.get(), m_output.get());
+    } catch (const std::exception& e) {
+      error() << e.what() << endmsg;
+      return StatusCode::FAILURE;
+    }
     return StatusCode::SUCCESS;
   }
 
@@ -63,7 +76,7 @@ public:
 
 protected:
   template <typename T> void setAlgoProp(std::string_view name, T&& value) {
-    m_algo.template setProperty(name, value);
+    m_algo.template setProperty<T>(name, value);
   }
   template <typename T> T getAlgoProp(std::string name) const {
     return m_algo.template getProperty<T>(name);
@@ -72,6 +85,7 @@ protected:
 
 private:
   algo_type m_algo;
+  SmartIF<IAlgoServiceSvc> m_algo_svc;
   detail::DataProxy<output_type> m_output;
   detail::DataProxy<input_type> m_input;
 };
