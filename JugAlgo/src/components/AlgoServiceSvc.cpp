@@ -31,7 +31,7 @@ DECLARE_COMPONENT(AlgoServiceSvc)
 StatusCode AlgoServiceSvc::initialize() {
   StatusCode sc = Service::initialize();
   if (!sc.isSuccess()) {
-    fatal() << "Error initializing ParticleSvc" << endmsg;
+    fatal() << "Error initializing AlgoServiceSvc" << endmsg;
     return sc;
   }
 

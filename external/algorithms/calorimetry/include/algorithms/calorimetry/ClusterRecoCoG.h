@@ -20,7 +20,7 @@
 
 namespace algorithms::calorimetry {
 
-using ClusterRecoCoGBase = Algorithm<
+using ClusteringAlgorithm = Algorithm<
     Input<edm4eic::ProtoClusterCollection, std::optional<edm4hep::SimCalorimeterHitCollection>>,
     Output<edm4eic::ClusterCollection,
            std::optional<edm4eic::MCRecoClusterParticleAssociationCollection>>>;
@@ -32,17 +32,17 @@ using ClusterRecoCoGBase = Algorithm<
  *
  * \ingroup reco
  */
-class ClusterRecoCoG : public ClusterRecoCoGBase {
+class ClusterRecoCoG : public ClusteringAlgorithm {
 public:
-  using Input      = ClusterRecoCoGBase::Input;
-  using Output     = ClusterRecoCoGBase::Output;
+  using Input      = ClusteringAlgorithm::Input;
+  using Output     = ClusteringAlgorithm::Output;
   using WeightFunc = std::function<double(double, double, double)>;
 
   // TODO: get rid of "Collection" in names
   ClusterRecoCoG(std::string_view name)
-      : ClusterRecoCoGBase{name,
-                           {"inputProtoClusterCollection", "mcHits"},
-                           {"outputClusterCollection", "outputAssociations"}} {}
+      : ClusteringAlgorithm{name,
+                            {"inputProtoClusterCollection", "mcHits"},
+                            {"outputClusterCollection", "outputAssociations"}} {}
 
   void init();
   void process(const Input&, const Output&);
@@ -50,7 +50,6 @@ public:
 private:
   edm4eic::MutableCluster reconstruct(const edm4eic::ProtoCluster&) const;
 
-  // FIXME do we really want sampling fraction here?
   Property<double> m_sampFrac{this, "samplingFraction", 1.0};
   Property<double> m_logWeightBase{this, "logWeightBase", 3.6};
   Property<std::string> m_energyWeight{this, "energyWeight", "log"};
