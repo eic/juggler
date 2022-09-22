@@ -16,6 +16,7 @@
 #include <tuple>
 
 #include "fmt/format.h"
+#include "fmt/ranges.h"
 
 #include "Gaudi/Property.h"
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -39,6 +40,11 @@
 #include "edm4eic/vector_utils.h"
 #include "edm4hep/Vector3f.h"
 #include "edm4hep/Vector2f.h"
+
+#ifdef USE_SYCL
+    #include <CL/sycl.hpp>
+    #include <unordered_map>
+#endif
 
 #if defined __has_include
 #  if __has_include ("edm4eic/Vector3f.h")
@@ -117,8 +123,323 @@ static std::map<std::string,
         {"globalDistRPhi", {globalDistRPhi, {mm, rad}}}, {"globalDistEtaPhi", {globalDistEtaPhi, {1., rad}}},
     };
 
+#ifdef USE_SYCL
+
+// Functor throws async device errors to user thread
+struct async_err_handler {
+  void operator()(sycl::exception_list elist){
+    for(auto e : elist){
+      std::rethrow_exception(e);
+    }
+  }
+};
+
+// SYCL Initializations
+sycl::default_selector device_selector;
+sycl::queue queue(device_selector, async_err_handler{});
+
+// enum to choose hitsDist method within SYCL code
+enum class sycl_hits_dist {
+    localXY,
+    localXZ,
+    localYZ,
+    dimScaleLocalXY,
+    globalRPhi,
+    globalEtaPhi
+};
+
+sycl_hits_dist sHitsDist;
+bool is_debug = false;
+
+#endif
+
 } // namespace
 namespace Jug::Reco {
+
+#ifdef USE_SYCL
+  SYCL_EXTERNAL inline bool is_neighbour( const sycl::accessor<sycl::float3,1,sycl::access::mode::read>& lpos,
+                                          const sycl::accessor<sycl::float3,1,sycl::access::mode::read>& gpos,
+                                          const sycl::accessor<sycl::float3,1,sycl::access::mode::read>& dims,
+                                          const sycl::accessor<int,1,sycl::access::mode::read>& sectors,
+                                          const sycl::accessor<double,1,sycl::access::mode::read>& secDist,
+                                          const sycl::accessor<double,1,sycl::access::mode::read>& neighDist,
+                                          sycl::id<1> hit1, int hit2, int hitDist_type) {
+    
+    if(sectors[hit1] != sectors[hit2]) {
+      auto delta = gpos[hit1] - gpos[hit2];
+      return (sycl::length(delta) <= secDist[0]);
+    } else {
+      auto delta = lpos[hit1] - lpos[hit2];
+      switch(hitDist_type){
+        case 0: {
+          // LocalXY
+          return (delta.x() <= neighDist[0] && delta.y() <= neighDist[1]);
+          break;
+        }
+        case 1: {
+          // LocalXZ
+          return (delta.x() <= neighDist[0] && delta.z() <= neighDist[1]);
+          break;
+        }
+        case 2: {
+          // LocalYZ
+          return (delta.y() <= neighDist[0] && delta.z() <= neighDist[1]);
+          break;
+        }
+        case 3: {
+          // dimScaleLocalXY
+          auto dimsum = dims[hit1] + dims[hit2];
+          return ((2*delta.x()/dimsum.x()) <= neighDist[0] && (2*delta.y()/dimsum.y()) <= neighDist[1]);
+          break;
+        }
+        case 4: {
+          // globalRPhi
+          double r = sycl::length(gpos[hit1]) - sycl::length(gpos[hit2]);
+          double phi = sycl::atan2(gpos[hit1].y(), gpos[hit1].x()) - sycl::atan2(gpos[hit2].y(), gpos[hit2].x());
+          return (r <= neighDist[0] && phi <= neighDist[1]);
+          break;
+        }
+        case 5: {
+          // globalEtaPhi
+          double ang_polar = sycl::atan2(sycl::hypot(gpos[hit1].x(), gpos[hit1].y()), gpos[hit1].z());
+          double eta = -sycl::log(sycl::tan(0.5 * ang_polar));
+          double phi = sycl::atan2(gpos[hit1].y(), gpos[hit1].x()) - sycl::atan2(gpos[hit2].y(), gpos[hit2].x());
+          return (eta <= neighDist[0] && phi <= neighDist[1]); 
+        }
+      }
+    }
+
+  }
+
+  void parallel_group(std::vector<std::vector<std::pair<uint32_t, CaloHit>>>& groups,
+                      const CaloHitCollection& hits, std::array<double,2>& neighbourDist,
+                      double minClusterHitEdep, double sectorDist) {
+    // Corner Cases
+    if(hits.size() <= 0) return;
+
+    // Host memory
+    //
+    // Get location data from hits
+    std::vector<int32_t> sectors;
+    std::vector<float> energy;
+    std::vector<sycl::vec<float, 3>> lpos, gpos, dims;
+
+    // Neighbour Indices
+    std::vector<int> nidx (hits.size());
+
+    // Can't filter out hits here as index numbers will not match
+    for(size_t i = 0; i < hits.size(); i++) {
+      lpos.emplace_back(hits[i].getLocal().x, hits[i].getLocal().y, hits[i].getLocal().z);
+      gpos.emplace_back(hits[i].getPosition().x, hits[i].getPosition().y, hits[i].getPosition().z);
+      dims.emplace_back(hits[i].getDimension().x, hits[i].getDimension().y, hits[i].getDimension().z);
+      energy.emplace_back(hits[i].getEnergy());
+      sectors.emplace_back(hits[i].getSector());
+    }
+
+    {
+      // Device memory
+      sycl::buffer<int, 1> nidx_buf (nidx.data(), sycl::range<1>(nidx.size()));
+      sycl::buffer<double, 1> minClusterHitEdep_buf (&minClusterHitEdep, sycl::range<1>(1));
+      sycl::buffer<float, 1> energy_buf (energy.data(), sycl::range<1>(energy.size()));
+
+      sycl::buffer<sycl::float3,1> lpos_buf (lpos.data(), sycl::range<1>(lpos.size()));
+      sycl::buffer<sycl::float3,1> gpos_buf (gpos.data(), sycl::range<1>(gpos.size()));
+      sycl::buffer<sycl::float3,1> dims_buf (dims.data(), sycl::range<1>(dims.size()));
+
+      sycl::buffer<int,1> sectors_buf (sectors.data(), sycl::range<1>(sectors.size()));
+      sycl::buffer<double, 1> sectorDist_buf (&sectorDist, sycl::range<1>(1));
+      sycl::buffer<double, 1> neighbourDist_buf (neighbourDist.data(), sycl::range<1>(neighbourDist.size()));
+
+      try {
+            // Initalize Neighbour Indices
+            queue.submit([&](sycl::handler& h) {
+              auto nidx_acc = nidx_buf.get_access<sycl::access::mode::write>(h);
+              h.parallel_for(sycl::range<1>(hits.size()), [=](sycl::id<1> idx) {
+                  nidx_acc[idx] = idx;
+              });
+            });
+
+            /**
+             * @brief Assign current vertex id (idx) to neighbour if idx < id
+             * held at neighbour index. Emulates sequential assignment of 
+             * clusters by DFS in parallel.
+             */
+            queue.submit([&](sycl::handler& h) {
+              auto nidx_acc = nidx_buf.get_access<sycl::access::mode::atomic>(h);
+              auto minClusterHitEdep_acc = minClusterHitEdep_buf.get_access<sycl::access::mode::read>(h);
+              auto energy_acc = energy_buf.get_access<sycl::access::mode::read>(h);
+
+              int hitsDist_type = static_cast<int>(sHitsDist);
+              auto lpos_acc = lpos_buf.get_access<sycl::access::mode::read>(h);
+              auto gpos_acc = gpos_buf.get_access<sycl::access::mode::read>(h);
+              auto dims_acc = dims_buf.get_access<sycl::access::mode::read>(h);
+
+              auto sectors_acc = sectors_buf.get_access<sycl::access::mode::read>(h);
+              auto sectorDist_acc = sectorDist_buf.get_access<sycl::access::mode::read>(h);
+              auto neighbourDist_acc = neighbourDist_buf.get_access<sycl::access::mode::read>(h);
+
+              h.parallel_for(sycl::range<1>(hits.size()), [=](sycl::id<1> idx) {
+                // not a qualified hit - skip
+                if(energy_acc[idx] < minClusterHitEdep_acc[0]){
+                  return;
+                }
+
+                for(size_t i = 0; i < nidx_acc.size(); i++) {
+
+                  if(energy_acc[i] < minClusterHitEdep_acc[0]) continue;
+
+                  if(!Jug::Reco::is_neighbour(lpos_acc,gpos_acc,dims_acc,sectors_acc,
+                                   sectorDist_acc,neighbourDist_acc,idx,i,hitsDist_type)){
+                    continue;
+                  }
+                  
+                  // Atomic exchange of min element between current neighbour index nidx_acc[i] and idx
+                  nidx_acc[i].fetch_min(idx);
+
+                }
+
+              });
+            }).wait_and_throw();
+      } catch(sycl::exception e) {
+        std::cerr << "Caught SYCL Exception: " << e.what() << "\n";
+      }
+
+    } // Sync Device and Host memory
+
+    if(is_debug){
+        fmt::print("Parallel grouping results are:\n{}\n",fmt::join(nidx," "));
+    }
+    
+    // Emplace index array into groups for further processing
+    std::unordered_map<int, std::vector<std::pair<uint32_t, CaloHit>>> grp_map;
+    for(size_t i = 0; i < hits.size(); i++) {
+      grp_map[nidx[i]].emplace_back(i, hits[i]);
+    }
+    for(auto i : grp_map) {
+      groups.emplace_back(i.second);
+    }
+
+  }
+
+  std::vector<CaloHit>
+  parallel_find_maxima(const std::vector<std::pair<uint32_t, CaloHit>>& group,
+              std::array<double,2>& neighbourDist,
+              double minClusterCenterEdep, double sectorDist, bool global = false) {
+    std::vector<CaloHit> maxima;
+
+    if (group.empty()) {
+      return maxima;
+    }
+
+    if (global) {
+      int mpos = 0;
+      for (size_t i = 0; i < group.size(); ++i) {
+        if (group[mpos].second.getEnergy() < group[i].second.getEnergy()) {
+          mpos = i;
+        }
+      }
+      if (group[mpos].second.getEnergy() >= minClusterCenterEdep) {
+        maxima.push_back(group[mpos].second);
+      }
+      return maxima;
+    }
+
+    // Prep Host memory for device offload
+    std::vector<float> energy;
+    std::vector<uint8_t> max_idx (group.size());
+
+    // Get location data from hits
+    std::vector<int32_t> sectors;
+    std::vector<sycl::vec<float, 3>> lpos, gpos, dims;
+
+    for (const auto& [idx, hit] : group){
+      lpos.emplace_back(hit.getLocal().x, hit.getLocal().y, hit.getLocal().z);
+      gpos.emplace_back(hit.getPosition().x, hit.getPosition().y, hit.getPosition().z);
+      dims.emplace_back(hit.getDimension().x, hit.getDimension().y, hit.getDimension().z);
+      energy.push_back(hit.getEnergy());
+      sectors.push_back(hit.getSector());
+    }
+
+    // Device memory
+    {
+
+      sycl::buffer<float, 1> energy_buf (energy.data(), sycl::range<1>(energy.size()));
+      sycl::buffer<uint8_t, 1> max_idx_buf (max_idx.data(), sycl::range<1>(max_idx.size()));
+      sycl::buffer<double, 1> minClusterCenterEdep_buf (&minClusterCenterEdep, sycl::range<1>(1));
+
+      int hitsDist_type = static_cast<int>(sHitsDist);
+      sycl::buffer<sycl::float3,1> lpos_buf (lpos.data(), sycl::range<1>(lpos.size()));
+      sycl::buffer<sycl::float3,1> gpos_buf (gpos.data(), sycl::range<1>(gpos.size()));
+      sycl::buffer<sycl::float3,1> dims_buf (dims.data(), sycl::range<1>(dims.size()));
+
+      sycl::buffer<int32_t,1> sectors_buf (sectors.data(), sycl::range<1>(sectors.size()));
+      sycl::buffer<double, 1> sectorDist_buf (&sectorDist, sycl::range<1>(1));
+      sycl::buffer<double, 1> neighbourDist_buf (neighbourDist.data(), sycl::range<1>(neighbourDist.size()));
+      
+      try {
+        queue.submit([&](sycl::handler& h){
+          auto energy_acc = energy_buf.get_access<sycl::access::mode::read>(h);
+          auto max_idx_acc = max_idx_buf.get_access<sycl::access::mode::write>(h);
+          auto minClusterCenterEdep_acc = minClusterCenterEdep_buf.get_access<sycl::access::mode::read>(h);
+
+          auto lpos_acc = lpos_buf.get_access<sycl::access::mode::read>(h);
+          auto gpos_acc = gpos_buf.get_access<sycl::access::mode::read>(h);
+          auto dims_acc = dims_buf.get_access<sycl::access::mode::read>(h);
+
+          auto sectors_acc = sectors_buf.get_access<sycl::access::mode::read>(h);
+          auto sectorDist_acc = sectorDist_buf.get_access<sycl::access::mode::read>(h);
+          auto neighbourDist_acc = neighbourDist_buf.get_access<sycl::access::mode::read>(h);
+
+          h.parallel_for(sycl::range<1>(group.size()), [=](sycl::id<1> idx){
+            // not a qualified hit - skip
+            if(energy_acc[idx] < minClusterCenterEdep_acc[0]){
+              return;
+            }
+            
+            bool is_max = true;
+
+            for(size_t i = 0; i < energy_acc.size(); i++){
+              if(idx == i){
+                continue;
+              }
+
+              if(energy_acc[i] > energy_acc[idx]){
+                if(Jug::Reco::is_neighbour(lpos_acc,gpos_acc,dims_acc,sectors_acc,
+                                sectorDist_acc,neighbourDist_acc,idx,i,hitsDist_type)){
+                      is_max = false;
+                      break;
+                  }
+                      
+              }
+            }
+
+            if(is_max){
+              max_idx_acc[idx] = 1;
+            }
+            
+          });
+        }).wait_and_throw();
+
+      } catch(sycl::exception e) {
+        std::cerr << "Caught SYLC Exception: " << e.what() << "\n";
+      }
+
+    } // Sync Device memory to Host
+
+    // Convert maxima index array to hit vector for further processing
+    for(size_t i = 0; i < max_idx.size(); i++){
+      if(max_idx[i] == 1){
+        if(is_debug){
+            std::cout << "Found Maxima at: " << group[i].first << "\n";
+        }
+        maxima.push_back(group[i].second);
+      }
+    }
+
+    return maxima;
+  }
+
+#endif
 
 /**
  *  Island Clustering Algorithm for Calorimeter Blocks.
@@ -189,6 +510,24 @@ public:
           neighbourDist[i] = uprop.value()[i] / units[i];
         }
         hitsDist = method;
+
+        #ifdef USE_SYCL
+        if(uprop.name() == "localDistXY")
+            sHitsDist = sycl_hits_dist::localXY;
+        if(uprop.name() == "localDistXZ")
+            sHitsDist = sycl_hits_dist::localXZ;
+        if(uprop.name() == "localDistYZ")
+            sHitsDist = sycl_hits_dist::localYZ;
+        if(uprop.name() == "dimScaledLocalDistXY")
+            sHitsDist = sycl_hits_dist::dimScaleLocalXY;
+        if(uprop.name() == "globalDistRPhi")
+            sHitsDist = sycl_hits_dist::globalRPhi;
+        if(uprop.name() == "globalDistEtaPhi")
+            sHitsDist = sycl_hits_dist::globalEtaPhi;
+        
+        if(msgLevel(MSG::DEBUG)) is_debug = true;
+        #endif
+
         info() << fmt::format("Clustering uses {} with distances <= [{}]", uprop.name(), fmt::join(neighbourDist, ","))
                << endmsg;
       }
@@ -229,6 +568,20 @@ public:
     // group neighboring hits
     std::vector<std::vector<std::pair<uint32_t, CaloHit>>> groups;
 
+    #ifdef USE_SYCL
+    for (size_t i = 0; i < hits.size(); ++i) {
+      if (msgLevel(MSG::DEBUG)) {
+        const auto& hit = hits[i];
+        debug() << fmt::format("hit {:d}: energy = {:.4f} MeV, local = ({:.4f}, {:.4f}) mm, "
+                               "global=({:.4f}, {:.4f}, {:.4f}) mm",
+                               i, hit.getEnergy() * 1000., hit.getLocal().x, hit.getLocal().y, hit.getPosition().x,
+                               hit.getPosition().y, hit.getPosition().z)
+                << endmsg;
+      }
+    }
+
+    parallel_group(groups, hits, neighbourDist, minClusterHitEdep, sectorDist);
+    #else
     std::vector<bool> visits(hits.size(), false);
     for (size_t i = 0; i < hits.size(); ++i) {
       if (msgLevel(MSG::DEBUG)) {
@@ -247,12 +600,17 @@ public:
       // create a new group, and group all the neighboring hits
       dfs_group(groups.back(), i, hits, visits);
     }
+    #endif
 
     for (auto& group : groups) {
       if (group.empty()) {
         continue;
       }
+    #ifdef USE_SYCL
+      auto maxima = parallel_find_maxima(group, neighbourDist, minClusterCenterEdep, sectorDist, !m_splitCluster.value());
+    #else
       auto maxima = find_maxima(group, !m_splitCluster.value());
+    #endif
       split_group(group, maxima, proto);
       if (msgLevel(MSG::DEBUG)) {
         debug() << "hits in a group: " << group.size() << ", "
@@ -296,7 +654,7 @@ private:
     }
   }
 
-  // find local maxima that above a certain threshold
+  // find local maxima that are above a certain threshold
   std::vector<CaloHit>
   find_maxima(const std::vector<std::pair<uint32_t, CaloHit>>& group,
               bool global = false) const {
