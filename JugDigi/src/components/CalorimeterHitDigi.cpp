@@ -31,34 +31,33 @@ public:
     return StatusCode::SUCCESS;
   }
 
-  private:
-    // additional smearing resolutions
-    Gaudi::Property<std::vector<double>> u_eRes{this, "energyResolutions", {}}; // a/sqrt(E/GeV) + b + c/(E/GeV)
-    Gaudi::Property<double>              m_tRes{this, "timeResolution", 0.0 * ns};
-    // single hit energy deposition threshold
-    Gaudi::Property<double>              m_threshold{this, "threshold", 1. * keV};
+private:
+  // additional smearing resolutions
+  Gaudi::Property<std::vector<double>> u_eRes{this, "energyResolutions", {}}; // a/sqrt(E/GeV) + b + c/(E/GeV)
+  Gaudi::Property<double>              m_tRes{this, "timeResolution", 0.0 * dd4hep::ns};
+  // single hit energy deposition threshold
+  Gaudi::Property<double>              m_threshold{this, "threshold", 1. * dd4hep::keV};
 
-    // digitization settings
-    Gaudi::Property<unsigned int>       m_capADC{this, "capacityADC", 8096};
-    Gaudi::Property<double>             m_dyRangeADC{this, "dynamicRangeADC", 100 * MeV};
-    Gaudi::Property<unsigned int>       m_pedMeanADC{this, "pedestalMean", 400};
-    Gaudi::Property<double>             m_pedSigmaADC{this, "pedestalSigma", 3.2};
-    Gaudi::Property<double>             m_resolutionTDC{this, "resolutionTDC", 10 * ps};
+  // digitization settings
+  Gaudi::Property<unsigned int>       m_capADC{this, "capacityADC", 8096};
+  Gaudi::Property<double>             m_dyRangeADC{this, "dynamicRangeADC", 100 * dd4hep::MeV};
+  Gaudi::Property<unsigned int>       m_pedMeanADC{this, "pedestalMean", 400};
+  Gaudi::Property<double>             m_pedSigmaADC{this, "pedestalSigma", 3.2};
+  Gaudi::Property<double>             m_resolutionTDC{this, "resolutionTDC", 0.010 * dd4hep::ns};
+  Gaudi::Property<double>             m_corrMeanScale{this, "scaleResponse", 1.0};
 
-    Gaudi::Property<double>             m_corrMeanScale{this, "scaleResponse", 1.0};
+  // signal sums
+  // @TODO: implement signal sums with timing
+  // field names to generate id mask, the hits will be grouped by masking the field
+  Gaudi::Property<std::vector<std::string>> u_fields{this, "signalSumFields", {}};
+  // ref field ids are used for the merged hits, 0 is used if nothing provided
+  Gaudi::Property<std::vector<int>>         u_refs{this, "fieldRefNumbers", {}};
+  Gaudi::Property<std::string>              m_geoSvcName{this, "geoServiceName", "GeoSvc"};
+  Gaudi::Property<std::string>              m_readout{this, "readoutClass", ""};
 
-    // signal sums
-    // @TODO: implement signal sums with timing
-    // field names to generate id mask, the hits will be grouped by masking the field
-    Gaudi::Property<std::vector<std::string>> u_fields{this, "signalSumFields", {}};
-    // ref field ids are used for the merged hits, 0 is used if nothing provided
-    Gaudi::Property<std::vector<int>>         u_refs{this, "fieldRefNumbers", {}};
-    Gaudi::Property<std::string>              m_geoSvcName{this, "geoServiceName", "GeoSvc"};
-    Gaudi::Property<std::string>              m_readout{this, "readoutClass", ""};
+};
 
-  };
-
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-  DECLARE_COMPONENT(CalorimeterHitDigi)
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+DECLARE_COMPONENT(CalorimeterHitDigi)
 
 } // namespace Jug::Digi
