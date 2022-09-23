@@ -29,8 +29,6 @@ public:
     setAlgoProp("logWeightBase", m_logWeightBase.value());
     setAlgoProp("energyWeight", m_energyWeight.value());
     setAlgoProp("moduleDimZName", m_moduleDimZName.value());
-    warning() << "DBG DBG type info for etabounds: " << typeid(m_enableEtaBounds.value()).name()
-              << endmsg;
     setAlgoProp("enableEtaBounds", m_enableEtaBounds.value());
     return StatusCode::SUCCESS;
   }
