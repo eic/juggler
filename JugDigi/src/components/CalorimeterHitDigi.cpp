@@ -6,6 +6,8 @@
 
 #include "Gaudi/Property.h"
 
+namespace Jug::Digi {
+
 namespace {
   using AlgoBase = Jug::Algo::Algorithm<algorithms::calorimetry::CalorimeterHitDigi>;
 }
