@@ -87,7 +87,4 @@ namespace algorithms::calorimetry {
     const RandomSvc& m_randomSvc = RandomSvc::instance();
   };
 
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-  DECLARE_COMPONENT(CalorimeterHitDigi)
-
 } // namespace algoriths::calorimetry
