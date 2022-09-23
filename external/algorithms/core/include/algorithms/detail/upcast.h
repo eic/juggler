@@ -26,6 +26,7 @@ template <typename String>
 struct upcast_type<String, std::enable_if_t<std::is_convertible_v<String, std::string>>> {
   using type = std::string;
 };
+template <> struct upcast_type<bool> { using type = bool; };
 
 template <class T> using upcast_type_t = typename upcast_type<T>::type;
 
