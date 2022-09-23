@@ -16,7 +16,7 @@ public:
   CalorimeterHitDigi(const std::string& name, ISvcLocator* svcLoc) : AlgoBase(name, svcLoc) {}
 
   virtual StatusCode configure() {
-    setAlgoProp("energyResolutions", u_rRes.value());
+    setAlgoProp("energyResolutions", u_eRes.value());
     setAlgoProp("timeResolution", m_tRes.value());
     setAlgoProp("threshold", m_threshold.value());
     setAlgoProp("capacityADC", m_capADC.value());
