@@ -24,6 +24,8 @@ public:
   using PropertyMap = std::map<std::string_view, PropertyBase&>;
 
   template <typename T> void setProperty(std::string_view name, T&& value) {
+    // TODO FIXME remove debug line
+    std::cerr << "DBGDBG passing property " << name << " with value " << value << std::endl;
     m_props.at(name).set(detail::upcast_type_t<T>(std::forward<T&&>(value)));
   }
   template <typename T> T getProperty(std::string_view name) const {
