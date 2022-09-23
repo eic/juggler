@@ -43,8 +43,8 @@ namespace algorithms::calorimetry {
 
     CalorimeterHitDigi(std::string_view name)
       : CalorimeterHitDigiAlgorithm{name,
-                            {"inputHitCollection", "inputHits"},
-                            {"outputHitCollection", "outputHits"}} {};
+                            {"inputHitCollection"},
+                            {"outputHitCollection"}} {};
 
     void init();
     void process(const Input&, const Output&);
