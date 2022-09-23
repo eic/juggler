@@ -42,7 +42,7 @@ void ClusterRecoCoG::init() {
   std::string ew = m_energyWeight;
   // make it case-insensitive
   std::transform(ew.begin(), ew.end(), ew.begin(), [](char s) { return std::tolower(s); });
-  if (weightMethods.count(ew)) {
+  if (!weightMethods.count(ew)) {
     std::vector<std::string> keys;
     std::transform(weightMethods.begin(), weightMethods.end(), std::back_inserter(keys),
                    [](const auto& keyvalue) { return keyvalue.first; });
