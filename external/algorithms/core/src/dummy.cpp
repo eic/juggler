@@ -1,3 +1,8 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Wouter Deconinck, Sylvester Joosten
+//
+// Dummy that instantiates some objects to trigger compile errors early on in case of
+// bugs. This should be migrated to tests TODO.
 #include <algorithms/logger.h>
 
 #include <algorithms/algorithm.h>

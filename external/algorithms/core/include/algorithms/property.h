@@ -1,3 +1,10 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Wouter Deconinck, Sylvester Joosten
+//
+// Defines the Configurable base class and related PropertyMixin
+// These base classes provide access to the Property<T> object, a self-registering
+// configurable property that acts as a bare object T from a performance point-of-view
+//
 #pragma once
 
 #include <any>

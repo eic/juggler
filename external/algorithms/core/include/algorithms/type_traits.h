@@ -1,3 +1,10 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Wouter Deconinck, Sylvester Joosten
+//
+// Type traits used for argument deduction for input and output arguments.
+// It allows to distinguish Vector and Optional arguments from regular arguments,
+// and to select the appropriate underlying pointer type for each of the argument types.
+//
 #pragma once
 
 #include <gsl/gsl>

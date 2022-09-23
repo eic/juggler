@@ -1,3 +1,8 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Wouter Deconinck, Sylvester Joosten
+//
+// A simple exception base class that transports both an error message and error type
+
 #pragma once
 
 #include <exception>

@@ -1,3 +1,11 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Wouter Deconinck, Sylvester Joosten
+//
+// Basic Service infrastructure, implemented as lazy-evaluated singletons (thread-safe).
+//
+// Provides the special ServiceSvc (that provides access to all instantiated services as
+// Configurable*), and the ServiceMixin (and related ALGORITHMS_DEFINE_SERVICE macro).
+//
 #pragma once
 
 #include <map>

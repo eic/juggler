@@ -1,3 +1,8 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Wouter Deconinck, Sylvester Joosten
+//
+// Defines NameMixin - simple base class to provide name functionality
+//
 #pragma once
 
 namespace algorithms {

@@ -1,3 +1,29 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Wouter Deconinck, Sylvester Joosten
+//
+// Algorithm base class, defined as a template with a tuple of Input<> and Output<>
+// parameters.
+//
+// Known types are:
+//   - Normal data type T
+//   - Optional data type std::optional<T>
+//   - Vector of normal data std::vector<T>
+//
+// For input data, this then selects:
+//   - T           --> gsl::not_null<const T*> (NOT allowed to be null)
+//   - optional<T> --> const T* (allowed to be null)
+//   - vector<T>   --> std::vector<gsl::not_null<const T*>> (N arguments, NOT allowed to
+//                                                           be null, but can be zero
+//                                                           length)
+//
+// Same for output data, but replace `const T*` with `T*` (mutable) everywhere.
+//
+// The ::process() algorithm is then provided with a tuple of both the input and the
+// output pointers according to this scheme.
+//
+// Finally, provides provides utility traits to determine if a type Input<T...> or Output<T...> are
+// an Input or Output Type (is_input_v<U> and is_output_v<U>)
+//
 #pragma once
 
 #include <array>

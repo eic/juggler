@@ -1,3 +1,12 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Wouter Deconinck, Sylvester Joosten
+//
+// Logging service, which will use a callback to use the framework logging infrastructure.
+// use ::action(void(LogLevel, std::string_view, std::string_view)) to register
+// a logger.
+//
+// Also provides the LoggerMixin and LoggedService base classes
+//
 #pragma once
 
 #include <array>

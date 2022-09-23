@@ -1,3 +1,10 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+// Copyright (C) 2022 Wouter Deconinck, Sylvester Joosten
+//
+// DD4hep Geometry service exposing a detector(), world(), and cellIDPositionConverter()
+// Meant to be set by the calling framework, but can also load DD4hep itself
+// when given a compact file as Property.
+//
 #pragma once
 
 #include <gsl/gsl>
