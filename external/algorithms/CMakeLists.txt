@@ -60,4 +60,13 @@ find_package(fmt REQUIRED)
 include(GNUInstallDirs)
 
 add_subdirectory(core)
+
+# FIXME: add directory as soon as one algorithm converted
+#add_subdirectory(acts)
 add_subdirectory(calorimetry)
+#add_subdirectory(dis)
+#add_subdirectory(far_forward)
+#add_subdirectory(pid)
+#add_subdirectory(tracking)
+#add_subdirectory(truth)
+#add_subdirectory(utility)

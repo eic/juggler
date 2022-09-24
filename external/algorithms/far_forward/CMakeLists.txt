@@ -5,11 +5,14 @@
 # Package: algorithms core utilities
 ################################################################################
 
-set(SUBDIR "core")
+set(SUBDIR "far_forward")
 set(LIBRARY "algo${SUBDIR}")
 set(TARGETS ${TARGETS} ${LIBRARY} PARENT_SCOPE)
 
-file(GLOB SRC CONFIGURE_DEPENDS src/*.cpp)
+# FIXME: adding one by one
+#file(GLOB SRC CONFIGURE_DEPENDS src/*.cpp)
+set(SRC
+)
 
 add_library(${LIBRARY} SHARED ${SRC})
 target_link_libraries(${LIBRARY}
@@ -17,6 +20,7 @@ target_link_libraries(${LIBRARY}
     EDM4HEP::edm4hep
     EDM4EIC::edm4eic
     DD4hep::DDRec
+    algocore
     fmt::fmt)
 target_include_directories(${LIBRARY}
   PUBLIC
