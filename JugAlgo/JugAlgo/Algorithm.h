@@ -26,7 +26,9 @@ public:
       : GaudiAlgorithm(name, svcLoc)
       , m_algo{name}
       , m_output{this, m_algo.outputNames()}
-      , m_input{this, m_algo.inputNames()} {}
+      , m_input{this, m_algo.inputNames()} {
+    defineProperties();
+  }
 
   StatusCode initialize() override {
     debug() << "Initializing " << name() << endmsg;
@@ -49,12 +51,9 @@ public:
     m_input.init();
     m_output.init();
 
-    // call configure function that passes properties
+    // configure properties
     debug() << "Configuring properties" << endmsg;
-    auto sc = configure();
-    if (sc != StatusCode::SUCCESS) {
-      return sc;
-    }
+    initProperties();
 
     // call the internal algorithm init
     debug() << "Initializing underlying algorithm " << m_algo.name() << endmsg;
@@ -72,8 +71,6 @@ public:
     return StatusCode::SUCCESS;
   }
 
-  virtual StatusCode configure() = 0;
-
 protected:
   template <typename T> void setAlgoProp(std::string_view name, T&& value) {
     m_algo.template setProperty<T>(name, value);
@@ -84,10 +81,38 @@ protected:
   bool hasAlgoProp(std::string_view name) const { return m_algo.hasProperty(name); }
 
 private:
+  // to be called during construction (before init())
+  void defineProperties() {
+    for (const auto& [key, prop] : m_algo.getProperties()) {
+      std::visit(
+          [this, key](auto&& val) {
+            using T = std::decay_t<decltype(val)>;
+            this->m_props.emplace(
+                key, std::make_unique<Gaudi::Property<T>>(this, std::string(key), val));
+          },
+          prop.get());
+    }
+  }
+
+  // to be called during init() --> will actually set the underlying alo properties
+  void initProperties() {
+    for (const auto& [key, prop] : m_algo.getProperties()) {
+      std::visit(
+          [this, key](auto&& val) {
+            using T                = std::decay_t<decltype(val)>;
+            const auto* gaudi_prop = static_cast<Gaudi::Property<T>*>(this->m_props.at(key).get());
+            const auto prop_val    = gaudi_prop->value();
+            this->m_algo.setProperty(key, prop_val);
+          },
+          prop.get());
+    }
+  }
+
   algo_type m_algo;
   SmartIF<IAlgoServiceSvc> m_algo_svc;
   detail::DataProxy<output_type> m_output;
   detail::DataProxy<input_type> m_input;
+  std::map<std::string_view, std::unique_ptr<Gaudi::Details::PropertyBase>> m_props;
 };
 
 } // namespace Jug::Algo

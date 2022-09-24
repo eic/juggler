@@ -24,21 +24,6 @@ class ClusterRecoCoG : public AlgoBase {
 public:
   ClusterRecoCoG(const std::string& name, ISvcLocator* svcLoc) : AlgoBase(name, svcLoc) {}
 
-  virtual StatusCode configure() {
-    setAlgoProp("samplingFraction", m_sampFrac.value());
-    setAlgoProp("logWeightBase", m_logWeightBase.value());
-    setAlgoProp("energyWeight", m_energyWeight.value());
-    setAlgoProp("moduleDimZName", m_moduleDimZName.value());
-    setAlgoProp("enableEtaBounds", m_enableEtaBounds.value());
-    return StatusCode::SUCCESS;
-  }
-
-private:
-  Gaudi::Property<double> m_sampFrac{this, "samplingFraction", 1.0};
-  Gaudi::Property<double> m_logWeightBase{this, "logWeightBase", 3.6};
-  Gaudi::Property<std::string> m_energyWeight{this, "energyWeight", "log"};
-  Gaudi::Property<std::string> m_moduleDimZName{this, "moduleDimZName", ""};
-  Gaudi::Property<bool> m_enableEtaBounds{this, "enableEtaBounds", false};
 };
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
