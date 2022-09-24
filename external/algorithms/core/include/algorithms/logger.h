@@ -58,7 +58,7 @@ constexpr std::string_view logLevelName(LogLevel level) {
 class LogSvc : public Service<LogSvc> {
 public:
   using LogAction = std::function<void(LogLevel, std::string_view, std::string_view)>;
-  void defaultLevel(const LogLevel l) { m_level.set(l); }
+  void defaultLevel(const LogLevel l) { m_level.set(detail::upcast_type_t<LogLevel>(l)); }
   LogLevel defaultLevel() const { return m_level; }
   void action(LogAction a) { m_action = a; }
   void report(const LogLevel l, std::string_view caller, std::string_view msg) const {

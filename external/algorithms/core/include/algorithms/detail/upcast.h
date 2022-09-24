@@ -18,6 +18,9 @@ template <typename Int>
 struct upcast_type<Int, std::enable_if_t<std::is_integral_v<Int> && std::is_signed_v<Int>>> {
   using type = int64_t;
 };
+template <typename Enum> struct upcast_type<Enum, std::enable_if_t<std::is_enum_v<Enum>>> {
+  using type = int64_t;
+};
 template <typename Float>
 struct upcast_type<Float, std::enable_if_t<std::is_floating_point_v<Float>>> {
   using type = double;
