@@ -12,6 +12,15 @@
 #include <JugAlgo/IAlgoServiceSvc.h>
 #include <JugAlgo/detail/DataProxy.h>
 
+#define JUGALGO_DEFINE_ALGORITHM(algorithm, impl, ns)                                              \
+  using algorithm##Base = Jug::Algo::Algorithm<impl>;                                              \
+  namespace ns {                                                                                   \
+  struct algorithm : algorithm##Base {                                                             \
+    algorithm(const std::string& name, ISvcLocator* svcLoc) : algorithm##Base(name, svcLoc) {}     \
+  };                                                                                               \
+  DECLARE_COMPONENT(algorithm)                                                                     \
+  }
+
 namespace Jug::Algo {
 
 template <class AlgoImpl> class Algorithm : public GaudiAlgorithm {
