@@ -9,6 +9,7 @@
 
 #include <algorithms/geo.h>
 #include <algorithms/logger.h>
+#include <algorithms/random.h>
 #include <algorithms/service.h>
 
 // too many services? :P
@@ -83,6 +84,17 @@ StatusCode AlgoServiceSvc::initialize() {
       info() << "Setting up algorithms::GeoSvc" << endmsg;
       auto* geo = static_cast<algorithms::GeoSvc*>(svc);
       geo->init(m_geoSvc->detector());
+    } else if (name == algorithms::RandomSvc::kName) {
+      // Setup random service
+      //m_rndmGenSvc = service("RndmGenSvc");
+      //if (!m_rndmGenSvc) {
+      //  error() << "Unable to locate Random Service. "
+      //          << "Make sure you have RndmGenSvc in the right order in the configuration." << endmsg;
+      //  return StatusCode::FAILURE;
+      //}
+      info() << "Setting up algorithms::RandomSvc" << endmsg;
+      auto* random = static_cast<algorithms::RandomSvc*>(svc);
+      random->init(); // FIXME: algorithms::core::random service is not using framework
     } else {
       fatal() << "Unknown service encountered, please implement the necessary framework hooks"
               << endmsg;
