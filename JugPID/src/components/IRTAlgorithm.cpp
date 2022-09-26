@@ -642,8 +642,8 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	      theta += wt*photon->_m_PDF[radiator].GetAverage();
               thphot.push_back(photon->_m_PDF[radiator].GetAverage());
 
-              cbuffer.addToThetaPhoton(photon->_m_PDF[radiator].GetAverage());
-              cbuffer.addToPhiPhoton(photon->m_Phi[radiator]);
+              cbuffer.addToThetaphoton(photon->_m_PDF[radiator].GetAverage());
+              cbuffer.addToPhiphoton(photon->m_Phi[radiator]);
 
 	      ri    +=    photon->GetVertexRefractiveIndex();
 	      // FIXME: hardcoded;
