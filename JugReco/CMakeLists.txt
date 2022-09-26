@@ -23,4 +23,8 @@ target_include_directories(JugRecoPlugins PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
+if(USE_SYCL)
+  target_include_directories(JugRecoPlugins PUBLIC ${SYCL_INCLUDE_DIR})
+endif()
+
 target_compile_options(JugRecoPlugins PRIVATE -Wno-suggest-override)
