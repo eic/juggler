@@ -173,14 +173,6 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
   {
     const auto &radiators = m_RadiatorConfig.value();
     
-    // radiator specifications, to be parsed from options file
-    std::string name = "";
-    std::string mode = "";
-    unsigned zbins = 0;
-    float qmrad = -1.;
-    float ri = -1.;
-    float attenuation = -1.;
-    
     for(auto rptr: radiators) {
       // parse radiator specification string; FIXME: expected format could be more consistent, e.g. each token is `this=that`
       //                                      FIXME: check for incorrect formatting
@@ -190,6 +182,16 @@ StatusCode Jug::PID::IRTAlgorithm::initialize( void )
        * - "smearing=%s" parses to  `mode`
        * - "%fmrad"      parses to  `mrad`
        */
+
+      // radiator specifications, to be parsed from options file
+      std::string name = "";
+      std::string mode = "";
+      unsigned zbins = 0;
+      float qmrad = -1.;
+      float ri = -1.;
+      float attenuation = -1.;
+
+      // parse
       std::stringstream rptrStream(rptr);
       std::string rptrTok;
       std::regex rmEq("^.*=");
