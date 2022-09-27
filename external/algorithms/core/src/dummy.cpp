@@ -6,6 +6,7 @@
 #include <algorithms/logger.h>
 
 #include <algorithms/algorithm.h>
+#include <algorithms/random.h>
 
 #include <fmt/ranges.h>
 
