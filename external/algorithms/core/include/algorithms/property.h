@@ -7,9 +7,10 @@
 //
 #pragma once
 
-#include <any>
+#include <cstdint>
 #include <map>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include <fmt/core.h>
@@ -24,6 +25,13 @@ public:
   PropertyError(std::string_view msg) : Error{msg, "algorithms::PropertyError"} {}
 };
 
+// Data types supported for Properties, defined as std::variant. This allows for
+// automatic Property registration with the calling framework, and enables compile-time
+// type errors.
+using PropertyValue = std::variant<bool, uint64_t, int64_t, double, std::string, std::vector<bool>,
+                                   std::vector<uint64_t>, std::vector<int64_t>, std::vector<double>,
+                                   std::vector<std::string>>;
+
 // Configuration/property handling
 class Configurable {
 public:
@@ -31,10 +39,10 @@ public:
   using PropertyMap = std::map<std::string_view, PropertyBase&>;
 
   template <typename T> void setProperty(std::string_view name, T&& value) {
-    m_props.at(name).set(detail::upcast_type_t<T>(std::forward<T&&>(value)));
+    m_props.at(name).set(static_cast<detail::upcast_type_t<T>>(value));
   }
   template <typename T> T getProperty(std::string_view name) const {
-    return static_cast<T>(std::any_cast<detail::upcast_type_t<T>>(m_props.at(name).get()));
+    return std::get<T>(m_props.at(name).get());
   }
   const PropertyMap& getProperties() const { return m_props; }
   bool hasProperty(std::string_view name) const {
@@ -55,8 +63,8 @@ public:
   class PropertyBase {
   public:
     PropertyBase(std::string_view name) : m_name{name} {}
-    virtual void set(std::any v) = 0;
-    virtual std::any get() const = 0;
+    virtual void set(const PropertyValue& v) = 0;
+    virtual PropertyValue get() const        = 0;
     bool hasValue() const { return m_has_value; }
     std::string_view name() const { return m_name; }
 
@@ -69,7 +77,8 @@ public:
   // Essentially a simplified and const-like version of Gaudi::Property
   template <class T> class Property : public PropertyBase {
   public:
-    using ValueType = T;
+    using value_type = T;
+    using impl_type  = detail::upcast_type_t<T>;
 
     Property(Configurable* owner, std::string_view name) : PropertyBase{name} {
       if (owner) {
@@ -79,29 +88,28 @@ public:
             fmt::format("Attempting to create Property '{}' without valid owner", name));
       }
     }
-    Property(Configurable* owner, std::string_view name, const ValueType& v)
+    Property(Configurable* owner, std::string_view name, const value_type& v)
         : Property(owner, name) {
-      set(detail::upcast_type_t<T>(v));
+      set(static_cast<impl_type>(v));
     }
 
     Property()                = delete;
     Property(const Property&) = default;
     Property& operator=(const Property&) = default;
 
-    // Only settable by explicitly calling the ::set() member functio n
+    // Only settable by explicitly calling the ::set() member function
     // as we want the Property to mostly act as if it is constant
-    virtual void set(std::any v) {
-      m_value     = static_cast<T>(std::any_cast<detail::upcast_type_t<T>>(v));
+    virtual void set(const PropertyValue& v) {
+      m_value     = static_cast<value_type>(std::get<impl_type>(v));
       m_has_value = true;
     }
-    // virtual getter for use from PropertyBase - use ::value() instead for a quick
-    // version that does not go through std::any
-    // Get const reference to the value
-    virtual std::any get() const { return m_value; }
+    // virtual getter for use from PropertyBase - use ::value() instead for direct member
+    // access
+    virtual PropertyValue get() const { return static_cast<impl_type>(m_value); }
 
     // Direct access to the value. Use this one whenever possible (or go through the
     // automatic casting)
-    const ValueType& value() const { return m_value; }
+    const value_type& value() const { return m_value; }
 
     // automatically cast to T
     operator T() const { return m_value; }
@@ -120,28 +128,28 @@ public:
 
     // stl collection helpers if needed
     // forced to be templated so we only declare them when used
-    template <class U = const ValueType> decltype(auto) size() const { return value().size(); }
-    template <class U = const ValueType> decltype(auto) length() const { return value().length(); }
-    template <class U = const ValueType> decltype(auto) empty() const { return value().empty(); }
-    template <class U = ValueType> decltype(auto) clear() { value().clear(); }
-    template <class U = const ValueType> decltype(auto) begin() const { return value().begin(); }
-    template <class U = const ValueType> decltype(auto) end() const { return value().end(); }
-    template <class U = ValueType> decltype(auto) begin() { return value().begin(); }
-    template <class U = ValueType> decltype(auto) end() { return value().end(); }
+    template <class U = const value_type> decltype(auto) size() const { return value().size(); }
+    template <class U = const value_type> decltype(auto) length() const { return value().length(); }
+    template <class U = const value_type> decltype(auto) empty() const { return value().empty(); }
+    template <class U = value_type> decltype(auto) clear() { value().clear(); }
+    template <class U = const value_type> decltype(auto) begin() const { return value().begin(); }
+    template <class U = const value_type> decltype(auto) end() const { return value().end(); }
+    template <class U = value_type> decltype(auto) begin() { return value().begin(); }
+    template <class U = value_type> decltype(auto) end() { return value().end(); }
     template <class Arg> decltype(auto) operator[](const Arg& arg) const { return value()[arg]; }
     template <class Arg> decltype(auto) operator[](const Arg& arg) { return value()[arg]; }
-    template <class U = const ValueType>
+    template <class U = const value_type>
     decltype(auto) find(const typename U::key_type& key) const {
       return value().find(key);
     }
-    template <class U = ValueType> decltype(auto) find(const typename U::key_type& key) {
+    template <class U = value_type> decltype(auto) find(const typename U::key_type& key) {
       return value().find(key);
     }
     template <class Arg> decltype(auto) erase(const Arg& arg) { return value().erase(arg); }
 
     // In case our property has operator (), delegate the operator()
     template <class... Args>
-    decltype(std::declval<ValueType>()(std::declval<Args&&>()...))
+    decltype(std::declval<value_type>()(std::declval<Args&&>()...))
     operator()(Args&&... args) const {
       return m_value()(std::forward<Args>(args)...);
     }
