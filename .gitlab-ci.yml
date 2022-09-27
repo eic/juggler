@@ -103,6 +103,7 @@ analysis:clang-tidy:
     expire_in: 1 week
     paths:
       - clang_tidy_fixes.yml
+  allow_failure: true
 
 version:
   stage: config 
