@@ -49,12 +49,6 @@ public:
     return m_props.count(name) && m_props.at(name).hasValue();
   }
 
-  template <class Visitor> void visitProperties(Visitor v) {
-    for (auto& [key, prop] : m_props) {
-      std::visit(v, prop);
-    }
-  }
-
 private:
   void registerProperty(PropertyBase& prop) {
     if (m_props.count(prop.name())) {
