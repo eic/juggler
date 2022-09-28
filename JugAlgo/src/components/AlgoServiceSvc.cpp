@@ -9,6 +9,7 @@
 
 #include <algorithms/geo.h>
 #include <algorithms/logger.h>
+#include <algorithms/random.h>
 #include <algorithms/service.h>
 
 // too many services? :P
@@ -83,6 +84,10 @@ StatusCode AlgoServiceSvc::initialize() {
       info() << "Setting up algorithms::GeoSvc" << endmsg;
       auto* geo = static_cast<algorithms::GeoSvc*>(svc);
       geo->init(m_geoSvc->detector());
+    } else if (name == algorithms::RandomSvc::kName) {
+      // setup random service
+      info() << "No setup for algorithms::RandomSvc --> using internal STL 64-bit MT engine"
+             << endmsg;
     } else {
       fatal() << "Unknown service encountered, please implement the necessary framework hooks"
               << endmsg;
