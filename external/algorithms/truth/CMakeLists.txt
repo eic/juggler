@@ -12,6 +12,7 @@ set(TARGETS ${TARGETS} ${LIBRARY} PARENT_SCOPE)
 # FIXME: adding one by one
 #file(GLOB SRC CONFIGURE_DEPENDS src/*.cpp)
 set(SRC
+    src/ParticlesWithTruthPID.cpp
 )
 
 add_library(${LIBRARY} SHARED ${SRC})

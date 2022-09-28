@@ -10,7 +10,6 @@
 
 #include <algorithms/algorithm.h>
 #include <algorithms/geo.h>
-#include <algorithms/property.h>
 
 // Data types
 #include <edm4eic/ClusterCollection.h>
