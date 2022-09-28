@@ -1,107 +1,78 @@
 #pragma once
 
-#include <atomic>
 #include <cstdint>
 #include <functional>
-#include <gsl/gsl>
 #include <mutex>
 #include <random>
-#include <vector>
 
+#include <algorithms/detail/random.h>
 #include <algorithms/logger.h>
 #include <algorithms/service.h>
 
 namespace algorithms {
 
-// Cached link to the underlying generator allowing for multiple instances to be evaluated
-// in parallel. Specs:
-//   - GenFunc is required to return N random numbers between 0 and
+// Random Engine callback function:
+//   - Signature: std::function<std::vector<value_type>(size_t N)> --> generates a vector
+//     of N numbers
+//   - RandomEngineCB is required to return N random numbers between 0 and
 //     std::numeric_limits<uint_fast64_t>::max()
-//   - GenFunc is responsible to deal with possible simultaneous access by multiple
-//     instances of CachedBitGenerator (required to be thread-safe).
-//   - The owner of a CachedGenerator instance is responsible to prevent parallel
-//     calls to ::operator()
-//  Implements the uniform_random_bit_generator concept
-class CachedBitGenerator {
+//   - RandomEngineCB is responsible to deal with possible simultaneous access by multiple
+//     Generator instances (required to be thread-safe).
+using RandomEngineCB = detail::CachedBitGenerator::GenFunc;
+
+// thread-safe generator front-end. Requires that the underlying random engine used by
+// the RandomSvc is thread-safe.
+class Generator {
 public:
-  using value_type = uint_fast64_t;
-  using GenFunc    = std::function<std::vector<value_type>(size_t /* N */)>;
-  CachedBitGenerator(const GenFunc& gen, const size_t cache_size)
-      // index starts at the end of the (empty) cache to force an immediate refresh
-      // on first access
-      : m_gen{gen}, m_cache(cache_size), m_index{cache_size} {}
+  Generator(const RandomEngineCB& gen, const size_t cache_size) : m_gen{gen, cache_size} {}
 
-  value_type operator()() {
-    if (m_index >= m_cache.size()) {
-      refresh();
-    }
-    return m_cache[m_index++];
+  template <class Int = int> Int uniform_int(const Int min, const Int max) const {
+    std::uniform_int_distribution<Int> d{min, max};
+    std::lock_guard<std::mutex> lock{m_mutex};
+    return d(m_gen);
   }
-
-  constexpr value_type min() const { return 0; }
-  constexpr value_type max() const { return std::numeric_limits<value_type>::max(); }
+  template <class Float = double> Float uniform_double(const Float min, const Float max) const {
+    std::uniform_real_distribution<Float> d{min, max};
+    std::lock_guard<std::mutex> lock{m_mutex};
+    return d(m_gen);
+  }
+  template <class Int = int> Int poisson(const Int mean) const {
+    std::poisson_distribution<Int> d{mean};
+    std::lock_guard<std::mutex> lock{m_mutex};
+    return d(m_gen);
+  }
+  template <class Float = double> Float exponential(const Float lambda) const {
+    std::exponential_distribution<Float> d{lambda};
+    std::lock_guard<std::mutex> lock{m_mutex};
+    return d(m_gen);
+  }
+  template <class Float = double> Float gaussian(const Float mu, const Float sigma) const {
+    std::normal_distribution<Float> d{mu, sigma};
+    std::lock_guard<std::mutex> lock{m_mutex};
+    return d(m_gen);
+  }
 
 private:
-  void refresh() {
-    m_cache = m_gen(m_cache.size());
-    m_index = 0;
-  }
-
-  GenFunc m_gen;
-  std::vector<CachedBitGenerator::value_type> m_cache;
-  size_t m_index;
+  mutable detail::CachedBitGenerator m_gen;
+  mutable std::mutex m_mutex;
 };
 
-// thread-safe random generator
+// Random service that creates multiple Generators that are linked to a single random
+// engine. The Generators are safe to be used in parallel as long as the Engine itself is
+// thread-safe (this is a hard requirement for MT). The Generators avoid unnecesary locking
+// by running off a auto-refreshing cached random sequence.
 class RandomSvc : public LoggedService<RandomSvc> {
 public:
-  using value_type = CachedBitGenerator::value_type;
-  using GenFunc    = CachedBitGenerator::GenFunc;
+  using value_type = detail::CachedBitGenerator::value_type;
 
   void init();
-  void init(const GenFunc& gen);
-
-public:
-  class Generator {
-  public:
-    Generator(const GenFunc& gen, const size_t cache_size) : m_gen{gen, cache_size} {}
-
-    template <class Int = int> Int uniform_int(const Int min, const Int max) {
-      std::uniform_int_distribution<Int> d{min, max};
-      std::lock_guard<std::mutex> lock{m_mutex};
-      return d(m_gen);
-    }
-    template <class Float = double> Float uniform_double(const Float min, const Float max) {
-      std::uniform_real_distribution<Float> d{min, max};
-      std::lock_guard<std::mutex> lock{m_mutex};
-      return d(m_gen);
-    }
-    template <class Int = int> Int poisson(const Int mean) {
-      std::poisson_distribution<Int> d{mean};
-      std::lock_guard<std::mutex> lock{m_mutex};
-      return d(m_gen);
-    }
-    template <class Float = double> Float exponential(const Float lambda) {
-      std::exponential_distribution<Float> d{lambda};
-      std::lock_guard<std::mutex> lock{m_mutex};
-      return d(m_gen);
-    }
-    template <class Float = double> Float gaussian(const Float mu, const Float sigma) {
-      std::normal_distribution<Float> d{mu, sigma};
-      std::lock_guard<std::mutex> lock{m_mutex};
-      return d(m_gen);
-    }
-
-  private:
-    CachedBitGenerator m_gen;
-    std::mutex m_mutex;
-  };
+  void init(const RandomEngineCB& gen);
   Generator generator() { return {m_gen, m_cache_size}; }
 
 private:
-  GenFunc createBitGenerator(const size_t seed = 0);
+  RandomEngineCB createEngine(const size_t seed = 0);
 
-  GenFunc m_gen{createBitGenerator()};
+  RandomEngineCB m_gen{createEngine()};
   Property<size_t> m_seed{this, "seed"};
   Property<size_t> m_cache_size{this, "cacheSize", 1024};
   std::mutex m_mutex;
