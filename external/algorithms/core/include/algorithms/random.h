@@ -65,13 +65,45 @@ class RandomSvc : public LoggedService<RandomSvc> {
 public:
   using value_type = detail::CachedBitGenerator::value_type;
 
+  Generator generator() { return {m_gen, m_cache_size}; }
+// FIXME fix the CMake setup so these are properly found in Gaudi
+#if 0 
   void init();
   void init(const RandomEngineCB& gen);
-  Generator generator() { return {m_gen, m_cache_size}; }
+#endif
+  void init() {
+    if (m_seed.hasValue()) {
+      info() << "Custom random seed requested: " << m_seed << endmsg;
+      m_gen = createEngine(m_seed);
+    }
+  }
+  void init(const RandomEngineCB& gen) {
+    init();
+    info() << "Loading external generator function." << endmsg;
+    m_gen = gen;
+    if (m_seed.hasValue()) {
+      warning() << "Custom random seed request ignored when using external generator function"
+                << endmsg;
+    }
+  }
+
+#if 0
+private:
+  RandomEngineCB createEngine(const size_t seed = 1);
+#endif
+  RandomEngineCB createEngine(const size_t seed = 1) {
+    return [=](const size_t size) {
+      static std::mutex m;
+      static std::mt19937_64 gen{seed};
+      std::lock_guard<std::mutex> lock{m};
+      std::vector<value_type> ret{size};
+      std::generate(ret.begin(), ret.end(), gen);
+      return ret;
+    };
+  }
+  // end of FIXME
 
 private:
-  RandomEngineCB createEngine(const size_t seed = 0);
-
   RandomEngineCB m_gen{createEngine()};
   Property<size_t> m_seed{this, "seed"};
   Property<size_t> m_cache_size{this, "cacheSize", 1024};

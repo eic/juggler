@@ -2,6 +2,8 @@
 
 namespace algorithms {
 
+// FIXME fix the CMake setup so these are properly found in Gaudi...
+#if 0
 void RandomSvc::init() {
   if (m_seed.hasValue()) {
     info() << "Custom random seed requested: " << m_seed << endmsg;
@@ -27,4 +29,5 @@ RandomEngineCB RandomSvc::createEngine(const size_t seed) {
     return ret;
   };
 }
+#endif
 } // namespace algorithms
