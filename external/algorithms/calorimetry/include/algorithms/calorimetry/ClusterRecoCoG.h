@@ -42,7 +42,7 @@ public:
                             {"outputClusterCollection", "outputAssociations"}} {}
 
   void init();
-  void process(const Input&, const Output&);
+  void process(const Input&, const Output&) const;
 
 private:
   edm4eic::MutableCluster reconstruct(const edm4eic::ProtoCluster&) const;

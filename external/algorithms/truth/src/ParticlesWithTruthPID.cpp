@@ -15,7 +15,7 @@ void ParticlesWithTruthPID::init() {
   ; // do nothing
 }
 void ParticlesWithTruthPID::process(const ParticlesWithTruthPID::Input& input,
-                                    const ParticlesWithTruthPID::Output& output) {
+                                    const ParticlesWithTruthPID::Output& output) const {
   const auto [mc_ptr, tracks_ptr] = input;
   auto [part_ptr, assoc_ptr]      = output;
 

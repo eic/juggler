@@ -19,11 +19,11 @@ class ParticlesWithTruthPID : public ParticlesWithTruthPIDAlgorithm {
 public:
   ParticlesWithTruthPID(std::string_view name)
       : ParticlesWithTruthPIDAlgorithm{name,
-                                      {"inputMCParticles", "inputTrackParameters"},
-                                      {"outputParticles", "outputAssociations"}} {}
+                                       {"inputMCParticles", "inputTrackParameters"},
+                                       {"outputParticles", "outputAssociations"}} {}
 
   void init();
-  void process(const Input&, const Output&);
+  void process(const Input&, const Output&) const;
 
 private:
   // Matching momentum tolerance requires 10% by default;
