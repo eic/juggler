@@ -33,8 +33,6 @@ using ClusteringAlgorithm = Algorithm<
  */
 class ClusterRecoCoG : public ClusteringAlgorithm {
 public:
-  using Input      = ClusteringAlgorithm::Input;
-  using Output     = ClusteringAlgorithm::Output;
   using WeightFunc = std::function<double(double, double, double)>;
 
   // TODO: get rid of "Collection" in names
