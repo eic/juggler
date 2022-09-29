@@ -29,7 +29,8 @@ public:
 // Data types supported for Properties, defined as std::variant. This allows for
 // automatic Property registration with the calling framework, and enables compile-time
 // type errors.
-using PropertyValue = std::variant<bool, uint64_t, int64_t, double, std::string, std::vector<bool>,
+using PropertyValue = std::variant<bool, uint32_t, int32_t, uint64_t, int64_t, double, std::string,
+                                   std::vector<bool>, std::vector<uint32_t>, std::vector<int32_t>,
                                    std::vector<uint64_t>, std::vector<int64_t>, std::vector<double>,
                                    std::vector<std::string>>;
 
