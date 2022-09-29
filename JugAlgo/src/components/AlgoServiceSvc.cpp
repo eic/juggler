@@ -23,6 +23,7 @@ public:
 
 private:
   SmartIF<IGeoSvc> m_geoSvc;
+  Gaudi::Property<size_t> m_randomSeed{this, "randomSeed", 1};
 };
 
 DECLARE_COMPONENT(AlgoServiceSvc)
@@ -86,8 +87,12 @@ StatusCode AlgoServiceSvc::initialize() {
       geo->init(m_geoSvc->detector());
     } else if (name == algorithms::RandomSvc::kName) {
       // setup random service
-      info() << "No setup for algorithms::RandomSvc --> using internal STL 64-bit MT engine"
-             << endmsg;
+      info() << "Setting up algorithms::RandomSvc\n"
+             << "  --> using internal STL 64-bit MT engine\n"
+             << "  --> seed set to" << m_randomSeed << endmsg;
+      auto* rnd = static_cast<algorithms::RandomSvc*>(svc);
+      rnd->setProperty("seed", m_randomSeed);
+      rnd->init();
     } else {
       fatal() << "Unknown service encountered, please implement the necessary framework hooks"
               << endmsg;
