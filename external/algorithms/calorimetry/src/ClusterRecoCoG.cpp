@@ -54,7 +54,7 @@ void ClusterRecoCoG::init() {
 }
 
 void ClusterRecoCoG::process(const ClusterRecoCoG::Input& input,
-                             const ClusterRecoCoG::Output& output) {
+                             const ClusterRecoCoG::Output& output) const {
   const auto [proto, opt_simhits] = input;
   auto [clusters, opt_assoc]      = output;
 

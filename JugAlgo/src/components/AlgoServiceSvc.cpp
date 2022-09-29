@@ -9,6 +9,7 @@
 
 #include <algorithms/geo.h>
 #include <algorithms/logger.h>
+#include <algorithms/random.h>
 #include <algorithms/service.h>
 
 // too many services? :P
@@ -22,6 +23,7 @@ public:
 
 private:
   SmartIF<IGeoSvc> m_geoSvc;
+  Gaudi::Property<size_t> m_randomSeed{this, "randomSeed", 1};
 };
 
 DECLARE_COMPONENT(AlgoServiceSvc)
@@ -83,6 +85,14 @@ StatusCode AlgoServiceSvc::initialize() {
       info() << "Setting up algorithms::GeoSvc" << endmsg;
       auto* geo = static_cast<algorithms::GeoSvc*>(svc);
       geo->init(m_geoSvc->detector());
+    } else if (name == algorithms::RandomSvc::kName) {
+      // setup random service
+      info() << "Setting up algorithms::RandomSvc\n"
+             << "  --> using internal STL 64-bit MT engine\n"
+             << "  --> seed set to" << m_randomSeed << endmsg;
+      auto* rnd = static_cast<algorithms::RandomSvc*>(svc);
+      rnd->setProperty("seed", m_randomSeed);
+      rnd->init();
     } else {
       fatal() << "Unknown service encountered, please implement the necessary framework hooks"
               << endmsg;

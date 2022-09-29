@@ -10,7 +10,6 @@
 
 #include <algorithms/algorithm.h>
 #include <algorithms/geo.h>
-#include <algorithms/property.h>
 
 // Data types
 #include <edm4eic/ClusterCollection.h>
@@ -34,8 +33,6 @@ using ClusteringAlgorithm = Algorithm<
  */
 class ClusterRecoCoG : public ClusteringAlgorithm {
 public:
-  using Input      = ClusteringAlgorithm::Input;
-  using Output     = ClusteringAlgorithm::Output;
   using WeightFunc = std::function<double(double, double, double)>;
 
   // TODO: get rid of "Collection" in names
@@ -45,7 +42,7 @@ public:
                             {"outputClusterCollection", "outputAssociations"}} {}
 
   void init();
-  void process(const Input&, const Output&);
+  void process(const Input&, const Output&) const;
 
 private:
   edm4eic::MutableCluster reconstruct(const edm4eic::ProtoCluster&) const;
