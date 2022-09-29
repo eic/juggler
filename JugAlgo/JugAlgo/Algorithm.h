@@ -42,35 +42,41 @@ public:
   StatusCode initialize() override {
     debug() << "Initializing " << name() << endmsg;
 
-    // Grab the AlgoServiceSvc
-    m_algo_svc = service("AlgoServiceSvc");
-    if (!m_algo_svc) {
-      error() << "Unable to get an instance of the AlgoServiceSvc" << endmsg;
+    // Algorithms uses exceptions, Gaudi uses StatusCode --> catch and propagate
+    try {
+      // Grab the AlgoServiceSvc
+      m_algo_svc = service("AlgoServiceSvc");
+      if (!m_algo_svc) {
+        error() << "Unable to get an instance of the AlgoServiceSvc" << endmsg;
+        return StatusCode::FAILURE;
+      }
+
+      // Forward the log level of this algorithm
+      const algorithms::LogLevel level{
+          static_cast<algorithms::LogLevel>(msgLevel() > 0 ? msgLevel() - 1 : 0)};
+      debug() << "Setting the logger level to " << algorithms::logLevelName(level) << endmsg;
+      m_algo.level(level);
+
+      // Init our data structures
+      debug() << "Initializing data structures" << endmsg;
+      m_input.init();
+      m_output.init();
+
+      // configure properties
+      debug() << "Configuring properties" << endmsg;
+      initProperties();
+
+      // validate properties
+      debug() << "Validating properties" << endmsg;
+      m_algo.validate();
+
+      // call the internal algorithm init
+      debug() << "Initializing underlying algorithm " << m_algo.name() << endmsg;
+      m_algo.init();
+    } catch (const std::exception& e) {
+      fatal() << e.what() << endmsg;
       return StatusCode::FAILURE;
     }
-
-    // Forward the log level of this algorithm
-    const algorithms::LogLevel level{
-        static_cast<algorithms::LogLevel>(msgLevel() > 0 ? msgLevel() - 1 : 0)};
-    debug() << "Setting the logger level to " << algorithms::logLevelName(level) << endmsg;
-    m_algo.level(level);
-
-    // Init our data structures
-    debug() << "Initializing data structures" << endmsg;
-    m_input.init();
-    m_output.init();
-
-    // configure properties
-    debug() << "Configuring properties" << endmsg;
-    initProperties();
-
-    // validate properties
-    debug() << "Validating properties" << endmsg;
-    m_algo.validate();
-
-    // call the internal algorithm init
-    debug() << "Initializing underlying algorithm " << m_algo.name() << endmsg;
-    m_algo.init();
     return StatusCode::SUCCESS;
   }
 
