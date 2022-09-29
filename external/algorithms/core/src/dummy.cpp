@@ -49,11 +49,11 @@ public:
   }
 
 private:
-  Property<int> m_int{this, "integer", 3};
-  Property<std::string> m_foo{this, "foo", "foo_property_value"};
+  Property<int> m_int{this, "integer", 3, "test integer property"};
+  Property<std::string> m_foo{this, "foo", "foo_property_value", "test foo property"};
   // and one without a default
-  Property<std::string> m_bar{this, "bar"};
-  Property<double> m_double{this, "double"};
+  Property<std::string> m_bar{this, "bar", "test bar property without default"};
+  Property<double> m_double{this, "double", "test double property without default"};
 };
 
 int dummy() {
@@ -80,7 +80,7 @@ int dummy() {
   tp.print();
 
   Algorithm<Input<int, double>, Output<double, std::vector<double>>> a{
-      "myAlgo", {"int", "double"}, {"moredouble", "variable"}};
+      "myAlgo", {"int", "double"}, {"moredouble", "variable"}, "Test algo"};
   fmt::print("Algo input: {}\n", a.inputNames());
   fmt::print("Algo output: {}\n", a.outputNames());
   // The following won't compile as the number of strings (variable names) and

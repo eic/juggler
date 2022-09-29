@@ -38,7 +38,8 @@ private:
 
   // Configuration variables. These only need to be specified if we are actually running
   // in "standalone" mode (hence they're optional)
-  Property<std::vector<std::string>> m_xml_list{this, "detectors", {}};
+  Property<std::vector<std::string>> m_xml_list{
+      this, "detectors", {}, "List of DD4hep compact files for standalone operation"};
 
   ALGORITHMS_DEFINE_LOGGED_SERVICE(GeoSvc)
 };

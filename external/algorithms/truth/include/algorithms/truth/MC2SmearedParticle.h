@@ -16,7 +16,11 @@ using MC2SmearedParticleAlgorithm = Algorithm<Input<edm4hep::MCParticleCollectio
 class MC2SmearedParticle : public MC2SmearedParticleAlgorithm {
 public:
   MC2SmearedParticle(std::string_view name)
-      : MC2SmearedParticleAlgorithm{name, {"inputParticles"}, {"outputParticles"}} {}
+      : MC2SmearedParticleAlgorithm{name,
+                                    {"inputParticles"},
+                                    {"outputParticles"},
+                                    "Create mock reconstructed particles out of input MCParticles "
+                                    "using Gaussian momentum smearing"} {}
 
   void init();
   void process(const Input&, const Output&) const;
@@ -24,7 +28,8 @@ public:
 private:
   Generator m_rng = RandomSvc::instance().generator();
 
-  Property<double> m_smearing{this, "smearing", 0.01 /* 1 percent*/};
+  // (0.01 --> 1%)
+  Property<double> m_smearing{this, "smearing", 0.01, "Sigma for Gaussian smearing factor"};
 };
 
 } // namespace algorithms::truth

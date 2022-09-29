@@ -73,7 +73,8 @@ public:
   }
   // constructor for the service base class registers the service, except
   // for the ServiceSvc which is its own thing (avoid circularity)
-  Service(std::string_view name) : NameMixin{name} { ServiceSvc::instance().add(name, this); }
+  // (services don't currently have an attached description)
+  Service(std::string_view name) : NameMixin{name, name} { ServiceSvc::instance().add(name, this); }
 };
 
 } // namespace algorithms

@@ -105,8 +105,8 @@ private:
 
 private:
   RandomEngineCB m_gen{createEngine()};
-  Property<size_t> m_seed{this, "seed"};
-  Property<size_t> m_cache_size{this, "cacheSize", 1024};
+  Property<size_t> m_seed{this, "seed", "Random seed for the internal random engine"};
+  Property<size_t> m_cache_size{this, "cacheSize", 1024, "Cache size for each generator instance"};
   std::mutex m_mutex;
 
   ALGORITHMS_DEFINE_LOGGED_SERVICE(RandomSvc)

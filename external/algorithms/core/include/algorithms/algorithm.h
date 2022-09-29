@@ -65,9 +65,10 @@ public:
   using InputNames  = typename input_type::key_type;
   using OutputNames = typename output_type::key_type;
 
-  Algorithm(std::string_view name, const InputNames& input_names, const OutputNames& output_names)
+  Algorithm(std::string_view name, const InputNames& input_names, const OutputNames& output_names,
+            std::string_view description)
       : LoggerMixin(name)
-      , NameMixin(name)
+      , NameMixin(name, description)
       , m_input_names{input_names}
       , m_output_names{output_names} {}
 

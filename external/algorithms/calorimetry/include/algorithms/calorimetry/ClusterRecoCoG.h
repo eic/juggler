@@ -39,7 +39,10 @@ public:
   ClusterRecoCoG(std::string_view name)
       : ClusteringAlgorithm{name,
                             {"inputProtoClusterCollection", "mcHits"},
-                            {"outputClusterCollection", "outputAssociations"}} {}
+                            {"outputClusterCollection", "outputAssociations"},
+                            "Reconstruct a cluster with the Center of Gravity method. For "
+                            "simulation results it optionally creates a Cluster <-> MCParticle "
+                            "association provided both optional arguments are provided."} {}
 
   void init();
   void process(const Input&, const Output&) const;
@@ -47,14 +50,15 @@ public:
 private:
   edm4eic::MutableCluster reconstruct(const edm4eic::ProtoCluster&) const;
 
-  Property<double> m_sampFrac{this, "samplingFraction", 1.0};
-  Property<double> m_logWeightBase{this, "logWeightBase", 3.6};
-  Property<std::string> m_energyWeight{this, "energyWeight", "log"};
-  Property<std::string> m_moduleDimZName{this, "moduleDimZName", ""};
+  // TODO FIXME does the sampling fraction belong here or in the hit reconstruction?
+  Property<double> m_sampFrac{this, "samplingFraction", 1.0, "Sampling fraction"};
+  Property<double> m_logWeightBase{this, "logWeightBase", 3.6, "Weight base for log weighting"};
+  Property<std::string> m_energyWeight{this, "energyWeight", "log", "Default hit weight method"};
+  Property<std::string> m_moduleDimZName{this, "moduleDimZName", "", "z-dim name of the module"};
   // Constrain the cluster position eta to be within
   // the eta of the contributing hits. This is useful to avoid edge effects
   // for endcaps.
-  Property<bool> m_enableEtaBounds{this, "enableEtaBounds", true};
+  Property<bool> m_enableEtaBounds{this, "enableEtaBounds", true, "Constrain cluster to hit eta?"};
 
   WeightFunc m_weightFunc;
 
