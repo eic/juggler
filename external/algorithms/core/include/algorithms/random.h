@@ -96,7 +96,7 @@ private:
       static std::mutex m;
       static std::mt19937_64 gen{seed};
       std::lock_guard<std::mutex> lock{m};
-      std::vector<value_type> ret{size};
+      std::vector<value_type> ret(size);
       std::generate(ret.begin(), ret.end(), gen);
       return ret;
     };
