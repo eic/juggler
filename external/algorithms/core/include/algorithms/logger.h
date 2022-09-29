@@ -60,18 +60,28 @@ public:
   using LogAction = std::function<void(LogLevel, std::string_view, std::string_view)>;
   void defaultLevel(const LogLevel l) { m_level.set(detail::upcast_type_t<LogLevel>(l)); }
   LogLevel defaultLevel() const { return m_level; }
-  void action(LogAction a) { m_action = a; }
+  void init(LogAction a) {
+    m_action = a;
+    ready(true);
+  }
   void report(const LogLevel l, std::string_view caller, std::string_view msg) const {
     m_action(l, caller, msg);
   }
 
 private:
-  Property<LogLevel> m_level{this, "defaultLevel", LogLevel::kInfo, "Default log level for the LogSvc"};
-  LogAction m_action = [](const LogLevel l, std::string_view caller, std::string_view msg) {
-    static std::mutex m;
-    std::lock_guard<std::mutex> lock(m);
-    fmt::print("{} [{}] {}\n", logLevelName(l), caller, msg);
-  };
+  LogAction makeDefaultAction() {
+    ready(true);
+    return [](const LogLevel l, std::string_view caller, std::string_view msg) {
+      static std::mutex m;
+      std::lock_guard<std::mutex> lock(m);
+      fmt::print("{} [{}] {}\n", logLevelName(l), caller, msg);
+    };
+  }
+
+  Property<LogLevel> m_level{this, "defaultLevel", LogLevel::kInfo,
+                             "Default log level for the LogSvc"};
+  LogAction m_action = makeDefaultAction();
+
   ALGORITHMS_DEFINE_SERVICE(LogSvc)
 };
 

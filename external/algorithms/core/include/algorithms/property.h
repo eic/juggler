@@ -13,7 +13,8 @@
 #include <variant>
 #include <vector>
 
-#include <fmt/core.h>
+#include <fmt/format.h>
+#include <fmt/ranges.h>
 
 #include <algorithms/detail/upcast.h>
 #include <algorithms/error.h>
@@ -49,6 +50,23 @@ public:
   const PropertyMap& getProperties() const { return m_props; }
   bool hasProperty(std::string_view name) const {
     return m_props.count(name) && m_props.at(name).hasValue();
+  }
+  // get a vector of the names of all missing (unset) properties
+  auto missingProperties() const {
+    std::vector<std::string_view> missing;
+    for (const auto& [name, prop] : m_props) {
+      if (!prop.hasValue()) {
+        missing.push_back(name);
+      }
+    }
+    return missing;
+  }
+  // Throw an exception if any properties are not set
+  void validate() const {
+    const auto missing = missingProperties();
+    if (!missing.empty()) {
+      throw PropertyError(fmt::format("Missing properties: {}", missing));
+    }
   }
 
 private:
@@ -160,7 +178,7 @@ public:
   private:
     T m_value;
   };
-};
+}; // namespace algorithms
 
 // Property mixin, provides all the configuration functionality for
 // our algorithms and services

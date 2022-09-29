@@ -75,16 +75,17 @@ public:
     if (m_seed.hasValue()) {
       info() << "Custom random seed requested: " << m_seed << endmsg;
       m_gen = createEngine(m_seed);
+      ready(true);
     }
   }
   void init(const RandomEngineCB& gen) {
-    init();
     info() << "Loading external generator function." << endmsg;
     m_gen = gen;
     if (m_seed.hasValue()) {
       warning() << "Custom random seed request ignored when using external generator function"
                 << endmsg;
     }
+    ready(true);
   }
 
 #if 0

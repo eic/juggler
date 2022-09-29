@@ -47,7 +47,7 @@ StatusCode AlgoServiceSvc::initialize() {
     info() << "Setting up algorithms::LogSvc with default level " << algorithms::logLevelName(level)
            << endmsg;
     logger.defaultLevel(level);
-    logger.action(
+    logger.init(
         [this](const algorithms::LogLevel l, std::string_view caller, std::string_view msg) {
           const std::string text = fmt::format("[{}] {}", caller, msg);
           if (l == algorithms::LogLevel::kCritical) {
@@ -98,6 +98,14 @@ StatusCode AlgoServiceSvc::initialize() {
               << endmsg;
       return StatusCode::FAILURE;
     }
+  }
+
+  // Validate our service setup
+  try {
+    serviceSvc.validate();
+  } catch (const algorithms::ServiceError& e) {
+    fatal() << e.what() << endmsg;
+    return StatusCode::FAILURE;
   }
 
   info() << "AlgoServiceSvc initialized successfully" << endmsg;
