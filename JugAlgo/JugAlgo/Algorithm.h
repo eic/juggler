@@ -64,6 +64,10 @@ public:
     debug() << "Configuring properties" << endmsg;
     initProperties();
 
+    // validate properties
+    debug() << "Validating properties" << endmsg;
+    m_algo.validate();
+
     // call the internal algorithm init
     debug() << "Initializing underlying algorithm " << m_algo.name() << endmsg;
     m_algo.init();
