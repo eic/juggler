@@ -16,7 +16,7 @@ using MC2SmearedParticleAlgorithm = Algorithm<Input<edm4hep::MCParticleCollectio
 class MC2SmearedParticle : public MC2SmearedParticleAlgorithm {
 public:
   MC2SmearedParticle(std::string_view name)
-      : MC2SmearedParticleAlgorithm{name, {"inputMCParticles"}, {"outputParticles"}} {}
+      : MC2SmearedParticleAlgorithm{name, {"inputParticles"}, {"outputParticles"}} {}
 
   void init();
   void process(const Input&, const Output&) const;
