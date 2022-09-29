@@ -66,7 +66,7 @@ public:
   }
 
 private:
-  Property<LogLevel> m_level{this, "defaultLevel", LogLevel::kInfo};
+  Property<LogLevel> m_level{this, "defaultLevel", LogLevel::kInfo, "Default log level for the LogSvc"};
   LogAction m_action = [](const LogLevel l, std::string_view caller, std::string_view msg) {
     static std::mutex m;
     std::lock_guard<std::mutex> lock(m);

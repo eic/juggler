@@ -17,6 +17,7 @@
 
 #include <algorithms/detail/upcast.h>
 #include <algorithms/error.h>
+#include <algorithms/name.h>
 
 namespace algorithms {
 
@@ -60,16 +61,15 @@ private:
   PropertyMap m_props;
 
 public:
-  class PropertyBase {
+  class PropertyBase : public NameMixin {
   public:
-    PropertyBase(std::string_view name) : m_name{name} {}
+    PropertyBase(std::string_view name, std::string_view description)
+        : NameMixin{name, description} {}
     virtual void set(const PropertyValue& v) = 0;
     virtual PropertyValue get() const        = 0;
     bool hasValue() const { return m_has_value; }
-    std::string_view name() const { return m_name; }
 
   protected:
-    const std::string m_name;
     bool m_has_value = false;
   };
 
@@ -80,7 +80,8 @@ public:
     using value_type = T;
     using impl_type  = detail::upcast_type_t<T>;
 
-    Property(Configurable* owner, std::string_view name) : PropertyBase{name} {
+    Property(Configurable* owner, std::string_view name, std::string_view description)
+        : PropertyBase{name, description} {
       if (owner) {
         owner->registerProperty(*this);
       } else {
@@ -88,8 +89,9 @@ public:
             fmt::format("Attempting to create Property '{}' without valid owner", name));
       }
     }
-    Property(Configurable* owner, std::string_view name, const value_type& v)
-        : Property(owner, name) {
+    Property(Configurable* owner, std::string_view name, const value_type& v,
+             std::string_view description)
+        : Property(owner, name, description) {
       set(static_cast<impl_type>(v));
     }
 
