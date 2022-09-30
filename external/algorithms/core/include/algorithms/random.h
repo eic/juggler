@@ -46,7 +46,7 @@ public:
     std::lock_guard<std::mutex> lock{m_mutex};
     return d(m_gen);
   }
-  template <class Float = double> Float gaussian(const Float mu, const Float sigma) const {
+  template <class Float = double> Float gaussian(const Float mu = 0.0, const Float sigma = 1.0) const {
     std::normal_distribution<Float> d{mu, sigma};
     std::lock_guard<std::mutex> lock{m_mutex};
     return d(m_gen);
