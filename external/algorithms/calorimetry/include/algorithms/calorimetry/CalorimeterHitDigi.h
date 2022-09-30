@@ -44,7 +44,9 @@ namespace algorithms::calorimetry {
     CalorimeterHitDigi(std::string_view name)
       : CalorimeterHitDigiAlgorithm{name,
                             {"inputHitCollection"},
-                            {"outputHitCollection"}} {};
+                            {"outputHitCollection"},
+                            "Create digitized calorimeter hits from simulated calorimeter hits "
+                            "based on specified ADC parameters and energy resolutions"} {};
 
     void init();
     void process(const Input&, const Output&);
@@ -54,19 +56,19 @@ namespace algorithms::calorimetry {
     void signal_sum_digi(const Input&, const Output&);
 
     // additional smearing resolutions
-    Property<std::vector<double>> u_eRes{this, "energyResolutions", {}}; // a/sqrt(E/GeV) + b + c/(E/GeV)
-    Property<double>              m_tRes{this, "timeResolution", 0.0 * dd4hep::ns};
+    Property<std::vector<double>> u_eRes{this, "energyResolutions", {}, "Energy resolution constants, a/sqrt(E/GeV) + b + c/(E/GeV)"};
+    Property<double>              m_tRes{this, "timeResolution", 0.0 * dd4hep::ns, "Time resolution"};
     // single hit energy deposition threshold
-    Property<double>              m_threshold{this, "threshold", 1. * dd4hep::keV};
+    Property<double>              m_threshold{this, "threshold", 1. * dd4hep::keV, "Energy threshold"};
 
     // digitization settings
-    Property<unsigned int>       m_capADC{this, "capacityADC", 8096};
-    Property<double>             m_dyRangeADC{this, "dynamicRangeADC", 100 * dd4hep::MeV};
-    Property<unsigned int>       m_pedMeanADC{this, "pedestalMean", 400};
-    Property<double>             m_pedSigmaADC{this, "pedestalSigma", 3.2};
-    Property<double>             m_resolutionTDC{this, "resolutionTDC", 0.010 * dd4hep::ns};
+    Property<unsigned int>       m_capADC{this, "capacityADC", 8096, "ADC capacity"};
+    Property<double>             m_dyRangeADC{this, "dynamicRangeADC", 100 * dd4hep::MeV, "ADC dynamic range"};
+    Property<unsigned int>       m_pedMeanADC{this, "pedestalMean", 400, "Noise pedestal mean in ADC channels"};
+    Property<double>             m_pedSigmaADC{this, "pedestalSigma", 3.2, "Noise pedestal sigma in ADC channels"};
+    Property<double>             m_resolutionTDC{this, "resolutionTDC", 0.010 * dd4hep::ns, "Time resolution"};
 
-    Property<double>             m_corrMeanScale{this, "scaleResponse", 1.0};
+    Property<double>             m_corrMeanScale{this, "scaleResponse", 1.0, "Response scale factor"};
     // These are better variable names for the "energyResolutions" array which is a bit
     // magic @FIXME
     //Property<double>             m_corrSigmaCoeffE{this, "responseCorrectionSigmaCoeffE", 0.0};
@@ -75,10 +77,10 @@ namespace algorithms::calorimetry {
     // signal sums
     // @TODO: implement signal sums with timing
     // field names to generate id mask, the hits will be grouped by masking the field
-    Property<std::vector<std::string>> u_fields{this, "signalSumFields", {}};
+    Property<std::vector<std::string>> u_fields{this, "signalSumFields", {}, "Field names to be grouped"};
     // ref field ids are used for the merged hits, 0 is used if nothing provided
-    Property<std::vector<int>>         u_refs{this, "fieldRefNumbers", {}};
-    Property<std::string>              m_readout{this, "readoutClass", ""};
+    Property<std::vector<int>>         u_refs{this, "fieldRefNumbers", {}, "Field IDs to use for merged hits"};
+    Property<std::string>              m_readout{this, "readoutClass", "", "Readout class"};
 
     double eRes[3] = {0., 0., 0.};
     uint64_t id_mask{0}, ref_mask{0};
