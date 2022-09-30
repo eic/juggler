@@ -86,7 +86,7 @@ namespace algorithms::calorimetry {
     uint64_t id_mask{0}, ref_mask{0};
 
     const GeoSvc& m_geoSvc = GeoSvc::instance();
-    const RandomSvc& m_randomSvc = RandomSvc::instance();
+    Generator m_rng = RandomSvc::instance().generator();
   };
 
 } // namespace algoriths::calorimetry

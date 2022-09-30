@@ -87,14 +87,14 @@ void CalorimeterHitDigi::single_hits_digi(
 
     // apply additional calorimeter noise to corrected energy deposit
     const double eResRel = (eDep > m_threshold)
-        ? m_randomSvc.normal() * std::sqrt(
+        ? m_rng.gaussian() * std::sqrt(
               std::pow(eRes[0] / std::sqrt(eDep), 2) +
               std::pow(eRes[1], 2) +
               std::pow(eRes[2] / (eDep), 2)
           )
         : 0;
 
-    const double ped    = m_pedMeanADC + m_randomSvc.normal() * m_pedSigmaADC;
+    const double ped    = m_pedMeanADC + m_rng.gaussian() * m_pedSigmaADC;
     const long long adc = std::llround(ped +  eDep * (m_corrMeanScale + eResRel) / m_dyRangeADC * m_capADC);
 
     double time = std::numeric_limits<double>::max();
@@ -103,7 +103,7 @@ void CalorimeterHitDigi::single_hits_digi(
         time = c.getTime();
       }
     }
-    const long long tdc = std::llround((time + m_randomSvc.normal() * m_tRes) / m_resolutionTDC);
+    const long long tdc = std::llround((time + m_rng.gaussian() * m_tRes) / m_resolutionTDC);
 
     edm4eic::RawCalorimeterHit rawhit(
       ahit.getCellID(),
@@ -154,14 +154,14 @@ void CalorimeterHitDigi::signal_sum_digi(
 
     // safety check
     const double eResRel = (edep > m_threshold)
-        ? m_randomSvc.normal() * eRes[0] / std::sqrt(edep) +
-          m_randomSvc.normal() * eRes[1] +
-          m_randomSvc.normal() * eRes[2] / edep
+        ? m_rng.gaussian() * eRes[0] / std::sqrt(edep) +
+          m_rng.gaussian() * eRes[1] +
+          m_rng.gaussian() * eRes[2] / edep
         : 0;
 
-    double    ped     = m_pedMeanADC + m_randomSvc.normal() * m_pedSigmaADC;
+    double    ped     = m_pedMeanADC + m_rng.gaussian() * m_pedSigmaADC;
     unsigned long long adc     = std::llround(ped + edep * (1. + eResRel) / m_dyRangeADC * m_capADC);
-    unsigned long long tdc     = std::llround((time + m_randomSvc.normal() * m_tRes) / m_resolutionTDC);
+    unsigned long long tdc     = std::llround((time + m_rng.gaussian() * m_tRes) / m_resolutionTDC);
 
     edm4eic::RawCalorimeterHit rawhit(
       id,
