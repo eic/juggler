@@ -104,7 +104,7 @@ private:
   void defineProperties() {
     for (const auto& [key, prop] : m_algo.getProperties()) {
       std::visit(
-          [this, key](auto&& val) {
+          [this, key = key](auto&& val) {
             using T = std::decay_t<decltype(val)>;
             this->m_props.emplace(
                 key, std::make_unique<Gaudi::Property<T>>(this, std::string(key), val));
