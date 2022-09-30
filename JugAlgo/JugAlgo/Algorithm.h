@@ -117,7 +117,7 @@ private:
   void initProperties() {
     for (const auto& [key, prop] : m_algo.getProperties()) {
       std::visit(
-          [this, key](auto&& val) {
+          [this, key = key](auto&& val) {
             using T                = std::decay_t<decltype(val)>;
             const auto* gaudi_prop = static_cast<Gaudi::Property<T>*>(this->m_props.at(key).get());
             const auto prop_val    = gaudi_prop->value();
