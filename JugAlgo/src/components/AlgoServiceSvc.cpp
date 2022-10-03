@@ -40,13 +40,13 @@ StatusCode AlgoServiceSvc::initialize() {
   try {
     auto& serviceSvc = algorithms::ServiceSvc::instance();
     info() << "ServiceSvc declared " << serviceSvc.services().size() << " services" << endmsg;
-    // Always initialize the LogSvc first to ensure proper logging for the others
-    {
-      auto& logger = algorithms::LogSvc::instance();
-      const algorithms::LogLevel level{
-          static_cast<algorithms::LogLevel>(msgLevel() > 0 ? msgLevel() - 1 : 0)};
-      info() << "Setting up algorithms::LogSvc with default level "
-             << algorithms::logLevelName(level) << endmsg;
+    // Now register custom initializers
+    // Starting with the logger
+    const algorithms::LogLevel level{
+        static_cast<algorithms::LogLevel>(msgLevel() > 0 ? msgLevel() - 1 : 0)};
+    info() << "Setting up algorithms::LogSvc with default level " << algorithms::logLevelName(level)
+           << endmsg;
+    serviceSvc.setInit<algorithms::LogSvc>([=](auto&& logger) {
       logger.defaultLevel(level);
       logger.init(
           [this](const algorithms::LogLevel l, std::string_view caller, std::string_view msg) {
@@ -65,44 +65,33 @@ StatusCode AlgoServiceSvc::initialize() {
               this->verbose() << text << endmsg;
             }
           });
-      // set own log level to verbose so we actually display everything that is requested
-      // (this overrides what was initally set through the OutputLevel property)
-      updateMsgStreamOutputLevel(MSG::VERBOSE);
+    });
+    // geo Service
+    info() << "Setting up algorithms::GeoSvc" << endmsg;
+    m_geoSvc = service("GeoSvc");
+    if (!m_geoSvc) {
+      error() << "Unable to locate Geometry Service. "
+              << "Make sure you have GeoSvc in the right order in the configuration." << endmsg;
+      return StatusCode::FAILURE;
     }
-    // loop over all remaining services and handle each properly
-    // Note: this code is kind of dangerous, as getting the types wrong will lead to
-    // undefined runtime behavior.
-    for (auto [name, svc] : serviceSvc.services()) {
-      if (name == algorithms::LogSvc::kName) {
-        ; // Logsvc already initialized, do nothing
-      } else if (name == algorithms::GeoSvc::kName) {
-        // Setup geometry service
-        m_geoSvc = service("GeoSvc");
-        if (!m_geoSvc) {
-          error() << "Unable to locate Geometry Service. "
-                  << "Make sure you have GeoSvc in the right order in the configuration." << endmsg;
-          return StatusCode::FAILURE;
-        }
-        info() << "Setting up algorithms::GeoSvc" << endmsg;
-        auto* geo = static_cast<algorithms::GeoSvc*>(svc);
-        geo->init(m_geoSvc->detector());
-      } else if (name == algorithms::RandomSvc::kName) {
-        // setup random service
-        info() << "Setting up algorithms::RandomSvc\n"
-               << "  --> using internal STL 64-bit MT engine\n"
-               << "  --> seed set to" << m_randomSeed << endmsg;
-        auto* rnd = static_cast<algorithms::RandomSvc*>(svc);
-        rnd->setProperty("seed", m_randomSeed);
-        rnd->init();
-      } else {
-        fatal() << "Unknown service encountered, please implement the necessary framework hooks"
-                << endmsg;
-        return StatusCode::FAILURE;
-      }
-    }
+    serviceSvc.setInit<algorithms::GeoSvc>([=](auto&& g) { g.init(m_geoSvc->detector()); });
+    // setup random service
+    info() << "Setting up algorithms::RandomSvc\n"
+           << "  --> using internal STL 64-bit MT engine\n"
+           << "  --> seed set to" << m_randomSeed << endmsg;
+    serviceSvc.setInit<algorithms::RandomSvc>([=](auto&& r) {
+      r.setProperty("seed", m_randomSeed);
+      r.init();
+    });
+    info() << "Initializing services" << endmsg;
 
-    // Validate our service setup
-    serviceSvc.validate();
+    // first set own log level to verbose so we actually display everything that is requested
+    // (this overrides what was initally set through the OutputLevel property)
+    updateMsgStreamOutputLevel(MSG::VERBOSE);
+
+    // Validate our service setup (this will throw if we encounter issues)
+    serviceSvc.init();
+
   } catch (const std::exception& e) {
     fatal() << e.what() << endmsg;
     return StatusCode::FAILURE;

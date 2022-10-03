@@ -62,36 +62,58 @@ public:
     static ServiceSvc svc;
     return svc;
   }
-  void add(std::string_view name, ServiceBase* svc) { m_services[name] = svc; }
-  template <class T = ServiceBase> T* service(std::string_view name) const {
-    return static_cast<T*>(m_services.at(name));
+  template <class Svc>
+  void add(
+      ServiceBase* svc, const std::function<void(Svc&)>& init = [](Svc& s) { s.init(); }) {
+    m_keys.push_back(Svc::kName);
+    m_services[Svc::kName] = svc;
+    setInit(init);
   }
-  const ServiceMapType& services() const { return m_services; }
-  bool active(std::string_view name) const { return m_services.count(name); }
-  // Check if all service are in the `ready` state and all properties are set
+
+  template <class Svc> bool has() const { return m_services.count(Svc::kName); }
+  template <class Svc> void setInit(const std::function<void(Svc&)>& init) {
+    m_initializers[Svc::kName] = [init]() { init(Svc::instance()); };
+  }
+
+  // Loop over all services in order and initialize one-by-one
+  // Finalize by validating that all is well
+  void init() {
+    // Validate the services before we call init
+    validate();
+    // Call init for all the services and mark as ready
+    for (const auto& name : m_keys) {
+      m_initializers[name]();
+      m_services[name]->ready(true);
+    }
+  }
+
+  template <class Svc = ServiceBase> Svc* service(std::string_view name) const {
+    return static_cast<Svc*>(m_services.at(name));
+  }
+  // Check if all service properties are set
   // TODO FIXME move to implementation file
   void validate() const {
-    std::vector<std::string_view> not_ready;
     std::map<std::string_view, std::vector<std::string_view>> missing_props;
     for (const auto& [name, svc] : m_services) {
-      if (!svc->ready()) {
-        not_ready.push_back(name);
-      }
       auto missing = svc->missingProperties();
       if (!missing.empty()) {
         missing_props[name] = missing;
       }
     }
     std::string err = "";
-    if (!not_ready.empty()) {
-      err += fmt::format("Encountered unitialized services: {}\n", not_ready);
-    }
     if (!missing_props.empty()) {
       err += fmt::format("Encountered missing service properties: {}\n", missing_props);
-    }
-    if (!err.empty()) {
       throw ServiceError(fmt::format("Error initializing all services:\n{}", err));
     }
+  }
+  const auto& services() const { return m_services; }
+  bool ready() const {
+    for (const auto& key : m_keys) {
+      if (!m_services.at(key)->ready()) {
+        return false;
+      }
+    }
+    return true;
   }
 
 private:
@@ -102,7 +124,9 @@ public:
   void operator=(const ServiceSvc&) = delete;
 
 private:
-  ServiceMapType m_services;
+  std::vector<std::string_view> m_keys;                // Ordered list of service keys
+  std::map<std::string_view, ServiceBase*> m_services; // Map of services for easier lookup
+  std::map<std::string_view, std::function<void()>> m_initializers; // Init calls
 };
 
 // Thread-safe lazy-evaluated minimal service system
@@ -119,7 +143,9 @@ public:
   // constructor for the service base class registers the service, except
   // for the ServiceSvc which is its own thing (avoid circularity)
   // (services don't currently have an attached description)
-  Service(std::string_view name) : NameMixin{name, name} { ServiceSvc::instance().add(name, this); }
+  Service(std::string_view name) : NameMixin{name, name} {
+    ServiceSvc::instance().add<SvcType>(this);
+  }
 };
 
 } // namespace algorithms
