@@ -80,7 +80,6 @@ public:
   void init() {
     // Call init for all the services and mark as ready
     for (const auto& name : m_keys) {
-      std::cout << "DBGDBG - Initializing " << name << std::endl;
       try {
         m_initializers[name]();
       } catch (const std::exception& e) {
@@ -89,8 +88,6 @@ public:
       }
       // Ensure our init made sense -- cannot have missing properties at this stage
       if (m_services[name]->missingProperties().size() > 0) {
-        std::cout << "DBGDBG - Encountered missing properties for " << name << " bailing on init"
-                  << std::endl;
         break;
       }
       m_services[name]->ready(true);
