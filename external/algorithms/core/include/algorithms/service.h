@@ -134,7 +134,6 @@ public:
     m_initializers.at(name)();
     // mark as ready
     svc->ready(true);
-    // revalidate
   }
 
   template <class Svc = ServiceBase> Svc* service(std::string_view name) const {
