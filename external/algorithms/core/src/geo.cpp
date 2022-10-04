@@ -27,9 +27,6 @@ void GeoSvc::init(dd4hep::Detector* det) {
   }
   // always: instantiate cellIDConverter
   m_converter = std::make_unique<const dd4hep::rec::CellIDPositionConverter>(*m_detector);
-
-  // we are now ready to process events
-  ready(true);
 }
 } // namespace algorithms
 
