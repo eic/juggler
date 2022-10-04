@@ -72,23 +72,25 @@ public:
 
   template <class Svc> bool has() const { return m_services.count(Svc::kName); }
   template <class Svc> void setInit(const std::function<void(Svc&)>& init) {
-    std::cerr << "DBGDBG - Setting init callback for " << Svc::kName << std::endl;
     m_initializers[Svc::kName] = [init]() { init(Svc::instance()); };
   }
 
   // Loop over all services in order and initialize one-by-one
   // Finalize by validating that all is well
   void init() {
-    // Validate the services before we call init
-    validate();
     // Call init for all the services and mark as ready
-    std::cerr << fmt::format("DBGDBG - Calling init for all requested algorithms: {}", m_keys)
-              << std::endl;
     for (const auto& name : m_keys) {
-      std::cerr << "DBGDBG - Initializing: " << name << std::endl;
+      // cannot initialize services with missing properties
+      if (m_services[name]->missingProperties().size() > 0) {
+        break;
+      }
       m_initializers[name]();
       m_services[name]->ready(true);
     }
+
+    // Validate all services in case we encountered issues so we get useful error
+    // reporting
+    validate();
   }
 
   template <class Svc = ServiceBase> Svc* service(std::string_view name) const {
@@ -98,16 +100,25 @@ public:
   // TODO FIXME move to implementation file
   void validate() const {
     std::map<std::string_view, std::vector<std::string_view>> missing_props;
+    std::vector<std::string_view> not_initialized;
     for (const auto& [name, svc] : m_services) {
       auto missing = svc->missingProperties();
       if (!missing.empty()) {
         missing_props[name] = missing;
       }
-    }
-    std::string err = "";
-    if (!missing_props.empty()) {
-      err += fmt::format("Encountered missing service properties: {}\n", missing_props);
-      throw ServiceError(fmt::format("Error initializing all services:\n{}", err));
+      if (!svc->ready()) {
+        not_initialized.push_back(name);
+      }
+      std::string err = "";
+      if (missing_props.size() > 0) {
+        err += fmt::format("Encountered missing service properties: {}\n", missing_props);
+      }
+      if (not_initialized.size() > 0) {
+        err += fmt::format("Encountered uninitialized services: {}\n", not_initialized);
+      }
+      if (err.size() > 0) {
+        throw ServiceError(fmt::format("Error initializing all services:\n{}", err));
+      }
     }
   }
   const auto& services() const { return m_services; }
