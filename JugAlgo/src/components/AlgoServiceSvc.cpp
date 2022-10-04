@@ -47,6 +47,7 @@ StatusCode AlgoServiceSvc::initialize() {
     info() << "Setting up algorithms::LogSvc with default level " << algorithms::logLevelName(level)
            << endmsg;
     serviceSvc.setInit<algorithms::LogSvc>([=](auto&& logger) {
+      this->info() << "Initializing the algorithms::LogSvc using the Gaudi logger" << endmsg;
       logger.defaultLevel(level);
       logger.init(
           [this](const algorithms::LogLevel l, std::string_view caller, std::string_view msg) {
@@ -74,12 +75,16 @@ StatusCode AlgoServiceSvc::initialize() {
               << "Make sure you have GeoSvc in the right order in the configuration." << endmsg;
       return StatusCode::FAILURE;
     }
-    serviceSvc.setInit<algorithms::GeoSvc>([=](auto&& g) { g.init(m_geoSvc->detector()); });
+    serviceSvc.setInit<algorithms::GeoSvc>([=](auto&& g) {
+      this->info() << "Initializing algorithms::RandomSvc with the Juggler GeoSvc" << endmsg;
+      g.init(m_geoSvc->detector());
+    });
     // setup random service
     info() << "Setting up algorithms::RandomSvc\n"
            << "  --> using internal STL 64-bit MT engine\n"
            << "  --> seed set to" << m_randomSeed << endmsg;
     serviceSvc.setInit<algorithms::RandomSvc>([=](auto&& r) {
+      this->info() << "Initializing the algorithms::RandomSvc" << endmsg;
       r.setProperty("seed", m_randomSeed);
       r.init();
     });

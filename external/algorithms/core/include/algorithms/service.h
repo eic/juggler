@@ -72,6 +72,7 @@ public:
 
   template <class Svc> bool has() const { return m_services.count(Svc::kName); }
   template <class Svc> void setInit(const std::function<void(Svc&)>& init) {
+    std::cerr << "DBGDBG - Setting init callback for " << Svc::kName << std::endl;
     m_initializers[Svc::kName] = [init]() { init(Svc::instance()); };
   }
 
@@ -81,7 +82,10 @@ public:
     // Validate the services before we call init
     validate();
     // Call init for all the services and mark as ready
+    std::cerr << fmt::format("DBGDBG - Calling init for all requested algorithms: {}", m_keys)
+              << std::endl;
     for (const auto& name : m_keys) {
+      std::cerr << "DBGDBG - Initializing: " << name << std::endl;
       m_initializers[name]();
       m_services[name]->ready(true);
     }
