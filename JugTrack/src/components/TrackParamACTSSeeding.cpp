@@ -338,9 +338,15 @@ namespace Jug::Reco {
                             0.0, 10.0, 0.05, 0.0),
                         static_cast<int32_t>(spacePoint.size())));
                 spacePointPtrs.push_back(&spacePoint.back());
+                #if Acts_VERSION_MAJOR < 19 || (Acts_VERSION_MAJOR == 19 && Acts_VERSION_MINOR < 9)
                 rRangeSPExtent.check({ spacePoint.back().x(),
                                        spacePoint.back().y(),
                                        spacePoint.back().z() });
+                #else
+                rRangeSPExtent.extend({ spacePoint.back().x(),
+                                        spacePoint.back().y(),
+                                        spacePoint.back().z() });
+                #endif
 #endif // USE_LOCAL_COORD
             }
         }
@@ -363,9 +369,15 @@ namespace Jug::Reco {
 #ifndef USE_LOCAL_COORD
             spacePoint.push_back(SpacePoint(h, static_cast<int32_t>(spacePoint.size())));
             spacePointPtrs.push_back(&spacePoint.back());
+            #if Acts_VERSION_MAJOR < 19 || (Acts_VERSION_MAJOR == 19 && Acts_VERSION_MINOR < 9)
             rRangeSPExtent.check({ spacePoint.back().x(),
                                    spacePoint.back().y(),
                                    spacePoint.back().z() });
+            #else
+            rRangeSPExtent.extend({ spacePoint.back().x(),
+                                    spacePoint.back().y(),
+                                    spacePoint.back().z() });
+            #endif
 #endif // USE_LOCAL_COORD
         }
         if (msgLevel(MSG::DEBUG)) {
