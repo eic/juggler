@@ -33,7 +33,7 @@ endif()
 # Set default build type
 set(default_build_type "Release")
 if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
-  set(default_build_type "Debug")
+  set(default_build_type "RelWithDebInfo")
 endif()
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
@@ -74,14 +74,20 @@ add_definitions("-DActs_VERSION_MINOR=${Acts_VERSION_MINOR}")
 add_definitions("-DActs_VERSION_PATCH=${Acts_VERSION_PATCH}")
 
 find_package(IRT REQUIRED)
+
+## algorithms dependency
+add_subdirectory(external/algorithms)
+
 find_package(Gaudi)
 add_subdirectory(JugBase)
+add_subdirectory(JugAlgo)
 add_subdirectory(JugDigi)
 add_subdirectory(JugFast)
 add_subdirectory(JugPID)
 add_subdirectory(JugReco)
 add_subdirectory(JugTrack)
 gaudi_install(CMAKE)
+
 
 # create and install Juggler.xenv file as it still has a use-case
 # TODO: update workflow to not need xenv files anymore

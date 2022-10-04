@@ -2,7 +2,7 @@ image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
 
 variables:
   ## Base eic_dev image is testing. This puts the container at the same level as
-  ## the nightly release. For now we tag the master as:
+  ## the nightly release. For now we tag the main as:
   ##  - juggler:testing (for CI usage)
   ##  - We also trigger the eic_container master to rebuild the jug_xl nightly
   EIC_DEV_TAG: "testing"
@@ -12,12 +12,10 @@ variables:
   ## Other versions to be included in the container. In general these should be "master"
   ## to keep the container functionally identical to jug_xl:nightly
   JUGGLER_NPDET_VERSION: "master"
-  JUGGLER_EDM4EIC_VERSION: "main"
-  JUGGLER_EDM4EIC_REPOSITORYURL: "https://github.com/eic/EDM4eic.git"
   JUGGLER_IRT_VERSION: "main"
 
   ## We have:
-  ##   - Juggler triggers eic_container on a master pipeline
+  ##   - Juggler triggers eic_container on a main pipeline
   ##   - eic_container triggers juggler on nightly builds
   ## this way jug_xl:nightly and juggler:testing are kept in sync
 
@@ -50,23 +48,23 @@ stages:
   - finalize
 
 workflow:
-  ## Only rebuild on MRs and on commits to the master, as in other cases
+  ## Only rebuild on MRs and on commits to the main, as in other cases
   ## we should use the tagged jug_xl releases from eic_container.
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
 
 default:
 
 ## plan:
 ##  Workflows:
-##  - master      --> config + docker (eic_container) + singularity (this repo)
+##  - main        --> config + docker (eic_container) + singularity (this repo)
 ##      --> trigger eic_container master
 ##  - MR          --> config + docker (eic_container) + singularity (this repo)
-##  - upstream trigger from eic_container (nightly) --> run master
+##  - upstream trigger from eic_container (nightly) --> run main
 ##
 ##  Container images tags
-##  - master      --> nightly on eicweb & DH, and export to eic_container
+##  - main        --> nightly on eicweb & DH, and export to eic_container
 ##  - MR          --> unstable-mr-XXX (on eicweb only, untag at end of pipeline)
 
 juggler:local:
@@ -77,13 +75,6 @@ juggler:local:
     - CMAKE_CXX_STANDARD:
       - 17
   script:
-    ## first install EDM4EIC to ensure the latest version, then build juggler
-    - |
-      git clone ${JUGGLER_EDM4EIC_REPOSITORYURL} /tmp/EDM4eic
-      cd /tmp/EDM4eic && git checkout ${JUGGLER_EDM4EIC_VERSION} && cd -
-      cmake -B /tmp/build -S /tmp/EDM4eic -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} -DCMAKE_INSTALL_PREFIX=/usr/local
-      cmake --build /tmp/build -j40 -- install
-      rm -rf /tmp/build /tmp/EDM4eic
     - |
       cmake -Bbuild -S. -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} -DCMAKE_INSTALL_PREFIX=/usr/local
       cmake --build build -j20
@@ -147,15 +138,13 @@ juggler:default:
                    --build-arg INTERNAL_TAG=${EIC_DEV_TAG}
                    --build-arg JUGGLER_VERSION=${CI_COMMIT_REF_NAME}
                    --build-arg NPDET_VERSION=${JUGGLER_NPDET_VERSION}
-                   --build-arg EDM4EIC_REPOSITORYURL=${JUGGLER_EDM4EIC_REPOSITORYURL}
-                   --build-arg EDM4EIC_VERSION=${JUGGLER_EDM4EIC_VERSION}
                    --build-arg IRT_VERSION=${JUGGLER_IRT_VERSION}
                    --build-arg DETECTOR_VERSION=${JUGGLER_DETECTOR_VERSION}
                    --build-arg IP6_VERSION=${JUGGLER_IP6_VERSION}
                    --build-arg JUG_VERSION=juggler-${INTERNAL_TAG}-$(date +%Y-%m-%d_%H-%M-%S)-$(git rev-parse HEAD)
                    eic_container/containers/jug
     - |
-      if [ "$CI_COMMIT_BRANCH" == "master" ]; then
+      if [ "$CI_COMMIT_BRANCH" == "main" ]; then
         ./eic_container/gitlab-ci/docker_login.sh                                       \
             -u $DH_REGISTRY_USER -p $DH_EICWEB_TOKEN                                         \
             -n $DOCKER_NTRIES -t $DOCKER_WAIT_TIME
@@ -194,7 +183,7 @@ juggler:default:
 jug_xl:master:
   stage: deploy
   rules:
-    - if: '$CI_COMMIT_BRANCH == "master" && $TRIGGERED_BY_NIGHTLY == "0" && $CI_SERVER_HOST == "eicweb.phy.anl.gov"'
+    - if: '$CI_COMMIT_BRANCH == "main" && $TRIGGERED_BY_NIGHTLY == "0" && $CI_SERVER_HOST == "eicweb.phy.anl.gov"'
       when: on_success
     - when: never
   needs:
@@ -239,7 +228,7 @@ pages:
   image: eicweb.phy.anl.gov:4567/containers/eic_container/alpine
   stage: deploy
   rules:
-    - if: '$CI_SERVER_HOST == "gitlab.phy.anl.gov" && $CI_COMMIT_BRANCH == "master"' 
+    - if: '$CI_SERVER_HOST == "gitlab.phy.anl.gov" && $CI_COMMIT_BRANCH == "main"' 
   script:
     - apk update && apk add doxygen  graphviz ttf-ubuntu-font-family
     - cd doc && doxygen Doxyfile  && cd ..
