@@ -81,13 +81,18 @@ public:
     // Call init for all the services and mark as ready
     for (const auto& name : m_keys) {
       std::cout << "DBGDBG - Initializing " << name << std::endl;
-      // cannot initialize services with missing properties
+      try {
+        m_initializers[name]();
+      } catch (const std::exception& e) {
+        // we encountered an issue, stop here so validation fails
+        break;
+      }
+      // Ensure our init made sense -- cannot have missing properties at this stage
       if (m_services[name]->missingProperties().size() > 0) {
         std::cout << "DBGDBG - Encountered missing properties for " << name << " bailing on init"
                   << std::endl;
         break;
       }
-      m_initializers[name]();
       m_services[name]->ready(true);
     }
 
