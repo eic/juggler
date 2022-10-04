@@ -80,8 +80,11 @@ public:
   void init() {
     // Call init for all the services and mark as ready
     for (const auto& name : m_keys) {
+      std::cout << "DBGDBG - Initializing " << name << std::endl;
       // cannot initialize services with missing properties
       if (m_services[name]->missingProperties().size() > 0) {
+        std::cout << "DBGDBG - Encountered missing properties for " << name << " bailing on init"
+                  << std::endl;
         break;
       }
       m_initializers[name]();
@@ -101,8 +104,9 @@ public:
   void validate() const {
     std::map<std::string_view, std::vector<std::string_view>> missing_props;
     std::vector<std::string_view> not_initialized;
-    for (const auto& [name, svc] : m_services) {
-      auto missing = svc->missingProperties();
+    for (std::string_view name : m_keys) {
+      const auto svc = m_services.at(name);
+      auto missing   = svc->missingProperties();
       if (!missing.empty()) {
         missing_props[name] = missing;
       }
