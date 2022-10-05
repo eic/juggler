@@ -62,12 +62,25 @@ public:
     static ServiceSvc svc;
     return svc;
   }
+  // add a service to the ServiceSvc. Two options:
+  // - prior to init --> just add the service to the service stack and set the initializer
+  // - after init    --> add service to call stack, set the initializer,
+  //                     manually call init for the service, revalidate
   template <class Svc>
   void add(
       ServiceBase* svc, const std::function<void(Svc&)>& init = [](Svc& s) { s.init(); }) {
     m_keys.push_back(Svc::kName);
     m_services[Svc::kName] = svc;
-    setInit(init);
+    // only add initializer if not already present (e.g. if for some reason the framework did
+    // the registration early)
+    if (m_initializers.count(Svc::kName) == 0) {
+      setInit(init);
+    }
+    // call init if we are already in an initialized state (this is a straggler)
+    if (m_init) {
+      initSingle<Svc>();
+      validate();
+    }
   }
 
   template <class Svc> bool has() const { return m_services.count(Svc::kName); }
@@ -78,24 +91,49 @@ public:
   // Loop over all services in order and initialize one-by-one
   // Finalize by validating that all is well
   void init() {
+    // ensure we only call init once
+    if (m_init) {
+      throw ServiceError("Cannot initialize services twice");
+    }
     // Call init for all the services and mark as ready
     for (const auto& name : m_keys) {
       try {
-        m_initializers[name]();
+        m_initializers.at(name)();
       } catch (const std::exception& e) {
         // we encountered an issue, stop here so validation fails
         break;
       }
+      auto svc = m_services.at(name);
       // Ensure our init made sense -- cannot have missing properties at this stage
-      if (m_services[name]->missingProperties().size() > 0) {
+      if (svc->missingProperties().size() > 0) {
         break;
       }
-      m_services[name]->ready(true);
+      svc->ready(true);
     }
 
     // Validate all services in case we encountered issues so we get useful error
     // reporting
     validate();
+
+    // Label initialization as complete
+    m_init = true;
+  }
+  // Single service init (meant to be called for stragglers after general init)
+  template <class Svc> void initSingle() {
+    std::string_view name = Svc::kName;
+    if (!m_init) {
+      throw ServiceError(
+          fmt::format("initSingle<{}>() should not be called before/instead of init()", name));
+    }
+    auto svc = m_services.at(name);
+    // ensure we only call init once
+    if (svc->ready()) {
+      throw ServiceError(fmt::format("Cannot initialize service {} - already initialized", name));
+    }
+    // call init
+    m_initializers.at(name)();
+    // mark as ready
+    svc->ready(true);
   }
 
   template <class Svc = ServiceBase> Svc* service(std::string_view name) const {
@@ -148,6 +186,7 @@ private:
   std::vector<std::string_view> m_keys;                // Ordered list of service keys
   std::map<std::string_view, ServiceBase*> m_services; // Map of services for easier lookup
   std::map<std::string_view, std::function<void()>> m_initializers; // Init calls
+  bool m_init = false; // did we initialize the services already?
 };
 
 // Thread-safe lazy-evaluated minimal service system
