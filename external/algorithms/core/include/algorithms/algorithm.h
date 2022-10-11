@@ -31,6 +31,7 @@
 #include <optional>
 #include <string>
 #include <tuple>
+#include <typeindex>
 #include <typeinfo>
 #include <vector>
 
@@ -60,11 +61,12 @@ template <class... T> struct Output : std::tuple<output_type_t<T>...> {
 
 class AlgorithmBase : public PropertyMixin, public LoggerMixin, public NameMixin {
 public:
-  virtual ~AlgorithmBase() = 0;
+  AlgorithmBase(std::string_view name, std::string_view description)
+      : LoggerMixin(name), NameMixin(name, description) {}
 };
 
 // TODO: C++20 Concepts version for better error handling
-template <class InputType, class OutputType> class Algorithm : AlgorithmBase {
+template <class InputType, class OutputType> class Algorithm : public AlgorithmBase {
 public:
   using input_type     = InputType;
   using output_type    = OutputType;
@@ -76,13 +78,13 @@ public:
 
   Algorithm(std::string_view name, const InputNames& input_names, const OutputNames& output_names,
             std::string_view description)
-      : LoggerMixin(name)
-      , NameMixin(name, description)
+      : AlgorithmBase(name, description)
       , m_input_names{input_names}
       , m_output_names{output_names} {}
 
-  virtual void init()                                            = 0;
-  virtual void process(const Input& input, const Output& output) = 0;
+  virtual ~Algorithm() {}
+  virtual void init() {}
+  virtual void process(const Input&, const Output&) {}
 
   const InputNames& inputNames() const { return m_input_names; }
   const OutputNames& outputNames() const { return m_output_names; }
@@ -103,22 +105,22 @@ public:
   template <class Algo> void add() {
     static std::mutex m;
     static std::lock_guard<std::mutex> lock;
-    auto type = typeid(Algo::algorithm_type);
-    auto name = detail::demangledName<Algo>();
+    auto type            = Algo::algorithm_type;
+    std::type_index name = detail::demangledName<Algo>();
     if (!available<type>()) {
-      m_factories.emplace(type, {});
+      m_factories[type] = {};
     }
     if (available<type>(name)) {
       return; // do nothing, already there
     }
-    m_factories[type].emplace(name, []() { return static_cast<AlgoBase*>(new Algo()); });
+    m_factories[type].emplace({name, []() { return static_cast<AlgorithmBase*>(new Algo()); }});
   }
 
   // Get a new owning pointer to an instance of an algorithm.
   // Throws if the resource isn't available, or if we aren't fully ready yet.
   template <class AlgoType> std::unique_ptr<AlgoType> get(std::string_view name) const {
     ensureReady();
-    if (!available<AlgoType>(name) {
+    if (!available<AlgoType>(name)) {
       raise(fmt::format("No factory with name {} and type {} registered with the AlgorithmSvc",
                         name, typeid(AlgoType).name()));
     }
@@ -147,7 +149,7 @@ private:
   // if any of the lower-level assumptions fail
   template <class AlgoType> bool available(std::string_view name) const {
     if (name == "") {
-      raise("Invalid name provided: '{}'" + name);
+      raise(fmt::format("Invalid name provided: '{}'", name));
     }
     return factory<AlgoType>().count(name) != 0;
   }

@@ -6,6 +6,7 @@
 
 #include <cstdlib>
 #include <cxxabi.h>
+#include <fmt/format.h>
 #include <memory>
 #include <string>
 
@@ -17,10 +18,10 @@ template <class T> std::string demangledName() {
   const char* mangled = typeid(T).name();
   int status          = 1; // ABI spec sets status to 0 on success, so we need a different
                            // starting value
-  std::unique_ptr<char, void (*)(void*)> res{abi::__cxa_demangle(name, NULL, NULL, &status),
+  std::unique_ptr<char, void (*)(void*)> res{abi::__cxa_demangle(mangled, NULL, NULL, &status),
                                              std::free};
   if (status != 0) {
-    throw algorithms::Error("Failed to demangle type name: " + mangled,
+    throw algorithms::Error(fmt::format("Failed to demangle type name: {}", mangled),
                             "algorithms::detail::demangledName()");
   }
 
