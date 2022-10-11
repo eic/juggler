@@ -1,6 +1,6 @@
 SPDXVersion: SPDX-2.1
 DataLicense: CC0-1.0
 PackageName: Juggler
-PackageOriginator: Whitney Armstrong, Sylvester Joosten
-PackageHomePage: https://eicweb.phy.anl.gov/EIC/juggler
+PackageOriginator: Wouter Deconinck, Sylvester Joosten
+PackageHomePage: https://github.com/eic/algorithms
 PackageLicenseDeclared: LGPL-3.0-or-later
