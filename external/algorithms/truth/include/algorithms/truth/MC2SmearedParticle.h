@@ -22,8 +22,8 @@ public:
                                     "Create mock reconstructed particles out of input MCParticles "
                                     "using Gaussian momentum smearing"} {}
 
-  void init();
-  void process(const Input&, const Output&) const;
+  void init() final;
+  void process(const Input&, const Output&) const final;
 
 private:
   Generator m_rng = RandomSvc::instance().generator();

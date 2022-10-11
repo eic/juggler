@@ -44,8 +44,8 @@ public:
                             "simulation results it optionally creates a Cluster <-> MCParticle "
                             "association provided both optional arguments are provided."} {}
 
-  void init();
-  void process(const Input&, const Output&) const;
+  void init() final;
+  void process(const Input&, const Output&) const final;
 
 private:
   edm4eic::MutableCluster reconstruct(const edm4eic::ProtoCluster&) const;
