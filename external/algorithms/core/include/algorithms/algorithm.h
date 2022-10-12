@@ -28,6 +28,7 @@
 
 #include <array>
 #include <map>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <tuple>
@@ -104,7 +105,7 @@ public:
   // will be used as identifier for the factory
   template <class Algo> void add() {
     static std::mutex m;
-    static std::lock_guard<std::mutex> lock;
+    static std::lock_guard<std::mutex> lock{m};
     auto type            = Algo::algorithm_type;
     std::type_index name = detail::demangledName<Algo>();
     if (!available<type>()) {
