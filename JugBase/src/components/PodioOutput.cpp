@@ -187,7 +187,8 @@ StatusCode PodioOutput::finalize() {
   debug() << "Finalizing trees and output file" << endmsg;
   m_file->cd();
   m_metadatatree->Branch("gaudiConfigOptions", &config_data);
-  m_metadatatree->Branch("CollectionIDs", m_podioDataSvc->getCollectionIDs());
+  const auto collIDTable = m_podioDataSvc->getCollectionIDs();
+  m_metadatatree->Branch("CollectionIDs", collIDTable);
   m_metadatatree->Fill();
   m_colMDtree->Branch("colMD", "std::map<int,podio::GenericParameters>", m_podioDataSvc->getProvider().getColMetaDataMap() ) ;
   m_colMDtree->Fill();

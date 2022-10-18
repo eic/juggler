@@ -29,8 +29,7 @@ StatusCode PodioDataSvc::initialize() {
       m_reader.openFiles(m_filenames);
       m_eventMax = m_reader.getEntries();
       m_provider.setReader(&m_reader);
-      auto* idTable = m_reader.getCollectionIDTable();
-      setCollectionIDs(idTable);
+      setCollectionIDs(m_reader.getCollectionIDTable());
 
       if (m_1stEvtEntry != 0) {
         m_reader.goToEvent(m_1stEvtEntry);
@@ -84,8 +83,7 @@ void PodioDataSvc::endOfRead() {
   }
 }
 
-void PodioDataSvc::setCollectionIDs(podio::CollectionIDTable* collectionIds) {
-  delete m_collectionIDs;
+void PodioDataSvc::setCollectionIDs(CollectionIDTable_ptr collectionIds) {
   m_collectionIDs = collectionIds;
 }
 
@@ -93,11 +91,6 @@ void PodioDataSvc::setCollectionIDs(podio::CollectionIDTable* collectionIds) {
 PodioDataSvc::PodioDataSvc(const std::string& name, ISvcLocator* svc)
 : DataSvc(name, svc), m_collectionIDs(new podio::CollectionIDTable()) {
   m_eventDataTree = new TTree("events", "Events tree");
-}
-
-/// Standard Destructor
-PodioDataSvc::~PodioDataSvc() {
-  delete m_collectionIDs;
 }
 
 StatusCode PodioDataSvc::readCollection(const std::string& collectionName, int collectionID) {

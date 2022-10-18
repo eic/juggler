@@ -26,7 +26,7 @@ StatusCode PodioInput::initialize() {
     return StatusCode::FAILURE;
   }
 
-  auto* idTable = m_podioDataSvc->getCollectionIDs();
+  auto idTable = m_podioDataSvc->getCollectionIDs();
   for (auto& name : m_collectionNames) {
     debug() << "Finding collection " << name << " in collection registry." << endmsg;
     if (!idTable->present(name)) {
