@@ -25,7 +25,8 @@
  */
 class PodioDataSvc : public DataSvc {
 public:
-  typedef std::vector<std::pair<std::string, podio::CollectionBase*>> CollRegistry;
+  using CollRegistry = std::vector<std::pair<std::string, podio::CollectionBase*>>;
+  using CollectionIDTable_ptr = decltype(std::declval<podio::ROOTReader>().getCollectionIDTable());
 
   /** Initialize the service.
    *  - attaches data loader
@@ -40,7 +41,7 @@ public:
   PodioDataSvc(const std::string& name, ISvcLocator* svc);
 
   /// Standard Destructor
-  virtual ~PodioDataSvc();
+  virtual ~PodioDataSvc() { };
 
   // Use DataSvc functionality except where we override
   using DataSvc::registerObject;
@@ -55,10 +56,10 @@ public:
   virtual const CollRegistry& getCollections() const { return m_collections; }
   virtual const CollRegistry& getReadCollections() const { return m_readCollections; }
   podio::EventStore& getProvider() { return m_provider; }
-  virtual podio::CollectionIDTable* getCollectionIDs() { return m_collectionIDs; }
+  virtual CollectionIDTable_ptr getCollectionIDs() { return m_collectionIDs; }
 
   /// Set the collection IDs (if reading a file)
-  void setCollectionIDs(podio::CollectionIDTable* collectionIds);
+  void setCollectionIDs(CollectionIDTable_ptr collectionIds);
   /// Resets caches of reader and event store, increases event counter
   void endOfRead();
 
@@ -85,7 +86,7 @@ private:
   // special members for podio handling
   std::vector<std::pair<std::string, podio::CollectionBase*>> m_collections;
   std::vector<std::pair<std::string, podio::CollectionBase*>> m_readCollections;
-  podio::CollectionIDTable* m_collectionIDs;
+  CollectionIDTable_ptr m_collectionIDs;
 
 protected:
   /// ROOT file name the input is read from. Set by option filename
