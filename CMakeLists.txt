@@ -49,6 +49,21 @@ if(NOT CMAKE_BUILD_TYPE MATCHES Release)
   add_compile_options(-Wall -Wextra -Werror)
 endif()
 
+# Following check is SYCL Implementation specific (Intel OneAPI)
+# OneAPI sets an env variable after its environment is initialized,
+# which we use to detect presence of the DPCPP SYCL compiler
+option(USE_SYCL "Enable SYCL support" OFF)
+if(USE_SYCL)
+  if(DEFINED ENV{SETVARS_COMPLETED})
+    add_compile_definitions(USE_SYCL)
+    find_package(IntelDPCPP REQUIRED)   # Requires CMAKE_PREFIX_PATH setup by environment
+  elseif(EXISTS "/opt/intel/oneapi/compiler/latest/linux/bin/dpcpp")
+    message(FATAL_ERROR "OneAPI environment not initalized! source /opt/intel/oneapi/setvars.sh before proceeding")
+  else()
+    message(WARNING "OneAPI environment not found, not using SYCL")
+  endif()
+endif()
+
 find_package(Microsoft.GSL CONFIG)
 
 find_package(EDM4EIC REQUIRED)
