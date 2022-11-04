@@ -277,10 +277,42 @@ namespace Jug::Reco {
 			 debug() << "Z projection is " << projectionPos(2) << endmsg;
         	      }
 
-		      edm4hep::Vector3f hcalN_proj{static_cast<float>(projectionPos(0)),static_cast<float>(projectionPos(1)),static_cast<float>(projectionPos(2))};
-		      track_segment.setHcalencapN_proj(hcalN_proj);
+		      const decltype(edm4eic::TrackPoint::position) proj_position {
+		           static_cast<float>(projectionPos(0)),
+            		   static_cast<float>(projectionPos(1)),
+            		   static_cast<float>(projectionPos(2))
+          	      };
+		      const decltype(edm4eic::TrackPoint::positionError) proj_positionError{0, 0, 0};
+		      const decltype(edm4eic::TrackPoint::momentum) proj_momentum{0, 0, 0};
+		      const decltype(edm4eic::TrackPoint::momentumError) proj_momentumError{0, 0, 0};
+		      const float proj_time = 0;
+		      const float proj_timeError = 0;
+		      const float proj_theta = 0;
+                      const float proj_phi = 0;
+		      const decltype(edm4eic::TrackPoint::directionError) proj_directionError{0, 0, 0};
+		      const float proj_pathLength = 0;
+		      const float proj_pathLengthError = 0;
+
+		      // Store projection point
+		      track_segment.addToPoints({
+            		proj_position,
+          		proj_positionError,
+            		proj_momentum,
+            		proj_momentumError,
+            		proj_time,
+            		proj_timeError,
+            		proj_theta,
+           	 	proj_phi,
+            		proj_directionError,
+            		proj_pathLength,
+            		proj_pathLengthError
+          	     });
+
 	      }
-	
+
+	// Set associated track
+	// track_segment.setTrack(traj);	
+
         // Add to output collection
         track_segments->push_back(track_segment);
       }
