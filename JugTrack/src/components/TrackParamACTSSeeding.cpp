@@ -27,12 +27,13 @@
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/BField/DD4hepBField.h"
-#include "JugTrack/IndexSourceLink.hpp"
 #include "JugTrack/Measurement.hpp"
 #include "JugTrack/Track.hpp"
 
-#include "edm4eic/TrackerHitCollection.h"
+#include "DDRec/CellIDPositionConverter.h"
 
+#include "edm4eic/TrackerHitCollection.h"
+#include "dd4pod/Geant4ParticleCollection.h"
 #include "Math/Vector3D.h"
 
 
@@ -57,12 +58,6 @@ namespace Jug::Reco {
      */
     class TrackParamACTSSeeding : public GaudiAlgorithm {
     public:
-        DataHandle<IndexSourceLinkContainer>
-        m_inputSourceLinks { "inputSourceLinks",
-            Gaudi::DataHandle::Reader, this };
-        DataHandle<MeasurementContainer>
-        m_inputMeasurements { "inputMeasurements",
-            Gaudi::DataHandle::Reader, this};
         DataHandle<edm4eic::TrackerHitCollection>
         m_inputHitCollection { "inputHitCollection",
             Gaudi::DataHandle::Reader, this };
@@ -72,7 +67,7 @@ namespace Jug::Reco {
             Gaudi::DataHandle::Writer, this };
 
         SmartIF<IGeoSvc> m_geoSvc;
-        Acts::GeometryContext m_geoContext;
+        // Acts::GeometryContext m_geoContext;
         std::shared_ptr<const Jug::BField::DD4hepBField> m_BField =
             nullptr;
         Acts::MagneticFieldContext m_fieldContext;
@@ -86,31 +81,67 @@ namespace Jug::Reco {
 
         /// Space point representation of eic::TrackerHitData suitable
         /// for ACTS track seeding.
-        class SpacePoint : edm4eic::TrackerHitData {
+        class SpacePoint
+        // : edm4eic::TrackerHitData
+        {
         public:
+            // Acts::Vector3 _dummy[16];
+            Acts::Vector3 _position;
+            Acts::Vector3 _positionError;
             int32_t _measurementIndex;
+            const Acts::Surface *_surface;
             // Constructor to circumvent the fact that eic::TrackerHit
             // and associated classes are all non-polymorphic
             SpacePoint(const edm4eic::TrackerHit h,
-                       const int32_t measurementIndex)
+                       const int32_t measurementIndex,
+                       SmartIF<IGeoSvc> m_geoSvc)
                 : _measurementIndex(measurementIndex)
             {
-                position = h.getPosition();
-                positionError = h.getPositionError();
+                _position[0] = h.getPosition().x;
+                _position[1] = h.getPosition().y;
+                _position[2] = h.getPosition().z;
+                _positionError[0] = h.getPositionError().xx;
+                _positionError[1] = h.getPositionError().yy;
+                _positionError[2] = h.getPositionError().zz;
+                const auto volumeId =
+                    m_geoSvc->cellIDPositionConverter()->
+                    findContext(h.getCellID())->identifier;
+                const auto its = m_geoSvc->surfaceMap().find(volumeId);
+                if (its == m_geoSvc->surfaceMap().end()) {
+                    _surface = nullptr;
+                }
+                else {
+                    _surface = its->second;
+                }
             }
-            constexpr float x() const { return position.x; }
-            constexpr float y() const { return position.y; }
-            constexpr float z() const { return position.z; }
+            SpacePoint(const SpacePoint &sp)
+                : _position(sp._position),
+                  _positionError(sp._positionError),
+                  _measurementIndex(sp._measurementIndex),
+                  _surface(sp._surface)
+            {
+            }
+            float x() const { return _position[0]; }
+            float y() const { return _position[1]; }
+            float z() const { return _position[2]; }
             float r() const { return std::hypot(x(), y()); }
             float varianceR() const
             {
-                return (std::pow(x(), 2) * positionError.xx +
-                        std::pow(y(), 2) * positionError.yy) /
+                return (std::pow(x(), 2) * _positionError[0] +
+                        std::pow(y(), 2) * _positionError[1]) /
                     (std::pow(x(), 2) + std::pow(y(), 2));
             }
-            constexpr float varianceZ() const { return positionError.zz; }
+            float varianceZ() const { return _positionError[2]; }
             constexpr uint32_t measurementIndex() const {
                 return _measurementIndex; }
+            bool isOnSurface() const {
+                if (_surface == nullptr) {
+                    return false;
+                }
+                return _surface->isOnSurface(
+                     Acts::GeometryContext(), {x(), y(), z()},
+                     {0, 0, 0});
+            }
         };
 
         static bool spCompare(SpacePoint r, SpacePoint s)
@@ -147,17 +178,17 @@ namespace Jug::Reco {
             std::string outputProtoTracks;
 
             float bFieldInZ = 3 * Acts::UnitConstants::T;
-            float minPt = 500 * Acts::UnitConstants::MeV;
+            float cotThetaMax = std::sinh(4.01);
+            float minPt = 100 * Acts::UnitConstants::MeV / cotThetaMax;
             float rMax = 440 * Acts::UnitConstants::mm;
             float zMin = -1500 * Acts::UnitConstants::mm;
             float zMax = 1700 * Acts::UnitConstants::mm;
-            float deltaRMin = 1 * Acts::UnitConstants::mm;
+            float deltaRMin = 0 * Acts::UnitConstants::mm;
             float deltaRMax = 600 * Acts::UnitConstants::mm;
-            float cotThetaMax = sinh(4.01);
             //
             float collisionRegionMin = -250 * Acts::UnitConstants::mm;
             float collisionRegionMax = 250 * Acts::UnitConstants::mm;
-            float maxSeedsPerSpM = 6;
+            float maxSeedsPerSpM = 0;
             float sigmaScattering = 5;
             float radLengthPerSeed = 0.1;
             float beamPosX = 0 * Acts::UnitConstants::mm;
@@ -198,10 +229,6 @@ namespace Jug::Reco {
         TrackParamACTSSeeding(const std::string &name,
                               ISvcLocator* svcLoc)
             : GaudiAlgorithm(name, svcLoc) {
-            declareProperty("inputSourceLinks",
-                            m_inputSourceLinks, "");
-            declareProperty("inputMeasurements",
-                            m_inputMeasurements, "");
             declareProperty("inputHitCollection",
                             m_inputHitCollection, "");
             declareProperty("outputInitialTrackParameters",
@@ -209,13 +236,6 @@ namespace Jug::Reco {
         }
 
         StatusCode initialize() override;
-
-        void
-        findSeed(SeedContainer &seeds,
-                 const edm4eic::TrackerHitCollection *hits,
-                 const IndexSourceLinkContainer *sourceLinks,
-                 const MeasurementContainer *measurements,
-                 Acts::Seedfinder<SpacePoint>::State &state);
 
         StatusCode execute() override;
     };
@@ -289,13 +309,17 @@ namespace Jug::Reco {
         return StatusCode::SUCCESS;
     }
 
-    void TrackParamACTSSeeding::
-    findSeed(SeedContainer &seeds,
-             const edm4eic::TrackerHitCollection *hits,
-             const IndexSourceLinkContainer *sourceLinks,
-             const MeasurementContainer *measurements,
-             Acts::Seedfinder<SpacePoint>::State &state)
+    StatusCode TrackParamACTSSeeding::execute()
     {
+        const edm4eic::TrackerHitCollection *hits =
+            m_inputHitCollection.get();
+        // Create output collections
+        auto initTrackParameters =
+            m_outputInitialTrackParameters.createAndPut();
+
+        static thread_local SeedContainer seeds;
+        static thread_local Acts::Seedfinder<SpacePoint>::State state;
+
         // Sadly, eic::TrackerHit and eic::TrackerHitData are
 	// non-polymorphic
         std::vector<SpacePoint> spacePoint;
@@ -306,10 +330,11 @@ namespace Jug::Reco {
         std::shared_ptr<const Acts::TrackingGeometry>
             trackingGeometry = m_geoSvc->trackingGeometry();
 
+#ifdef USE_LOCAL_COORD
+        // Currently broken, possibly geometry issues
         if (msgLevel(MSG::DEBUG)) {
             debug() << __FILE__ << ':' << __LINE__ << ": "
                     << sourceLinks->size() << ' '
-                    << measurements->size() << ' '
                     << hits->size() << endmsg;
         }
         auto its = sourceLinks->begin();
@@ -317,9 +342,19 @@ namespace Jug::Reco {
         for (; its != sourceLinks->end() &&
                  itm != measurements->end();
              its++, itm++) {
-            const Acts::Surface *surface = trackingGeometry->findSurface(its->get().geometryId());
+            const Acts::Surface *surface =
+                trackingGeometry->findSurface(its->get().geometryId());
             if (surface != nullptr) {
-                Acts::Vector3 v = surface->localToGlobal(m_geoContext, {std::get<Acts::Measurement<Acts::BoundIndices, 2>>(*itm).parameters()[0], std::get<Acts::Measurement<Acts::BoundIndices, 2>>(*itm).parameters()[1]}, {0, 0, 0});
+                Acts::Vector3 v =
+                    surface->localToGlobal(
+                        Acts::GeometryContext(),
+                        {std::get<Acts::Measurement<
+                         Acts::BoundIndices, 2>>(*itm).
+                         parameters()[0],
+                         std::get<Acts::Measurement<
+                         Acts::BoundIndices, 2>>(*itm).
+                         parameters()[1]},
+                        {0, 0, 0});
                 if (msgLevel(MSG::DEBUG)) {
                     debug() << __FILE__ << ':' << __LINE__ << ": "
                             << its - sourceLinks->begin() << ' '
@@ -327,31 +362,28 @@ namespace Jug::Reco {
                             << v[0] << ' ' << v[1] << ' ' << v[2]
                             << endmsg;
                 }
-#ifdef USE_LOCAL_COORD
                 spacePoint.push_back(
                     SpacePoint(
                         edm4eic::TrackerHit(
-                            static_cast<uint64_t>(spacePoint.size()),
-                            {v[0], v[1], v[2]},
-                            {25.0e-6 / 3.0,
-                             25.0e-6 / 3.0, 0.0},
+                            static_cast<uint64_t>(spacePoint.size() + 1),
+                            edm4eic::Vector3f(v[0], v[1], v[2]),
+                            // Dummy uncertainties
+                            edm4eic::CovDiag3f(25.0e-6 / 3.0,
+                                               25.0e-6 / 3.0, 0.0),
                             0.0, 10.0, 0.05, 0.0),
                         static_cast<int32_t>(spacePoint.size())));
                 spacePointPtrs.push_back(&spacePoint.back());
-                #if Acts_VERSION_MAJOR < 19 || (Acts_VERSION_MAJOR == 19 && Acts_VERSION_MINOR < 9)
                 rRangeSPExtent.check({ spacePoint.back().x(),
                                        spacePoint.back().y(),
                                        spacePoint.back().z() });
-                #else
-                rRangeSPExtent.extend({ spacePoint.back().x(),
-                                        spacePoint.back().y(),
-                                        spacePoint.back().z() });
-                #endif
-#endif // USE_LOCAL_COORD
             }
         }
-
+#else // USE_LOCAL_COORD
         for(const auto &h : *hits) {
+            spacePoint.push_back(SpacePoint(
+                h, static_cast<int32_t>(spacePoint.size() + 1),
+                m_geoSvc));
+            spacePointPtrs.push_back(&spacePoint.back());
             if (msgLevel(MSG::DEBUG)) {
                 debug() << __FILE__ << ':' << __LINE__ << ": "
                         << ' ' << h.getPosition().x
@@ -364,22 +396,16 @@ namespace Jug::Reco {
                         << ' ' << h.getTimeError()
                         << ' ' << h.getEdep()
                         << ' ' << h.getEdepError()
+                        << ' ' << spacePointPtrs.back()
+                        << ' ' << spacePointPtrs.back()->measurementIndex()
+                        << ' ' << spacePointPtrs.back()->isOnSurface()
                         << endmsg;
             }
-#ifndef USE_LOCAL_COORD
-            spacePoint.push_back(SpacePoint(h, static_cast<int32_t>(spacePoint.size())));
-            spacePointPtrs.push_back(&spacePoint.back());
-            #if Acts_VERSION_MAJOR < 19 || (Acts_VERSION_MAJOR == 19 && Acts_VERSION_MINOR < 9)
             rRangeSPExtent.check({ spacePoint.back().x(),
                                    spacePoint.back().y(),
                                    spacePoint.back().z() });
-            #else
-            rRangeSPExtent.extend({ spacePoint.back().x(),
-                                    spacePoint.back().y(),
-                                    spacePoint.back().z() });
-            #endif
-#endif // USE_LOCAL_COORD
         }
+#endif // USE_LOCAL_COORD
         if (msgLevel(MSG::DEBUG)) {
             debug() << __FILE__ << ':' << __LINE__ << ": " << endmsg;
         }
@@ -411,11 +437,31 @@ namespace Jug::Reco {
             debug() << __FILE__ << ':' << __LINE__ << ": " << endmsg;
         }
 
+        const float bFieldInZSave = m_gridCfg.bFieldInZ;
+        const float minPtSave = m_gridCfg.minPt;
+        m_gridCfg.minPt = 400 * Acts::UnitConstants::MeV;
+        m_gridCfg.bFieldInZ =
+            (m_gridCfg.minPt / Acts::UnitConstants::MeV) /
+            (150.0 * (1.0 + FLT_EPSILON) *
+             (m_gridCfg.rMax / Acts::UnitConstants::mm)) *
+            1000.0 * Acts::UnitConstants::T;
+        if (msgLevel(MSG::DEBUG)) {
+            debug() << "createGrid() with temporary minPt = "
+                    << m_gridCfg.minPt / Acts::UnitConstants::MeV
+                    << " MeV, bFieldInZ = "
+                    << m_gridCfg.bFieldInZ / (1000 * Acts::UnitConstants::T)
+                    << " kT" << endmsg;
+        }
         auto grid =
             Acts::SpacePointGridCreator::createGrid<SpacePoint>(
                 m_gridCfg);
+        m_gridCfg.bFieldInZ = bFieldInZSave;
+        m_gridCfg.minPt = minPtSave;
         if (msgLevel(MSG::DEBUG)) {
-            debug() << __FILE__ << ':' << __LINE__ << ": " << endmsg;
+            debug() << "phiBins = "
+                    << grid->axes().front()->getNBins()
+                    << ", zBins = "
+                    << grid->axes().back()->getNBins() << endmsg;
         }
 
         auto spacePointsGrouping =
@@ -439,52 +485,38 @@ namespace Jug::Reco {
 
         auto group = spacePointsGrouping.begin();
         auto groupEnd = spacePointsGrouping.end();
-#if 1
         for (; !(group == groupEnd); ++group) {
             finder.createSeedsForGroup(
                 state, std::back_inserter(seeds),
                 group.bottom(), group.middle(), group.top(),
                 rRangeSPExtent);
         }
-#endif
 
         if (msgLevel(MSG::DEBUG)) {
             debug() << "seeds.size() = " << seeds.size() << endmsg;
         }
-    }
-
-    StatusCode TrackParamACTSSeeding::execute()
-    {
-        const edm4eic::TrackerHitCollection *hits =
-            m_inputHitCollection.get();
-        const IndexSourceLinkContainer *sourceLinks =
-            m_inputSourceLinks.get();
-        const MeasurementContainer *measurements =
-            m_inputMeasurements.get();
-        // Create output collections
-        auto initTrackParameters =
-            m_outputInitialTrackParameters.createAndPut();
-
-        static thread_local SeedContainer seeds;
-        static thread_local Acts::Seedfinder<SpacePoint>::State state;
-
-        findSeed(seeds, hits, sourceLinks, measurements, state);
 
         TrackParametersContainer trackParameters;
         ProtoTrackContainer tracks;
         trackParameters.reserve(seeds.size());
         tracks.reserve(seeds.size());
 
-        std::shared_ptr<const Acts::TrackingGeometry>
-            trackingGeometry = m_geoSvc->trackingGeometry();
         std::shared_ptr<const Acts::MagneticFieldProvider>
             magneticField = m_geoSvc->getFieldProvider();
 
-        if (msgLevel(MSG::DEBUG)) { debug() << __FILE__ << ':' << __LINE__ << ": " << endmsg; }
+        // if (msgLevel(MSG::DEBUG)) { debug() << __FILE__ << ':' << __LINE__ << ": " << endmsg; }
         auto bCache = magneticField->makeCache(m_fieldContext);
 
         std::unordered_map<size_t, bool> spTaken;
 
+#if 0
+        for (size_t iseed = 0; iseed < seeds.size(); iseed++) {
+            const auto &seed = seeds[iseed];
+            // Get the bottom space point and its reference surface
+            const auto bottomSP = seed.sp().front();
+            fprintf(stderr, "%s:%d: %p\n", __FILE__, __LINE__, reinterpret_cast<const void *>(bottomSP));
+        }
+#endif
         for (size_t iseed = 0; iseed < seeds.size(); iseed++) {
             const auto &seed = seeds[iseed];
             // Get the bottom space point and its reference surface
@@ -496,19 +528,43 @@ namespace Jug::Reco {
             //         // debug() << __FILE__ << ':' << __LINE__ << ": " << i->measurementIndex() << ", " << i->x() << ", " << i->y() << ", " << i->z() << endmsg;
             //     }
             // }
-            // Guard against any memory access issues
-            hitIdx = std::min(hitIdx, static_cast<uint32_t>(
-                sourceLinks->size() - 1));
-            const Acts::Surface *surface = nullptr;
-            for (auto &s : *sourceLinks) {
-                surface = trackingGeometry->findSurface(s.get().geometryId());
-                if (surface != nullptr &&
-                    surface->isOnSurface(
-                        m_geoContext,
-                        {bottomSP->x(), bottomSP->y(), bottomSP->z()},
-                        {0, 0, 0})) {
-                    break;
+            // const Acts::Surface *surface = nullptr;
+            const Acts::Surface *surface = bottomSP->_surface;
+            if (surface == nullptr) {
+                if (msgLevel(MSG::DEBUG)) {
+                    debug() << "hit " << hitIdx << " ("
+                            << bottomSP->x() << ", " << bottomSP->y()
+                            << ", " << bottomSP->z()
+                            << ") lost its surface" << endmsg;
                 }
+#if 0
+                for (auto &s : *sourceLinks) {
+                    surface = trackingGeometry->
+                        findSurface(s.get().geometryId());
+                    if (surface != nullptr &&
+                        surface->isOnSurface(
+                            Acts::GeometryContext(),
+                            {bottomSP->x(), bottomSP->y(),
+                             bottomSP->z()},
+                            {0, 0, 0})) {
+                        if (msgLevel(MSG::DEBUG)) {
+                            debug() << "reattached" << endmsg;
+                        }
+                        break;
+                    }
+                }
+#endif
+            }
+            if (std::find_if(spacePoint.begin(), spacePoint.end(),
+                             [&surface](const SpacePoint sp) {
+                                 return surface == sp._surface;
+                             }) == spacePoint.end()) {
+                if (msgLevel(MSG::DEBUG)) {
+                    debug() << "hit " << hitIdx
+                            << " has a surface that was never "
+                            << "associated with a hit" << endmsg;
+                }
+                surface = nullptr;
             }
             if (surface == nullptr && msgLevel(MSG::DEBUG)) {
                 debug() << "hit " << hitIdx
@@ -517,7 +573,9 @@ namespace Jug::Reco {
                 continue;
             }
 
+#if 0
             if (msgLevel(MSG::DEBUG)) {
+                Acts::GeometryContext m_geoContext;
                 debug() << __FILE__ << ':' << __LINE__
                         << ": iseed = " << iseed << ", "
                         << surface->type() << ", "
@@ -526,17 +584,19 @@ namespace Jug::Reco {
                         << surface->center(m_geoContext).z()
                         << endmsg;
             }
+#endif
 
             // Get the magnetic field at the bottom space point
             auto fieldRes = magneticField->getField(
                 {bottomSP->x(), bottomSP->y(), bottomSP->z()},
                 bCache);
-            if (msgLevel(MSG::DEBUG)) { debug() << __FILE__ << ':' << __LINE__ << ": " << endmsg; }
+            // if (msgLevel(MSG::DEBUG)) { debug() << __FILE__ << ':' << __LINE__ << ": " << endmsg; }
             // Estimate the track parameters from seed
             auto optParams = Acts::estimateTrackParamsFromSeed(
-                m_geoContext, seed.sp().begin(), seed.sp().end(),
+                Acts::GeometryContext(),
+                seed.sp().begin(), seed.sp().end(),
                 *surface, *fieldRes, m_cfg.bFieldMin);
-            if (msgLevel(MSG::DEBUG)) { debug() << __FILE__ << ':' << __LINE__ << ": " << endmsg; }
+            // if (msgLevel(MSG::DEBUG)) { debug() << __FILE__ << ':' << __LINE__ << ": " << endmsg; }
             if (not optParams.has_value()) {
                 debug() << "Estimation of track parameters for seed "
                         << iseed << " failed." << endmsg;
@@ -558,7 +618,7 @@ namespace Jug::Reco {
                 spTaken[seed.sp()[2]->measurementIndex()] = true;
 #endif
             }
-            if (msgLevel(MSG::DEBUG)) { debug() << __FILE__ << ':' << __LINE__ << ": " << endmsg; }
+            // if (msgLevel(MSG::DEBUG)) { debug() << __FILE__ << ':' << __LINE__ << ": " << endmsg; }
         }
 
         return StatusCode::SUCCESS;
