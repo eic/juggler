@@ -17,6 +17,7 @@ target_link_libraries(${LIBRARY}
     EDM4HEP::edm4hep
     EDM4EIC::edm4eic
     DD4hep::DDRec
+    Microsoft.GSL::GSL
     fmt::fmt)
 target_include_directories(${LIBRARY}
   PUBLIC

@@ -60,17 +60,16 @@ public:
   using LogAction = std::function<void(LogLevel, std::string_view, std::string_view)>;
   void defaultLevel(const LogLevel l) { m_level.set(detail::upcast_type_t<LogLevel>(l)); }
   LogLevel defaultLevel() const { return m_level; }
-  void init(LogAction a) {
-    m_action = a;
-    ready(true);
+  void init() {
+    ; // do nothing by default, as we are already initialized
   }
+  void init(LogAction a) { m_action = a; }
   void report(const LogLevel l, std::string_view caller, std::string_view msg) const {
     m_action(l, caller, msg);
   }
 
 private:
   LogAction makeDefaultAction() {
-    ready(true);
     return [](const LogLevel l, std::string_view caller, std::string_view msg) {
       static std::mutex m;
       std::lock_guard<std::mutex> lock(m);

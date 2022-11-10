@@ -25,8 +25,8 @@ public:
                                        "PID with reconstructed tracks. Matching happens by "
                                        "comparing generated with reconstructed P, phi, and eta."} {}
 
-  void init();
-  void process(const Input&, const Output&) const;
+  void init() final;
+  void process(const Input&, const Output&) const final;
 
 private:
   // Matching momentum tolerance requires 10% by default;
