@@ -33,7 +33,6 @@
 #include "DDRec/CellIDPositionConverter.h"
 
 #include "edm4eic/TrackerHitCollection.h"
-#include "dd4pod/Geant4ParticleCollection.h"
 #include "Math/Vector3D.h"
 
 
