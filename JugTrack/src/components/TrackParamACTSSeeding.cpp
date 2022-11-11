@@ -187,7 +187,7 @@ namespace Jug::Reco {
             //
             float collisionRegionMin = -250 * Acts::UnitConstants::mm;
             float collisionRegionMax = 250 * Acts::UnitConstants::mm;
-            float maxSeedsPerSpM = 10;
+            float maxSeedsPerSpM = 2;
             float sigmaScattering = 5;
             float radLengthPerSeed = 0.1;
             float beamPosX = 0 * Acts::UnitConstants::mm;
@@ -230,7 +230,8 @@ namespace Jug::Reco {
     public:
         TrackParamACTSSeeding(const std::string &name,
                               ISvcLocator* svcLoc)
-            : GaudiAlgorithm(name, svcLoc) {
+            : GaudiAlgorithm(name, svcLoc)
+        {
             declareProperty("inputHitCollection",
                             m_inputHitCollection, "");
             declareProperty("outputInitialTrackParameters",
@@ -319,8 +320,8 @@ namespace Jug::Reco {
         auto initTrackParameters =
             m_outputInitialTrackParameters.createAndPut();
 
-        static thread_local SeedContainer seeds;
-        static thread_local Acts::Seedfinder<SpacePoint>::State state;
+        static SeedContainer seeds;
+        static Acts::Seedfinder<SpacePoint>::State state;
 
         // Sadly, eic::TrackerHit and eic::TrackerHitData are
 	// non-polymorphic
