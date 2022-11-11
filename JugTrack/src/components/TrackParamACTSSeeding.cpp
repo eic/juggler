@@ -176,7 +176,7 @@ namespace Jug::Reco {
             /// Output proto track collection.
             std::string outputProtoTracks;
 
-            float bFieldInZ = 3 * Acts::UnitConstants::T;
+            float bFieldInZ = 1.7 * Acts::UnitConstants::T;
             float cotThetaMax = std::sinh(4.01);
             float minPt = 100 * Acts::UnitConstants::MeV / cotThetaMax;
             float rMax = 440 * Acts::UnitConstants::mm;
@@ -187,7 +187,7 @@ namespace Jug::Reco {
             //
             float collisionRegionMin = -250 * Acts::UnitConstants::mm;
             float collisionRegionMax = 250 * Acts::UnitConstants::mm;
-            float maxSeedsPerSpM = 0;
+            float maxSeedsPerSpM = 10;
             float sigmaScattering = 5;
             float radLengthPerSeed = 0.1;
             float beamPosX = 0 * Acts::UnitConstants::mm;
@@ -334,6 +334,7 @@ namespace Jug::Reco {
 
 #ifdef USE_LOCAL_COORD
         // Currently broken, possibly geometry issues
+#error Do not use, broken
         if (msgLevel(MSG::DEBUG)) {
             debug() << __FILE__ << ':' << __LINE__ << ": "
                     << sourceLinks->size() << ' '
@@ -398,6 +399,11 @@ namespace Jug::Reco {
                         << ' ' << spacePointPtrs.back()->measurementIndex()
                         << ' ' << spacePointPtrs.back()->isOnSurface()
                         << endmsg;
+#if 1 // ACTS 19.9
+            rRangeSPExtent.extend({ spacePoint.back().x(),
+                                    spacePoint.back().y(),
+                                    spacePoint.back().z() });
+#endif
             }
         }
 #endif // USE_LOCAL_COORD
@@ -463,7 +469,11 @@ namespace Jug::Reco {
             Acts::BinnedSPGroup<SpacePoint>(
                 spacePointPtrs.begin(), spacePointPtrs.end(),
                 extractGlobalQuantities, bottomBinFinder,
-                topBinFinder, std::move(grid), m_finderCfg);
+                topBinFinder, std::move(grid),
+#if 0 // ACTS 20.x
+                rRangeSPExtent,
+#endif
+                m_finderCfg);
         auto finder = Acts::Seedfinder<SpacePoint>(m_finderCfg);
 
         if (msgLevel(MSG::DEBUG)) {
@@ -472,7 +482,7 @@ namespace Jug::Reco {
                     << spacePointsGrouping.size() << endmsg;
         }
 
-#if 0
+#if 0 // ACTS 20.x
         const Acts::Range1D<float> rMiddleSPRange(
             std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
             m_cfg.deltaRMiddleMinSPRange,
