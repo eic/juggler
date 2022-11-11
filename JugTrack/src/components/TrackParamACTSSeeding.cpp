@@ -214,6 +214,9 @@ namespace Jug::Reco {
 
 	    int numPhiNeighbors = 1;
 
+            float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
+            float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
+
             // vector containing the map of z bins in the top and bottom layers
             std::vector<std::pair<int, int> > zBinNeighborsTop;
             std::vector<std::pair<int, int> > zBinNeighborsBottom;
@@ -373,10 +376,6 @@ namespace Jug::Reco {
                             0.0, 10.0, 0.05, 0.0),
                         static_cast<int32_t>(spacePoint.size())));
                 spacePointPtrs.push_back(&spacePoint.back());
-                rRangeSPExtent.check({ spacePoint.back().x(),
-                                       spacePoint.back().y(),
-                                       spacePoint.back().z() });
-            }
         }
 #else // USE_LOCAL_COORD
         for(const auto &h : *hits) {
@@ -401,9 +400,6 @@ namespace Jug::Reco {
                         << ' ' << spacePointPtrs.back()->isOnSurface()
                         << endmsg;
             }
-            rRangeSPExtent.check({ spacePoint.back().x(),
-                                   spacePoint.back().y(),
-                                   spacePoint.back().z() });
         }
 #endif // USE_LOCAL_COORD
         if (msgLevel(MSG::DEBUG)) {
@@ -476,10 +472,15 @@ namespace Jug::Reco {
                     << ": spacePointsGrouping.size() = "
                     << spacePointsGrouping.size() << endmsg;
         }
+
 #if 0
-        topBinFinder.get();
-        bottomBinFinder.get();
+        const Acts::Range1D<float> rMiddleSPRange(
+            std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
+            m_cfg.deltaRMiddleMinSPRange,
+            std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2 -
+            m_cfg.deltaRMiddleMaxSPRange);
 #endif
+
         // Run the seeding
         seeds.clear();
 
@@ -509,25 +510,11 @@ namespace Jug::Reco {
 
         std::unordered_map<size_t, bool> spTaken;
 
-#if 0
-        for (size_t iseed = 0; iseed < seeds.size(); iseed++) {
-            const auto &seed = seeds[iseed];
-            // Get the bottom space point and its reference surface
-            const auto bottomSP = seed.sp().front();
-            fprintf(stderr, "%s:%d: %p\n", __FILE__, __LINE__, reinterpret_cast<const void *>(bottomSP));
-        }
-#endif
         for (size_t iseed = 0; iseed < seeds.size(); iseed++) {
             const auto &seed = seeds[iseed];
             // Get the bottom space point and its reference surface
             const auto bottomSP = seed.sp().front();
             auto hitIdx = bottomSP->measurementIndex();
-            // if (msgLevel(MSG::DEBUG)) {
-            //     // debug() << __FILE__ << ':' << __LINE__ << ": iseed = " << iseed << ", seed.sp().size() = " << seed.sp().size() << ", hitIdx = " << hitIdx << endmsg;
-            //     for (auto i : seed.sp()) {
-            //         // debug() << __FILE__ << ':' << __LINE__ << ": " << i->measurementIndex() << ", " << i->x() << ", " << i->y() << ", " << i->z() << endmsg;
-            //     }
-            // }
             // const Acts::Surface *surface = nullptr;
             const Acts::Surface *surface = bottomSP->_surface;
             if (surface == nullptr) {
@@ -537,23 +524,6 @@ namespace Jug::Reco {
                             << ", " << bottomSP->z()
                             << ") lost its surface" << endmsg;
                 }
-#if 0
-                for (auto &s : *sourceLinks) {
-                    surface = trackingGeometry->
-                        findSurface(s.get().geometryId());
-                    if (surface != nullptr &&
-                        surface->isOnSurface(
-                            Acts::GeometryContext(),
-                            {bottomSP->x(), bottomSP->y(),
-                             bottomSP->z()},
-                            {0, 0, 0})) {
-                        if (msgLevel(MSG::DEBUG)) {
-                            debug() << "reattached" << endmsg;
-                        }
-                        break;
-                    }
-                }
-#endif
             }
             if (std::find_if(spacePoint.begin(), spacePoint.end(),
                              [&surface](const SpacePoint sp) {
@@ -572,19 +542,6 @@ namespace Jug::Reco {
                         << endmsg;
                 continue;
             }
-
-#if 0
-            if (msgLevel(MSG::DEBUG)) {
-                Acts::GeometryContext m_geoContext;
-                debug() << __FILE__ << ':' << __LINE__
-                        << ": iseed = " << iseed << ", "
-                        << surface->type() << ", "
-                        << surface->center(m_geoContext).x() << ", "
-                        << surface->center(m_geoContext).y() << ", "
-                        << surface->center(m_geoContext).z()
-                        << endmsg;
-            }
-#endif
 
             // Get the magnetic field at the bottom space point
             auto fieldRes = magneticField->getField(
