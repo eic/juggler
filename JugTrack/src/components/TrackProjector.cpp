@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright (C) 2022 Wenqing Fan, Barak Schmookler, Whitney Armstrong, Sylvester Joosten
+// Copyright (C) 2022 wfan, Whitney Armstrong, Sylvester Joosten
 
 #include <algorithm>
 
@@ -37,17 +37,10 @@
 #include "Acts/MagneticField/SharedBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Surfaces/DiscSurface.hpp"
-#include "Acts/Surfaces/RadialBounds.hpp"
 
 #include "edm4eic/vector_utils.h"
 
 #include <cmath>
-
-using BoundTrackParamPtr = std::unique_ptr<const Acts::BoundTrackParameters>;
-using BoundTrackParamPtrResult = Acts::Result<BoundTrackParamPtr>;
-using SurfacePtr = std::shared_ptr<const Acts::Surface>;
-
 
 namespace Jug::Reco {
 
@@ -66,11 +59,7 @@ namespace Jug::Reco {
     Gaudi::Property<float> m_firstGreaterThanZ{this, "firstGreaterThanZ", 0};
     Gaudi::Property<float> m_firstGreaterThanR{this, "firstGreaterThanR", -1};
 
-    SmartIF<IGeoSvc> m_geoSvc;
     Acts::GeometryContext m_geoContext;
-    Acts::MagneticFieldContext m_fieldContext;
-
-    std::shared_ptr<Acts::DiscSurface> hcalEndcapNSurf;
 
     public:
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
@@ -83,46 +72,7 @@ namespace Jug::Reco {
     StatusCode initialize() override {
       if (GaudiAlgorithm::initialize().isFailure())
         return StatusCode::FAILURE;
-
-      m_geoSvc = service("GeoSvc");
-      if (!m_geoSvc) {
-      error() << "Unable to locate Geometry Service. "
-              << "Make sure you have GeoSvc in the right order in the configuration." << endmsg;
-      return StatusCode::FAILURE;
-    }
-
-      auto transform = Acts::Transform3::Identity();
-	
-      // make a reference disk to mimic electron-endcap HCal
-      const auto hcalEndcapNZ = -3322.;
-      const auto hcalEndcapNMinR = 83.01;
-      const auto hcalEndcapNMaxR = 950;
-      auto hcalEndcapNBounds = std::make_shared<Acts::RadialBounds>(hcalEndcapNMinR, hcalEndcapNMaxR);
-      auto hcalEndcapNTrf = transform * Acts::Translation3(Acts::Vector3(0, 0, hcalEndcapNZ));
-      hcalEndcapNSurf = Acts::Surface::makeShared<Acts::DiscSurface>(hcalEndcapNTrf, hcalEndcapNBounds);
-
       return StatusCode::SUCCESS;
-    }
-
-    BoundTrackParamPtrResult propagateTrack(const Acts::BoundTrackParameters& params, const SurfacePtr& targetSurf) {
-
-	    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = m_geoSvc->trackingGeometry();
-	    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField = m_geoSvc->getFieldProvider();
-	    using Stepper            = Acts::EigenStepper<>;
-	    using Propagator         = Acts::Propagator<Stepper>;
-	    Stepper stepper(magneticField);
-	    Propagator propagator(stepper);
-	    // Acts::Logging::Level logLevel = Acts::Logging::FATAL
-	    Acts::Logging::Level logLevel = Acts::Logging::DEBUG;
-	    
-	    ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("ProjectTrack Logger", logLevel));
-      
-	    Acts::PropagatorOptions<> options(m_geoContext,m_fieldContext,Acts::LoggerWrapper{logger()});
-
-	    auto result = propagator.propagate(params, *targetSurf, options);
-   
-	    if(result.ok()) return std::move((*result).endParameters);
-	    return result.error();
     }
 
     StatusCode execute() override {
@@ -258,60 +208,6 @@ namespace Jug::Reco {
         if (msgLevel(MSG::DEBUG)) {
           debug() << "n calibrated state in trajectory " << m_nCalibrated << endmsg;
         }
-
-	      //=================================================
-	      //Track projection
-	      //Reference sPHENIX code: https://github.com/sPHENIX-Collaboration/coresoftware/blob/335e6da4ccacc8374cada993485fe81d82e74a4f/offline/packages/trackreco/PHActsTrackProjection.h
-	      //=================================================
-	      const auto& boundParam = traj.trackParameters(trackTip);	
-	
-	      // project track parameters to electron endcap hcal surface
-	      auto result = propagateTrack(boundParam, hcalEndcapNSurf);
-              if(result.ok()){
-		      auto trackStateParams = std::move(**result);
-                      auto projectionPos = trackStateParams.position(m_geoContext);
-
-		      if (msgLevel(MSG::DEBUG)) {
-         		 debug() << "X projection is " << projectionPos(0) << endmsg;
-			 debug() << "Y projection is " << projectionPos(1) << endmsg;
-			 debug() << "Z projection is " << projectionPos(2) << endmsg;
-        	      }
-
-		      const decltype(edm4eic::TrackPoint::position) proj_position {
-		           static_cast<float>(projectionPos(0)),
-            		   static_cast<float>(projectionPos(1)),
-            		   static_cast<float>(projectionPos(2))
-          	      };
-		      const decltype(edm4eic::TrackPoint::positionError) proj_positionError{0, 0, 0};
-		      const decltype(edm4eic::TrackPoint::momentum) proj_momentum{0, 0, 0};
-		      const decltype(edm4eic::TrackPoint::momentumError) proj_momentumError{0, 0, 0};
-		      const float proj_time = 0;
-		      const float proj_timeError = 0;
-		      const float proj_theta = 0;
-                      const float proj_phi = 0;
-		      const decltype(edm4eic::TrackPoint::directionError) proj_directionError{0, 0, 0};
-		      const float proj_pathLength = 0;
-		      const float proj_pathLengthError = 0;
-
-		      // Store projection point
-		      track_segment.addToPoints({
-            		proj_position,
-          		proj_positionError,
-            		proj_momentum,
-            		proj_momentumError,
-            		proj_time,
-            		proj_timeError,
-            		proj_theta,
-           	 	proj_phi,
-            		proj_directionError,
-            		proj_pathLength,
-            		proj_pathLengthError
-          	     });
-
-	      }
-
-	// Set associated track
-	// track_segment.setTrack(traj);	
 
         // Add to output collection
         track_segments->push_back(track_segment);
