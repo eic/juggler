@@ -9,10 +9,6 @@ variables:
   JUGGLER_IMAGE: "juggler"
   DEFAULT_TAG: "testing"
 
-  ## Other versions to be included in the container. In general these should be "master"
-  ## to keep the container functionally identical to jug_xl:nightly
-  JUGGLER_NPDET_VERSION: "master"
-
   ## We have:
   ##   - Juggler triggers eic_container on a main pipeline
   ##   - eic_container triggers juggler on nightly builds
@@ -136,7 +132,6 @@ juggler:default:
                    -f eic_container/containers/jug/xl.Dockerfile
                    --build-arg INTERNAL_TAG=${EIC_DEV_TAG}
                    --build-arg JUGGLER_VERSION=${CI_COMMIT_REF_NAME}
-                   --build-arg NPDET_VERSION=${JUGGLER_NPDET_VERSION}
                    --build-arg DETECTOR_VERSION=${JUGGLER_DETECTOR_VERSION}
                    --build-arg IP6_VERSION=${JUGGLER_IP6_VERSION}
                    --build-arg JUG_VERSION=juggler-${INTERNAL_TAG}-$(date +%Y-%m-%d_%H-%M-%S)-$(git rev-parse HEAD)
