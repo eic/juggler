@@ -7,6 +7,7 @@
 
 #include <algorithms/algorithm.h>
 #include <algorithms/random.h>
+#include <algorithms/context.h>
 
 #include <fmt/ranges.h>
 
