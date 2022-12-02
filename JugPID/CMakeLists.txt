@@ -19,6 +19,7 @@ gaudi_add_module(JugPIDPlugins
 )
 
 target_include_directories(JugPIDPlugins PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/JugBase>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
