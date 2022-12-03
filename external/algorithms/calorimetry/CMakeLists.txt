@@ -9,11 +9,7 @@ set(SUBDIR "calorimetry")
 set(LIBRARY "algo${SUBDIR}")
 set(TARGETS ${TARGETS} ${LIBRARY} PARENT_SCOPE)
 
-# FIXME: adding one by one
-#file(GLOB SRC CONFIGURE_DEPENDS src/*.cpp)
-set(SRC
-  src/ClusterRecoCoG.cpp
-)
+file(GLOB SRC CONFIGURE_DEPENDS src/*.cpp)
 
 add_library(${LIBRARY} SHARED ${SRC})
 target_link_libraries(${LIBRARY}
