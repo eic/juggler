@@ -31,8 +31,8 @@ public:
     return m_cache[m_index++];
   }
 
-  constexpr value_type min() const { return 0; }
-  constexpr value_type max() const { return std::numeric_limits<value_type>::max(); }
+  static constexpr value_type min() { return 0; }
+  static constexpr value_type max() { return std::numeric_limits<value_type>::max(); }
 
 private:
   void refresh() {
