@@ -19,13 +19,13 @@ namespace algorithms::calorimetry {
 void CalorimeterHitReco::init() {
 
   // unitless conversion
-  dyRangeADC = m_dyRangeADC.value() / GeV;
+  dyRangeADC = m_dyRangeADC.value() / dd4hep::GeV;
 
   // threshold for firing
   thresholdADC = m_thresholdFactor.value() * m_pedSigmaADC.value() + m_thresholdValue.value();
 
   // TDC channels to timing conversion
-  stepTDC = ns / m_resolutionTDC.value();
+  stepTDC = dd4hep::ns / m_resolutionTDC.value();
 
   // do not get the layer/sector ID if no readout class provided
   if (m_readout.value().empty()) {
