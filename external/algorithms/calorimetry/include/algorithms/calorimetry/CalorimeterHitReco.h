@@ -25,6 +25,8 @@ using CalorimeterHitRecoAlgorithm = Algorithm<
  */
 class CalorimeterHitReco : public CalorimeterHitRecoAlgorithm {
 
+public:
+
   // TODO: get rid of "Collection" in names
   CalorimeterHitReco(std::string_view name)
       : CalorimeterHitRecoAlgorithm{name,
