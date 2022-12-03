@@ -32,7 +32,7 @@ void CalorimeterHitReco::init() {
     return;
   }
 
-  auto id_spec = m_geo->detector()->readout(m_readout).idSpec();
+  auto id_spec = m_geo.detector()->readout(m_readout).idSpec();
   try {
     id_dec = id_spec.decoder();
     if (!m_sectorField.value().empty()) {
@@ -51,7 +51,7 @@ void CalorimeterHitReco::init() {
   // local detector name has higher priority
   if (!m_localDetElement.value().empty()) {
     try {
-      local = m_geo->detector()->detector(m_localDetElement.value());
+      local = m_geo.detector()->detector(m_localDetElement.value());
       info() << "Local coordinate system from DetElement " << m_localDetElement.value() << endmsg;
     } catch (...) {
       error() << "Failed to locate local coordinate system from DetElement " << m_localDetElement.value() << endmsg;
@@ -80,7 +80,7 @@ void CalorimeterHitReco::process(const CalorimeterHitReco::Input& input,
   const auto rawhits = input;
   auto hits          = output;
 
-  auto converter = m_geo->cellIDPositionConverter();
+  auto converter = m_geo.cellIDPositionConverter();
 
   // energy time reconstruction
   for (const auto& rh : rawhits) {
