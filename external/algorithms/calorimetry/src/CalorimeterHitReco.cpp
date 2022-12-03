@@ -77,13 +77,13 @@ void CalorimeterHitReco::init() {
 
 void CalorimeterHitReco::process(const CalorimeterHitReco::Input& input,
                                  const CalorimeterHitReco::Output& output) const {
-  const auto rawhits = input;
-  auto hits          = output;
+  const auto [rawhits] = input;
+  auto [hits]          = output;
 
   auto converter = m_geo.cellIDPositionConverter();
 
   // energy time reconstruction
-  for (const auto& rh : rawhits) {
+  for (const auto& rh : *rawhits) {
 
     #pragma GCC diagnostic push
     #pragma GCC diagnostic error "-Wsign-conversion"
