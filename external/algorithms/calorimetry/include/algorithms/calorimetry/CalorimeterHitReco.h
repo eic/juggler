@@ -41,10 +41,10 @@ private:
 
   // digitization settings, must be consistent with digi class
   Property<unsigned int> m_capADC{this, "capacityADC", 8096, "Number of ADC channels"};
-  Property<double> m_dyRangeADC{this, "dynamicRangeADC", 100. * MeV, "Dynamic range of the ADC"};
+  Property<double> m_dyRangeADC{this, "dynamicRangeADC", 100. * dd4hep::MeV, "Dynamic range of the ADC"};
   Property<unsigned int> m_pedMeanADC{this, "pedestalMean", 400, "Mean of pedestal in ADC channels"};
   Property<double> m_pedSigmaADC{this, "pedestalSigma", 3.2, "Sigma of pedestal in ADC channels"};
-  Property<double> m_resolutionTDC{this, "resolutionTDC", 10 * ps, ""};
+  Property<double> m_resolutionTDC{this, "resolutionTDC", 10 * dd4hep::picosecond, ""};
 
   // zero suppression values
   Property<double> m_thresholdFactor{this, "thresholdFactor", 0.0, ""};
