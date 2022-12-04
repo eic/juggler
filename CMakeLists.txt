@@ -74,7 +74,15 @@ add_definitions("-DActs_VERSION_MINOR=${Acts_VERSION_MINOR}")
 add_definitions("-DActs_VERSION_PATCH=${Acts_VERSION_PATCH}")
 
 ## algorithms dependency
-add_subdirectory(external/algorithms)
+option(USE_SYSTEM_ALGORITHMS "Use system-provided algorithms" OFF)
+if (USE_SYSTEM_ALGORITHMS)
+  find_package(algorithms)
+else()
+  add_subdirectory(external/algorithms)
+  add_library(algorithms::core ALIAS algocore)
+  add_library(algorithms::truth ALIAS algotruth)
+  add_library(algorithms::calorimetry ALIAS algocalorimetry)
+endif()
 
 find_package(Gaudi)
 add_subdirectory(JugBase)
