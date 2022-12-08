@@ -11,7 +11,7 @@ gaudi_add_library(JugAlgo
   ${JugAlgo_sources}
   LINK
   Gaudi::GaudiKernel Gaudi::GaudiAlgLib
-  algocore
+  algorithms::core
   JugBase
 )
 
@@ -30,7 +30,7 @@ gaudi_add_module(JugAlgoPlugins
   Gaudi::GaudiKernel Gaudi::GaudiAlgLib
   JugBase
   JugAlgo
-  algocore
+  algorithms::core
 )
 
 target_include_directories(JugAlgoPlugins PUBLIC
