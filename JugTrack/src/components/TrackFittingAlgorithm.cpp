@@ -73,10 +73,6 @@ namespace Jug::Reco {
     m_BField   = std::dynamic_pointer_cast<const Jug::BField::DD4hepBField>(m_geoSvc->getFieldProvider());
     m_fieldctx = Jug::BField::BFieldVariant(m_BField);
 
-    // chi2 and #sourclinks per surface cutoffs
-    //m_sourcelinkSelectorCfg = {
-    //    {Acts::GeometryIdentifier(), {15, 10}},
-    //};
     m_trackFittingFunc = makeTrackFittingFunction(m_geoSvc->trackingGeometry(), m_BField);
     return StatusCode::SUCCESS;
   }
@@ -108,13 +104,14 @@ namespace Jug::Reco {
     // kfOptions.multipleScattering = m_cfg.multipleScattering;
     // kfOptions.energyLoss         = m_cfg.energyLoss;
 
-    Acts::KalmanFitterExtensions extensions;
+    Acts::KalmanFitterExtensions<Acts::VectorMultiTrajectory> extensions;
     MeasurementCalibrator calibrator{*measurements};
     extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
     Acts::GainMatrixUpdater kfUpdater;
     Acts::GainMatrixSmoother kfSmoother;
-    extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
-    extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
+    extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
+        &kfUpdater);
+    extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
         &kfSmoother);
 
     Acts::KalmanFitterOptions kfOptions(
@@ -152,8 +149,6 @@ namespace Jug::Reco {
         if (auto it = sourceLinks->nth(hitIndex); it != sourceLinks->end()) {
           const IndexSourceLink& sourceLink = *it;
           trackSourceLinks.push_back(std::cref(sourceLink));
-          //auto geoId = sourceLink.geometryId();
-          //surfSequence.push_back(m_cfg.trackingGeometry->findSurface(geoId));
         } else {
           ACTS_FATAL("Proto track " << itrack << " contains invalid hit index"
                                     << hitIndex);
@@ -168,39 +163,25 @@ namespace Jug::Reco {
       if (msgLevel(MSG::DEBUG)) {
         debug() << "fitting done." << endmsg;
       }
-      // if (result.ok()) {
-      //  // Get the track finding output object
-      //  const auto& trackFindingOutput = result.value();
-      //  // Create a SimMultiTrajectory
-      //  trajectories->emplace_back(std::move(trackFindingOutput.fittedStates),
-      //  std::move(trackFindingOutput.lastMeasurementIndices),
-      //                             std::move(trackFindingOutput.fittedParameters));
-      //} else {
-      //  debug() << "Track finding failed for truth seed " << iseed << endmsg;
-      //  ACTS_WARNING("Track finding failed for truth seed " << iseed << " with error" <<
-      //  result.error());
-      //  // Track finding failed, but still create an empty SimMultiTrajectory
-      //  // trajectories->push_back(SimMultiTrajectory());
-      //}
       if (result.ok())
       {
         // Get the fit output object
-        const auto& fitOutput = result.value();
+        auto& fitOutput = result.value();
         // The track entry indices container. One element here.
-        std::vector<size_t> trackTips;
+        std::vector<Acts::MultiTrajectoryTraits::IndexType> trackTips;
         trackTips.reserve(1);
         trackTips.emplace_back(fitOutput.lastMeasurementIndex);
         // The fitted parameters container. One element (at most) here.
         Trajectories::IndexedParameters indexedParams;
-        //if (fitOutput.fittedParameters) {
-        //  const auto& params = fitOutput.fittedParameters.value();
-        //  ACTS_VERBOSE("Fitted paramemeters for track " << itrack);
-        //  ACTS_VERBOSE("  " << params.parameters().transpose());
-        //  // Push the fitted parameters to the container
-        //  indexedParams.emplace(fitOutput.lastMeasurementIndex, std::move(params));
-        //} else {
-        //  ACTS_DEBUG("No fitted paramemeters for track " << itrack);
-        //}
+        if (fitOutput.fittedParameters) {
+          const auto& params = fitOutput.fittedParameters.value();
+          ACTS_VERBOSE("Fitted paramemeters for track " << itrack);
+          ACTS_VERBOSE("  " << params.parameters().transpose());
+          // Push the fitted parameters to the container
+          indexedParams.emplace(fitOutput.lastMeasurementIndex, params);
+        } else {
+          ACTS_DEBUG("No fitted paramemeters for track " << itrack);
+        }
         // store the result
         trajectories->emplace_back(std::move(fitOutput.fittedStates), std::move(trackTips),
                                   std::move(indexedParams));
@@ -212,81 +193,9 @@ namespace Jug::Reco {
       }
     }
 
-    // ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
-    return StatusCode::SUCCESS;
-
-    ///////////////////////////
-    // acts example
-
-  // Set the KalmanFitter options
-
-  // Perform the fit for each input track
-  //std::vector<IndexSourceLink> trackSourceLinks;
-  //for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
-  //  // The list of hits and the initial start parameters
-  //  const auto& protoTrack = protoTracks[itrack];
-  //  const auto& initialParams = initialParameters[itrack];
-
-  //  // We can have empty tracks which must give empty fit results so the number
-  //  // of entries in input and output containers matches.
-  //  if (protoTrack.empty()) {
-  //    trajectories.push_back(Trajectories());
-  //    ACTS_WARNING("Empty track " << itrack << " found.");
-  //    continue;
-  //  }
-
-  //  // Clear & reserve the right size
-  //  trackSourceLinks.clear();
-  //  trackSourceLinks.reserve(protoTrack.size());
-
-  //  // Fill the source links via their indices from the container
-  //  for (auto hitIndex : protoTrack) {
-  //    auto sourceLink = sourceLinks.nth(hitIndex);
-  //    if (sourceLink == sourceLinks.end()) {
-  //      ACTS_FATAL("Proto track " << itrack << " contains invalid hit index"
-  //                                << hitIndex);
-  //      return ProcessCode::ABORT;
-  //    }
-  //    trackSourceLinks.push_back(*sourceLink);
-  //  }
-
-  //  ACTS_DEBUG("Invoke fitter");
-  //  auto result = m_cfg.fit(trackSourceLinks, initialParams, kfOptions);
-  //  if (result.ok()) {
-  //    // Get the fit output object
-  //    const auto& fitOutput = result.value();
-  //    // The track entry indices container. One element here.
-  //    std::vector<size_t> trackTips;
-  //    trackTips.reserve(1);
-  //    trackTips.emplace_back(fitOutput.trackTip);
-  //    // The fitted parameters container. One element (at most) here.
-  //    Trajectories::IndexedParameters indexedParams;
-  //    if (fitOutput.fittedParameters) {
-  //      const auto& params = fitOutput.fittedParameters.value();
-  //      ACTS_VERBOSE("Fitted paramemeters for track " << itrack);
-  //      ACTS_VERBOSE("  " << params.parameters().transpose());
-  //      // Push the fitted parameters to the container
-  //      indexedParams.emplace(fitOutput.trackTip, std::move(params));
-  //    } else {
-  //      ACTS_DEBUG("No fitted paramemeters for track " << itrack);
-  //    }
-  //    // store the result
-  //    trajectories.emplace_back(std::move(fitOutput.fittedStates),
-  //                              std::move(trackTips), std::move(indexedParams));
-  //  } else {
-  //    ACTS_WARNING("Fit failed for track " << itrack << " with error"
-  //                                         << result.error());
-  //    // Fit failed. Add an empty result so the output container has
-  //    // the same number of entries as the input.
-  //    trajectories.push_back(Trajectories());
-  //  }
-  //}
-
-
     return StatusCode::SUCCESS;
   }
 
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   DECLARE_COMPONENT(TrackFittingAlgorithm)
 
