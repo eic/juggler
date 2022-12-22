@@ -21,10 +21,9 @@ namespace {
   using Smoother         = Acts::GainMatrixSmoother;
   using Stepper          = Acts::EigenStepper<>;
   using Propagator       = Acts::Propagator<Stepper, Acts::Navigator>;
-  using Fitter           = Acts::KalmanFitter<Propagator>;
+  using Fitter           = Acts::KalmanFitter<Propagator, Acts::VectorMultiTrajectory>;
   using DirectPropagator = Acts::Propagator<Stepper, Acts::DirectNavigator>;
-  using DirectFitter     = Acts::KalmanFitter<DirectPropagator>;
-
+  using DirectFitter     = Acts::KalmanFitter<DirectPropagator, Acts::VectorMultiTrajectory>;
 
   /** Fitter implmentation .
    *
@@ -54,9 +53,9 @@ namespace Jug::Reco {
   using Smoother         = Acts::GainMatrixSmoother;
   using Stepper          = Acts::EigenStepper<>;
   using Propagator       = Acts::Propagator<Stepper, Acts::Navigator>;
-  using Fitter           = Acts::KalmanFitter<Propagator>;
+  using Fitter           = Acts::KalmanFitter<Propagator, Acts::VectorMultiTrajectory>;
   using DirectPropagator = Acts::Propagator<Stepper, Acts::DirectNavigator>;
-  using DirectFitter     = Acts::KalmanFitter<DirectPropagator>;
+  using DirectFitter     = Acts::KalmanFitter<DirectPropagator, Acts::VectorMultiTrajectory>;
 
   TrackFittingAlgorithm::FitterFunction TrackFittingAlgorithm::makeTrackFittingFunction(
       std::shared_ptr<const Acts::TrackingGeometry>      trackingGeometry,
@@ -75,27 +74,5 @@ namespace Jug::Reco {
     // build the fitter functions. owns the fitter object.
     return TrackFitterFunctionImpl(std::move(trackFitter));
   }
-  //  using Updater  = Acts::GainMatrixUpdater;
-  //  using Smoother = Acts::GainMatrixSmoother;
 
-  //  // unpack the magnetic field variant and instantiate the corresponding fitter.
-  //  return std::visit(
-  //      [trackingGeometry](auto&& inputField) -> FitterFunction {
-  //        // each entry in the variant is already a shared_ptr
-  //        // need ::element_type to get the real magnetic field type
-  //        // construct all components for the fitter
-  //        MagneticField field(std::move(inputField));
-  //        Stepper       stepper(std::move(field));
-  //        Navigator     navigator(trackingGeometry);
-  //        navigator.resolvePassive   = false;
-  //        navigator.resolveMaterial  = true;
-  //        navigator.resolveSensitive = true;
-  //        Propagator propagator(std::move(stepper), std::move(navigator));
-  //        Fitter     trackFitter(std::move(propagator));
-
-  //        // build the fitter functions. owns the fitter object.
-  //        return TrackFitterFunctionImpl<Fitter>(std::move(trackFitter));
-  //      },
-  //      std::move(magneticField));
-  //}
 } // namespace Jug::Reco

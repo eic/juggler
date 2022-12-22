@@ -47,10 +47,10 @@ namespace Jug::Reco {
     /// Track fitter function that takes input measurements, initial trackstate
     /// and fitter options and returns some track-fitter-specific result.
     using TrackFitterOptions =
-        Acts::KalmanFitterOptions;
+        Acts::KalmanFitterOptions<Acts::VectorMultiTrajectory>;
 
-    //using TrackFinderResult = Acts::Result<Acts::CombinatorialKalmanFilterResult<SourceLink>>;
-    using FitterResult = Acts::Result<Acts::KalmanFitterResult>;
+    using FitterResult =
+	Acts::Result<Acts::KalmanFitterResult<Acts::VectorMultiTrajectory>>;
 
     /// Fit function that takes input measurements, initial trackstate and fitter
     using FitterFunction = std::function<FitterResult(
@@ -82,7 +82,6 @@ namespace Jug::Reco {
     static FitterFunction
     makeTrackFittingFunction(std::shared_ptr<const Acts::TrackingGeometry>      trackingGeometry,
                              std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
-    // BFieldVariant                                 magneticField);
 
     StatusCode initialize() override;
 
@@ -94,7 +93,6 @@ namespace Jug::Reco {
         const TrackParameters& initialParameters,
         const TrackFitterOptions& options
         ) const;
-        //, const std::vector<const Acts::Surface*>& surfSequence) const;
   };
 
   inline TrackFittingAlgorithm::FitterResult
@@ -102,10 +100,6 @@ namespace Jug::Reco {
                                   const TrackParameters&              initialParameters,
                                   const TrackFitterOptions&           options) const
   {
-    // const std::vector<const Acts::Surface*>& surfSequence) const
-    // if (m_cfg.directNavigation) {
-    //  return m_cfg.dFit(sourceLinks, initialParameters, options, surfSequence);
-    //}
     return m_trackFittingFunc(sourceLinks, initialParameters, options);
   }
 
