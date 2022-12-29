@@ -1,5 +1,6 @@
 
 #include <map>
+#include <fmt/core.h>
 
 #include "TFile.h"
 
@@ -292,7 +293,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
   auto &cpid               = *m_outputCherenkovPID->createAndPut();
     
   // An interface variable; FIXME: check memory cleanup;
-  auto event = new CherenkovEvent();
+  auto event = new CherenkovEvent(); // TODO
 
   //printf("%3ld track(s) and %4ld hit(s)\n", mctracks.size(), hits.size());
 
@@ -336,13 +337,13 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
     if (mctrack.getPDG() == 13) continue;
     
     //printf("CAME HERE  MC Loop!\n");
-    auto particle = new ChargedParticle(mctrack.getPDG());
+    auto particle = new ChargedParticle(mctrack.getPDG()); // TODO
     //printf("HepMC Particle PDG %d \n",mctrack.getPDG());
-    event->AddChargedParticle(particle);
+    event->AddChargedParticle(particle);  // TODO
 
     // Start radiator history for all known radiators;
     for(auto rptr: m_IrtDet->Radiators())
-      particle->StartRadiatorHistory(std::make_pair(rptr.second, new RadiatorHistory()));
+      particle->StartRadiatorHistory(std::make_pair(rptr.second, new RadiatorHistory())); // TODO
       
     // Distribute photons over radiators where they were presumably produced, to 
     // create a structure which would mimic a standalone G4 stepper behavior;
@@ -397,7 +398,8 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 
 	// Add the point to the radiator history buffer; FIXME: all this is not 
 	// needed if ACTS trajectory parameterization is used;
-	particle->FindRadiatorHistory(radiator)->AddStepBufferPoint(phtrack.getTime(), vtx);
+	particle->FindRadiatorHistory(radiator)->AddStepBufferPoint(phtrack.getTime(), vtx); // TODO? maybe not this way, this is photon pinning
+                                                                                             // TODO use TrackSegment's TrackPoints instead
 
 	//printf("Here-2A\n");
 	continue;
@@ -412,11 +414,11 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
       TVector3 lxyPixel;
       // FIXME: '0' - for now assume a single photon detector type for the whole ERICH (DRICH),
       // which must be a reasonable assumption; eventually may want to generalize;
-      const auto pd = m_IrtDet->m_PhotonDetectors[0];
-      uint64_t vcopy = hit.getCellID() & m_ReadoutCellMask;
+      const auto pd = m_IrtDet->m_PhotonDetectors[0]; // TODO
+      uint64_t vcopy = hit.getCellID() & m_ReadoutCellMask; // TODO
       {
-	const auto irt = pd->GetIRT(vcopy);
-	auto sensor = dynamic_cast<const FlatSurface*>(irt->tail()->GetSurface());
+	const auto irt = pd->GetIRT(vcopy); // TODO
+	auto sensor = dynamic_cast<const FlatSurface*>(irt->tail()->GetSurface()); // TODO
 
 	double pitch = m_SensorPixelPitch.value(), sens = m_SensorPixelSize.value();//pitch - gap;
 	const auto &x = hit.getPosition();
@@ -434,16 +436,20 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 	// Well, just ignore this small fraction of unlucky photons (do not even use them for track pinning);
 	if (fabs(lxy[0] - lxyPixels[0]) > sens/2 || fabs(lxy[1] - lxyPixels[1]) > sens/2) continue;
 
-	lxyPixel = sensor->GetSpacePoint(lxyPixels[0], lxyPixels[1]);
+	lxyPixel = sensor->GetSpacePoint(lxyPixels[0], lxyPixels[1]); // TODO: what is this number? do we need PhotoMultiplierHitDigi's pixel hit position?
       }     
 
       useful_photons_found = true;
 
-      // Photon accepted; add it to the internal event structure;
+      // Photon accepted; add it to the internal event structure; // TODO
       auto photon = new OpticalPhoton();
       photon->SetVolumeCopy(vcopy);
       photon->SetDetectionPosition(lxyPixel);
       photon->SetPhotonDetector(pd);
+
+      // EICrecon cross check:
+      fmt::print("[cross-check] cell_id={:#X}  copy={}  pixel_pos=( {:>10.2f} {:>10.2f} {:>10.2f} )\n",
+          hit.getCellID(), vcopy, lxyPixel.x(), lxyPixel.y(), lxyPixel.z());
 
       {
 	// Start vertex and momentum; 
@@ -476,7 +482,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
     for(auto radiator: m_SelectedRadiators) {
       auto history = particle->FindRadiatorHistory(radiator);
 
-      history->CalculateSteps();
+      history->CalculateSteps(); // TODO: NOT NECESSARY ALREADY DONE
 
       unsigned stCount = history->StepCount();
       if (!stCount) continue;
@@ -544,7 +550,7 @@ StatusCode Jug::PID::IRTAlgorithm::execute( void )
 		double zlen = (pt2 - pt1).z();//Mag();
 
 		//radiator->AddLocation(pt1 + (fabs(z - z1)/len)*nn, p0);//.Mag()*n12);
-		radiator->AddLocation(pt1 + ((z - z1)/zlen)*p12, p0.Mag()*n12);
+		radiator->AddLocation(pt1 + ((z - z1)/zlen)*p12, p0.Mag()*n12); // TODO: can we just use the TrackPoint position?
 		//printf("(1) %f %f %f\n", 
 		//     (pt1 + ((z - z1)/zlen)*p12).x(), 
 		//     (pt1 + ((z - z1)/zlen)*p12).y(), 
