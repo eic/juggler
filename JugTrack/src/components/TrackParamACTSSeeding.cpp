@@ -9,12 +9,23 @@
 
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
-#include "Acts/Seeding/SeedfinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#if Acts_VERSION_MAJOR < 21
+#include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/Seedfinder.hpp"
+namespace Acts {
+  template<typename T>
+  using SeedFinder = Seedfinder<T>;
+  template<typename T>
+  using SeedFinderConfig = SeedfinderConfig<T>;
+}
+#else
+#include "Acts/Seeding/SeedFinderConfig.hpp"
+#include "Acts/Seeding/SeedFinder.hpp"
+#endif
 
 // Gaudi
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -221,7 +232,7 @@ namespace Jug::Reco {
             std::vector<std::pair<int, int> > zBinNeighborsBottom;
         } m_cfg;
         Acts::SpacePointGridConfig m_gridCfg;
-        Acts::SeedfinderConfig<SpacePoint> m_finderCfg;
+        Acts::SeedFinderConfig<SpacePoint> m_finderCfg;
         /// The track parameters covariance (assumed to be the same
         /// for all estimated track parameters for the moment)
         Acts::BoundSymMatrix m_covariance =
@@ -321,7 +332,7 @@ namespace Jug::Reco {
             m_outputInitialTrackParameters.createAndPut();
 
         static SeedContainer seeds;
-        static Acts::Seedfinder<SpacePoint>::State state;
+        static Acts::SeedFinder<SpacePoint>::State state;
 
         // Sadly, eic::TrackerHit and eic::TrackerHitData are
 	// non-polymorphic
@@ -475,7 +486,7 @@ namespace Jug::Reco {
                 rRangeSPExtent,
 #endif
                 m_finderCfg);
-        auto finder = Acts::Seedfinder<SpacePoint>(m_finderCfg);
+        auto finder = Acts::SeedFinder<SpacePoint>(m_finderCfg);
 
         if (msgLevel(MSG::DEBUG)) {
             debug() << __FILE__ << ':' << __LINE__
