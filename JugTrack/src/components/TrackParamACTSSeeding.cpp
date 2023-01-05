@@ -338,8 +338,10 @@ namespace Jug::Reco {
 	// non-polymorphic
         std::vector<SpacePoint> spacePoint;
         std::vector<const SpacePoint *> spacePointPtrs;
+#if Acts_VERSION_MAJOR < 21
         // extent used to store r range for middle spacepoint
         Acts::Extent rRangeSPExtent;
+#endif
 
         std::shared_ptr<const Acts::TrackingGeometry>
             trackingGeometry = m_geoSvc->trackingGeometry();
@@ -411,7 +413,7 @@ namespace Jug::Reco {
                         << ' ' << spacePointPtrs.back()->measurementIndex()
                         << ' ' << spacePointPtrs.back()->isOnSurface()
                         << endmsg;
-#if 1 // ACTS 19.9
+#if Acts_VERSION_MAJOR < 21
             rRangeSPExtent.extend({ spacePoint.back().x(),
                                     spacePoint.back().y(),
                                     spacePoint.back().z() });
@@ -482,7 +484,7 @@ namespace Jug::Reco {
                 spacePointPtrs.begin(), spacePointPtrs.end(),
                 extractGlobalQuantities, bottomBinFinder,
                 topBinFinder, std::move(grid),
-#if 0 // ACTS 20.x
+#if Acts_VERSION_MAJOR >= 21
                 rRangeSPExtent,
 #endif
                 m_finderCfg);
@@ -494,7 +496,7 @@ namespace Jug::Reco {
                     << spacePointsGrouping.size() << endmsg;
         }
 
-#if 0 // ACTS 20.x
+#if Acts_VERSION_MAJOR >= 21
         const Acts::Range1D<float> rMiddleSPRange(
             std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
             m_cfg.deltaRMiddleMinSPRange,
