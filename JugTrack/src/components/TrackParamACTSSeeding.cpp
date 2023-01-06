@@ -9,12 +9,23 @@
 
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
-#include "Acts/Seeding/SeedfinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#if Acts_VERSION_MAJOR >= 21
+#include "Acts/Seeding/SeedFinderConfig.hpp"
+#include "Acts/Seeding/SeedFinder.hpp"
+#else
+#include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/Seedfinder.hpp"
+namespace Acts {
+  template<typename T>
+  using SeedFinder = Seedfinder<T>;
+  template<typename T>
+  using SeedFinderConfig = SeedfinderConfig<T>;
+}
+#endif
 
 // Gaudi
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -221,7 +232,7 @@ namespace Jug::Reco {
             std::vector<std::pair<int, int> > zBinNeighborsBottom;
         } m_cfg;
         Acts::SpacePointGridConfig m_gridCfg;
-        Acts::SeedfinderConfig<SpacePoint> m_finderCfg;
+        Acts::SeedFinderConfig<SpacePoint> m_finderCfg;
         /// The track parameters covariance (assumed to be the same
         /// for all estimated track parameters for the moment)
         Acts::BoundSymMatrix m_covariance =
@@ -321,14 +332,20 @@ namespace Jug::Reco {
             m_outputInitialTrackParameters.createAndPut();
 
         static SeedContainer seeds;
-        static Acts::Seedfinder<SpacePoint>::State state;
+#if Acts_VERSION_MAJOR >= 21
+        static Acts::SeedFinder<SpacePoint>::SeedingState state;
+#else
+        static Acts::SeedFinder<SpacePoint>::State state;
+#endif
 
         // Sadly, eic::TrackerHit and eic::TrackerHitData are
 	// non-polymorphic
         std::vector<SpacePoint> spacePoint;
         std::vector<const SpacePoint *> spacePointPtrs;
+#if Acts_VERSION_MAJOR < 21
         // extent used to store r range for middle spacepoint
         Acts::Extent rRangeSPExtent;
+#endif
 
         std::shared_ptr<const Acts::TrackingGeometry>
             trackingGeometry = m_geoSvc->trackingGeometry();
@@ -400,7 +417,7 @@ namespace Jug::Reco {
                         << ' ' << spacePointPtrs.back()->measurementIndex()
                         << ' ' << spacePointPtrs.back()->isOnSurface()
                         << endmsg;
-#if 1 // ACTS 19.9
+#if Acts_VERSION_MAJOR < 21
             rRangeSPExtent.extend({ spacePoint.back().x(),
                                     spacePoint.back().y(),
                                     spacePoint.back().z() });
@@ -423,6 +440,11 @@ namespace Jug::Reco {
         if (msgLevel(MSG::DEBUG)) {
             debug() << __FILE__ << ':' << __LINE__ << ": " << endmsg;
         }
+
+#if Acts_VERSION_MAJOR >= 21
+        // extent used to store r range for middle spacepoint
+        Acts::Extent rRangeSPExtent;
+#endif
 
         auto bottomBinFinder =
             std::make_shared<Acts::BinFinder<SpacePoint>>(
@@ -471,11 +493,11 @@ namespace Jug::Reco {
                 spacePointPtrs.begin(), spacePointPtrs.end(),
                 extractGlobalQuantities, bottomBinFinder,
                 topBinFinder, std::move(grid),
-#if 0 // ACTS 20.x
+#if Acts_VERSION_MAJOR >= 21
                 rRangeSPExtent,
 #endif
                 m_finderCfg);
-        auto finder = Acts::Seedfinder<SpacePoint>(m_finderCfg);
+        auto finder = Acts::SeedFinder<SpacePoint>(m_finderCfg);
 
         if (msgLevel(MSG::DEBUG)) {
             debug() << __FILE__ << ':' << __LINE__
@@ -483,7 +505,7 @@ namespace Jug::Reco {
                     << spacePointsGrouping.size() << endmsg;
         }
 
-#if 0 // ACTS 20.x
+#if Acts_VERSION_MAJOR >= 21
         const Acts::Range1D<float> rMiddleSPRange(
             std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
             m_cfg.deltaRMiddleMinSPRange,
@@ -500,7 +522,12 @@ namespace Jug::Reco {
             finder.createSeedsForGroup(
                 state, std::back_inserter(seeds),
                 group.bottom(), group.middle(), group.top(),
-                rRangeSPExtent);
+#if Acts_VERSION_MAJOR >= 21
+                rMiddleSPRange
+#else
+                rRangeSPExtent
+#endif
+            );
         }
 
         if (msgLevel(MSG::DEBUG)) {
