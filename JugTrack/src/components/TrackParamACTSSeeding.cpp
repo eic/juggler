@@ -9,23 +9,12 @@
 
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
+#include "Acts/Seeding/SeedfinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
+#include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#if Acts_VERSION_MAJOR >= 21
-#include "Acts/Seeding/SeedFinderConfig.hpp"
-#include "Acts/Seeding/SeedFinder.hpp"
-#else
-#include "Acts/Seeding/SeedfinderConfig.hpp"
-#include "Acts/Seeding/Seedfinder.hpp"
-namespace Acts {
-  template<typename T>
-  using SeedFinder = Seedfinder<T>;
-  template<typename T>
-  using SeedFinderConfig = SeedfinderConfig<T>;
-}
-#endif
 
 // Gaudi
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -95,7 +84,7 @@ namespace Jug::Reco {
         // : edm4eic::TrackerHitData
         {
         public:
-            // Acts::Vector3 _dummy[16];
+            Acts::Vector3 _dummy[16];
             Acts::Vector3 _position;
             Acts::Vector3 _positionError;
             int32_t _measurementIndex;
@@ -188,17 +177,17 @@ namespace Jug::Reco {
             std::string outputProtoTracks;
 
             float bFieldInZ = 1.7 * Acts::UnitConstants::T;
-            float cotThetaMax = std::sinh(4.01);
+            float cotThetaMax = std::sinh(3.5);
             float minPt = 100 * Acts::UnitConstants::MeV / cotThetaMax;
             float rMax = 440 * Acts::UnitConstants::mm;
             float zMin = -1500 * Acts::UnitConstants::mm;
             float zMax = 1700 * Acts::UnitConstants::mm;
-            float deltaRMin = 0 * Acts::UnitConstants::mm;
-            float deltaRMax = 600 * Acts::UnitConstants::mm;
+            float deltaRMin = 50 * Acts::UnitConstants::mm;
+            float deltaRMax = 220 * Acts::UnitConstants::mm;
             //
             float collisionRegionMin = -250 * Acts::UnitConstants::mm;
             float collisionRegionMax = 250 * Acts::UnitConstants::mm;
-            float maxSeedsPerSpM = 2;
+            float maxSeedsPerSpM = 0;
             float sigmaScattering = 5;
             float radLengthPerSeed = 0.1;
             float beamPosX = 0 * Acts::UnitConstants::mm;
@@ -222,17 +211,17 @@ namespace Jug::Reco {
             /// Time resolution.
             double sigmaT0 = 1400 * Acts::UnitConstants::s;
 
-	    int numPhiNeighbors = 1;
+	    int numPhiNeighbors = 3;
 
             float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
             float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
 
             // vector containing the map of z bins in the top and bottom layers
-            std::vector<std::pair<int, int> > zBinNeighborsTop;
-            std::vector<std::pair<int, int> > zBinNeighborsBottom;
+            std::vector<std::pair<int, int> > zBinNeighborsTop = { {0, 0} };
+            std::vector<std::pair<int, int> > zBinNeighborsBottom = { {0, 0} };
         } m_cfg;
         Acts::SpacePointGridConfig m_gridCfg;
-        Acts::SeedFinderConfig<SpacePoint> m_finderCfg;
+        Acts::SeedfinderConfig<SpacePoint> m_finderCfg;
         /// The track parameters covariance (assumed to be the same
         /// for all estimated track parameters for the moment)
         Acts::BoundSymMatrix m_covariance =
@@ -283,7 +272,19 @@ namespace Jug::Reco {
 
         // Construct seed filter
         Acts::SeedFilterConfig filterCfg;
+        filterCfg.deltaRMin = m_cfg.deltaRMin;
         filterCfg.maxSeedsPerSpM = m_cfg.maxSeedsPerSpM;
+        filterCfg.seedConfirmation = true;
+        filterCfg.centralSeedConfirmationRange.zMinSeedConf = -250 * Acts::UnitConstants::mm;
+        filterCfg.centralSeedConfirmationRange.zMaxSeedConf = 250 * Acts::UnitConstants::mm;
+        filterCfg.centralSeedConfirmationRange.rMaxSeedConf = 220 * Acts::UnitConstants::mm;
+        filterCfg.centralSeedConfirmationRange.nTopForLargeR = 3;
+        filterCfg.centralSeedConfirmationRange.nTopForSmallR = 3;
+        filterCfg.forwardSeedConfirmationRange.zMinSeedConf = -3000 * Acts::UnitConstants::mm;
+        filterCfg.forwardSeedConfirmationRange.zMaxSeedConf = 3000 * Acts::UnitConstants::mm;
+        filterCfg.forwardSeedConfirmationRange.rMaxSeedConf = 220 * Acts::UnitConstants::mm;
+        filterCfg.forwardSeedConfirmationRange.nTopForLargeR = 7;
+        filterCfg.forwardSeedConfirmationRange.nTopForSmallR = 7;
         m_finderCfg.seedFilter =
             std::make_unique<Acts::SeedFilter<SpacePoint>>(
                 Acts::SeedFilter<SpacePoint>(filterCfg));
@@ -332,20 +333,14 @@ namespace Jug::Reco {
             m_outputInitialTrackParameters.createAndPut();
 
         static SeedContainer seeds;
-#if Acts_VERSION_MAJOR >= 21
-        static Acts::SeedFinder<SpacePoint>::SeedingState state;
-#else
-        static Acts::SeedFinder<SpacePoint>::State state;
-#endif
+        static Acts::Seedfinder<SpacePoint>::State state;
 
         // Sadly, eic::TrackerHit and eic::TrackerHitData are
 	// non-polymorphic
         std::vector<SpacePoint> spacePoint;
         std::vector<const SpacePoint *> spacePointPtrs;
-#if Acts_VERSION_MAJOR < 21
         // extent used to store r range for middle spacepoint
         Acts::Extent rRangeSPExtent;
-#endif
 
         std::shared_ptr<const Acts::TrackingGeometry>
             trackingGeometry = m_geoSvc->trackingGeometry();
@@ -417,7 +412,7 @@ namespace Jug::Reco {
                         << ' ' << spacePointPtrs.back()->measurementIndex()
                         << ' ' << spacePointPtrs.back()->isOnSurface()
                         << endmsg;
-#if Acts_VERSION_MAJOR < 21
+#if 1 // ACTS 19.9
             rRangeSPExtent.extend({ spacePoint.back().x(),
                                     spacePoint.back().y(),
                                     spacePoint.back().z() });
@@ -440,11 +435,6 @@ namespace Jug::Reco {
         if (msgLevel(MSG::DEBUG)) {
             debug() << __FILE__ << ':' << __LINE__ << ": " << endmsg;
         }
-
-#if Acts_VERSION_MAJOR >= 21
-        // extent used to store r range for middle spacepoint
-        Acts::Extent rRangeSPExtent;
-#endif
 
         auto bottomBinFinder =
             std::make_shared<Acts::BinFinder<SpacePoint>>(
@@ -488,16 +478,22 @@ namespace Jug::Reco {
                     << grid->axes().back()->getNBins() << endmsg;
         }
 
+        if (msgLevel(MSG::DEBUG)) {
+            debug() << __FILE__ << ':' << __LINE__ << ": " << m_finderCfg.deltaRMin << endmsg;
+        }
         auto spacePointsGrouping =
             Acts::BinnedSPGroup<SpacePoint>(
                 spacePointPtrs.begin(), spacePointPtrs.end(),
                 extractGlobalQuantities, bottomBinFinder,
                 topBinFinder, std::move(grid),
-#if Acts_VERSION_MAJOR >= 21
+#if 0 // ACTS 20.x
                 rRangeSPExtent,
 #endif
                 m_finderCfg);
-        auto finder = Acts::SeedFinder<SpacePoint>(m_finderCfg);
+        auto finder = Acts::Seedfinder<SpacePoint>(m_finderCfg);
+        if (msgLevel(MSG::DEBUG)) {
+            debug() << __FILE__ << ':' << __LINE__ << ": " << m_finderCfg.seedFilter->getSeedFilterConfig().deltaRMin << endmsg;
+        }
 
         if (msgLevel(MSG::DEBUG)) {
             debug() << __FILE__ << ':' << __LINE__
@@ -505,7 +501,7 @@ namespace Jug::Reco {
                     << spacePointsGrouping.size() << endmsg;
         }
 
-#if Acts_VERSION_MAJOR >= 21
+#if 0 // ACTS 20.x
         const Acts::Range1D<float> rMiddleSPRange(
             std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
             m_cfg.deltaRMiddleMinSPRange,
@@ -522,12 +518,12 @@ namespace Jug::Reco {
             finder.createSeedsForGroup(
                 state, std::back_inserter(seeds),
                 group.bottom(), group.middle(), group.top(),
-#if Acts_VERSION_MAJOR >= 21
+#if 0
                 rMiddleSPRange
 #else
                 rRangeSPExtent
 #endif
-            );
+                );
         }
 
         if (msgLevel(MSG::DEBUG)) {
