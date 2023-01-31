@@ -40,6 +40,7 @@
 #include <algorithms/logger.h>
 #include <algorithms/name.h>
 #include <algorithms/property.h>
+#include <algorithms/resource.h>
 #include <algorithms/service.h>
 #include <algorithms/type_traits.h>
 
@@ -60,7 +61,10 @@ template <class... T> struct Output : std::tuple<output_type_t<T>...> {
   using key_type                      = std::array<const std::string, kSize>;
 };
 
-class AlgorithmBase : public PropertyMixin, public LoggerMixin, public NameMixin {
+class AlgorithmBase : public PropertyMixin,
+                      public ResourceMixin,
+                      public LoggerMixin,
+                      public NameMixin {
 public:
   AlgorithmBase(std::string_view name, std::string_view description)
       : LoggerMixin(name), NameMixin(name, description) {}

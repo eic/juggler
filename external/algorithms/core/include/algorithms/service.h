@@ -4,7 +4,7 @@
 // Basic Service infrastructure, implemented as lazy-evaluated singletons (thread-safe).
 //
 // Provides the special ServiceSvc (that provides access to all instantiated services as
-// Configurable*), and the ServiceMixin (and related ALGORITHMS_DEFINE_SERVICE macro).
+// ServiceHandle*), and the Service CRPT base class (and related ALGORITHMS_DEFINE_SERVICE macro).
 //
 #pragma once
 

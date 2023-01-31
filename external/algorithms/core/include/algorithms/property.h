@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Wouter Deconinck, Sylvester Joosten
 //
-// Defines the Configurable base class and related PropertyMixin
-// These base classes provide access to the Property<T> object, a self-registering
+// Defines the PropertyMixin
+// This base class provide access to the Property<T> object, a self-registering
 // configurable property that acts as a bare object T from a performance point-of-view
 //
 #pragma once
@@ -30,16 +30,16 @@ public:
 // Data types supported for Properties, defined as std::variant. This allows for
 // automatic Property registration with the calling framework, and enables compile-time
 // type errors.
-using PropertyValue = std::variant<bool, uint32_t, int32_t, uint64_t, int64_t, double, std::string,
-                                   std::vector<bool>, std::vector<uint32_t>, std::vector<int32_t>,
-                                   std::vector<uint64_t>, std::vector<int64_t>, std::vector<double>,
-                                   std::vector<std::string>>;
+using PropertyValue =
+    std::variant<bool, uint32_t, int32_t, uint64_t, int64_t, double, std::string, std::vector<bool>,
+                 std::vector<uint32_t>, std::vector<int32_t>, std::vector<uint64_t>,
+                 std::vector<int64_t>, std::vector<double>, std::vector<std::string>>;
 
 // Configuration/property handling
-class Configurable {
+class PropertyMixin {
 public:
-  class PropertyBase;
-  using PropertyMap = std::map<std::string_view, PropertyBase&>;
+  class PropertyHandle;
+  using PropertyMap = std::map<std::string_view, PropertyHandle&>;
 
   template <typename T> void setProperty(std::string_view name, T&& value) {
     m_props.at(name).set(static_cast<detail::upcast_type_t<T>>(value));
@@ -70,7 +70,7 @@ public:
   }
 
 private:
-  void registerProperty(PropertyBase& prop) {
+  void registerProperty(PropertyHandle& prop) {
     if (m_props.count(prop.name())) {
       throw PropertyError(fmt::format("Duplicate property name: {}", prop.name()));
     }
@@ -80,9 +80,9 @@ private:
   PropertyMap m_props;
 
 public:
-  class PropertyBase : public NameMixin {
+  class PropertyHandle : public NameMixin {
   public:
-    PropertyBase(std::string_view name, std::string_view description)
+    PropertyHandle(std::string_view name, std::string_view description)
         : NameMixin{name, description} {}
     virtual void set(const PropertyValue& v) = 0;
     virtual PropertyValue get() const        = 0;
@@ -94,13 +94,13 @@ public:
 
   // A property type that auto-registers itself with the property handler
   // Essentially a simplified and const-like version of Gaudi::Property
-  template <class T> class Property : public PropertyBase {
+  template <class T> class Property : public PropertyHandle {
   public:
     using value_type = T;
     using impl_type  = detail::upcast_type_t<T>;
 
-    Property(Configurable* owner, std::string_view name, std::string_view description)
-        : PropertyBase{name, description} {
+    Property(PropertyMixin* owner, std::string_view name, std::string_view description)
+        : PropertyHandle{name, description} {
       if (owner) {
         owner->registerProperty(*this);
       } else {
@@ -108,7 +108,7 @@ public:
             fmt::format("Attempting to create Property '{}' without valid owner", name));
       }
     }
-    Property(Configurable* owner, std::string_view name, const value_type& v,
+    Property(PropertyMixin* owner, std::string_view name, const value_type& v,
              std::string_view description)
         : Property(owner, name, description) {
       set(static_cast<impl_type>(v));
@@ -124,7 +124,7 @@ public:
       m_value     = static_cast<value_type>(std::get<impl_type>(v));
       m_has_value = true;
     }
-    // virtual getter for use from PropertyBase - use ::value() instead for direct member
+    // virtual getter for use from PropertyHandle - use ::value() instead for direct member
     // access
     virtual PropertyValue get() const { return static_cast<impl_type>(m_value); }
 
@@ -180,26 +180,21 @@ public:
   };
 }; // namespace algorithms
 
-// Property mixin, provides all the configuration functionality for
-// our algorithms and services
-// Currently an alias to Configurable
-using PropertyMixin = Configurable;
-
 } // namespace algorithms
 
 // operator== overload not needed in C++20 as it will call the member version
 #if __cpp_impl_three_way_comparison < 201711
 template <class T, class U>
-bool operator==(const U& rhs, const algorithms::Configurable::Property<T>& p) {
+bool operator==(const U& rhs, const algorithms::PropertyMixin::Property<T>& p) {
   return p == rhs;
 }
 #endif
 template <class T>
-std::ostream& operator<<(std::ostream& os, const algorithms::Configurable::Property<T>& p) {
+std::ostream& operator<<(std::ostream& os, const algorithms::PropertyMixin::Property<T>& p) {
   return os << p.value();
 }
 
 // Make Property formateble
 template <class T>
-struct fmt::formatter<algorithms::Configurable::Property<T>> : fmt::formatter<T> {};
+struct fmt::formatter<algorithms::PropertyMixin::Property<T>> : fmt::formatter<T> {};
 // others needed??? TODO
