@@ -38,25 +38,28 @@ public:
   ServiceError(std::string_view msg) : Error{msg, "algorithms::ServiceError"} {}
 };
 
-class ServiceBase : public PropertyMixin {
-public:
-  // Is this service ready? (active and initialized)
-  bool ready() const { return m_ready; }
-  void ready(bool state) { m_ready = state; }
+namespace detail {
+  class ServiceHandle : public PropertyMixin, public NameMixin {
+  public:
+    ServiceHandle(std::string_view name) : NameMixin{name, name} {}
+    // Is this service ready? (active and initialized)
+    bool ready() const { return m_ready; }
+    void ready(bool state) { m_ready = state; }
 
-private:
-  bool m_ready{false};
-};
+  private:
+    bool m_ready{false};
+  };
+} // namespace detail
 
 // Service service --> keeps track of all services :)
-//                 --> exposes the underlying ServiceBase* object of the service so
+//                 --> exposes the underlying detail::ServiceHandle* object of the service so
 //                     we can configure the services by name in the framework
 //                     boundary plugin
 //                 --> Special service (does not use the Service base class to avoid
 //                     circularity)
 class ServiceSvc : public NameMixin {
 public:
-  using ServiceMapType = std::map<std::string_view, ServiceBase*>;
+  using ServiceMapType = std::map<std::string_view, detail::ServiceHandle*>;
   static ServiceSvc& instance() {
     // This is guaranteed to be thread-safe from C++11 onwards.
     static ServiceSvc svc;
@@ -68,7 +71,8 @@ public:
   //                     manually call init for the service, revalidate
   template <class Svc>
   void add(
-      ServiceBase* svc, const std::function<void(Svc&)>& init = [](Svc& s) { s.init(); }) {
+      detail::ServiceHandle* svc,
+      const std::function<void(Svc&)>& init = [](Svc& s) { s.init(); }) {
     m_keys.push_back(Svc::kName);
     m_services[Svc::kName] = svc;
     // only add initializer if not already present (e.g. if for some reason the framework did
@@ -136,7 +140,7 @@ public:
     svc->ready(true);
   }
 
-  template <class Svc = ServiceBase> Svc* service(std::string_view name) const {
+  template <class Svc = detail::ServiceHandle> Svc* service(std::string_view name) const {
     return static_cast<Svc*>(m_services.at(name));
   }
   // Check if all service properties are set
@@ -183,8 +187,9 @@ public:
   void operator=(const ServiceSvc&) = delete;
 
 private:
-  std::vector<std::string_view> m_keys;                // Ordered list of service keys
-  std::map<std::string_view, ServiceBase*> m_services; // Map of services for easier lookup
+  std::vector<std::string_view> m_keys; // Ordered list of service keys
+  std::map<std::string_view, detail::ServiceHandle*>
+      m_services; // Map of services for easier lookup
   std::map<std::string_view, std::function<void()>> m_initializers; // Init calls
   bool m_init = false; // did we initialize the services already?
 };
@@ -193,7 +198,7 @@ private:
 // CRTP base class to add the instance method
 // This could have been part of DEFINE_SERVICE macro, but I think it is better
 // to keep the macro magic to a minimum to maximize transparency
-template <class SvcType> class Service : public ServiceBase, public NameMixin {
+template <class SvcType> class Service : public detail::ServiceHandle {
 public:
   static SvcType& instance() {
     // This is guaranteed to be thread-safe from C++11 onwards.
@@ -203,7 +208,7 @@ public:
   // constructor for the service base class registers the service, except
   // for the ServiceSvc which is its own thing (avoid circularity)
   // (services don't currently have an attached description)
-  Service(std::string_view name) : NameMixin{name, name} {
+  Service(std::string_view name) : detail::ServiceHandle{name} {
     ServiceSvc::instance().add<SvcType>(this);
   }
 };
