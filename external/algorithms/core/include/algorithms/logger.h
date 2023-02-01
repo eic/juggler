@@ -109,9 +109,18 @@ namespace detail {
   public:
     LoggerStream(std::string_view caller, const LogLevel level,
                  const LogLevel threshold = LogSvc::instance().defaultLevel())
-        : m_buffer{level, caller}, m_os{&m_buffer}, m_level{level}, m_threshold{threshold} {}
-    LoggerStream()                    = delete;
-    LoggerStream(const LoggerStream&) = delete;
+        : m_buffer{level, caller}
+        , m_os{&m_buffer}
+        , m_level{level}
+        , m_caller{caller}
+        , m_threshold{threshold} {}
+    LoggerStream() = delete;
+    LoggerStream(const LoggerStream& rhs)
+        : m_buffer{rhs.m_level, rhs.m_caller}
+        , m_os{&m_buffer}
+        , m_level{rhs.m_level}
+        , m_caller{rhs.m_caller}
+        , m_threshold{rhs.m_threshold} {}
 
     template <class Arg> LoggerStream& operator<<(Arg&& streamable) {
       if (m_level >= m_threshold) {
@@ -145,12 +154,13 @@ namespace detail {
     void threshold(const LogLevel th) { m_threshold = th; }
 
   private:
-    std::mutex m_mutex;
+    mutable std::mutex m_mutex;
     LoggerBuffer m_buffer;
     std::ostream m_os;
     const LogLevel m_level;
+    std::string_view m_caller;
     LogLevel m_threshold;
-  };
+  }; // namespace detail
 } // namespace detail
 
 // Mixin meant to add utility logger functions to algorithms/services/etc
