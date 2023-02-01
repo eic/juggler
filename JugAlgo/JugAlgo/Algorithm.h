@@ -82,7 +82,12 @@ public:
 
   StatusCode execute() override {
     try {
-      m_algo.process(m_input.get(), m_output.get());
+      algorithms::Context c;
+      c.run(0); // need to get run number somehow TODO
+      c.event(getContext().evt());
+      // need to get info on MC-ness of this sample somehow TODO
+      c.mc(true);
+      m_algo.executeInContext(m_input.get(), m_output.get(), c);
     } catch (const std::exception& e) {
       error() << e.what() << endmsg;
       return StatusCode::FAILURE;
