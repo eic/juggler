@@ -48,11 +48,12 @@ public:
 
   // Copy constructor for the ResourceMixin needs to update the addresses of the contained
   // resources to refer to the new copies.
-  ResourceMixin(const ResourceMixin& rhs) {
+  ResourceMixin(const ResourceMixin& rhs) : m_resources{rhs.m_resources} {
     for (size_t i = 0; i < m_resources.size(); ++i) {
       m_resources[i] = &(*m_resources[i]) - (&rhs - this);
     }
   }
+  ResourceMixin& operator= (const ResourceMixin& rhs) = delete;
 
   void resourceContext(const Context& c) {
     for (auto r : m_resources) {
