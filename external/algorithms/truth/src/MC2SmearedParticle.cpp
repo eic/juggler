@@ -30,7 +30,7 @@ void MC2SmearedParticle::process(const MC2SmearedParticle::Input& input,
     // for now.
     const auto pvec     = p.getMomentum();
     const auto pgen     = std::hypot(pvec.x, pvec.y, pvec.z);
-    const auto momentum = pgen * m_rng.gaussian<double>(0., m_smearing);
+    const auto momentum = pgen * m_rng->gaussian<double>(0., m_smearing);
     // make sure we keep energy consistent
     using MomType = decltype(edm4eic::ReconstructedParticle().getMomentum().x);
     const MomType energy =

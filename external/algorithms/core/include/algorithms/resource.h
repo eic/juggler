@@ -28,8 +28,8 @@ public:
 template <class SvcType> class SvcResource : public NameMixin {
 public:
   SvcResource(std::string_view name) : NameMixin{name, name}, m_service{SvcType::instance()} {}
-  const SvcType& service() { return m_service; }
-  void context(const Context& c) { m_context = c; }
+  const SvcType& service() const { return m_service; }
+  virtual void context(const Context& c) { m_context = c; }
   const Context& context() const { return m_context; }
 
 private:
@@ -69,7 +69,7 @@ public:
             fmt::format("Attempting to create Resource '{}' without valid owner", m_impl.name()));
       }
     }
-    void context(const Context& c) { m_impl.context(c); }
+    void context(const Context& c) final { m_impl.context(c); }
 
     // Indirection operators to work with the underlying resource
     ResourceType* operator->() { return &m_impl; }

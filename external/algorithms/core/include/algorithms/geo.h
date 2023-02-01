@@ -14,6 +14,7 @@
 #include <DD4hep/Detector.h>
 
 #include <algorithms/logger.h>
+#include <algorithms/resource.h>
 #include <algorithms/service.h>
 
 namespace algorithms {
@@ -27,7 +28,6 @@ public:
 
   // TODO check const-ness
   gsl::not_null<const dd4hep::Detector*> detector() const { return m_detector; }
-  dd4hep::DetElement world() const { return detector()->world(); }
   gsl::not_null<const dd4hep::rec::CellIDPositionConverter*> cellIDPositionConverter() const {
     return m_converter.get();
   }
@@ -42,6 +42,13 @@ private:
       this, "detectors", {}, "List of DD4hep compact files for standalone operation"};
 
   ALGORITHMS_DEFINE_LOGGED_SERVICE(GeoSvc)
+};
+
+class Geo : public SvcResource<GeoSvc> {
+public:
+  auto detector() const { return service().detector(); }
+  dd4hep::DetElement world() const { return detector()->world(); }
+  auto cellIdPositionConverter() const { return service().cellIDPositionConverter(); }
 };
 
 } // namespace algorithms

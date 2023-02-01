@@ -26,7 +26,7 @@ public:
   void process(const Input&, const Output&) const final;
 
 private:
-  Generator m_rng = RandomSvc::instance().generator();
+  Resource<Generator> m_rng{this};
 
   // (0.01 --> 1%)
   Property<double> m_smearing{this, "smearing", 0.01, "Sigma for Gaussian smearing factor"};
