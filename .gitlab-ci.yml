@@ -210,6 +210,7 @@ benchmarks:physics:
     - version
     - juggler:default
   variables:
+    RECO: "juggler"
     JUGGLER_TAG: "$INTERNAL_TAG"
     JUGGLER_REGISTRY: "$CI_REGISTRY_IMAGE"
   trigger:
