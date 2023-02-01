@@ -42,6 +42,17 @@ private:
 class ResourceMixin {
 public:
   class ResourceHandle;
+
+  ResourceMixin() = default;
+
+  // Copy constructor for the ResourceMixin needs to update the addresses of the contained
+  // resources to refer to the new copies.
+  ResourceMixin(const ResourceMixin& rhs) {
+    for (size_t i = 0; i < m_resources.size(); ++i) {
+      m_resources[i] = &(*m_resources[i]) - (&rhs - this);
+    }
+  }
+
   void resourceContext(const Context& c) {
     for (auto r : m_resources) {
       r->context(c);
