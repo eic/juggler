@@ -68,8 +68,7 @@ public:
     } else if (validTime()) {
       return m_time - scopeID;
     } else {
-      throw ContextError("Cannot get uniqueID for invalid context. A valid context has at least "
-                         "either a valid run+event, or a valid time stamp.");
+      return scopeID;
     }
   }
 
