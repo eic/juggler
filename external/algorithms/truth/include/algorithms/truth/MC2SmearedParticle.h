@@ -22,6 +22,7 @@ public:
                                     "Create mock reconstructed particles out of input MCParticles "
                                     "using Gaussian momentum smearing"} {}
 
+private:
   void init() final;
   void process(const Input&, const Output&) const final;
 

@@ -44,6 +44,7 @@ public:
                             "simulation results it optionally creates a Cluster <-> MCParticle "
                             "association provided both optional arguments are provided."} {}
 
+private:
   void init() final;
   void process(const Input&, const Output&) const final;
 

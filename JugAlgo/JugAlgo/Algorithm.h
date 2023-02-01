@@ -72,7 +72,7 @@ public:
 
       // call the internal algorithm init
       debug() << "Initializing underlying algorithm " << m_algo.name() << endmsg;
-      m_algo.init();
+      m_algo.initialize();
     } catch (const std::exception& e) {
       fatal() << e.what() << endmsg;
       return StatusCode::FAILURE;
