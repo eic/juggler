@@ -61,17 +61,17 @@ template <class... T> struct Output : std::tuple<output_type_t<T>...> {
   using key_type                      = std::array<const std::string, kSize>;
 };
 
-class AlgorithmBase : public PropertyMixin,
-                      public ResourceMixin,
-                      public LoggerMixin,
-                      public NameMixin {
+class AlgorithmHandle : public NameMixin,
+                        public LoggerMixin,
+                        public PropertyMixin,
+                        public ResourceMixin {
 public:
-  AlgorithmBase(std::string_view name, std::string_view description)
-      : LoggerMixin(name), NameMixin(name, description) {}
+  AlgorithmHandle(std::string_view name, std::string_view description)
+      : NameMixin{name, description}, LoggerMixin{name} {}
 };
 
 // TODO: C++20 Concepts version for better error handling
-template <class InputType, class OutputType> class Algorithm : public AlgorithmBase {
+template <class InputType, class OutputType> class Algorithm : public AlgorithmHandle {
 public:
   using input_type     = InputType;
   using output_type    = OutputType;
@@ -83,18 +83,31 @@ public:
 
   Algorithm(std::string_view name, const InputNames& input_names, const OutputNames& output_names,
             std::string_view description)
-      : AlgorithmBase(name, description)
+      : AlgorithmHandle(name, description)
       , m_input_names{input_names}
-      , m_output_names{output_names} {}
+      , m_output_names{output_names} {
+  }
 
   virtual ~Algorithm() {}
-  virtual void init() {}
-  virtual void process(const Input&, const Output&) const {}
+
+  void initialize() { init(); }
+  void execute(const Input& i, const Output& o) const { process(i, o); }
+  void context(const Context& c) {
+    resourceContext(c);
+  }
+  void executeInContext(const Input& i, const Output& o, const Context& c) const {
+    Algorithm clone = *this;
+    clone.context(c);
+    clone.execute(i, o);
+  }
 
   const InputNames& inputNames() const { return m_input_names; }
   const OutputNames& outputNames() const { return m_output_names; }
 
 private:
+  virtual void init() {}
+  virtual void process(const Input&, const Output&) const {}
+
   const InputNames m_input_names;
   const OutputNames m_output_names;
 };
@@ -118,7 +131,7 @@ public:
     if (available<type>(name)) {
       return; // do nothing, already there
     }
-    m_factories[type].emplace({name, []() { return static_cast<AlgorithmBase*>(new Algo()); }});
+    m_factories[type].emplace({name, []() { return static_cast<AlgorithmHandle*>(new Algo()); }});
   }
 
   // Get a new owning pointer to an instance of an algorithm.
@@ -172,7 +185,7 @@ private:
     }
   }
 
-  using factory_type = std::function<std::unique_ptr<AlgorithmBase>()>;
+  using factory_type = std::function<std::unique_ptr<AlgorithmHandle>()>;
 
   std::map<std::type_index, std::map<std::string_view, factory_type>> m_factories;
 };

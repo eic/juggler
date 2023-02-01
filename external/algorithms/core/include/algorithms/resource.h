@@ -31,6 +31,7 @@ public:
   const SvcType& service() const { return m_service; }
   void context(const Context& c) { m_context = c; }
   const Context& context() const { return m_context; }
+  void scope(const NameMixin* s) { m_context.scope(s); }
 
 private:
   const SvcType& m_service;
@@ -68,13 +69,22 @@ public:
   // management. Implementation is simular to Property
   class ResourceHandle {
   public:
-    virtual void context(const Context& c) = 0;
+    virtual void context(const Context&) = 0;
   };
   template <class ResourceType> class Resource : public ResourceHandle {
   public:
     Resource(ResourceMixin* owner) {
       if (owner) {
         owner->registerResource(*this);
+      } else {
+        throw ResourceError(
+            fmt::format("Attempting to create Resource '{}' without valid owner", m_impl.name()));
+      }
+    }
+    template <class NamedClass> Resource(NamedClass* owner) {
+      if (owner) {
+        owner->registerResource(*this);
+        m_impl.scope(owner);
       } else {
         throw ResourceError(
             fmt::format("Attempting to create Resource '{}' without valid owner", m_impl.name()));

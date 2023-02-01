@@ -47,7 +47,7 @@ public:
   void event(const event_type e) { m_event = e; }
   void time(const time_type t) { m_time = t; }
   void mc(const bool b) { m_mc = b; }
-  void scope(const NameMixin& s) { m_scope = &s; }
+  void scope(const NameMixin* s) { m_scope = s; }
 
   constexpr auto run() const { return m_run; }
   constexpr auto event() const { return m_event; }
