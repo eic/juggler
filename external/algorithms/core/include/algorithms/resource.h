@@ -29,7 +29,7 @@ template <class SvcType> class SvcResource : public NameMixin {
 public:
   SvcResource(std::string_view name) : NameMixin{name, name}, m_service{SvcType::instance()} {}
   const SvcType& service() const { return m_service; }
-  virtual void context(const Context& c) { m_context = c; }
+  void context(const Context& c) { m_context = c; }
   const Context& context() const { return m_context; }
 
 private:

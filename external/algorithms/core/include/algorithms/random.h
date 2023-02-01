@@ -51,7 +51,7 @@ public:
   Generator() : SvcResource<RandomSvc>{"Generator"} {}
 
   // Override the resource context function to change the random seed on context change
-  void context(const Context& c) override {
+  void context(const Context& c) {
     SvcResource<RandomSvc>::context(c);
     // Subtracting the global seed is OK as worst case the unsigned integer will wrap
     // which is OK.
