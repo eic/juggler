@@ -196,6 +196,7 @@ benchmarks:reconstruction:
   variables:
     JUGGLER_TAG: "$INTERNAL_TAG"
     JUGGLER_REGISTRY: "$CI_REGISTRY_IMAGE"
+    RECO: "juggler"
   trigger:
     project: EIC/benchmarks/reconstruction_benchmarks
     strategy: depend
@@ -212,6 +213,7 @@ benchmarks:physics:
   variables:
     JUGGLER_TAG: "$INTERNAL_TAG"
     JUGGLER_REGISTRY: "$CI_REGISTRY_IMAGE"
+    RECO: "juggler"
   trigger:
     project: EIC/benchmarks/physics_benchmarks
     strategy: depend
