@@ -87,9 +87,9 @@ public:
       c.event(getContext().evt());
       // need to get info on MC-ness of this sample somehow TODO
       c.mc(true);
-      // m_algo.executeInContext(m_input.get(), m_output.get(), c);
-      m_algo.context(c);
-      m_algo.execute(m_input.get(), m_output.get());
+      m_algo.executeInContext(m_input.get(), m_output.get(), c);
+      //m_algo.context(c);
+      //m_algo.execute(m_input.get(), m_output.get());
     } catch (const std::exception& e) {
       error() << e.what() << endmsg;
       return StatusCode::FAILURE;
