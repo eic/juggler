@@ -32,6 +32,9 @@ public:
   void context(const Context& c) { m_context = c; }
   const Context& context() const { return m_context; }
   void scope(const NameMixin* s) { m_context.scope(s); }
+  template <class T = NameMixin> const T* scope() const {
+    return static_cast<const T*>(m_context.scope());
+  }
 
 private:
   const SvcType& m_service;
@@ -48,13 +51,9 @@ public:
 
   // Copy constructor for the ResourceMixin needs to update the addresses of the contained
   // resources to refer to the new copies.
-  ResourceMixin(const ResourceMixin& rhs) : m_resources{rhs.m_resources} {
+  ResourceMixin(const ResourceMixin& rhs) : m_resources(rhs.m_resources.size(), nullptr) {
     for (size_t i = 0; i < m_resources.size(); ++i) {
-      m_resources[i] = rhs.m_resources[i] - (&rhs - this);
-      std::cout << std::hex << rhs.m_resources[i] << std::endl;
-      std::cout << std::hex << (&rhs - this) << " " << &rhs << " " << this;
-      std::cout << std::hex << m_resources[i] << std::endl;
-      std::cout << std::hex << rhs.m_resources[i] << std::endl;
+      m_resources[i] = rhs.m_resources[i]->relocate(this);
     }
     std::cout << "GOT HERE - trying access" << std::endl;
     for (size_t i = 0; i < m_resources.size(); ++i) {
@@ -64,9 +63,12 @@ public:
   }
   ResourceMixin& operator=(const ResourceMixin& rhs) = delete;
 
-  void resourceContext(const Context& c) {
+  void updateResources(const Context& c, const NameMixin* s = nullptr) {
     for (auto r : m_resources) {
       r->context(c);
+      if (s) {
+        r->scope(s);
+      }
     }
   }
 
@@ -79,12 +81,26 @@ public:
   // management. Implementation is simular to Property
   class ResourceHandle {
   public:
-    virtual void context(const Context&)   = 0;
-    virtual const Context& context() const = 0;
+    ResourceHandle(const ResourceMixin* owner)
+        : m_offset{reinterpret_cast<const char*>(this) - reinterpret_cast<const char*>(owner)} {}
+    virtual void context(const Context&)       = 0;
+    virtual const Context& context() const     = 0;
+    virtual void scope(const NameMixin* owner) = 0;
+    virtual const NameMixin* scope() const     = 0;
+    // return the relocated address for the copied object in the new owner
+    ResourceHandle* relocate(ResourceMixin* clone) const {
+      return reinterpret_cast<ResourceHandle*>(reinterpret_cast<char*>(clone) + m_offset);
+    }
+
+  private:
+    // offset versus the ResourceMixin `this` pointer to allow relocating views
+    const ptrdiff_t m_offset;
   };
   template <class ResourceType> class Resource : public ResourceHandle {
   public:
-    Resource(ResourceMixin* owner) {
+    template <class... Args>
+    Resource(ResourceMixin* owner, Args&&... args)
+        : ResourceHandle{owner}, m_impl{std::forward<Args>(args)...} {
       if (owner) {
         owner->registerResource(*this);
       } else {
@@ -92,17 +108,15 @@ public:
             fmt::format("Attempting to create Resource '{}' without valid owner", m_impl.name()));
       }
     }
-    template <class NamedClass> Resource(NamedClass* owner) {
-      if (owner) {
-        owner->registerResource(*this);
-        m_impl.scope(owner);
-      } else {
-        throw ResourceError(
-            fmt::format("Attempting to create Resource '{}' without valid owner", m_impl.name()));
-      }
+    template <class NamedClass, class... Args>
+    Resource(NamedClass* owner, Args&&... args)
+        : Resource{static_cast<ResourceMixin*>(owner), std::forward<Args>(args)...} {
+      m_impl.scope(owner);
     }
     void context(const Context& c) final { m_impl.context(c); }
     const Context& context() const final { return m_impl.context(); }
+    void scope(const NameMixin* owner) final { m_impl.scope(owner); }
+    const NameMixin* scope() const final { return m_impl.scope(); }
 
     // Indirection operators to work with the underlying resource
     ResourceType* operator->() { return &m_impl; }

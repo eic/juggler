@@ -85,19 +85,16 @@ public:
             std::string_view description)
       : AlgorithmHandle(name, description)
       , m_input_names{input_names}
-      , m_output_names{output_names} {
-  }
+      , m_output_names{output_names} {}
 
   virtual ~Algorithm() {}
 
   void initialize() { init(); }
   void execute(const Input& i, const Output& o) const { process(i, o); }
-  void context(const Context& c) {
-    resourceContext(c);
-  }
+  void context(const Context& c) { updateResources(c); }
   void executeInContext(const Input& i, const Output& o, const Context& c) const {
     Algorithm clone = *this;
-    clone.context(c);
+    clone.updateResources(c, &clone);
     clone.execute(i, o);
   }
 
