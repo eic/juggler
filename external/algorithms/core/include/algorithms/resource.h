@@ -50,10 +50,15 @@ public:
   // resources to refer to the new copies.
   ResourceMixin(const ResourceMixin& rhs) : m_resources{rhs.m_resources} {
     for (size_t i = 0; i < m_resources.size(); ++i) {
-      m_resources[i] = &(*m_resources[i]) - (&rhs - this);
+      m_resources[i] = &(*rhs.m_resources[i]) - (&rhs - this);
+    }
+    std::cout << "GOT HERE - trying access" << std::endl;
+    for (size_t i = 0; i < m_resources.size(); ++i) {
+      std::cout << "original scope: " << rhs.m_resources[i]->context().scope()->name() << std::endl;
+      std::cout << "cloned scope: " << m_resources[i]->context().scope()->name() << std::endl;
     }
   }
-  ResourceMixin& operator= (const ResourceMixin& rhs) = delete;
+  ResourceMixin& operator=(const ResourceMixin& rhs) = delete;
 
   void resourceContext(const Context& c) {
     for (auto r : m_resources) {
@@ -70,7 +75,8 @@ public:
   // management. Implementation is simular to Property
   class ResourceHandle {
   public:
-    virtual void context(const Context&) = 0;
+    virtual void context(const Context&)   = 0;
+    virtual const Context& context() const = 0;
   };
   template <class ResourceType> class Resource : public ResourceHandle {
   public:
@@ -92,6 +98,7 @@ public:
       }
     }
     void context(const Context& c) final { m_impl.context(c); }
+    const Context& context() const final { return m_impl.context(); }
 
     // Indirection operators to work with the underlying resource
     ResourceType* operator->() { return &m_impl; }

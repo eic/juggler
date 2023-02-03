@@ -57,6 +57,7 @@ public:
     // which is OK.
     m_gen.seed(c.id() - service().seed());
   }
+  using SvcResource<RandomSvc>::context;
 
   template <class Int = int> Int uniform_int(const Int min, const Int max) const {
     std::uniform_int_distribution<Int> d{min, max};
