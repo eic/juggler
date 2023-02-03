@@ -50,7 +50,11 @@ public:
   // resources to refer to the new copies.
   ResourceMixin(const ResourceMixin& rhs) : m_resources{rhs.m_resources} {
     for (size_t i = 0; i < m_resources.size(); ++i) {
-      m_resources[i] = &(*rhs.m_resources[i]) - (&rhs - this);
+      m_resources[i] = rhs.m_resources[i] - (&rhs - this);
+      std::cout << std::hex << rhs.m_resources[i] << std::endl;
+      std::cout << std::hex << (&rhs - this) << " " << &rhs << " " << this;
+      std::cout << std::hex << m_resources[i] << std::endl;
+      std::cout << std::hex << rhs.m_resources[i] << std::endl;
     }
     std::cout << "GOT HERE - trying access" << std::endl;
     for (size_t i = 0; i < m_resources.size(); ++i) {
@@ -68,7 +72,7 @@ public:
 
 private:
   void registerResource(ResourceHandle& resource) { m_resources.emplace_back(&resource); }
-  std::vector<gsl::not_null<ResourceHandle*>> m_resources;
+  std::vector<ResourceHandle*> m_resources;
 
 public:
   // Resource wrapper that acts as a handle to the Resource that automatically takes care of Context
