@@ -183,10 +183,10 @@ eic_container:master:
   needs:
     - version
   variables:
-    - JUGGLER_VERSION: "${CI_COMMIT_BRANCH}"
-    - VERSION: "${VERSION}"
-    - DH_PUSH: "0"
-    - GH_PUSH: "0"
+    JUGGLER_VERSION: "${CI_COMMIT_BRANCH}"
+    VERSION: "${VERSION}"
+    DH_PUSH: "0"
+    GH_PUSH: "0"
   trigger:
     project: containers/eic_container
   allow_failure: false
