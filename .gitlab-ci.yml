@@ -39,6 +39,7 @@ stages:
   - config
   - docker    ## build new version of juggler
   - deploy    ## repo-local singularity image for development work
+  - benchmarks
   - analysis
   - finalize
 
@@ -173,6 +174,23 @@ juggler:default:
 #    - singularity pull build/${EXPORT_IMAGE}.sif 
 #                  docker://${CI_REGISTRY_IMAGE}/${BUILD_IMAGE}:${INTERNAL_TAG}
 
+eic_container:master:
+  stage: docker
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_SERVER_HOST == "eicweb.phy.anl.gov"'
+      when: on_success
+    - when: never
+  needs:
+    - version
+  variables:
+    - JUGGLER_VERSION: "${CI_COMMIT_BRANCH}"
+    - VERSION: "${VERSION}"
+    - DH_PUSH: "0"
+    - GH_PUSH: "0"
+  trigger:
+    project: containers/eic_container
+  allow_failure: false
+
 jug_xl:master:
   stage: deploy
   rules:
@@ -187,7 +205,7 @@ jug_xl:master:
   allow_failure: true
 
 benchmarks:reconstruction:
-  stage: deploy
+  stage: benchmarks
   rules:
     - if:  '$CI_SERVER_HOST == "eicweb.phy.anl.gov"'
   needs: 
@@ -204,7 +222,7 @@ benchmarks:reconstruction:
   allow_failure: false
   
 benchmarks:physics:
-  stage: deploy
+  stage: benchmarks
   rules:
     - if:  '$CI_SERVER_HOST == "eicweb.phy.anl.gov"'
   needs: 
