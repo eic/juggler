@@ -103,7 +103,7 @@ version:
       ## on eicweb to communicate between jobs (removed in cleanup job)
       INTERNAL_TAG="${DEFAULT_TAG}-${VERSION}"
       if [ "x${CI_PIPELINE_SOURCE}" == "xmerge_request_event" ]; then
-        INTERNAL_TAG="unstable-mr-${CI_MERGE_REQUEST_ID}"
+        INTERNAL_TAG="unstable-mr-${CI_MERGE_REQUEST_PROJECT_ID}-${CI_MERGE_REQUEST_IID}"
       fi
       echo "VERSION=$VERSION" >> build.env
       echo "INTERNAL_TAG=$INTERNAL_TAG" >> build.env
