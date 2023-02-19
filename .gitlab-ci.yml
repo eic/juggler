@@ -189,6 +189,7 @@ eic_container:master:
     GH_PUSH: "0"
   trigger:
     project: containers/eic_container
+    strategy: depend
   allow_failure: false
 
 jug_xl:master:
