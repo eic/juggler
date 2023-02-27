@@ -126,8 +126,8 @@ public:
             for (auto &data : it.second) {
                 edm4eic::RawTrackerHit hit{
                   it.first,
-                  static_cast<uint32_t>(data.signal), 
-                  static_cast<uint32_t>(data.time/(m_timeStep/ns))};
+                  static_cast<int32_t>(data.signal), 
+                  static_cast<int32_t>(data.time/(m_timeStep/ns))};
                 raw.push_back(hit);
             }
         }
