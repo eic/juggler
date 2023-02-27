@@ -107,7 +107,7 @@ version:
       ## on eicweb to communicate between jobs (removed in cleanup job)
       INTERNAL_TAG="${DEFAULT_TAG}-${VERSION}"
       if [ "x${CI_PIPELINE_SOURCE}" == "xmerge_request_event" ]; then
-        INTERNAL_TAG="unstable-mr-${CI_MERGE_REQUEST_ID}"
+        INTERNAL_TAG="unstable-mr-${CI_MERGE_REQUEST_PROJECT_ID}-${CI_MERGE_REQUEST_IID}"
       fi
       echo "VERSION=$VERSION" >> build.env
       echo "INTERNAL_TAG=$INTERNAL_TAG" >> build.env
@@ -199,8 +199,9 @@ benchmarks:reconstruction:
     - version
     - juggler:default
   variables:
-    JUGGLER_TAG: "$INTERNAL_TAG"
-    JUGGLER_REGISTRY: "$CI_REGISTRY_IMAGE"
+    BENCHMARKS_TAG: "$INTERNAL_TAG"
+    BENCHMARKS_CONTAINER: "juggler"
+    BENCHMARKS_REGISTRY: "$CI_REGISTRY_IMAGE"
   trigger:
     project: EIC/benchmarks/reconstruction_benchmarks
     strategy: depend
@@ -215,8 +216,10 @@ benchmarks:physics:
     - version
     - juggler:default
   variables:
-    JUGGLER_TAG: "$INTERNAL_TAG"
-    JUGGLER_REGISTRY: "$CI_REGISTRY_IMAGE"
+    RECO: "juggler"
+    BENCHMARKS_TAG: "$INTERNAL_TAG"
+    BENCHMARKS_CONTAINER: "juggler"
+    BENCHMARKS_REGISTRY: "$CI_REGISTRY_IMAGE"
   trigger:
     project: EIC/benchmarks/physics_benchmarks
     strategy: depend
