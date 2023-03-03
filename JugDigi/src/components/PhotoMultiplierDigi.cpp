@@ -88,7 +88,7 @@ public:
         auto &raw = *m_outputHitCollection.createAndPut();
 
         struct HitData { int npe; double signal; double time; };
-        std::unordered_map<uint64_t, std::vector<HitData>> hit_groups;
+        std::unordered_map<decltype(edm4eic::RawTrackerHitData::cellID), std::vector<HitData>> hit_groups;
         // collect the photon hit in the same cell
         // calculate signal
         for(const auto& ahit : sim) {
@@ -126,8 +126,8 @@ public:
             for (auto &data : it.second) {
                 edm4eic::RawTrackerHit hit{
                   it.first,
-                  static_cast<int32_t>(data.signal), 
-                  static_cast<int32_t>(data.time/(m_timeStep/ns))};
+                  static_cast<decltype(edm4eic::RawTrackerHitData::charge)>(data.signal), 
+                  static_cast<decltype(edm4eic::RawTrackerHitData::timeStamp)>(data.time/(m_timeStep/ns))};
                 raw.push_back(hit);
             }
         }
