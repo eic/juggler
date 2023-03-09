@@ -29,7 +29,7 @@
 
 // Event Model related classes
 #include "edm4eic/PMTHitCollection.h"
-#include "edm4eic/RawPMTHitCollection.h"
+#include "edm4eic/RawTrackerHitCollection.h"
 
 using namespace Gaudi::Units;
 
@@ -44,7 +44,7 @@ namespace Jug::Reco {
  */
 class PhotoMultiplierReco : public GaudiAlgorithm {
 private:
-  DataHandle<edm4eic::RawPMTHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
   DataHandle<edm4eic::PMTHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
   Gaudi::Property<double> m_timeStep{this, "timeStep", 0.0625 * ns};
   Gaudi::Property<double> m_minNpe{this, "minNpe", 0.0};
@@ -81,7 +81,7 @@ public:
 
     // reconstruct number of photo-electrons and time
     for (const auto& rh : rawhits) {
-      float npe = (rh.getIntegral() - m_pedMean) / m_speMean;
+      float npe = (rh.getCharge() - m_pedMean) / m_speMean;
       if (npe >= m_minNpe) {
         float time = rh.getTimeStamp() * (static_cast<float>(m_timeStep) / ns);
         auto id    = rh.getCellID();
