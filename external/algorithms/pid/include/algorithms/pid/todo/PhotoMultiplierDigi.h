@@ -23,7 +23,7 @@
 #include "JugBase/DataHandle.h"
 
 // Event Model related classes
-#include "edm4eic/RawPMTHitCollection.h"
+#include "edm4eic/RawTrackerHitCollection.h"
 #include "edm4hep/MCParticleCollection.h"
 #include "edm4hep/SimTrackerHitCollection.h"
 
@@ -41,7 +41,7 @@ class PhotoMultiplierDigi : public GaudiAlgorithm
 public:
     DataHandle<edm4hep::SimTrackerHitCollection>
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-    DataHandle<edm4eic::RawPMTHitCollection>
+    DataHandle<edm4eic::RawTrackerHitCollection>
         m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
     Gaudi::Property<std::vector<std::pair<double, double>>>
         u_quantumEfficiency{this, "quantumEfficiency", {{2.6*eV, 0.3}, {7.0*eV, 0.3}}};
@@ -88,7 +88,7 @@ public:
         auto &raw = *m_outputHitCollection.createAndPut();
 
         struct HitData { int npe; double signal; double time; };
-        std::unordered_map<uint64_t, std::vector<HitData>> hit_groups;
+        std::unordered_map<decltype(edm4eic::RawTrackerHitData::cellID), std::vector<HitData>> hit_groups;
         // collect the photon hit in the same cell
         // calculate signal
         for(const auto& ahit : sim) {
@@ -124,10 +124,10 @@ public:
         // build hit
         for (auto &it : hit_groups) {
             for (auto &data : it.second) {
-                edm4eic::RawPMTHit hit{
+                edm4eic::RawTrackerHit hit{
                   it.first,
-                  static_cast<uint32_t>(data.signal), 
-                  static_cast<uint32_t>(data.time/(m_timeStep/ns))};
+                  static_cast<decltype(edm4eic::RawTrackerHitData::charge)>(data.signal), 
+                  static_cast<decltype(edm4eic::RawTrackerHitData::timeStamp)>(data.time/(m_timeStep/ns))};
                 raw.push_back(hit);
             }
         }

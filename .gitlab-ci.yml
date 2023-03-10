@@ -132,7 +132,7 @@ juggler:default:
     - ./eic_container/gitlab-ci/docker_login.sh --ci -n $DOCKER_NTRIES -t $DOCKER_WAIT_TIME
     - echo ${CI_COMMIT_BRANCH}
     - cp eic_container/detectors.yaml eic_container/containers/jug
-    - docker build -t ${CI_REGISTRY_IMAGE}/${BUILD_IMAGE}:${INTERNAL_TAG}
+    - docker buildx build --load -t ${CI_REGISTRY_IMAGE}/${BUILD_IMAGE}:${INTERNAL_TAG}
                    -f eic_container/containers/jug/xl.Dockerfile
                    --build-arg INTERNAL_TAG=${EIC_DEV_TAG}
                    --build-arg JUGGLER_VERSION=${CI_COMMIT_REF_NAME}
@@ -140,6 +140,7 @@ juggler:default:
                    --build-arg DETECTOR_VERSION=${JUGGLER_DETECTOR_VERSION}
                    --build-arg IP6_VERSION=${JUGGLER_IP6_VERSION}
                    --build-arg JUG_VERSION=juggler-${INTERNAL_TAG}-$(date +%Y-%m-%d_%H-%M-%S)-$(git rev-parse HEAD)
+                   --build-context detectors=eic_container
                    eic_container/containers/jug
     - |
       if [ "$CI_COMMIT_BRANCH" == "main" ]; then
