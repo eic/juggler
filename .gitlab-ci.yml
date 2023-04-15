@@ -36,6 +36,7 @@ variables:
 
 stages:
   - build
+  - analysis
   - config
   - docker    ## build new version of juggler
   - deploy    ## repo-local singularity image for development work
