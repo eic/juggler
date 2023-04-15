@@ -1,38 +1,7 @@
 image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
 
 variables:
-  ## Base eic_dev image is testing. This puts the container at the same level as
-  ## the nightly release. For now we tag the main as:
-  ##  - juggler:testing (for CI usage)
-  ##  - We also trigger the eic_container master to rebuild the jug_xl nightly
-  EIC_DEV_TAG: "testing"
-  JUGGLER_IMAGE: "juggler"
-  DEFAULT_TAG: "testing"
-
-  ## We have:
-  ##   - Juggler triggers eic_container on a main pipeline
-  ##   - eic_container triggers juggler on nightly builds
-  ## this way jug_xl:nightly and juggler:testing are kept in sync
-
-  ## We need to enable Docker Buildkit to use cache mounts and better
-  ## build performance overal
-  DOCKER_BUILDKIT: 1
-
-  ## Dockerhub registry
-  DH_REGISTRY_USER: eicweb
-  DH_PUSH: 1
-  ## GitHub registry
-  GH_REGISTRY: ghcr.io
-  GH_PUSH: 0
-
-  ## TLS error resiliency: number of retries and second wait between tries 
-  ## (wait time is doubled with each attempt)
-  DOCKER_NTRIES: 5
-  DOCKER_WAIT_TIME: 5
-
-  ## variable set to 1 when triggered by eic_container nightly
-  ## build. This is to avoid circular dependencies
-  TRIGGERED_BY_NIGHTLY: 0
+  VERSION: "${CI_COMMIT_REF_NAME}"
 
 stages:
   - build
@@ -96,34 +65,24 @@ version:
     - if:  '$CI_SERVER_HOST == "eicweb.phy.anl.gov"'
   script:
     - |
-      ## version info
-      VERSION=`head -n1 VERSION`
-      ## internal tag used for the CI. Also temporarily tagged
-      ## on eicweb to communicate between jobs (removed in cleanup job)
-      INTERNAL_TAG="${DEFAULT_TAG}-${VERSION}"
       if [ "x${CI_PIPELINE_SOURCE}" == "xmerge_request_event" ]; then
-        INTERNAL_TAG="unstable-mr-${CI_MERGE_REQUEST_PROJECT_ID}-${CI_MERGE_REQUEST_IID}"
+        VERSION="unstable-mr-${CI_MERGE_REQUEST_PROJECT_ID}-${CI_MERGE_REQUEST_IID}"
       fi
       echo "VERSION=$VERSION" >> build.env
-      echo "INTERNAL_TAG=$INTERNAL_TAG" >> build.env
-      echo "CI_REGISTRY=$CI_REGISTRY" >> build.env
-      echo "CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE" >> build.env
-      echo "BUILD_IMAGE=$JUGGLER_IMAGE" >> build.env
       cat build.env
   artifacts:
     reports:
       dotenv: build.env
 
-jug_xl:master:
+eic_container:
   stage: deploy
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main" && $TRIGGERED_BY_NIGHTLY == "0" && $CI_SERVER_HOST == "eicweb.phy.anl.gov"'
-      when: on_success
-    - when: never
   needs:
     - version
+  variables:
+    VERSION: "${VERSION}"
   trigger:
     project: containers/eic_container
+    strategy: depend
   allow_failure: false
 
 pages:
