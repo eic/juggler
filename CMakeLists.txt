@@ -46,7 +46,7 @@ endif()
 
 # Set all warnings
 if(NOT CMAKE_BUILD_TYPE MATCHES Release)
-  add_compile_options(-Wall -Wextra -Werror)
+  add_compile_options(-Wall -Wextra -Werror -Wno-error=deprecated-declarations)
 endif()
 
 find_package(Microsoft.GSL CONFIG)
