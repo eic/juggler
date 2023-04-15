@@ -39,8 +39,6 @@ stages:
   - config
   - docker    ## build new version of juggler
   - deploy    ## repo-local singularity image for development work
-  - analysis
-  - finalize
 
 workflow:
   ## Only rebuild on MRs and on commits to the main, as in other cases
@@ -115,65 +113,6 @@ version:
     reports:
       dotenv: build.env
 
-juggler:default:
-  stage: docker
-  tags: 
-   - docker-new
-  rules:
-    - if:  '$CI_SERVER_HOST == "eicweb.phy.anl.gov"'
-  needs:
-    - version
-  script:
-    - GIT_SSL_NO_VERIFY=1 git clone -b master --depth=1 https://eicweb.phy.anl.gov/containers/eic_container.git
-    - ./eic_container/gitlab-ci/docker_login.sh --ci -n $DOCKER_NTRIES -t $DOCKER_WAIT_TIME
-    - echo ${CI_COMMIT_BRANCH}
-    - cp eic_container/detectors.yaml eic_container/containers/jug
-    - docker buildx build --load -t ${CI_REGISTRY_IMAGE}/${BUILD_IMAGE}:${INTERNAL_TAG}
-                   -f eic_container/containers/jug/xl.Dockerfile
-                   --build-arg INTERNAL_TAG=${EIC_DEV_TAG}
-                   --build-arg JUGGLER_VERSION=${CI_COMMIT_REF_NAME}
-                   --build-arg DETECTOR_VERSION=${JUGGLER_DETECTOR_VERSION}
-                   --build-arg IP6_VERSION=${JUGGLER_IP6_VERSION}
-                   --build-arg JUG_VERSION=juggler-${INTERNAL_TAG}-$(date +%Y-%m-%d_%H-%M-%S)-$(git rev-parse HEAD)
-                   --build-context detectors=eic_container
-                   eic_container/containers/jug
-    - |
-      if [ "$CI_COMMIT_BRANCH" == "main" ]; then
-        ./eic_container/gitlab-ci/docker_login.sh                                       \
-            -u $DH_REGISTRY_USER -p $DH_EICWEB_TOKEN                                         \
-            -n $DOCKER_NTRIES -t $DOCKER_WAIT_TIME
-        ./eic_container/gitlab-ci/docker_login.sh \
-            -u ${GITHUB_REGISTRY_USER} -p ${GITHUB_REGISTRY_TOKEN} \
-            -n ${DOCKER_NTRIES} -t ${DOCKER_WAIT_TIME} \
-            ${GH_REGISTRY}
-        ./eic_container/gitlab-ci/docker_push.sh -i ${BUILD_IMAGE} -l ${INTERNAL_TAG}   \
-                                                 -n $DOCKER_NTRIES -t $DOCKER_WAIT_TIME \
-                                                 ${DEFAULT_TAG}
-        # also tag latest for now until we update
-        # all the downstream benchmarks etc.
-        ./eic_container/gitlab-ci/docker_push.sh -i ${BUILD_IMAGE} -l ${INTERNAL_TAG}   \
-                                                 -n $DOCKER_NTRIES -t $DOCKER_WAIT_TIME \
-                                                 latest
-      fi
-      ./eic_container/gitlab-ci/docker_push.sh -i ${BUILD_IMAGE} -l ${INTERNAL_TAG}     \
-                                               -n $DOCKER_NTRIES -t $DOCKER_WAIT_TIME   \
-                                               ${INTERNAL_TAG} --eicweb
-#juggler:singularity:default:
-#  stage: deploy
-#  rules:
-#    - if:  '$CI_SERVER_HOST == "eicweb.phy.anl.gov"'
-#  artifacts:
-#      expire_in: 90 days
-#      paths:
-#        - build/${EXPORT_IMAGE}.sif
-#  needs:
-#    - version
-#    - juggler:default
-#  script:
-#    - mkdir build
-#    - singularity pull build/${EXPORT_IMAGE}.sif 
-#                  docker://${CI_REGISTRY_IMAGE}/${BUILD_IMAGE}:${INTERNAL_TAG}
-
 jug_xl:master:
   stage: deploy
   rules:
@@ -182,43 +121,8 @@ jug_xl:master:
     - when: never
   needs:
     - version
-    - juggler:default
   trigger:
     project: containers/eic_container
-  allow_failure: true
-
-benchmarks:reconstruction:
-  stage: deploy
-  rules:
-    - if:  '$CI_SERVER_HOST == "eicweb.phy.anl.gov"'
-  needs: 
-    - version
-    - juggler:default
-  variables:
-    BENCHMARKS_TAG: "$INTERNAL_TAG"
-    BENCHMARKS_CONTAINER: "juggler"
-    BENCHMARKS_REGISTRY: "$CI_REGISTRY_IMAGE"
-  trigger:
-    project: EIC/benchmarks/reconstruction_benchmarks
-    strategy: depend
-  ## for now allow failure, as we need to update those pipelines
-  allow_failure: false
-  
-benchmarks:physics:
-  stage: deploy
-  rules:
-    - if:  '$CI_SERVER_HOST == "eicweb.phy.anl.gov"'
-  needs: 
-    - version
-    - juggler:default
-  variables:
-    RECO: "juggler"
-    BENCHMARKS_TAG: "$INTERNAL_TAG"
-    BENCHMARKS_CONTAINER: "juggler"
-    BENCHMARKS_REGISTRY: "$CI_REGISTRY_IMAGE"
-  trigger:
-    project: EIC/benchmarks/physics_benchmarks
-    strategy: depend
   allow_failure: false
 
 pages:
@@ -233,18 +137,3 @@ pages:
   artifacts:
     paths:
     - public
-
-
-cleanup:
-  stage: finalize
-  rules:
-    - if:  '$CI_SERVER_HOST == "eicweb.phy.anl.gov"'
-  rules:
-    - when: always
-  dependencies:
-    - version
-  script:
-    ## remove the pipeline specific export from eicweb if needed
-    - echo "Cleaning up pipeline specific docker tags if needed"
-    - GIT_SSL_NO_VERIFY=1 git clone -b master --depth=1 https://eicweb.phy.anl.gov/containers/eic_container.git
-    - ./eic_container/gitlab-ci/cleanup_registry.sh -i ${BUILD_IMAGE} -r 50 ${INTERNAL_TAG}
