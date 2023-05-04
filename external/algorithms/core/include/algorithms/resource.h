@@ -29,16 +29,15 @@ template <class SvcType> class SvcResource : public NameMixin {
 public:
   SvcResource(std::string_view name) : NameMixin{name, name}, m_service{SvcType::instance()} {}
   const SvcType& service() const { return m_service; }
-  void context(const Context& c) { m_context = c; }
-  const Context& context() const { return m_context; }
-  void scope(const NameMixin* s) { m_context.scope(s); }
-  template <class T = NameMixin> const T* scope() const {
-    return static_cast<const T*>(m_context.scope());
-  }
+  void context(const Context* c) { m_context = c; }
+  const Context* context() const { return m_context; }
+  // Called whenever something changed (e.g. context update)
+  // to be overriden
+  void update() {}
 
 private:
   const SvcType& m_service;
-  Context m_context;
+  const Context* m_context;
 };
 
 // Mixin for Resource handling at the algorithm (or service) level (mirroring the
@@ -54,40 +53,39 @@ public:
   ResourceMixin(const ResourceMixin& rhs) : m_resources(rhs.m_resources.size(), nullptr) {
     for (size_t i = 0; i < m_resources.size(); ++i) {
       m_resources[i] = rhs.m_resources[i]->relocate(this);
-    }
-    std::cout << "GOT HERE - trying access" << std::endl;
-    for (size_t i = 0; i < m_resources.size(); ++i) {
-      std::cout << "original scope: " << rhs.m_resources[i]->context().scope()->name() << std::endl;
-      std::cout << "cloned scope: " << m_resources[i]->context().scope()->name() << std::endl;
+  //    std::cout << m_resources[i] << " " << rhs.m_resources[i] << std::endl;
+  //    m_resources[i]->context(&m_context);
     }
   }
   ResourceMixin& operator=(const ResourceMixin& rhs) = delete;
 
-  void updateResources(const Context& c, const NameMixin* s = nullptr) {
-    for (auto r : m_resources) {
-      r->context(c);
-      if (s) {
-        r->scope(s);
-      }
+  void context(const Context& c, const NameMixin* s = nullptr) {
+    m_context = c;
+    if (s) {
+      m_context.scope(s);
     }
   }
+  const Context& context() const { return m_context; }
 
 private:
-  void registerResource(ResourceHandle& resource) { m_resources.emplace_back(&resource); }
+  void registerResource(gsl::not_null<ResourceHandle*> resource) {
+    m_resources.emplace_back(resource);
+  }
   std::vector<ResourceHandle*> m_resources;
+  Context m_context;
 
 public:
   // Resource wrapper that acts as a handle to the Resource that automatically takes care of Context
-  // management. Implementation is simular to Property
+  // management. Implementation is similar to Property
   class ResourceHandle {
   public:
     ResourceHandle(const ResourceMixin* owner)
-        : m_offset{reinterpret_cast<const char*>(this) - reinterpret_cast<const char*>(owner)} {}
-    virtual void context(const Context&)       = 0;
-    virtual const Context& context() const     = 0;
-    virtual void scope(const NameMixin* owner) = 0;
-    virtual const NameMixin* scope() const     = 0;
-    // return the relocated address for the copied object in the new owner
+        : m_offset{reinterpret_cast<const char*>(this) - reinterpret_cast<const char*>(owner)} {
+      std::cout << "resources handle offset: " << m_offset << std::endl;
+    }
+    virtual void context(const Context*)   = 0;
+    virtual const Context* context() const = 0;
+    // return the relocated address for the copied object in the new instance
     ResourceHandle* relocate(ResourceMixin* clone) const {
       return reinterpret_cast<ResourceHandle*>(reinterpret_cast<char*>(clone) + m_offset);
     }
@@ -101,22 +99,21 @@ public:
     template <class... Args>
     Resource(ResourceMixin* owner, Args&&... args)
         : ResourceHandle{owner}, m_impl{std::forward<Args>(args)...} {
+      std::cout << "Hi, I'm the original and I'm here: " << this << std::endl;
       if (owner) {
-        owner->registerResource(*this);
+        owner->registerResource(this);
+        m_impl.context(&(owner->context()));
       } else {
         throw ResourceError(
             fmt::format("Attempting to create Resource '{}' without valid owner", m_impl.name()));
       }
     }
-    template <class NamedClass, class... Args>
-    Resource(NamedClass* owner, Args&&... args)
-        : Resource{static_cast<ResourceMixin*>(owner), std::forward<Args>(args)...} {
-      m_impl.scope(owner);
+    Resource(const Resource& rhs) : m_impl{rhs.m_impl} {
+      std::cout << "Hi I'm the copy and I'm here: " << this << " compared to previous: " << &rhs
+                << " offset: " << (&rhs - this) << std::endl;
     }
-    void context(const Context& c) final { m_impl.context(c); }
-    const Context& context() const final { return m_impl.context(); }
-    void scope(const NameMixin* owner) final { m_impl.scope(owner); }
-    const NameMixin* scope() const final { return m_impl.scope(); }
+    void context(const Context* c) final { m_impl.context(c); }
+    const Context* context() const final { return m_impl.context(); }
 
     // Indirection operators to work with the underlying resource
     ResourceType* operator->() { return &m_impl; }

@@ -50,14 +50,9 @@ class Generator : public SvcResource<RandomSvc> {
 public:
   Generator() : SvcResource<RandomSvc>{"Generator"} {}
 
-  // Override the resource context function to change the random seed on context change
-  void context(const Context& c) {
-    SvcResource<RandomSvc>::context(c);
-    // Subtracting the global seed is OK as worst case the unsigned integer will wrap
-    // which is OK.
-    m_gen.seed(c.id() - service().seed());
-  }
-  using SvcResource<RandomSvc>::context;
+  // Subtracting the global seed is OK as worst case the unsigned integer will wrap
+  // which is OK.
+  void update() { m_gen.seed(context()->id() - service().seed()); }
 
   template <class Int = int> Int uniform_int(const Int min, const Int max) const {
     std::uniform_int_distribution<Int> d{min, max};

@@ -91,10 +91,9 @@ public:
 
   void initialize() { init(); }
   void execute(const Input& i, const Output& o) const { process(i, o); }
-  void context(const Context& c) { updateResources(c); }
   void executeInContext(const Input& i, const Output& o, const Context& c) const {
     Algorithm clone = *this;
-    clone.updateResources(c, &clone);
+    clone.context(c, &clone);
     clone.execute(i, o);
   }
 
