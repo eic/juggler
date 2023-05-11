@@ -92,10 +92,11 @@ public:
   void initialize() { init(); }
   void execute(const Input& i, const Output& o) const { process(i, o); }
   void executeInContext(const Input& i, const Output& o, const Context& c) const {
-    Algorithm clone = *this;
-    clone.context(c, &clone);
-    clone.execute(i, o);
+    auto copy = clone();
+    copy->context(c, copy.get());
+    copy->execute(i, o);
   }
+  auto clone() const { return std::make_unique<Algorithm>(*this); }
 
   const InputNames& inputNames() const { return m_input_names; }
   const OutputNames& outputNames() const { return m_output_names; }
