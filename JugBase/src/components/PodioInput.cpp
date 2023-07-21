@@ -26,28 +26,23 @@ StatusCode PodioInput::initialize() {
     return StatusCode::FAILURE;
   }
 
-  auto idTable = m_podioDataSvc->getCollectionIDs();
-  for (auto& name : m_collectionNames) {
-    debug() << "Finding collection " << name << " in collection registry." << endmsg;
-    if (!idTable->present(name)) {
-      error() << "Requested product " << name << " not found." << endmsg;
-      return StatusCode::FAILURE;
-    }
-    m_collectionIDs.push_back(idTable->collectionID(name));
-  }
+  // TODO: add an upfront check for existence of data products
+
   return StatusCode::SUCCESS;
 }
 
 StatusCode PodioInput::execute() {
+  [[maybe_unused]]
   size_t cntr = 0;
   // Re-create the collections from ROOT file
-  for (auto& id : m_collectionIDs) {
-    const std::string& collName = m_collectionNames.value().at(cntr++);
-    debug() << "Registering collection to read " << collName << " with id " << id << endmsg;
-    if (m_podioDataSvc->readCollection(collName, id).isFailure()) {
+
+  for (auto& collName : m_collectionNames) {
+    debug() << "Registering collection to read " << collName << endmsg;
+    if (m_podioDataSvc->readCollection(collName).isFailure()) {
       return StatusCode::FAILURE;
     }
   }
+
   // Tell data service that we are done with requested collections
   m_podioDataSvc->endOfRead();
   return StatusCode::SUCCESS;

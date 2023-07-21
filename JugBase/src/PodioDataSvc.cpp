@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright (C) 2022 Whitney Armstrong, Wouter Deconinck, Sylvester Joosten
+// Copyright (C) 2022 Whitney Armstrong, Wouter Deconinck, Sylvester Joosten, Benedikt Hegner
 
 #include "JugBase/PodioDataSvc.h"
 #include "GaudiKernel/IConversionSvc.h"
@@ -26,17 +26,28 @@ StatusCode PodioDataSvc::initialize() {
 
   if (!m_filenames.empty()) {
     if (!m_filenames[0].empty()) {
+      m_reading_from_file = true;
       m_reader.openFiles(m_filenames);
-      m_eventMax = m_reader.getEntries();
-      m_provider.setReader(&m_reader);
-      setCollectionIDs(m_reader.getCollectionIDTable());
+
+      m_eventMax = m_reader.getEntries("events");
 
       if (m_1stEvtEntry != 0) {
-        m_reader.goToEvent(m_1stEvtEntry);
         m_eventMax -= m_1stEvtEntry;
       }
     }
   }
+
+  if (m_reading_from_file) {
+    if (auto metadata = m_reader.readEntry("metadata", 0)) {
+      m_metadataframe = std::move(metadata);
+    } else {
+      warning() << "Reading file without a 'metadata' category." << endmsg;
+      m_metadataframe = podio::Frame();
+    }
+  } else {
+    m_metadataframe = podio::Frame();
+  }
+
   return status;
 }
 /// Service reinitialization
@@ -52,27 +63,40 @@ StatusCode PodioDataSvc::finalize() {
 }
 
 StatusCode PodioDataSvc::clearStore() {
-  for (auto& collNamePair : m_collections) {
-    if (collNamePair.second != nullptr) {
-      collNamePair.second->clear();
-    }
+  // as the frame takes care of the ownership of the podio::Collections,
+  // make sure the DataWrappers don't cause a double delete
+  for(auto wrapper :  m_podio_datawrappers){
+    wrapper->resetData();
   }
-  for (auto& collNamePair : m_readCollections) {
-    if (collNamePair.second != nullptr) {
-      collNamePair.second->clear();
-    }
-  }
+  m_podio_datawrappers.clear();
+
   DataSvc::clearStore().ignore();
-  m_collections.clear();
-  m_readCollections.clear();
   return StatusCode::SUCCESS;
+}
+
+StatusCode PodioDataSvc::i_setRoot(std::string root_path, IOpaqueAddress* pRootAddr) {
+  // create a new frame
+  if (m_reading_from_file) {
+    m_eventframe = podio::Frame(m_reader.readEntry("events", m_eventNum + m_1stEvtEntry));
+  } else {
+    m_eventframe = podio::Frame();
+  }
+  return DataSvc::i_setRoot(root_path, pRootAddr);
+}
+
+StatusCode PodioDataSvc::i_setRoot(std::string root_path, DataObject* pRootObj) {
+  // create a new frame
+  if (m_reading_from_file) {
+    m_eventframe = podio::Frame(m_reader.readEntry("events", m_eventNum + m_1stEvtEntry));
+  } else {
+    m_eventframe = podio::Frame();
+  }
+  return DataSvc::i_setRoot(root_path, pRootObj);
 }
 
 void PodioDataSvc::endOfRead() {
   if (m_eventMax != -1) {
-    m_provider.clearCaches();
-    m_reader.endOfEvent();
-    if (m_eventNum++ > m_eventMax) {
+    if (m_eventNum++ >= m_eventMax-1) {  // we start counting at 0 thus the -1.
       info() << "Reached end of file with event " << m_eventMax << endmsg;
       IEventProcessor* eventProcessor = nullptr;
       auto ret = service("ApplicationMgr", eventProcessor);
@@ -83,29 +107,24 @@ void PodioDataSvc::endOfRead() {
   }
 }
 
-void PodioDataSvc::setCollectionIDs(CollectionIDTable_ptr collectionIds) {
-  m_collectionIDs = collectionIds;
-}
-
 /// Standard Constructor
 PodioDataSvc::PodioDataSvc(const std::string& name, ISvcLocator* svc)
-: DataSvc(name, svc), m_collectionIDs(new podio::CollectionIDTable()) {
-  m_eventDataTree = new TTree("events", "Events tree");
+: DataSvc(name, svc) {
 }
 
-StatusCode PodioDataSvc::readCollection(const std::string& collectionName, int collectionID) {
-  podio::CollectionBase* collection(nullptr);
-  m_provider.get(collectionID, collection);
-  if (collection->isSubsetCollection()) {
-    return StatusCode::SUCCESS;
+/// Standard Destructor
+PodioDataSvc::~PodioDataSvc() {}
+
+StatusCode PodioDataSvc::readCollection(const std::string& collName) {
+  const podio::CollectionBase* collection(nullptr);
+  collection = m_eventframe.get(collName);
+  if (collection == nullptr){
+    error() << "Collection " << collName << " does not exist." << endmsg;
   }
   auto* wrapper = new DataWrapper<podio::CollectionBase>;
-  const int id = m_collectionIDs->add(collectionName);
-  collection->setID(id);
-  collection->prepareAfterRead();
   wrapper->setData(collection);
-  m_readCollections.emplace_back(std::make_pair(collectionName, collection));
-  return DataSvc::registerObject("/Event", "/" + collectionName, wrapper);
+  m_podio_datawrappers.push_back(wrapper);
+  return DataSvc::registerObject("/Event", "/" + collName, wrapper);
 }
 
 StatusCode PodioDataSvc::registerObject(std::string_view parentPath, std::string_view fullPath, DataObject* pObject) {
@@ -115,9 +134,9 @@ StatusCode PodioDataSvc::registerObject(std::string_view parentPath, std::string
     if (coll != nullptr) {
       const size_t pos = fullPath.find_last_of("/");
       const std::string shortPath(fullPath.substr(pos + 1, fullPath.length()));
-      const int id = m_collectionIDs->add(shortPath);
-      coll->setID(id);
-      m_collections.emplace_back(std::make_pair(shortPath, coll));
+      // Attention: this passes the ownership of the data to the frame
+      m_eventframe.put(std::unique_ptr<podio::CollectionBase>(coll), shortPath);
+      m_podio_datawrappers.push_back(wrapper);
     }
   }
   return DataSvc::registerObject(parentPath, fullPath, pObject);

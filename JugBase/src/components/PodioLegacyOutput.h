@@ -1,25 +1,25 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright (C) 2022 Whitney Armstrong, Wouter Deconinck, Benedikt Hegner
+// Copyright (C) 2023 Benedikt Hegner
 
-#ifndef JUGBASE_PODIOOUTPUT_H
-#define JUGBASE_PODIOOUTPUT_H
+#ifndef JUGBASE_PODIOLEGACYOUTPUT_H
+#define JUGBASE_PODIOLEGACYOUTPUT_H
 
-#include "JugBase/KeepDropSwitch.h"
 #include "GaudiAlg/GaudiAlgorithm.h"
+#include "JugBase/KeepDropSwitch.h"
 #include "podio/CollectionBase.h"
-#include "podio/ROOTFrameWriter.h"
+
+#include "TTree.h"
 
 #include <vector>
-#include <gsl/gsl>
 
 // forward declarations
-class PodioDataSvc;
+class TFile;
+class PodioLegacyDataSvc;
 
-class PodioOutput : public GaudiAlgorithm {
-
+class PodioLegacyOutput : public GaudiAlgorithm {
 public:
   /// Constructor.
-  PodioOutput(const std::string& name, ISvcLocator* svcLoc);
+  PodioLegacyOutput(const std::string& name, ISvcLocator* svcLoc);
 
   /// Initialization of PodioOutput. Acquires the data service, creates trees and root file.
   virtual StatusCode initialize();
@@ -30,6 +30,8 @@ public:
   virtual StatusCode finalize();
 
 private:
+  void resetBranches(const std::vector<std::pair<std::string, podio::CollectionBase*>>& collections);
+  void createBranches(const std::vector<std::pair<std::string, podio::CollectionBase*>>& collections);
   /// First event or not
   bool m_firstEvent;
   /// Root file name the output is written to
@@ -37,17 +39,24 @@ private:
   /// Commands which output is to be kept
   Gaudi::Property<std::vector<std::string>> m_outputCommands{
       this, "outputCommands", {"keep *"}, "A set of commands to declare which collections to keep or drop."};
-  Gaudi::Property<std::string> m_filenameRemote{
-      this, "filenameRemote", "", "An optional file path to copy the outputfile to."};
+  Gaudi::Property<std::string> m_filenameRemote{this, "remoteFilename", "",
+                                                "An optional file path to copy the outputfile to."};
   /// Switch for keeping or dropping outputs
   KeepDropSwitch m_switch;
-  PodioDataSvc* m_podioDataSvc;
-  /// The actual ROOT frame writer
-  std::unique_ptr<podio::ROOTFrameWriter> m_framewriter;
+  /// Needed for collection ID table
+  PodioLegacyDataSvc* m_podioLegacyDataSvc;
+  /// The actual ROOT file
+  std::unique_ptr<TFile> m_file;
+  /// The tree to be filled with collections
+  TTree* m_datatree;
+  /// The tree to be filled with meta data
+  TTree* m_metadatatree;
+  TTree* m_runMDtree;
+  TTree* m_evtMDtree;
+  TTree* m_colMDtree;
+
   /// The stored collections
   std::vector<podio::CollectionBase*> m_storedCollections;
-  /// The collections to write out
-  std::vector<std::string> m_collection_names_to_write;
 };
 
-#endif  // JUGBASE_PODIOOUTPUT_H
+#endif  // JUGBASE_PODIOLEGACYOUTPUT_H

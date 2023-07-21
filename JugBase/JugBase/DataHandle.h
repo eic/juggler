@@ -6,6 +6,7 @@
 
 #include "JugBase/DataWrapper.h"
 #include "JugBase/PodioDataSvc.h"
+#include "JugBase/PodioLegacyDataSvc.h"
 
 #include <GaudiKernel/AlgTool.h>
 #include <GaudiKernel/Algorithm.h>
@@ -17,12 +18,6 @@
 #include <TTree.h>
 
 #include <type_traits>
-
-namespace Jug {
-using VecULong    = std::vector<unsigned long>;
-using VecVecULong = std::vector<std::vector<unsigned long>>;
-}
-
 
 /** Specialisation of the Gaudi DataHandle
  * for use with podio collections.
@@ -44,7 +39,7 @@ public:
   DataHandle(DataObjID& descriptor, Gaudi::DataHandle::Mode a, IDataHandleHolder* fatherAlg);
 
   DataHandle(const std::string& k, Gaudi::DataHandle::Mode a, IDataHandleHolder* fatherAlg);
-   
+
    ///Retrieve object from transient data store
   const T* get();
 
@@ -52,6 +47,8 @@ public:
    * Register object in transient store
    */
   void put(T* object);
+
+  T* put(std::unique_ptr<T> object);
 
   /**
   * Create and register object in transient store
@@ -77,49 +74,59 @@ DataHandle<T>::~DataHandle() {
 template <typename T>
 DataHandle<T>::DataHandle(DataObjID& descriptor, Gaudi::DataHandle::Mode a, IDataHandleHolder* fatherAlg)
     : DataObjectHandle<DataWrapper<T>>(descriptor, a, fatherAlg), m_eds("EventDataSvc", "DataHandle") {
-      
+
 }
 /// The DataHandle::Writer constructor is used to create the corresponding branch in the output file
 template <typename T>
 DataHandle<T>::DataHandle(const std::string& descriptor, Gaudi::DataHandle::Mode a, IDataHandleHolder* fatherAlg)
     : DataObjectHandle<DataWrapper<T>>(descriptor, a, fatherAlg), m_eds("EventDataSvc", "DataHandle") {
-
   if (a == Gaudi::DataHandle::Writer) {
     auto ret = m_eds.retrieve();
     // FIXME deal with errors
-    PodioDataSvc* pds;
-    pds = dynamic_cast<PodioDataSvc*>( m_eds.get());
     m_dataPtr = nullptr;
-  if (nullptr != pds) {
-    if (std::is_convertible<T*,podio::CollectionBase*>::value) {
-       // case 1: T is a podio collection
-       // for this case creation of branches is still handled in PodioOutput
-       // (but could be moved here in the future) 
-    } else if constexpr (std::is_integral_v<T>) {
-       // case 2: T is some integer type
-       // the call signature for TTree Branch is different for primitive types
-       // in particular, we pass the pointer, not the adress of the pointer
-       // and have to append a char indicating type (see TTree documentation)
-       // therefore  space needs to be allocated for the integer 
-       m_dataPtr = new T();
-       TTree* tree = pds->eventDataTree();
-       tree->Branch(descriptor.c_str(),  m_dataPtr, (descriptor + "/I").c_str());
-    } else if constexpr (std::is_floating_point_v<T>) {
-       // case 3: T is some floating point type
-       // similar case 2, distinguish floats and doubles by size
-       m_dataPtr = new T();
-       TTree* tree = pds->eventDataTree();
-       if (sizeof(T) > 4) {
-         tree->Branch(descriptor.c_str(),  m_dataPtr, (descriptor + "/D").c_str());
-       } else {
-         tree->Branch(descriptor.c_str(),  m_dataPtr, (descriptor + "/F").c_str());
-       }
+    PodioDataSvc* podio_data_service;
+
+    podio_data_service = dynamic_cast<PodioDataSvc*>(m_eds.get());
+    if (nullptr != podio_data_service) {
+      if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>) {
+        m_dataPtr = new T();
+      }
     } else {
-       // case 4: T is any other type (for which exists a root dictionary,
-       // otherwise i/o will fail)
-       // this includes std::vectors of ints, floats
-       TTree* tree = pds->eventDataTree();
-       tree->Branch(descriptor.c_str(),  &m_dataPtr);
+
+      // This is the legacy implementation kept for a transition period
+      PodioLegacyDataSvc* plds;
+      plds       = dynamic_cast<PodioLegacyDataSvc*>(m_eds.get());
+      if (nullptr != plds) {
+        if constexpr (std::is_convertible<T*, podio::CollectionBase*>::value) {
+          // case 1: T is a podio collection
+          // for this case creation of branches is still handled in PodioOutput
+          // (but could be moved here in the future)
+        } else if constexpr (std::is_integral_v<T>) {
+          // case 2: T is some integer type
+          // the call signature for TTree Branch is different for primitive types
+          // in particular, we pass the pointer, not the adress of the pointer
+          // and have to append a char indicating type (see TTree documentation)
+          // therefore  space needs to be allocated for the integer
+          m_dataPtr = new T();
+          TTree* tree = plds->eventDataTree();
+          tree->Branch(descriptor.c_str(),  m_dataPtr, (descriptor + "/I").c_str());
+        } else if constexpr (std::is_floating_point_v<T>) {
+          // case 3: T is some floating point type
+          // similar case 2, distinguish floats and doubles by size
+          m_dataPtr = new T();
+          TTree* tree = plds->eventDataTree();
+          if (sizeof(T) > 4) {
+            tree->Branch(descriptor.c_str(),  m_dataPtr, (descriptor + "/D").c_str());
+          } else {
+            tree->Branch(descriptor.c_str(),  m_dataPtr, (descriptor + "/F").c_str());
+          }
+        } else {
+          // case 4: T is any other type (for which exists a root dictionary,
+          // otherwise i/o will fail)
+          // this includes std::vectors of ints, floats
+          TTree* tree = plds->eventDataTree();
+          tree->Branch(descriptor.c_str(),  &m_dataPtr);
+        }
       }
     }
   }
@@ -178,8 +185,15 @@ void DataHandle<T>::put(T* objectp) {
   }
   dw->setData(objectp);
   DataObjectHandle<DataWrapper<T>>::put(std::move(dw));
-
 }
+
+//---------------------------------------------------------------------------
+template <typename T>
+T* DataHandle<T>::put(std::unique_ptr<T> objectp) {
+  put(objectp.get());
+  return objectp.release();
+}
+
 //---------------------------------------------------------------------------
 /**
  * Create the collection, put it in the DataObjectHandle and return the
@@ -195,14 +209,14 @@ T* DataHandle<T>::createAndPut() {
 
 // temporary to allow property declaration
 namespace Gaudi {
-template <class T>
-class Property<::DataHandle<T>&> : public ::DataHandleProperty {
-public:
-  Property(const std::string& name, ::DataHandle<T>& value) : ::DataHandleProperty(name, value) {}
+  template <class T>
+  class Property<::DataHandle<T>&> : public ::DataHandleProperty {
+  public:
+    Property(const std::string& name, ::DataHandle<T>& value) : ::DataHandleProperty(name, value) {}
 
-  /// virtual Destructor
-  virtual ~Property() {}
-};
-}
+    /// virtual Destructor
+    virtual ~Property() {}
+  };
+} // namespace Gaudi
 
 #endif

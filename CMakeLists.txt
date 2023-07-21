@@ -54,7 +54,7 @@ find_package(Microsoft.GSL CONFIG)
 find_package(EDM4EIC REQUIRED)
 find_package(EDM4HEP 0.4.1 REQUIRED)
 
-find_package(podio 0.14.1 REQUIRED)
+find_package(podio 0.16.3 REQUIRED)
 add_definitions("-Dpodio_VERSION_MAJOR=${podio_VERSION_MAJOR}")
 add_definitions("-Dpodio_VERSION_MINOR=${podio_VERSION_MINOR}")
 add_definitions("-Dpodio_VERSION_PATCH=${podio_VERSION_PATCH}")
