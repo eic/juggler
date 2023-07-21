@@ -79,7 +79,8 @@ eic_container:
   needs:
     - version
   variables:
-    JUGGLER_VERSION: "${VERSION}"
+    VERSION: "${VERSION}"
+    JUGGLER_VERSION: "${CI_COMMIT_REF_NAME}"
   trigger:
     project: containers/eic_container
     strategy: depend
