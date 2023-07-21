@@ -79,7 +79,7 @@ eic_container:
   needs:
     - version
   variables:
-    VERSION: "${VERSION}"
+    JUGGLER_VERSION: "${VERSION}"
   trigger:
     project: containers/eic_container
     strategy: depend
