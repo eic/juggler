@@ -8,7 +8,6 @@
 
 #include <stdexcept>
 #include <string>
-#include "edm4hep/Geant4Particle.h"
 
 #include "edm4eic/TrackerHitCollection.h"
 

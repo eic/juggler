@@ -17,7 +17,7 @@ gaudi_add_library(JugBase
   Gaudi::GaudiKernel Gaudi::GaudiAlgLib
   podio::podioRootIO
   ROOT::Core ROOT::RIO ROOT::Tree
-  DD4hep::DDG4IO DD4hep::DDRec
+  DD4hep::DDRec
   ActsCore ActsPluginDD4hep
 )
 
