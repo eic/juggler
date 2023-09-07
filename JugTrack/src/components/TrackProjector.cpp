@@ -179,8 +179,10 @@ namespace Jug::Reco {
           const float pathLength = static_cast<float>(trackstate.pathLength());
           const float pathLengthError = 0;
 
+#if EDM4EIC_VERSION_MAJOR >= 3
           uint64_t surface = 0; // trackstate.referenceSurface().geometryId().value(); FIXME - ASAN is not happy with this
           uint32_t system = 0;
+#endif
 
           // Store track point
           track_segment.addToPoints({
