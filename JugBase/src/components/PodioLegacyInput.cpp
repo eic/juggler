@@ -5,6 +5,7 @@
 
 #include "TFile.h"
 #include "TROOT.h"
+#include "podio/podioVersion.h"
 
 #include "JugBase/DataWrapper.h"
 #include "JugBase/PodioLegacyDataSvc.h"
@@ -29,7 +30,11 @@ StatusCode PodioLegacyInput::initialize() {
       error() << "Requested product " << name << " not found." << endmsg;
       return StatusCode::FAILURE;
     }
+#if podio_VERSION >= PODIO_VERSION(0, 17, 0)
+    m_collectionIDs.push_back(idTable->collectionID(name).value());
+#else
     m_collectionIDs.push_back(idTable->collectionID(name));
+#endif
   }
   return StatusCode::SUCCESS;
 }

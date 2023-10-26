@@ -7,6 +7,7 @@
 #include "TFile.h"
 #include "JugBase/PodioLegacyDataSvc.h"
 #include "rootUtils.h"
+#include "podio/podioVersion.h"
 
 DECLARE_COMPONENT(PodioLegacyOutput)
 
@@ -104,7 +105,11 @@ void PodioLegacyOutput::createBranches(const std::vector<std::pair<std::string, 
       }
     }
 
+#if podio_VERSION >= PODIO_VERSION(0, 17, 0)
+    const auto collID = m_podioLegacyDataSvc->getCollectionIDs()->collectionID(collName).value();
+#else
     const auto collID = m_podioLegacyDataSvc->getCollectionIDs()->collectionID(collName);
+#endif
     // No check necessary, only registered collections possible
     auto       coll     = collNamePair.second;
     const auto collType = std::string(coll->getValueTypeName()) + "Collection";
