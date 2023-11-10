@@ -5,7 +5,7 @@
 #include <cmath>
 #include <fmt/format.h>
 
-#include "Gaudi/Algorithm.h"
+#include "GaudiAlg/GaudiAlgorithm.h"
 #include "GaudiAlg/GaudiTool.h"
 #include "GaudiAlg/Producer.h"
 #include "GaudiAlg/Transformer.h"
