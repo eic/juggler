@@ -33,7 +33,7 @@
 
 // Event Model related classes
 #include "edm4eic/CalorimeterHitCollection.h"
-#include "edm4eic/vector_utils.h"
+#include "edm4hep/utils/vector_utils.h"
 
 using namespace Gaudi::Units;
 using Point3D = ROOT::Math::XYZPoint;
@@ -97,8 +97,8 @@ public:
 
     for (const auto h : *m_inputHitCollection.get()) {
       auto bins =
-          std::make_pair(static_cast<int64_t>(pos2bin(edm4eic::eta(h.getPosition()), gridSizes[0], 0.)),
-                         static_cast<int64_t>(pos2bin(edm4eic::angleAzimuthal(h.getPosition()), gridSizes[1], 0.)));
+          std::make_pair(static_cast<int64_t>(pos2bin(edm4hep::utils::eta(h.getPosition()), gridSizes[0], 0.)),
+                         static_cast<int64_t>(pos2bin(edm4hep::utils::angleAzimuthal(h.getPosition()), gridSizes[1], 0.)));
       merged_hits[bins].push_back(h);
     }
 
@@ -108,10 +108,10 @@ public:
       hit.setCellID(ref.getCellID());
       // TODO, we can do timing cut to reject noises
       hit.setTime(ref.getTime());
-      double r   = edm4eic::magnitude(ref.getPosition());
+      double r   = edm4hep::utils::magnitude(ref.getPosition());
       double eta = bin2pos(bins.first, gridSizes[0], 0.);
       double phi = bin2pos(bins.second, gridSizes[1], 1.);
-      hit.setPosition(edm4eic::sphericalToVector(r, edm4eic::etaToAngle(eta), phi));
+      hit.setPosition(edm4hep::utils::sphericalToVector(r, edm4hep::utils::etaToAngle(eta), phi));
       hit.setDimension({static_cast<float>(gridSizes[0]), static_cast<float>(gridSizes[1]), 0.});
       // merge energy
       hit.setEnergy(0.);

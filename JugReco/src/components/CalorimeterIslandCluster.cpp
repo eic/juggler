@@ -37,7 +37,7 @@
 #include "edm4eic/CalorimeterHitCollection.h"
 #include "edm4eic/ClusterCollection.h"
 #include "edm4eic/ProtoClusterCollection.h"
-#include "edm4eic/vector_utils.h"
+#include "edm4hep/utils/vector_utils.h"
 #include "edm4hep/Vector3f.h"
 #include "edm4hep/Vector2f.h"
 
@@ -94,10 +94,10 @@ static Vector2f globalDistRPhi(const CaloHit& h1, const CaloHit& h2) {
   using vector_type = decltype(Vector2f::a);
   return {
     static_cast<vector_type>(
-      edm4eic::magnitude(h1.getPosition()) - edm4eic::magnitude(h2.getPosition())
+      edm4hep::utils::magnitude(h1.getPosition()) - edm4hep::utils::magnitude(h2.getPosition())
     ),
     static_cast<vector_type>(
-      edm4eic::angleAzimuthal(h1.getPosition()) - edm4eic::angleAzimuthal(h2.getPosition())
+      edm4hep::utils::angleAzimuthal(h1.getPosition()) - edm4hep::utils::angleAzimuthal(h2.getPosition())
     )
   };
 }
@@ -106,10 +106,10 @@ static Vector2f globalDistEtaPhi(const CaloHit& h1,
   using vector_type = decltype(Vector2f::a);
   return {
     static_cast<vector_type>(
-      edm4eic::eta(h1.getPosition()) - edm4eic::eta(h2.getPosition())
+      edm4hep::utils::eta(h1.getPosition()) - edm4hep::utils::eta(h2.getPosition())
     ),
     static_cast<vector_type>(
-      edm4eic::angleAzimuthal(h1.getPosition()) - edm4eic::angleAzimuthal(h2.getPosition())
+      edm4hep::utils::angleAzimuthal(h1.getPosition()) - edm4hep::utils::angleAzimuthal(h2.getPosition())
     )
   };
 }
@@ -272,7 +272,7 @@ public:
               // different sector, local coordinates do not work, using global coordinates
             } else {
               // sector may have rotation (barrel), so z is included
-              return (edm4eic::magnitude(h1.getPosition() - h2.getPosition()) <= sectorDist);
+              return (edm4hep::utils::magnitude(h1.getPosition() - h2.getPosition()) <= sectorDist);
             }
           };
 
@@ -447,7 +447,7 @@ private:
       for (const auto& chit : maxima) {
         double dist_ref = chit.getDimension().x;
         double energy   = chit.getEnergy();
-        double dist     = edm4eic::magnitude(hitsDist(chit, hit));
+        double dist     = edm4hep::utils::magnitude(hitsDist(chit, hit));
         weights[j]      = std::exp(-dist / dist_ref) * energy;
         j += 1;
       }

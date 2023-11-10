@@ -18,7 +18,7 @@
 #include <fmt/ranges.h>
 
 // Event Model related classes
-#include "edm4eic/vector_utils.h"
+#include "edm4hep/utils/vector_utils.h"
 
 namespace algorithms::calorimetry {
 namespace {
@@ -124,7 +124,7 @@ void ClusterRecoCoG::process(const ClusterRecoCoG::Input& input,
         debug() << "corresponding mc hit energy " << mchit->getEnergy() << " at index "
                 << mchit->getObjectID().index << endmsg;
         debug() << "from MCParticle index " << mcp.getObjectID().index << ", PDG " << mcp.getPDG()
-                << ", " << edm4eic::magnitude(mcp.getMomentum()) << endmsg;
+                << ", " << edm4hep::utils::magnitude(mcp.getMomentum()) << endmsg;
       }
 
       // set association
@@ -174,7 +174,7 @@ edm4eic::MutableCluster ClusterRecoCoG::reconstruct(const edm4eic::ProtoCluster&
     totalE += energy;
     if (energy > maxE) {
     }
-    const float eta = edm4eic::eta(hit.getPosition());
+    const float eta = edm4hep::utils::eta(hit.getPosition());
     if (eta < minHitEta) {
       minHitEta = eta;
     }
@@ -206,14 +206,14 @@ edm4eic::MutableCluster ClusterRecoCoG::reconstruct(const edm4eic::ProtoCluster&
 
   // Optionally constrain the cluster to the hit eta values
   if (m_enableEtaBounds) {
-    const bool overflow  = (edm4eic::eta(cl.getPosition()) > maxHitEta);
-    const bool underflow = (edm4eic::eta(cl.getPosition()) < minHitEta);
+    const bool overflow  = (edm4hep::utils::eta(cl.getPosition()) > maxHitEta);
+    const bool underflow = (edm4hep::utils::eta(cl.getPosition()) < minHitEta);
     if (overflow || underflow) {
       const double newEta   = overflow ? maxHitEta : minHitEta;
-      const double newTheta = edm4eic::etaToAngle(newEta);
-      const double newR     = edm4eic::magnitude(cl.getPosition());
-      const double newPhi   = edm4eic::angleAzimuthal(cl.getPosition());
-      cl.setPosition(edm4eic::sphericalToVector(newR, newTheta, newPhi));
+      const double newTheta = edm4hep::utils::etaToAngle(newEta);
+      const double newR     = edm4hep::utils::magnitude(cl.getPosition());
+      const double newPhi   = edm4hep::utils::angleAzimuthal(cl.getPosition());
+      cl.setPosition(edm4hep::utils::sphericalToVector(newR, newTheta, newPhi));
       if (aboveDebugThreshold()) {
         debug() << "Bound cluster position to contributing hits due to "
                 << (overflow ? "overflow" : "underflow") << endmsg;
@@ -225,8 +225,8 @@ edm4eic::MutableCluster ClusterRecoCoG::reconstruct(const edm4eic::ProtoCluster&
 
   // best estimate on the cluster direction is the cluster position
   // for simple 2D CoG clustering
-  cl.setIntrinsicTheta(edm4eic::anglePolar(cl.getPosition()));
-  cl.setIntrinsicPhi(edm4eic::angleAzimuthal(cl.getPosition()));
+  cl.setIntrinsicTheta(edm4hep::utils::anglePolar(cl.getPosition()));
+  cl.setIntrinsicPhi(edm4hep::utils::angleAzimuthal(cl.getPosition()));
   // TODO errors
 
   // Calculate radius

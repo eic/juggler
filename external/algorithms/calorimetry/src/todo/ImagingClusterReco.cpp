@@ -35,7 +35,7 @@
 #include "edm4eic/ClusterCollection.h"
 #include "edm4eic/MCRecoClusterParticleAssociationCollection.h"
 #include "edm4eic/ProtoClusterCollection.h"
-#include "edm4eic/vector_utils.h"
+#include "edm4hep/utils/vector_utils.h"
 
 using namespace Gaudi::Units;
 using namespace Eigen;
@@ -251,7 +251,7 @@ private:
     // Calculate radius as the standard deviation of the hits versus the cluster center
     double radius = 0.;
     for (const auto& [hit, weight] : hits) {
-      radius += std::pow(edm4eic::magnitude(hit.getPosition() - layer.getPosition()), 2);
+      radius += std::pow(edm4hep::utils::magnitude(hit.getPosition() - layer.getPosition()), 2);
     }
     layer.addToShapeParameters(std::sqrt(radius / layer.getNhits()));
     // TODO Skewedness
@@ -282,9 +282,9 @@ private:
       const double energyWeight = hit.getEnergy() * weight;
       time += hit.getTime() * energyWeight;
       timeError += std::pow(hit.getTimeError() * energyWeight, 2);
-      meta += edm4eic::eta(hit.getPosition()) * energyWeight;
-      mphi += edm4eic::angleAzimuthal(hit.getPosition()) * energyWeight;
-      r = std::min(edm4eic::magnitude(hit.getPosition()), r);
+      meta += edm4hep::utils::eta(hit.getPosition()) * energyWeight;
+      mphi += edm4hep::utils::angleAzimuthal(hit.getPosition()) * energyWeight;
+      r = std::min(edm4hep::utils::magnitude(hit.getPosition()), r);
       cluster.addToHits(hit);
     }
     cluster.setEnergy(energy);
@@ -292,13 +292,13 @@ private:
     cluster.setTime(time / energy);
     cluster.setTimeError(std::sqrt(timeError) / energy);
     cluster.setNhits(hits.size());
-    cluster.setPosition(edm4eic::sphericalToVector(r, edm4eic::etaToAngle(meta / energy), mphi / energy));
+    cluster.setPosition(edm4hep::utils::sphericalToVector(r, edm4hep::utils::etaToAngle(meta / energy), mphi / energy));
 
     // shower radius estimate (eta-phi plane)
     double radius = 0.;
     for (const auto& hit : hits) {
-      radius += pow2(edm4eic::eta(hit.getPosition()) - edm4eic::eta(cluster.getPosition())) +
-                pow2(edm4eic::angleAzimuthal(hit.getPosition()) - edm4eic::angleAzimuthal(cluster.getPosition()));
+      radius += pow2(edm4hep::utils::eta(hit.getPosition()) - edm4hep::utils::eta(cluster.getPosition())) +
+                pow2(edm4hep::utils::angleAzimuthal(hit.getPosition()) - edm4hep::utils::angleAzimuthal(cluster.getPosition()));
     }
     cluster.addToShapeParameters(std::sqrt(radius / cluster.getNhits()));
     // Skewedness not calculated TODO

@@ -21,7 +21,7 @@
 // Event Model related classes
 #include "edm4eic/ReconstructedParticleCollection.h"
 #include "edm4eic/TrackerHitCollection.h"
-#include <edm4eic/vector_utils.h>
+#include <edm4hep/utils/vector_utils.h>
 
 namespace Jug::Reco {
 
@@ -258,7 +258,7 @@ public:
       edm4eic::MutableReconstructedParticle rpTrack;
       rpTrack.setType(0);
       rpTrack.setMomentum({prec});
-      rpTrack.setEnergy(std::hypot(edm4eic::magnitude(rpTrack.getMomentum()), .938272));
+      rpTrack.setEnergy(std::hypot(edm4hep::utils::magnitude(rpTrack.getMomentum()), .938272));
       rpTrack.setReferencePoint({0, 0, 0});
       rpTrack.setCharge(1);
       rpTrack.setMass(.938272);

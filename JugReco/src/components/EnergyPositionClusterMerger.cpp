@@ -16,7 +16,7 @@
 
 // Event Model related classes
 #include "edm4eic/ClusterCollection.h"
-#include "edm4eic/vector_utils.h"
+#include "edm4hep/utils/vector_utils.h"
 
 using namespace Gaudi::Units;
 
@@ -83,7 +83,7 @@ public:
         const auto& ec = e_clus[ie];
         // 1. stop if not within tolerance
         //    (make sure to handle rollover of phi properly)
-        double dphi = edm4eic::angleAzimuthal(pc.getPosition()) - edm4eic::angleAzimuthal(ec.getPosition());
+        double dphi = edm4hep::utils::angleAzimuthal(pc.getPosition()) - edm4hep::utils::angleAzimuthal(ec.getPosition());
         if (std::abs(dphi) > M_PI) {
           dphi = std::abs(dphi) - M_PI;
         }
@@ -120,13 +120,13 @@ public:
         if (msgLevel(MSG::DEBUG)) {
           debug() << fmt::format("Matched position cluster {} with energy cluster {}\n", pc.id(), ec.id()) << endmsg;
           debug() << fmt::format("  - Position cluster: (E: {}, phi: {}, z: {})", pc.getEnergy(),
-                                 edm4eic::angleAzimuthal(pc.getPosition()), pc.getPosition().z)
+                                 edm4hep::utils::angleAzimuthal(pc.getPosition()), pc.getPosition().z)
                   << endmsg;
           debug() << fmt::format("  - Energy cluster: (E: {}, phi: {}, z: {})", ec.getEnergy(),
-                                 edm4eic::angleAzimuthal(ec.getPosition()), ec.getPosition().z)
+                                 edm4hep::utils::angleAzimuthal(ec.getPosition()), ec.getPosition().z)
                   << endmsg;
           debug() << fmt::format("  ---> Merged cluster: (E: {}, phi: {}, z: {})", new_clus.getEnergy(),
-                                 edm4eic::angleAzimuthal(new_clus.getPosition()), new_clus.getPosition().z)
+                                 edm4hep::utils::angleAzimuthal(new_clus.getPosition()), new_clus.getPosition().z)
                   << endmsg;
         }
       }

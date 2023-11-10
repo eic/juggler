@@ -4,7 +4,7 @@
 #include <algorithms/truth/MC2SmearedParticle.h>
 
 #include <cmath>
-#include <edm4eic/vector_utils.h>
+#include <edm4hep/utils/vector_utils.h>
 
 namespace algorithms::truth {
 

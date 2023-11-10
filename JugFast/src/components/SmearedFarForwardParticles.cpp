@@ -17,7 +17,7 @@
 #include "edm4hep/MCParticleCollection.h"
 #include "edm4eic/MCRecoParticleAssociationCollection.h"
 #include "edm4eic/ReconstructedParticleCollection.h"
-#include "edm4eic/vector_utils.h"
+#include "edm4hep/utils/vector_utils.h"
 
 namespace {
 enum DetectorTags { kTagB0 = 1, kTagRP = 2, kTagOMD = 3, kTagZDC = 4 };
@@ -160,8 +160,8 @@ private:
         continue;
       }
       // only 0-->4.5 mrad
-      const double mom_ion_theta = edm4eic::anglePolar(mom_ion);
-      const double mom_ion_phi   = edm4eic::angleAzimuthal(mom_ion);
+      const double mom_ion_theta = edm4hep::utils::anglePolar(mom_ion);
+      const double mom_ion_phi   = edm4hep::utils::angleAzimuthal(mom_ion);
       if (mom_ion_theta > 4.5 / 1000.) {
         continue;
       }
@@ -192,7 +192,7 @@ private:
       const double phis = phi + dphi;
       const double moms = sqrt(Es * Es - part.getMass() * part.getMass());
       // now cast back into float
-      const auto mom3s_ion = edm4eic::sphericalToVector(moms, ths, phis);
+      const auto mom3s_ion = edm4hep::utils::sphericalToVector(moms, ths, phis);
       const auto mom3s     = rotateIonToLabDirection(mom3s_ion);
       RecPart rec_part;
       rec_part.setType(kTagZDC);
@@ -220,8 +220,8 @@ private:
         debug()
             << fmt::format(
                    "Found ZDC particle: {}, Etrue: {}, Emeas: {}, ptrue: {}, pmeas: {}, theta_true: {}, theta_meas: {}",
-                   part.getPDG(), E, rec_part.getEnergy(), part_p_mag, edm4eic::magnitude(rec_part.getMomentum()), th,
-                   edm4eic::anglePolar(rec_part.getMomentum()))
+                   part.getPDG(), E, rec_part.getEnergy(), part_p_mag, edm4hep::utils::magnitude(rec_part.getMomentum()), th,
+                   edm4hep::utils::anglePolar(rec_part.getMomentum()))
             << endmsg;
       }
     }
@@ -245,7 +245,7 @@ private:
       }
       // only 6-->20 mrad
       const auto mom_ion = removeCrossingAngle(part.getMomentum()); // rotateLabToIonDirection(part.getMomentum());
-      const auto mom_ion_theta = edm4eic::anglePolar(mom_ion);
+      const auto mom_ion_theta = edm4hep::utils::anglePolar(mom_ion);
       if (mom_ion_theta < m_thetaMinB0 || mom_ion_theta > m_thetaMaxB0) {
         continue;
       }
@@ -259,14 +259,14 @@ private:
       rc.emplace_back(rc_part, assoc);
       if (msgLevel(MSG::DEBUG)) {
         const auto& part_p      = part.getMomentum();
-        const auto part_p_pt    = edm4eic::magnitudeTransverse(part_p);
-        const auto part_p_mag   = edm4eic::magnitude(part_p);
-        const auto part_p_theta = edm4eic::anglePolar(part_p);
+        const auto part_p_pt    = edm4hep::utils::magnitudeTransverse(part_p);
+        const auto part_p_mag   = edm4hep::utils::magnitude(part_p);
+        const auto part_p_theta = edm4hep::utils::anglePolar(part_p);
         debug() << fmt::format("Found B0 particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
-                               part.getPDG(), part_p_mag, edm4eic::magnitude(rc_part.momentum()), part_p_pt,
-                               edm4eic::magnitudeTransverse(rc_part.momentum()), part_p_theta,
-                               edm4eic::anglePolar(rc_part.momentum()))
+                               part.getPDG(), part_p_mag, edm4hep::utils::magnitude(rc_part.momentum()), part_p_pt,
+                               edm4hep::utils::magnitudeTransverse(rc_part.momentum()), part_p_theta,
+                               edm4hep::utils::anglePolar(rc_part.momentum()))
                 << endmsg;
       }
     }
@@ -288,7 +288,7 @@ private:
         continue;
       }
       const auto mom_ion = removeCrossingAngle(part.getMomentum()); // rotateLabToIonDirection(part.getMomentum());
-      const auto mom_ion_theta = edm4eic::anglePolar(mom_ion);
+      const auto mom_ion_theta = edm4hep::utils::anglePolar(mom_ion);
       if (mom_ion_theta < m_thetaMinRP || mom_ion_theta > m_thetaMaxRP ||
           mom_ion.z < m_pMinRigidityRP * ionBeamEnergy) {
         continue;
@@ -298,14 +298,14 @@ private:
       rc.emplace_back(rc_part, assoc);
       if (msgLevel(MSG::DEBUG)) {
         const auto& part_p      = part.getMomentum();
-        const auto part_p_pt    = edm4eic::magnitudeTransverse(part_p);
-        const auto part_p_mag   = edm4eic::magnitude(part_p);
-        const auto part_p_theta = edm4eic::anglePolar(part_p);
+        const auto part_p_pt    = edm4hep::utils::magnitudeTransverse(part_p);
+        const auto part_p_mag   = edm4hep::utils::magnitude(part_p);
+        const auto part_p_theta = edm4hep::utils::anglePolar(part_p);
         debug() << fmt::format("Found RP particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
-                               part.getPDG(), part_p_mag, edm4eic::magnitude(rc_part.momentum()), part_p_pt,
-                               edm4eic::magnitudeTransverse(rc_part.momentum()), part_p_theta,
-                               edm4eic::anglePolar(rc_part.momentum()))
+                               part.getPDG(), part_p_mag, edm4hep::utils::magnitude(rc_part.momentum()), part_p_pt,
+                               edm4hep::utils::magnitudeTransverse(rc_part.momentum()), part_p_theta,
+                               edm4hep::utils::anglePolar(rc_part.momentum()))
                 << endmsg;
       }
     }
@@ -334,14 +334,14 @@ private:
       rc.emplace_back(rc_part, assoc);
       if (msgLevel(MSG::DEBUG)) {
         const auto& part_p      = part.getMomentum();
-        const auto part_p_pt    = edm4eic::magnitudeTransverse(part_p);
-        const auto part_p_mag   = edm4eic::magnitude(part_p);
-        const auto part_p_theta = edm4eic::anglePolar(part_p);
+        const auto part_p_pt    = edm4hep::utils::magnitudeTransverse(part_p);
+        const auto part_p_mag   = edm4hep::utils::magnitude(part_p);
+        const auto part_p_theta = edm4hep::utils::anglePolar(part_p);
         debug() << fmt::format("Found OMD particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
-                               part.getPDG(), part_p_mag, edm4eic::magnitude(rc_part.momentum()), part_p_pt,
-                               edm4eic::magnitudeTransverse(rc_part.momentum()), part_p_theta,
-                               edm4eic::anglePolar(rc_part.momentum()))
+                               part.getPDG(), part_p_mag, edm4hep::utils::magnitude(rc_part.momentum()), part_p_pt,
+                               edm4hep::utils::magnitudeTransverse(rc_part.momentum()), part_p_theta,
+                               edm4hep::utils::anglePolar(rc_part.momentum()))
                 << endmsg;
       }
     }

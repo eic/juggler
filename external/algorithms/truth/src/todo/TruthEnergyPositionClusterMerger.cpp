@@ -18,7 +18,7 @@
 #include "edm4hep/MCParticleCollection.h"
 #include "edm4eic/ClusterCollection.h"
 #include "edm4eic/MCRecoClusterParticleAssociationCollection.h"
-#include <edm4eic/vector_utils.h>
+#include <edm4hep/utils/vector_utils.h>
 
 using namespace Gaudi::Units;
 
@@ -167,7 +167,7 @@ public:
       new_clus.setTime(eclus.getTime());
       new_clus.setNhits(eclus.getNhits());
       // use nominal radius of 110cm, and use start vertex theta and phi
-      new_clus.setPosition(edm4eic::sphericalToVector(110.*cm, theta, phi));
+      new_clus.setPosition(edm4hep::utils::sphericalToVector(110.*cm, theta, phi));
       new_clus.addToClusters(eclus);
       if (msgLevel(MSG::DEBUG)) {
         debug() << " --> Processing energy cluster " << eclus.id() << ", mcID: " << mcID << ", energy: " << eclus.getEnergy()

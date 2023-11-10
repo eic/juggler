@@ -7,7 +7,7 @@
 #include <cmath>
 #include <fmt/format.h>
 
-#include <edm4eic/vector_utils.h>
+#include <edm4hep/utils/vector_utils.h>
 
 namespace algorithms::truth {
 
@@ -28,7 +28,7 @@ void ParticlesWithTruthPID::process(const ParticlesWithTruthPID::Input& input,
   std::vector<bool> consumed(mc.size(), false);
   for (const auto& trk : tracks) {
     const auto mom =
-        edm4eic::sphericalToVector(1.0 / std::abs(trk.getQOverP()), trk.getTheta(), trk.getPhi());
+        edm4hep::utils::sphericalToVector(1.0 / std::abs(trk.getQOverP()), trk.getTheta(), trk.getPhi());
     const auto charge_rec = trk.getCharge();
     // utility variables for matching
     int best_match    = -1;
@@ -46,11 +46,11 @@ void ParticlesWithTruthPID::process(const ParticlesWithTruthPID::Input& input,
       const auto p_mag    = std::hypot(p.x, p.y, p.z);
       const auto p_phi    = std::atan2(p.y, p.x);
       const auto p_eta    = std::atanh(p.z / p_mag);
-      const double dp_rel = std::abs((edm4eic::magnitude(mom) - p_mag) / p_mag);
+      const double dp_rel = std::abs((edm4hep::utils::magnitude(mom) - p_mag) / p_mag);
       // check the tolerance for sin(dphi/2) to avoid the hemisphere problem and allow
       // for phi rollovers
-      const double dsphi = std::abs(sin(0.5 * (edm4eic::angleAzimuthal(mom) - p_phi)));
-      const double deta  = std::abs((edm4eic::eta(mom) - p_eta));
+      const double dsphi = std::abs(sin(0.5 * (edm4hep::utils::angleAzimuthal(mom) - p_phi)));
+      const double deta  = std::abs((edm4hep::utils::eta(mom) - p_eta));
 
       if (dp_rel < m_pRelativeTolerance && deta < m_etaTolerance && dsphi < sinPhiOver2Tolerance) {
         const double delta = std::hypot(dp_rel / m_pRelativeTolerance, deta / m_etaTolerance,
@@ -78,7 +78,7 @@ void ParticlesWithTruthPID::process(const ParticlesWithTruthPID::Input& input,
       mass = mcpart.getMass();
     }
     rec_part.setType(static_cast<int16_t>(best_match >= 0 ? 0 : -1)); // @TODO: determine type codes
-    rec_part.setEnergy(std::hypot(edm4eic::magnitude(mom), mass));
+    rec_part.setEnergy(std::hypot(edm4hep::utils::magnitude(mom), mass));
     rec_part.setMomentum(mom);
     rec_part.setReferencePoint(referencePoint);
     rec_part.setCharge(charge_rec);
@@ -100,13 +100,13 @@ void ParticlesWithTruthPID::process(const ParticlesWithTruthPID::Input& input,
         const auto& mcpart = mc[best_match];
         debug() << fmt::format("Matched track with MC particle {}\n", best_match) << endmsg;
         debug() << fmt::format("  - Track: (mom: {}, theta: {}, phi: {}, charge: {})",
-                               edm4eic::magnitude(mom), edm4eic::anglePolar(mom),
-                               edm4eic::angleAzimuthal(mom), charge_rec)
+                               edm4hep::utils::magnitude(mom), edm4hep::utils::anglePolar(mom),
+                               edm4hep::utils::angleAzimuthal(mom), charge_rec)
                 << endmsg;
         const auto& p      = mcpart.getMomentum();
-        const auto p_mag   = edm4eic::magnitude(p);
-        const auto p_phi   = edm4eic::angleAzimuthal(p);
-        const auto p_theta = edm4eic::anglePolar(p);
+        const auto p_mag   = edm4hep::utils::magnitude(p);
+        const auto p_phi   = edm4hep::utils::angleAzimuthal(p);
+        const auto p_theta = edm4hep::utils::anglePolar(p);
         debug() << fmt::format(
                        "  - MC particle: (mom: {}, theta: {}, phi: {}, charge: {}, type: {}", p_mag,
                        p_theta, p_phi, mcpart.getCharge(), mcpart.getPDG())
@@ -114,8 +114,8 @@ void ParticlesWithTruthPID::process(const ParticlesWithTruthPID::Input& input,
       } else {
         debug() << fmt::format("Did not find a good match for track \n") << endmsg;
         debug() << fmt::format("  - Track: (mom: {}, theta: {}, phi: {}, charge: {})",
-                               edm4eic::magnitude(mom), edm4eic::anglePolar(mom),
-                               edm4eic::angleAzimuthal(mom), charge_rec)
+                               edm4hep::utils::magnitude(mom), edm4hep::utils::anglePolar(mom),
+                               edm4hep::utils::angleAzimuthal(mom), charge_rec)
                 << endmsg;
       }
     }

@@ -39,7 +39,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
-#include "edm4eic/vector_utils.h"
+#include "edm4hep/utils/vector_utils.h"
 
 #include <cmath>
 
@@ -155,7 +155,7 @@ namespace Jug::Reco {
             static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc1))
           };
           const decltype(edm4eic::TrackPoint::positionError) positionError{0, 0, 0};
-          const decltype(edm4eic::TrackPoint::momentum) momentum = edm4eic::sphericalToVector(
+          const decltype(edm4eic::TrackPoint::momentum) momentum = edm4hep::utils::sphericalToVector(
             static_cast<float>(1.0 / std::abs(parameter[Acts::eBoundQOverP])),
             static_cast<float>(parameter[Acts::eBoundTheta]),
             static_cast<float>(parameter[Acts::eBoundPhi])

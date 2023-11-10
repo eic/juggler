@@ -29,7 +29,7 @@
 
 // Event Model related classes
 #include "edm4eic/CalorimeterHitCollection.h"
-#include "edm4eic/vector_utils.h"
+#include "edm4hep/utils/vector_utils.h"
 
 using namespace Gaudi::Units;
 

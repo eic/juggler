@@ -25,7 +25,7 @@
 #include "edm4eic/MCRecoParticleAssociationCollection.h"
 #include "edm4eic/ReconstructedParticleCollection.h"
 #include "edm4eic/TrackParametersCollection.h"
-#include "edm4eic/vector_utils.h"
+#include "edm4hep/utils/vector_utils.h"
 
 namespace Jug::Fast {
 
@@ -271,7 +271,7 @@ private:
     const float energy = clus.getEnergy();
     const float p = energy < mass ? 0 : std::sqrt(energy * energy - mass * mass);
     const auto position = clus.getPosition();
-    const auto momentum = p * (position / edm4eic::magnitude(position));
+    const auto momentum = p * (position / edm4hep::utils::magnitude(position));
     // setup our particle
     edm4eic::MutableReconstructedParticle part;
     part.setMomentum(momentum);

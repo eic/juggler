@@ -24,7 +24,7 @@
 #include "edm4eic/ClusterCollection.h"
 #include "edm4eic/ProtoClusterCollection.h"
 #include "edm4eic/RawCalorimeterHitCollection.h"
-#include "edm4eic/vector_utils.h"
+#include "edm4hep/utils/vector_utils.h"
 
 using namespace Gaudi::Units;
 
@@ -127,7 +127,7 @@ namespace Jug::Reco {
         std::vector<std::pair<uint32_t, edm4eic::CalorimeterHit>> cluster_hits;
 
         for (const auto& [idx, h] : the_hits) {
-          if (edm4eic::magnitude(h.getPosition() - ref_hit.getPosition()) < max_dist) {
+          if (edm4hep::utils::magnitude(h.getPosition() - ref_hit.getPosition()) < max_dist) {
             cluster_hits.emplace_back(idx, h);
           } else {
             remaining_hits.emplace_back(idx, h);

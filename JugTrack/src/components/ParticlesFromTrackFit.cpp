@@ -31,7 +31,7 @@
 
 #include "Acts/Utilities/Helpers.hpp"
 
-#include "edm4eic/vector_utils.h"
+#include "edm4hep/utils/vector_utils.h"
 
 #include <cmath>
 
@@ -173,7 +173,7 @@ namespace Jug::Reco {
 
             auto rec_part = rec_parts->create();
             rec_part.setMomentum(
-              edm4eic::sphericalToVector(
+              edm4hep::utils::sphericalToVector(
                 1.0 / std::abs(params[Acts::eBoundQOverP]),
                 params[Acts::eBoundTheta],
                 params[Acts::eBoundPhi])

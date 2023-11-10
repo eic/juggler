@@ -18,7 +18,7 @@
 
 #include "edm4eic/TrackerHitCollection.h"
 #include "edm4eic/ClusterCollection.h"
-#include "edm4eic/vector_utils.h"
+#include "edm4hep/utils/vector_utils.h"
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
@@ -86,8 +86,8 @@ namespace Jug::Reco {
         if( p < 0.1*GeV) {
           continue;
         }
-        const double theta = edm4eic::anglePolar(c.getPosition());
-        const double phi = edm4eic::angleAzimuthal(c.getPosition());
+        const double theta = edm4hep::utils::anglePolar(c.getPosition());
+        const double phi = edm4hep::utils::angleAzimuthal(c.getPosition());
 
         Acts::BoundVector  params;
         params(Acts::eBoundLoc0)   = 0.0 * mm ;
