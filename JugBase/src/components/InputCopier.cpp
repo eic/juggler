@@ -7,7 +7,7 @@
 #include "GaudiAlg/Transformer.h"
 #include "GaudiAlg/Producer.h"
 #include "GaudiAlg/GaudiTool.h"
-#include "Gaudi/Algorithm.h"
+#include "GaudiAlg/GaudiAlgorithm.h"
 
 // FCCSW
 #include "JugBase/DataHandle.h"
