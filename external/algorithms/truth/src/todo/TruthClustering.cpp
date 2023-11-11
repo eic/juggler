@@ -68,7 +68,7 @@ public:
     // Loop over al calorimeter hits and sort per mcparticle
     for (const auto& hit : hits) {
       const auto& mcHit     = mc[hit.getObjectID().index];
-      const auto& trackID   = mcHit.getContributions(0).getParticle().id();
+      const auto& trackID   = mcHit.getContributions(0).getParticle().getObjectID().index;
       // Create a new protocluster if we don't have one for this trackID
       if (protoIndex.count(trackID) == 0) {
         auto pcl = proto.create();
