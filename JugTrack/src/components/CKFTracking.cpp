@@ -41,6 +41,7 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 
+#include "fmt/format.h"
 
 #include "edm4eic/TrackerHitCollection.h"
 
@@ -50,6 +51,7 @@
 #include <random>
 #include <stdexcept>
 
+template<> struct fmt::formatter<std::error_code> : fmt::ostream_formatter {};
 
 static const std::map<int, Acts::Logging::Level> s_msgMap = {
     {MSG::DEBUG, Acts::Logging::DEBUG},
