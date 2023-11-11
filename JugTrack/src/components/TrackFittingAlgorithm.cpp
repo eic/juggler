@@ -106,8 +106,10 @@ namespace Jug::Reco {
     // kfOptions.energyLoss         = m_cfg.energyLoss;
 
     Acts::KalmanFitterExtensions<Acts::VectorMultiTrajectory> extensions;
-    MeasurementCalibrator calibrator{*measurements};
-    extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
+    ActsExamples::PassThroughCalibrator pcalibrator;
+    ActsExamples::MeasurementCalibratorAdapter calibrator(pcalibrator, *measurements);
+    extensions.calibrator.connect<&ActsExamples::MeasurementCalibratorAdapter::calibrate>(
+        &calibrator);
     Acts::GainMatrixUpdater kfUpdater;
     Acts::GainMatrixSmoother kfSmoother;
     extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(

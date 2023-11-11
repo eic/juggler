@@ -123,14 +123,17 @@ namespace Jug::Reco {
     Acts::PropagatorPlainOptions pOptions;
     pOptions.maxSteps = 10000;
 
-    MeasurementCalibrator calibrator{*measurements};
+    ActsExamples::PassThroughCalibrator pcalibrator;
+    ActsExamples::MeasurementCalibratorAdapter calibrator(pcalibrator, *measurements);
     Acts::GainMatrixUpdater kfUpdater;
     Acts::GainMatrixSmoother kfSmoother;
     Acts::MeasurementSelector measSel{m_sourcelinkSelectorCfg};
 
     Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>
         extensions;
-    extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
+    extensions.calibrator.connect<
+        &ActsExamples::MeasurementCalibratorAdapter::calibrate>(
+        &calibrator);
     extensions.updater.connect<
         &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
         &kfUpdater);
