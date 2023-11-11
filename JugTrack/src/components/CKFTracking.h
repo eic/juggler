@@ -41,7 +41,7 @@ public:
   /// Track finder function that takes input measurements, initial trackstate
   /// and track finder options and returns some track-finder-specific result.
   using TrackFinderOptions =
-      Acts::CombinatorialKalmanFilterOptions<IndexSourceLinkAccessor::Iterator,
+      Acts::CombinatorialKalmanFilterOptions<ActsExamples::IndexSourceLinkAccessor::Iterator,
                                              Acts::VectorMultiTrajectory>;
   using TrackFinderResult = std::vector<Acts::Result<
       Acts::CombinatorialKalmanFilterResult<Acts::VectorMultiTrajectory>>>;

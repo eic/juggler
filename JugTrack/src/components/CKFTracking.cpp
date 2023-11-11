@@ -144,11 +144,11 @@ namespace Jug::Reco {
         .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
             &measSel);
 
-    IndexSourceLinkAccessor slAccessor;
+    ActsExamples::IndexSourceLinkAccessor slAccessor;
     slAccessor.container = src_links;
-    Acts::SourceLinkAccessorDelegate<IndexSourceLinkAccessor::Iterator>
+    Acts::SourceLinkAccessorDelegate<ActsExamples::IndexSourceLinkAccessor::Iterator>
         slAccessorDelegate;
-    slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
+    slAccessorDelegate.connect<&ActsExamples::IndexSourceLinkAccessor::range>(&slAccessor);
 
     // Set the CombinatorialKalmanFilter options
     CKFTracking::TrackFinderOptions options(
