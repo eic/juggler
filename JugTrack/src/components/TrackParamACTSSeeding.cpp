@@ -177,7 +177,6 @@ namespace Jug::Reco {
             /// Output proto track collection.
             std::string outputProtoTracks;
 
-            float bFieldInZ = 1.7 * Acts::UnitConstants::T;
             float cotThetaMax = std::sinh(4.01);
             float minPt = 100 * Acts::UnitConstants::MeV / cotThetaMax;
             float rMax = 440 * Acts::UnitConstants::mm;
@@ -191,9 +190,11 @@ namespace Jug::Reco {
             float maxSeedsPerSpM = 2;
             float sigmaScattering = 5;
             float radLengthPerSeed = 0.1;
+            float impactMax = 3 * Acts::UnitConstants::mm;
+            //
+            float bFieldInZ = 1.7 * Acts::UnitConstants::T;
             float beamPosX = 0 * Acts::UnitConstants::mm;
             float beamPosY = 0 * Acts::UnitConstants::mm;
-            float impactMax = 3 * Acts::UnitConstants::mm;
 
             /// The minimum magnetic field to trigger the track
             /// parameters estimation
@@ -222,7 +223,9 @@ namespace Jug::Reco {
             std::vector<std::pair<int, int> > zBinNeighborsBottom;
         } m_cfg;
         Acts::SpacePointGridConfig m_gridCfg;
+        Acts::SpacePointGridOptions m_gridOpt;
         Acts::SeedFinderConfig<SpacePoint> m_finderCfg;
+        Acts::SeedFinderOptions m_finderOpt;
         /// The track parameters covariance (assumed to be the same
         /// for all estimated track parameters for the moment)
         Acts::BoundSymMatrix m_covariance =
@@ -262,7 +265,6 @@ namespace Jug::Reco {
                 m_geoSvc->getFieldProvider());
         m_fieldContext = Jug::BField::BFieldVariant(m_BField);
 
-        m_gridCfg.bFieldInZ = m_cfg.bFieldInZ;
         m_gridCfg.minPt = m_cfg.minPt;
         m_gridCfg.rMax = m_cfg.rMax;
         m_gridCfg.zMax = m_cfg.zMax;
@@ -290,10 +292,17 @@ namespace Jug::Reco {
         m_finderCfg.sigmaScattering = m_cfg.sigmaScattering;
         m_finderCfg.radLengthPerSeed = m_cfg.radLengthPerSeed;
         m_finderCfg.minPt = m_cfg.minPt;
-        m_finderCfg.bFieldInZ = m_cfg.bFieldInZ;
-        m_finderCfg.beamPos =
-            Acts::Vector2(m_cfg.beamPosX, m_cfg.beamPosY);
         m_finderCfg.impactMax = m_cfg.impactMax;
+
+        m_finderOpt.bFieldInZ = m_cfg.bFieldInZ;
+        m_finderOpt.beamPos =
+            Acts::Vector2(m_cfg.beamPosX, m_cfg.beamPosY);
+
+        m_finderCfg =
+          m_finderCfg.toInternalUnits().calculateDerivedQuantities();
+        m_finderOpt =
+          m_finderOpt.toInternalUnits().calculateDerivedQuantities(
+            m_finderCfg);
 
         // Set up the track parameters covariance (the same for all
         // tracks)
@@ -436,10 +445,10 @@ namespace Jug::Reco {
             debug() << __FILE__ << ':' << __LINE__ << ": " << endmsg;
         }
 
-        const float bFieldInZSave = m_gridCfg.bFieldInZ;
+        const float bFieldInZSave = m_gridOpt.bFieldInZ;
         const float minPtSave = m_gridCfg.minPt;
         m_gridCfg.minPt = 400 * Acts::UnitConstants::MeV;
-        m_gridCfg.bFieldInZ =
+        m_gridOpt.bFieldInZ =
             (m_gridCfg.minPt / Acts::UnitConstants::MeV) /
             (150.0 * (1.0 + FLT_EPSILON) *
              (m_gridCfg.rMax / Acts::UnitConstants::mm)) *
@@ -448,13 +457,13 @@ namespace Jug::Reco {
             debug() << "createGrid() with temporary minPt = "
                     << m_gridCfg.minPt / Acts::UnitConstants::MeV
                     << " MeV, bFieldInZ = "
-                    << m_gridCfg.bFieldInZ / (1000 * Acts::UnitConstants::T)
+                    << m_gridOpt.bFieldInZ / (1000 * Acts::UnitConstants::T)
                     << " kT" << endmsg;
         }
         auto grid =
             Acts::SpacePointGridCreator::createGrid<SpacePoint>(
-                m_gridCfg);
-        m_gridCfg.bFieldInZ = bFieldInZSave;
+                m_gridCfg, m_gridOpt);
+        m_gridOpt.bFieldInZ = bFieldInZSave;
         m_gridCfg.minPt = minPtSave;
         if (msgLevel(MSG::DEBUG)) {
             debug() << "phiBins = "
@@ -491,6 +500,7 @@ namespace Jug::Reco {
         auto groupEnd = spacePointsGrouping.end();
         for (; !(group == groupEnd); ++group) {
             finder.createSeedsForGroup(
+                m_finderOpt,
                 state, std::back_inserter(seeds),
                 group.bottom(), group.middle(), group.top(),
                 rMiddleSPRange
