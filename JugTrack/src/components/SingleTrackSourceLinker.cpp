@@ -137,14 +137,14 @@ public:
       Acts::Vector2 pos(acts_pos.x(), acts_pos.y());
 
       // construct the covariance matrix
-      Acts::SymMatrix2 cov = Acts::SymMatrix2::Zero();
+      Acts::SquareMatrix2 cov = Acts::SquareMatrix2::Zero();
       cov(0, 0)            = ahit.getPositionError().xx * Acts::UnitConstants::mm * Acts::UnitConstants::mm;
       cov(1, 1)            = ahit.getPositionError().yy * Acts::UnitConstants::mm * Acts::UnitConstants::mm;
 
       // Above we only consider the two position coordinates the comment below shows how to add time
       // which we will probably want to try later.
       //
-      // Acts::SymMatrix3 cov;
+      // Acts::SquareMatrix3 cov;
       // cov << 0.05, 0., 0., 0., 0.05, 0., 0., 0., 900. * Acts::UnitConstants::ps * Acts::UnitConstants::ps;
       // Acts::Vector3 par(localX, localY, simHit.time());
 

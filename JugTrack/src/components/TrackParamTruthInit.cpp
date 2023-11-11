@@ -150,7 +150,7 @@ namespace Jug::Reco {
         using Acts::UnitConstants::ns;
 
         // build some track cov matrix
-        Acts::BoundSymMatrix cov                    = Acts::BoundSymMatrix::Zero();
+        Acts::BoundSquareMatrix cov                    = Acts::BoundSquareMatrix::Zero();
         cov(Acts::eBoundLoc0, Acts::eBoundLoc0)     = 1000*um*1000*um;
         cov(Acts::eBoundLoc1, Acts::eBoundLoc1)     = 1000*um*1000*um;
         cov(Acts::eBoundPhi, Acts::eBoundPhi)       = 0.05*0.05;

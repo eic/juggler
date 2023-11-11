@@ -92,7 +92,7 @@ public:
     int ihit = 0;
     for (const auto& ahit : *hits) {
 
-      Acts::SymMatrix2 cov = Acts::SymMatrix2::Zero();
+      Acts::SquareMatrix2 cov = Acts::SquareMatrix2::Zero();
       cov(0, 0)            = ahit.getPositionError().xx * mm_acts * mm_acts; // note mm = 1 (Acts)
       cov(1, 1)            = ahit.getPositionError().yy * mm_acts * mm_acts;
       if (msgLevel(MSG::DEBUG)) {
