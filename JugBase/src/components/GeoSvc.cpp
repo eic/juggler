@@ -115,6 +115,7 @@ StatusCode GeoSvc::initialize() {
   }
 
   // Convert DD4hep geometry to ACTS
+  auto logger = Acts::getDefaultLogger("CONV", m_actsLoggingLevel);
   Acts::BinningType bTypePhi = Acts::equidistant;
   Acts::BinningType bTypeR = Acts::equidistant;
   Acts::BinningType bTypeZ = Acts::equidistant;
@@ -124,7 +125,7 @@ StatusCode GeoSvc::initialize() {
   using Acts::sortDetElementsByID;
   m_trackingGeo = Acts::convertDD4hepDetector(
       m_dd4hepGeo->world(),
-      m_actsLoggingLevel,
+      *logger,
       bTypePhi,
       bTypeR,
       bTypeZ,
