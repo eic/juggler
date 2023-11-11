@@ -5,6 +5,7 @@
 #include <cmath>
 
 #include "Gaudi/Property.h"
+#include "GaudiAlg/GaudiAlgorithm.h"
 #include "GaudiAlg/GaudiTool.h"
 #include "GaudiAlg/Transformer.h"
 #include "GaudiKernel/PhysicalConstants.h"

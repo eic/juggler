@@ -14,6 +14,7 @@
 #include <cmath>
 #include <unordered_map>
 
+#include "GaudiAlg/GaudiAlgorithm.h"
 #include "GaudiAlg/GaudiTool.h"
 #include "GaudiAlg/Transformer.h"
 #include "GaudiKernel/PhysicalConstants.h"
