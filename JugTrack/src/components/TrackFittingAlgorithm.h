@@ -17,12 +17,12 @@
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/BField/DD4hepBField.h"
-#include "JugTrack/GeometryContainers.hpp"
-#include "JugTrack/IndexSourceLink.hpp"
-#include "JugTrack/Track.hpp"
-#include "JugTrack/Measurement.hpp"
-#include "JugTrack/Trajectories.hpp"
-#include "JugTrack/ProtoTrack.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
 
 #include "edm4eic/TrackerHitCollection.h"
 
@@ -54,15 +54,15 @@ namespace Jug::Reco {
 
     /// Fit function that takes input measurements, initial trackstate and fitter
     using FitterFunction = std::function<FitterResult(
-      const std::vector<IndexSourceLink>&, const TrackParameters&, const TrackFitterOptions&)>;
+      const std::vector<ActsExamples::IndexSourceLink>&, const ActsExamples::TrackParameters&, const TrackFitterOptions&)>;
 
   public:
-    DataHandle<IndexSourceLinkContainer> m_inputSourceLinks{"inputSourceLinks", Gaudi::DataHandle::Reader, this};
-    DataHandle<TrackParametersContainer> m_initialTrackParameters{"initialTrackParameters", Gaudi::DataHandle::Reader, this};
-    DataHandle<MeasurementContainer>     m_inputMeasurements{"inputMeasurements", Gaudi::DataHandle::Reader, this};
-    DataHandle<ProtoTrackContainer>      m_inputProtoTracks{"inputProtoTracks", Gaudi::DataHandle::Reader, this};
-    DataHandle<TrajectoriesContainer>    m_foundTracks{"foundTracks", Gaudi::DataHandle::Reader, this};
-    DataHandle<TrajectoriesContainer>    m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
+    DataHandle<ActsExamples::IndexSourceLinkContainer> m_inputSourceLinks{"inputSourceLinks", Gaudi::DataHandle::Reader, this};
+    DataHandle<ActsExamples::TrackParametersContainer> m_initialTrackParameters{"initialTrackParameters", Gaudi::DataHandle::Reader, this};
+    DataHandle<ActsExamples::MeasurementContainer>     m_inputMeasurements{"inputMeasurements", Gaudi::DataHandle::Reader, this};
+    DataHandle<ActsExamples::ProtoTrackContainer>      m_inputProtoTracks{"inputProtoTracks", Gaudi::DataHandle::Reader, this};
+    DataHandle<ActsExamples::TrajectoriesContainer>    m_foundTracks{"foundTracks", Gaudi::DataHandle::Reader, this};
+    DataHandle<ActsExamples::TrajectoriesContainer>    m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
 
     FitterFunction                        m_trackFittingFunc;
     SmartIF<IGeoSvc>                      m_geoSvc;
@@ -89,15 +89,15 @@ namespace Jug::Reco {
    private:
     /// Helper function to call correct FitterFunction
     FitterResult fitTrack(
-        const std::vector<IndexSourceLink>& sourceLinks,
-        const TrackParameters& initialParameters,
+        const std::vector<ActsExamples::IndexSourceLink>& sourceLinks,
+        const ActsExamples::TrackParameters& initialParameters,
         const TrackFitterOptions& options
         ) const;
   };
 
   inline TrackFittingAlgorithm::FitterResult
-  TrackFittingAlgorithm::fitTrack(const std::vector<IndexSourceLink>& sourceLinks,
-                                  const TrackParameters&              initialParameters,
+  TrackFittingAlgorithm::fitTrack(const std::vector<ActsExamples::IndexSourceLink>& sourceLinks,
+                                  const ActsExamples::TrackParameters&              initialParameters,
                                   const TrackFitterOptions&           options) const
   {
     return m_trackFittingFunc(sourceLinks, initialParameters, options);

@@ -31,10 +31,11 @@
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/BField/DD4hepBField.h"
 
-#include "JugTrack/GeometryContainers.hpp"
-#include "JugTrack/IndexSourceLink.hpp"
-#include "JugTrack/Track.hpp"
-#include "JugTrack/Measurement.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 
 #include "edm4eic/TrackerHitCollection.h"
 
@@ -120,7 +121,7 @@ namespace Jug::Reco {
         &(*pSurface));
 
     // used for processing the data
-    std::vector<IndexSourceLink>      trackSourceLinks;
+    std::vector<ActsExamples::IndexSourceLink> trackSourceLinks;
     std::vector<const Acts::Surface*> surfSequence;
 
     if (msgLevel(MSG::DEBUG)) {
@@ -147,7 +148,7 @@ namespace Jug::Reco {
 
       for (auto hitIndex : protoTrack) {
         if (auto it = sourceLinks->nth(hitIndex); it != sourceLinks->end()) {
-          const IndexSourceLink& sourceLink = *it;
+          const ActsExamples::IndexSourceLink& sourceLink = *it;
           trackSourceLinks.push_back(std::cref(sourceLink));
         } else {
           ACTS_FATAL("Proto track " << itrack << " contains invalid hit index"
@@ -172,7 +173,7 @@ namespace Jug::Reco {
         trackTips.reserve(1);
         trackTips.emplace_back(fitOutput.lastMeasurementIndex);
         // The fitted parameters container. One element (at most) here.
-        Trajectories::IndexedParameters indexedParams;
+        ActsExamples::Trajectories::IndexedParameters indexedParams;
         if (fitOutput.fittedParameters) {
           const auto& params = fitOutput.fittedParameters.value();
           ACTS_VERBOSE("Fitted paramemeters for track " << itrack);
@@ -189,7 +190,7 @@ namespace Jug::Reco {
         ACTS_WARNING("Fit failed for track " << itrack << " with error" << result.error());
         // Fit failed. Add an empty result so the output container has
         // the same number of entries as the input.
-        trajectories->push_back(Trajectories());
+        trajectories->push_back(ActsExamples::Trajectories());
       }
     }
 

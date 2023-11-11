@@ -16,12 +16,12 @@
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/BField/DD4hepBField.h"
-#include "JugTrack/GeometryContainers.hpp"
-#include "JugTrack/Index.hpp"
-#include "JugTrack/IndexSourceLink.hpp"
-#include "JugTrack/Measurement.hpp"
-#include "JugTrack/Track.hpp"
-#include "JugTrack/Trajectories.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 
 #include "edm4eic/TrackerHitCollection.h"
 
@@ -63,11 +63,11 @@ public:
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
 
 public:
-  DataHandle<IndexSourceLinkContainer> m_inputSourceLinks{"inputSourceLinks", Gaudi::DataHandle::Reader, this};
-  DataHandle<MeasurementContainer> m_inputMeasurements{"inputMeasurements", Gaudi::DataHandle::Reader, this};
-  DataHandle<TrackParametersContainer> m_inputInitialTrackParameters{"inputInitialTrackParameters",
+  DataHandle<ActsExamples::IndexSourceLinkContainer> m_inputSourceLinks{"inputSourceLinks", Gaudi::DataHandle::Reader, this};
+  DataHandle<ActsExamples::MeasurementContainer> m_inputMeasurements{"inputMeasurements", Gaudi::DataHandle::Reader, this};
+  DataHandle<ActsExamples::TrackParametersContainer> m_inputInitialTrackParameters{"inputInitialTrackParameters",
                                                                      Gaudi::DataHandle::Reader, this};
-  DataHandle<TrajectoriesContainer> m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
+  DataHandle<ActsExamples::TrajectoriesContainer> m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
 
   Gaudi::Property<std::vector<double>> m_etaBins{this, "etaBins", {}};
   Gaudi::Property<std::vector<double>> m_chi2CutOff{this, "chi2CutOff", {15.}};

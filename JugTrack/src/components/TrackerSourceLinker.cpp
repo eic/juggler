@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Whitney Armstrong, Sylvester Joosten, Wouter Deconinck
 
-#include "JugTrack/GeometryContainers.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
 
 // Gaudi
 #include "Gaudi/Property.h"
@@ -26,9 +26,9 @@
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-#include "JugTrack/Index.hpp"
-#include "JugTrack/IndexSourceLink.hpp"
-#include "JugTrack/Measurement.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 
 #include "edm4eic/TrackerHitCollection.h"
 
@@ -45,9 +45,9 @@ namespace Jug::Reco {
 class TrackerSourceLinker : public GaudiAlgorithm {
 private:
   DataHandle<edm4eic::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-  DataHandle<std::list<IndexSourceLink>> m_sourceLinkStorage{"sourceLinkStorage", Gaudi::DataHandle::Writer, this};
-  DataHandle<IndexSourceLinkContainer> m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};
-  DataHandle<MeasurementContainer> m_outputMeasurements{"outputMeasurements", Gaudi::DataHandle::Writer, this};
+  DataHandle<std::list<ActsExamples::IndexSourceLink>> m_sourceLinkStorage{"sourceLinkStorage", Gaudi::DataHandle::Writer, this};
+  DataHandle<ActsExamples::IndexSourceLinkContainer> m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};
+  DataHandle<ActsExamples::MeasurementContainer> m_outputMeasurements{"outputMeasurements", Gaudi::DataHandle::Writer, this};
   /// Pointer to the geometry service
   SmartIF<IGeoSvc> m_geoSvc;
 
@@ -144,8 +144,8 @@ public:
       // variable hitIdx not used anywhere
       // Index hitIdx = measurements->size();
       linkStorage->emplace_back(surface->geometryId(), ihit);
-      IndexSourceLink& sourceLink = linkStorage->back();
-      auto meas                   = Acts::makeMeasurement(sourceLink, loc, cov, Acts::eBoundLoc0, Acts::eBoundLoc1);
+      ActsExamples::IndexSourceLink& sourceLink = linkStorage->back();
+      auto meas = Acts::makeMeasurement(Acts::SourceLink{sourceLink}, loc, cov, Acts::eBoundLoc0, Acts::eBoundLoc1);
 
       // add to output containers. since the input is already geometry-order,
       // new elements in geometry containers can just be appended at the end.

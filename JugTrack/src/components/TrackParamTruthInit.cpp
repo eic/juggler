@@ -14,7 +14,7 @@
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/IParticleSvc.h"
-#include "JugTrack/Track.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Definitions/Common.hpp"
 
@@ -47,7 +47,7 @@ namespace Jug::Reco {
   private:
     DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader,
                                                                     this};
-    DataHandle<TrackParametersContainer>         m_outputInitialTrackParameters{"outputInitialTrackParameters",
+    DataHandle<ActsExamples::TrackParametersContainer>         m_outputInitialTrackParameters{"outputInitialTrackParameters",
                                                                         Gaudi::DataHandle::Writer, this};
     
     // selection settings

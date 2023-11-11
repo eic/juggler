@@ -12,7 +12,7 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugTrack/Track.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Definitions/Common.hpp"
 
@@ -44,10 +44,8 @@ namespace Jug::Reco {
    */
   class TrackParamImagingClusterInit : public GaudiAlgorithm {
   private:
-    using ImagingClusters =  edm4eic::ClusterCollection;
-
-    DataHandle<ImagingClusters>          m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
-    DataHandle<TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
+    DataHandle<edm4eic::ClusterCollection>          m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
+    DataHandle<ActsExamples::TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
                                                                         Gaudi::DataHandle::Writer, this};
 
   public:

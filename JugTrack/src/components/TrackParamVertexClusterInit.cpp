@@ -16,7 +16,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugTrack/Track.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "edm4eic/ClusterCollection.h"
@@ -37,12 +37,9 @@ namespace Jug::Reco {
  */
 class TrackParamVertexClusterInit : public GaudiAlgorithm {
 private:
-  using Clusters   = edm4eic::ClusterCollection;
-  using VertexHits = edm4eic::TrackerHitCollection;
-
-  DataHandle<VertexHits> m_inputVertexHits{"inputVertexHits", Gaudi::DataHandle::Reader, this};
-  DataHandle<Clusters> m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
-  DataHandle<TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
+  DataHandle<edm4eic::TrackerHitCollection> m_inputVertexHits{"inputVertexHits", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::ClusterCollection> m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
+  DataHandle<ActsExamples::TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
                                                                       Gaudi::DataHandle::Writer, this};
   Gaudi::Property<double> m_maxHitRadius{this, "maxHitRadius", 40.0 * mm};
 

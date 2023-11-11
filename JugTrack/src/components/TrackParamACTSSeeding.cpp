@@ -38,8 +38,9 @@ namespace Acts {
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/BField/DD4hepBField.h"
-#include "JugTrack/Measurement.hpp"
-#include "JugTrack/Track.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 
 #include "DDRec/CellIDPositionConverter.h"
 
@@ -71,7 +72,7 @@ namespace Jug::Reco {
         DataHandle<edm4eic::TrackerHitCollection>
         m_inputHitCollection { "inputHitCollection",
             Gaudi::DataHandle::Reader, this };
-        DataHandle<TrackParametersContainer>
+        DataHandle<ActsExamples::TrackParametersContainer>
         m_outputInitialTrackParameters {
             "outputInitialTrackParameters",
             Gaudi::DataHandle::Writer, this };
@@ -166,7 +167,7 @@ namespace Jug::Reco {
 
         /// A proto track is a collection of hits identified by their
         /// indices.
-        using ProtoTrack = std::vector<Index>;
+        using ProtoTrack = std::vector<ActsExamples::Index>;
         /// Container of proto tracks. Each proto track is identified by
         /// its index.
         using ProtoTrackContainer = std::vector<ProtoTrack>;
@@ -534,7 +535,7 @@ namespace Jug::Reco {
             debug() << "seeds.size() = " << seeds.size() << endmsg;
         }
 
-        TrackParametersContainer trackParameters;
+        ActsExamples::TrackParametersContainer trackParameters;
         ProtoTrackContainer tracks;
         trackParameters.reserve(seeds.size());
         tracks.reserve(seeds.size());
