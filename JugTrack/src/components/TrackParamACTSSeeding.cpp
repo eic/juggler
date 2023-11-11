@@ -228,8 +228,8 @@ namespace Jug::Reco {
         Acts::SeedFinderOptions m_finderOpt;
         /// The track parameters covariance (assumed to be the same
         /// for all estimated track parameters for the moment)
-        Acts::BoundSymMatrix m_covariance =
-            Acts::BoundSymMatrix::Zero();
+        Acts::BoundSquareMatrix m_covariance =
+            Acts::BoundSquareMatrix::Zero();
 
     public:
         TrackParamACTSSeeding(const std::string &name,
