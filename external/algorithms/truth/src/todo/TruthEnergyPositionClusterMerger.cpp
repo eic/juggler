@@ -92,7 +92,7 @@ public:
     }
     for (const auto& [mcID, pclus] : posMap) {
       if (msgLevel(MSG::DEBUG)) {
-        debug() << " --> Processing position cluster " << pclus.id() << ", mcID: " << mcID << ", energy: " << pclus.getEnergy()
+        debug() << " --> Processing position cluster " << pclus.getObjectID().index << ", mcID: " << mcID << ", energy: " << pclus.getEnergy()
                 << endmsg;
       }
       if (energyMap.count(mcID)) {
@@ -116,8 +116,8 @@ public:
           new_clus.addToShapeParameters(param);
         }
         if (msgLevel(MSG::DEBUG)) {
-          debug() << "   --> Found matching energy cluster " << eclus.id() << ", energy: " << eclus.getEnergy() << endmsg;
-          debug() << "   --> Created new combined cluster " << new_clus.id() << ", energy: " << new_clus.getEnergy() << endmsg;
+          debug() << "   --> Found matching energy cluster " << eclus.getObjectID().index << ", energy: " << eclus.getEnergy() << endmsg;
+          debug() << "   --> Created new combined cluster " << new_clus.getObjectID().index << ", energy: " << new_clus.getEnergy() << endmsg;
         }
 
         // set association
@@ -170,9 +170,9 @@ public:
       new_clus.setPosition(edm4hep::utils::sphericalToVector(110.*cm, theta, phi));
       new_clus.addToClusters(eclus);
       if (msgLevel(MSG::DEBUG)) {
-        debug() << " --> Processing energy cluster " << eclus.id() << ", mcID: " << mcID << ", energy: " << eclus.getEnergy()
+        debug() << " --> Processing energy cluster " << eclus.getObjectID().index << ", mcID: " << mcID << ", energy: " << eclus.getEnergy()
                 << endmsg;
-        debug() << "   --> Created new 'combined' cluster " << new_clus.id() << ", energy: " << new_clus.getEnergy() << endmsg;
+        debug() << "   --> Created new 'combined' cluster " << new_clus.getObjectID().index << ", energy: " << new_clus.getEnergy() << endmsg;
       }
 
       // set association

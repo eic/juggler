@@ -184,7 +184,7 @@ public:
     // debug output
     if (msgLevel(MSG::DEBUG)) {
       for (const auto& cl : clusters) {
-        debug() << fmt::format("Cluster {:d}: Edep = {:.3f} MeV, Dir = ({:.3f}, {:.3f}) deg", cl.id(),
+        debug() << fmt::format("Cluster {:d}: Edep = {:.3f} MeV, Dir = ({:.3f}, {:.3f}) deg", cl.getObjectID().index,
                                cl.getEnergy() * 1000., cl.getIntrinsicTheta() / M_PI * 180.,
                                cl.getIntrinsicPhi() / M_PI * 180.)
                 << endmsg;

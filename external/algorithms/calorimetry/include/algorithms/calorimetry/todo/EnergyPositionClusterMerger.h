@@ -118,7 +118,7 @@ public:
         // label our energy cluster as consumed
         consumed[best_match] = true;
         if (msgLevel(MSG::DEBUG)) {
-          debug() << fmt::format("Matched position cluster {} with energy cluster {}\n", pc.id(), ec.id()) << endmsg;
+          debug() << fmt::format("Matched position cluster {} with energy cluster {}\n", pc.getObjectID().index, ec.getObjectID().index) << endmsg;
           debug() << fmt::format("  - Position cluster: (E: {}, phi: {}, z: {})", pc.getEnergy(),
                                  edm4hep::utils::angleAzimuthal(pc.getPosition()), pc.getPosition().z)
                   << endmsg;
