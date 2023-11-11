@@ -37,6 +37,10 @@ namespace {
   using CKF =
       Acts::CombinatorialKalmanFilter<Propagator, Acts::VectorMultiTrajectory>;
 
+  using TrackContainer =
+      Acts::TrackContainer<Acts::VectorTrackContainer,
+                           Acts::VectorMultiTrajectory, std::shared_ptr>;
+
   /** Finder implmentation .
    *
    * \ingroup track
@@ -48,11 +52,10 @@ namespace {
     CKFTrackingFunctionImpl(CKF&& f) : trackFinder(std::move(f)) {}
 
     Jug::Reco::CKFTracking::TrackFinderResult
-    operator()(const Jug::TrackParametersContainer& initialParameters,
-               const Jug::Reco::CKFTracking::TrackFinderOptions& options)
-               const override
-    {
-      return trackFinder.findTracks(initialParameters, options);
+    operator()(const ActsExamples::TrackParameters& initialParameters,
+               const Jug::Reco::CKFTracking::TrackFinderOptions& options,
+               TrackContainer& tracks) const override {
+      return trackFinder.findTracks(initialParameters, options, tracks);
     };
   };
 

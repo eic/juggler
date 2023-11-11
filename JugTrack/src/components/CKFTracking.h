@@ -43,16 +43,18 @@ public:
   using TrackFinderOptions =
       Acts::CombinatorialKalmanFilterOptions<ActsExamples::IndexSourceLinkAccessor::Iterator,
                                              Acts::VectorMultiTrajectory>;
-  using TrackFinderResult = std::vector<Acts::Result<
-      Acts::CombinatorialKalmanFilterResult<Acts::VectorMultiTrajectory>>>;
+  using TrackFinderResult =
+      Acts::Result<std::vector<ActsExamples::TrackContainer::TrackProxy>>;
+
   /// Find function that takes the above parameters
   /// @note This is separated into a virtual interface to keep compilation units
   /// small
   class CKFTrackingFunction {
    public:
     virtual ~CKFTrackingFunction() = default;
-    virtual TrackFinderResult operator()(const TrackParametersContainer&,
-                                         const TrackFinderOptions&) const = 0;
+    virtual TrackFinderResult operator()(const ActsExamples::TrackParameters&,
+                                         const TrackFinderOptions&,
+                                         ActsExamples::TrackContainer&) const = 0;
   };
 
   /// Create the track finder function implementation.
@@ -67,6 +69,7 @@ public:
   DataHandle<ActsExamples::MeasurementContainer> m_inputMeasurements{"inputMeasurements", Gaudi::DataHandle::Reader, this};
   DataHandle<ActsExamples::TrackParametersContainer> m_inputInitialTrackParameters{"inputInitialTrackParameters",
                                                                      Gaudi::DataHandle::Reader, this};
+  DataHandle<ActsExamples::ConstTrackContainer> m_outputTracks{"outputTracks", Gaudi::DataHandle::Writer, this};
   DataHandle<ActsExamples::TrajectoriesContainer> m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
 
   Gaudi::Property<std::vector<double>> m_etaBins{this, "etaBins", {}};

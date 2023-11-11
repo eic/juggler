@@ -72,6 +72,7 @@ namespace Jug::Reco {
     declareProperty("inputSourceLinks", m_inputSourceLinks, "");
     declareProperty("inputMeasurements", m_inputMeasurements, "");
     declareProperty("inputInitialTrackParameters", m_inputInitialTrackParameters, "");
+    declareProperty("outputTracks", m_outputTracks, "");
     declareProperty("outputTrajectories", m_outputTrajectories, "");
   }
 
@@ -114,9 +115,9 @@ namespace Jug::Reco {
     const auto* const measurements    = m_inputMeasurements.get();
 
     //// Prepare the output data with MultiTrajectory
-    // TrajectoryContainer trajectories;
-    auto* trajectories = m_outputTrajectories.createAndPut();
-    trajectories->reserve(init_trk_params->size());
+    auto* acts_tracks = m_outputTracks.createAndPut();
+    auto* acts_trajectories = m_outputTrajectories.createAndPut();
+    acts_trajectories->reserve(init_trk_params->size());
 
     //// Construct a perigee surface as the target surface
     auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3{0., 0., 0.});
@@ -158,25 +159,87 @@ namespace Jug::Reco {
         m_geoctx, m_fieldctx, m_calibctx, slAccessorDelegate,
         extensions, pOptions, &(*pSurface));
 
-    auto results = (*m_trackFinderFunc)(*init_trk_params, options);
+    // Create track container
+    auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
+    auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
+    ActsExamples::TrackContainer tracks(trackContainer, trackStateContainer);
 
+    // Add seed number column
+    tracks.addColumn<unsigned int>("seed");
+    Acts::TrackAccessor<unsigned int> seedNumber("seed");
+
+    // Loop over seeds
     for (std::size_t iseed = 0; iseed < init_trk_params->size(); ++iseed) {
+        auto result =
+            (*m_trackFinderFunc)(init_trk_params->at(iseed), options, tracks);
 
-      auto& result = results[iseed];
-
-      if (result.ok()) {
-        // Get the track finding output object
-        auto& trackFindingOutput = result.value();
-        // Create a SimMultiTrajectory
-        trajectories->emplace_back(std::move(trackFindingOutput.fittedStates), 
-                                   std::move(trackFindingOutput.lastMeasurementIndices),
-                                   std::move(trackFindingOutput.fittedParameters));
-      } else {
-        if (msgLevel(MSG::DEBUG)) {
-          debug() << "Track finding failed for truth seed " << iseed << "with error: " << result.error() << endmsg;
+        if (!result.ok()) {
+            debug() << fmt::format("Track finding failed for seed {} with error {}", iseed, result.error()) << endmsg;
+            continue;
         }
-      }
+
+        // Set seed number for all found tracks
+        auto& tracksForSeed = result.value();
+        for (auto& track : tracksForSeed) {
+            seedNumber(track) = iseed;
+        }
     }
+
+    // Move track states and track container to const containers
+    // NOTE Using the non-const containers leads to references to
+    // implicitly converted temporaries inside the Trajectories.
+    auto constTrackStateContainer =
+        std::make_shared<Acts::ConstVectorMultiTrajectory>(
+            std::move(*trackStateContainer));
+
+    auto constTrackContainer =
+        std::make_shared<Acts::ConstVectorTrackContainer>(
+            std::move(*trackContainer));
+
+    ActsExamples::ConstTrackContainer constTracks(constTrackContainer, constTrackStateContainer);
+
+    // Seed number column accessor
+    const Acts::ConstTrackAccessor<unsigned int> constSeedNumber("seed");
+
+
+    // Prepare the output data with MultiTrajectory, per seed
+    ActsExamples::Trajectories::IndexedParameters parameters;
+    std::vector<Acts::MultiTrajectoryTraits::IndexType> tips;
+
+    std::optional<unsigned int> lastSeed;
+    for (const auto& track : constTracks) {
+      if (!lastSeed) {
+        lastSeed = constSeedNumber(track);
+      }
+
+      if (constSeedNumber(track) != lastSeed.value()) {
+        // make copies and clear vectors
+        acts_trajectories.push_back(new ActsExamples::Trajectories(
+          constTracks.trackStateContainer(),
+          tips, parameters));
+
+        tips.clear();
+        parameters.clear();
+      }
+
+      lastSeed = constSeedNumber(track);
+
+      tips.push_back(track.tipIndex());
+      parameters.emplace(
+          std::pair{track.tipIndex(),
+                    ActsExamples::TrackParameters{track.referenceSurface().getSharedPtr(),
+                                                  track.parameters(), track.covariance(),
+                                                  track.particleHypothesis()}});
+    }
+
+    if (tips.empty()) {
+      info() << fmt::format("Last trajectory is empty") << endmsg;
+    }
+
+    // last entry: move vectors
+    acts_trajectories.push_back(new ActsExamples::Trajectories(
+      constTracks.trackStateContainer(),
+      std::move(tips), std::move(parameters)));
 
     return StatusCode::SUCCESS;
   }
