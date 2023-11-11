@@ -71,6 +71,8 @@ namespace Jug::Reco {
       }
     };
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+    DECLARE_COMPONENT(TrackingHitsCollector)
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     DECLARE_COMPONENT(TrackingHitsCollector2)
 
 } // namespace Jug::Reco
