@@ -9,7 +9,6 @@
 #include "DD4hep/Printout.h"
 
 #include "JugBase/ACTSLogger.h"
-#include "JugBase/Acts/MaterialWiper.hpp"
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
@@ -113,9 +112,6 @@ StatusCode GeoSvc::initialize() {
     // Set up the json-based decorator
     m_materialDeco = std::make_shared<const Acts::JsonMaterialDecorator>(
       jsonGeoConvConfig, m_jsonFileName, m_actsLoggingLevel);
-  } else {
-    m_log << MSG::WARNING << "no ACTS materials map has been loaded" << endmsg;
-    m_materialDeco = std::make_shared<const Acts::MaterialWiper>();
   }
 
   // Convert DD4hep geometry to ACTS
