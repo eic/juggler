@@ -100,7 +100,7 @@ namespace Jug::Reco {
         debug() << "Invoke track finding seeded by truth particle with p = " << p/GeV  << " GeV" << endmsg;
 
         // add both charges to the track candidate...
-        init_trk_params->push_back({pSurface, params,  1});
+        init_trk_params->push_back({pSurface, params, {}, Acts::ParticleHypothesis::pion()});
 
         Acts::BoundVector  params2;
         params2(Acts::eBoundLoc0)   = 0.0 * mm ;
@@ -109,7 +109,7 @@ namespace Jug::Reco {
         params2(Acts::eBoundTheta)  = theta;
         params2(Acts::eBoundQOverP) = -1/p;
         params2(Acts::eBoundTime)   = 0 * ns;
-        init_trk_params->push_back({pSurface, params2, -1});
+        init_trk_params->push_back({pSurface, params2, {}, Acts::ParticleHypothesis::pion()});
 
       }
       return StatusCode::SUCCESS;

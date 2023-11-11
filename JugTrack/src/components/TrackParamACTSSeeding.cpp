@@ -601,11 +601,9 @@ namespace Jug::Reco {
                        spTaken[seed.sp()[1]->measurementIndex()] ||
                        spTaken[seed.sp()[2]->measurementIndex()])) {
                 const auto& params = optParams.value();
-                const double charge =
-                    std::copysign(1, params[Acts::eBoundQOverP]);
                 initTrackParameters->emplace_back(
-                    surface->getSharedPtr(), params, charge,
-                    m_covariance);
+                    surface->getSharedPtr(), params,
+                    m_covariance, Acts::ParticleHypothesis::pion());
                 // Activate/deactivate for unique seed filtering
 #if 0
                 spTaken[seed.sp()[0]->measurementIndex()] = true;

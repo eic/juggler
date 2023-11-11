@@ -171,7 +171,7 @@ namespace Jug::Reco {
             Acts::Vector3{part.getVertex().x * mm, part.getVertex().y * mm, part.getVertex().z * mm});
 
         //params(Acts::eBoundQOverP) = charge/p;
-        init_trk_params->push_back({pSurface, params, charge,cov});
+        init_trk_params->push_back({pSurface, params, cov, Acts::ParticleHypothesis::pion()});
         // std::make_optional(std::move(cov))
 
         if (msgLevel(MSG::DEBUG)) {
