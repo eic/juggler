@@ -153,7 +153,7 @@ namespace Jug::Reco {
     // Set the CombinatorialKalmanFilter options
     CKFTracking::TrackFinderOptions options(
         m_geoctx, m_fieldctx, m_calibctx, slAccessorDelegate,
-        extensions, Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
+        extensions, pOptions, &(*pSurface));
 
     auto results = (*m_trackFinderFunc)(*init_trk_params, options);
 

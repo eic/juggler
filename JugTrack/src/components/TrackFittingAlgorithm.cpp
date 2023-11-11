@@ -119,7 +119,7 @@ namespace Jug::Reco {
 
     Acts::KalmanFitterOptions kfOptions(
         m_geoctx, m_fieldctx, m_calibctx, extensions,
-        Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(),
+        Acts::PropagatorPlainOptions(),
         &(*pSurface));
 
     // used for processing the data
