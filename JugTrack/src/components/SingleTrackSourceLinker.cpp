@@ -151,7 +151,7 @@ public:
       linkStorage->emplace_back(surface->geometryId(), ihit);
       ActsExamples::IndexSourceLink& sourceLink = linkStorage->back();
       auto meas =
-          Acts::makeMeasurement(sourceLink, pos, cov, Acts::eBoundLoc0, Acts::eBoundLoc1); //, Acts::eBoundTime);
+          Acts::makeMeasurement(Acts::SourceLink{sourceLink}, pos, cov, Acts::eBoundLoc0, Acts::eBoundLoc1);
 
       // add to output containers. since the input is already geometry-order,
       // new elements in geometry containers can just be appended at the end.
