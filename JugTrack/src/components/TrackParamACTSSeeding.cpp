@@ -13,19 +13,8 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#if Acts_VERSION_MAJOR >= 21
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
-#else
-#include "Acts/Seeding/SeedfinderConfig.hpp"
-#include "Acts/Seeding/Seedfinder.hpp"
-namespace Acts {
-  template<typename T>
-  using SeedFinder = Seedfinder<T>;
-  template<typename T>
-  using SeedFinderConfig = SeedfinderConfig<T>;
-}
-#endif
 
 // Gaudi
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -333,20 +322,12 @@ namespace Jug::Reco {
             m_outputInitialTrackParameters.createAndPut();
 
         static SeedContainer seeds;
-#if Acts_VERSION_MAJOR >= 21
         static Acts::SeedFinder<SpacePoint>::SeedingState state;
-#else
-        static Acts::SeedFinder<SpacePoint>::State state;
-#endif
 
         // Sadly, eic::TrackerHit and eic::TrackerHitData are
 	// non-polymorphic
         std::vector<SpacePoint> spacePoint;
         std::vector<const SpacePoint *> spacePointPtrs;
-#if Acts_VERSION_MAJOR < 21
-        // extent used to store r range for middle spacepoint
-        Acts::Extent rRangeSPExtent;
-#endif
 
         std::shared_ptr<const Acts::TrackingGeometry>
             trackingGeometry = m_geoSvc->trackingGeometry();
@@ -418,11 +399,6 @@ namespace Jug::Reco {
                         << ' ' << spacePointPtrs.back()->measurementIndex()
                         << ' ' << spacePointPtrs.back()->isOnSurface()
                         << endmsg;
-#if Acts_VERSION_MAJOR < 21
-            rRangeSPExtent.extend({ spacePoint.back().x(),
-                                    spacePoint.back().y(),
-                                    spacePoint.back().z() });
-#endif
             }
         }
 #endif // USE_LOCAL_COORD
@@ -442,10 +418,8 @@ namespace Jug::Reco {
             debug() << __FILE__ << ':' << __LINE__ << ": " << endmsg;
         }
 
-#if Acts_VERSION_MAJOR >= 21
         // extent used to store r range for middle spacepoint
         Acts::Extent rRangeSPExtent;
-#endif
 
         auto bottomBinFinder =
             std::make_shared<Acts::BinFinder<SpacePoint>>(
@@ -494,9 +468,7 @@ namespace Jug::Reco {
                 spacePointPtrs.begin(), spacePointPtrs.end(),
                 extractGlobalQuantities, bottomBinFinder,
                 topBinFinder, std::move(grid),
-#if Acts_VERSION_MAJOR >= 21
                 rRangeSPExtent,
-#endif
                 m_finderCfg);
         auto finder = Acts::SeedFinder<SpacePoint>(m_finderCfg);
 
@@ -506,13 +478,11 @@ namespace Jug::Reco {
                     << spacePointsGrouping.size() << endmsg;
         }
 
-#if Acts_VERSION_MAJOR >= 21
         const Acts::Range1D<float> rMiddleSPRange(
             std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
             m_cfg.deltaRMiddleMinSPRange,
             std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2 -
             m_cfg.deltaRMiddleMaxSPRange);
-#endif
 
         // Run the seeding
         seeds.clear();
@@ -523,11 +493,7 @@ namespace Jug::Reco {
             finder.createSeedsForGroup(
                 state, std::back_inserter(seeds),
                 group.bottom(), group.middle(), group.top(),
-#if Acts_VERSION_MAJOR >= 21
                 rMiddleSPRange
-#else
-                rRangeSPExtent
-#endif
             );
         }
 
