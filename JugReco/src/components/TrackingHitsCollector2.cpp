@@ -71,7 +71,7 @@ namespace Jug::Reco {
       }
     };
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-    DECLARE_COMPONENT(TrackingHitsCollector)
+    DECLARE_COMPONENT_WITH_ID(TrackingHitsCollector2, "TrackingHitsCollector")
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     DECLARE_COMPONENT(TrackingHitsCollector2)
 
