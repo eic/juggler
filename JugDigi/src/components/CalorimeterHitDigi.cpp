@@ -148,7 +148,7 @@ namespace Jug::Digi {
           return StatusCode::FAILURE;
         }
         id_mask = ~id_mask;
-        info() << fmt::format("ID mask in {:s}: {:#064b}", m_readout, id_mask) << endmsg;
+        info() << fmt::format("ID mask in {:s}: {:#064b}", m_readout.value(), id_mask) << endmsg;
         return StatusCode::SUCCESS;
       }
 
