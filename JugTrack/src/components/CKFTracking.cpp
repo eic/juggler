@@ -41,12 +41,15 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 
-#include "fmt/format.h"
+#include <fmt/core.h>
+#include <fmt/ostream.h>
 
 #include "edm4eic/TrackerHitCollection.h"
 
 #include <functional>
 #include <stdexcept>
+#include <system_error>
+#include <type_traits>
 #include <vector>
 #include <random>
 #include <stdexcept>
@@ -115,7 +118,6 @@ namespace Jug::Reco {
     const auto* const measurements    = m_inputMeasurements.get();
 
     //// Prepare the output data with MultiTrajectory
-    auto* acts_tracks = m_outputTracks.createAndPut();
     auto* acts_trajectories = m_outputTrajectories.createAndPut();
     acts_trajectories->reserve(init_trk_params->size());
 
@@ -196,7 +198,9 @@ namespace Jug::Reco {
         std::make_shared<Acts::ConstVectorTrackContainer>(
             std::move(*trackContainer));
 
-    ActsExamples::ConstTrackContainer constTracks(constTrackContainer, constTrackStateContainer);
+    auto* constTracks = m_outputTracks.put(
+        std::make_unique<ActsExamples::ConstTrackContainer>(constTrackContainer, constTrackStateContainer)
+    );
 
     // Seed number column accessor
     const Acts::ConstTrackAccessor<unsigned int> constSeedNumber("seed");
@@ -207,16 +211,16 @@ namespace Jug::Reco {
     std::vector<Acts::MultiTrajectoryTraits::IndexType> tips;
 
     std::optional<unsigned int> lastSeed;
-    for (const auto& track : constTracks) {
+    for (const auto& track : *constTracks) {
       if (!lastSeed) {
         lastSeed = constSeedNumber(track);
       }
 
       if (constSeedNumber(track) != lastSeed.value()) {
         // make copies and clear vectors
-        acts_trajectories.push_back(new ActsExamples::Trajectories(
-          constTracks.trackStateContainer(),
-          tips, parameters));
+        acts_trajectories->emplace_back(
+          constTracks->trackStateContainer(),
+          tips, parameters);
 
         tips.clear();
         parameters.clear();
@@ -237,9 +241,9 @@ namespace Jug::Reco {
     }
 
     // last entry: move vectors
-    acts_trajectories.push_back(new ActsExamples::Trajectories(
-      constTracks.trackStateContainer(),
-      std::move(tips), std::move(parameters)));
+    acts_trajectories->emplace_back(
+      constTracks->trackStateContainer(),
+      std::move(tips), std::move(parameters));
 
     return StatusCode::SUCCESS;
   }
