@@ -72,6 +72,9 @@ endif()
 add_definitions("-DActs_VERSION_MAJOR=${Acts_VERSION_MAJOR}")
 add_definitions("-DActs_VERSION_MINOR=${Acts_VERSION_MINOR}")
 add_definitions("-DActs_VERSION_PATCH=${Acts_VERSION_PATCH}")
+# Get ActsCore path for ActsExamples include
+get_target_property(ActsCore_LOCATION ActsCore LOCATION)
+get_filename_component(ActsCore_PATH ${ActsCore_LOCATION} DIRECTORY)
 
 ## algorithms dependency
 option(USE_SYSTEM_ALGORITHMS "Use system-provided algorithms" OFF)
