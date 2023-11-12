@@ -496,14 +496,10 @@ namespace Jug::Reco {
         // Run the seeding
         seeds.clear();
 
-        auto group = spacePointsGrouping.begin();
-        auto groupEnd = spacePointsGrouping.end();
-        for (; !(group == groupEnd); ++group) {
+        for (const auto [bottom, middle, top] : spacePointsGrouping) {
             finder.createSeedsForGroup(
-                m_finderOpt,
-                state, std::back_inserter(seeds),
-                group.bottom(), group.middle(), group.top(),
-                rMiddleSPRange
+                m_finderOpt, state, spacePointsGrouping.grid(),
+                std::back_inserter(seeds), bottom, middle, top, rMiddleSPRange
             );
         }
 
