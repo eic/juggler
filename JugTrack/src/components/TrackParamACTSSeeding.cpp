@@ -478,7 +478,7 @@ namespace Jug::Reco {
                 extractGlobalQuantities, bottomBinFinder,
                 topBinFinder, std::move(grid),
                 rRangeSPExtent,
-                m_finderCfg);
+                m_finderCfg, m_finderOpt);
         auto finder = Acts::SeedFinder<SpacePoint>(m_finderCfg);
 
         if (msgLevel(MSG::DEBUG)) {
