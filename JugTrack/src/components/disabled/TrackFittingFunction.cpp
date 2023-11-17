@@ -36,8 +36,8 @@ namespace {
     TrackFitterFunctionImpl(track_fitter_t&& f) : trackFitter(std::move(f)) {}
 
     Jug::Reco::TrackFittingAlgorithm::FitterResult
-    operator()(const std::vector<Jug::IndexSourceLink>&                    sourceLinks,
-               const Jug::TrackParameters&                                 initialParameters,
+    operator()(const std::vector<ActsExamples::IndexSourceLink>&                    sourceLinks,
+               const ActsExamples::TrackParameters&                                 initialParameters,
                const Jug::Reco::TrackFittingAlgorithm::TrackFitterOptions& options) const
     {
       return trackFitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters, options);

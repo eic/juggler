@@ -15,6 +15,7 @@
 #include <unordered_map>
 #include <cmath>
 
+#include "GaudiAlg/GaudiAlgorithm.h"
 #include "GaudiAlg/Transformer.h"
 #include "GaudiAlg/GaudiTool.h"
 #include "GaudiKernel/RndmGenerators.h"

@@ -8,7 +8,10 @@
  *  Author: Chao Peng (ANL), 06/02/2021
  */
 #include "fmt/format.h"
+#pragma GCC diagnostic push                             // save the actual diag context
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"  // disable maybe warnings
 #include <Eigen/Dense>
+#pragma GCC diagnostic pop                              // restore previous diag context
 #include <algorithm>
 
 #include "Gaudi/Property.h"
@@ -38,7 +41,6 @@
 #include "edm4hep/utils/vector_utils.h"
 
 using namespace Gaudi::Units;
-using namespace Eigen;
 
 namespace Jug::Reco {
 
@@ -329,7 +331,7 @@ private:
 
     mean_pos = mean_pos / nrows;
     // fill position data
-    MatrixXd pos(nrows, 3);
+    Eigen::MatrixXd pos(nrows, 3);
     int ir = 0;
     for (const auto& layer : layers) {
       if ((layer.getNhits() > 0) && (layer.getHits(0).getLayer() <= m_trackStopLayer)) {
@@ -341,7 +343,7 @@ private:
       }
     }
 
-    JacobiSVD<MatrixXd> svd(pos, ComputeThinU | ComputeThinV);
+    Eigen::JacobiSVD<Eigen::MatrixXd> svd(pos, Eigen::ComputeThinU | Eigen::ComputeThinV);
     const auto dir = svd.matrixV().col(0);
     // theta and phi
     return {std::acos(dir(2)), std::atan2(dir(1), dir(0))};

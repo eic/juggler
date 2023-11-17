@@ -19,6 +19,7 @@
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
+#include "Acts/TrackFinding/SourceLinkAccessorConcept.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -33,21 +34,27 @@
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/BField/DD4hepBField.h"
 
-#include "JugTrack/GeometryContainers.hpp"
-#include "JugTrack/Measurement.hpp"
-#include "JugTrack/Index.hpp"
-#include "JugTrack/IndexSourceLink.hpp"
-#include "JugTrack/Track.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 
+#include <fmt/core.h>
+#include <fmt/ostream.h>
 
 #include "edm4eic/TrackerHitCollection.h"
 
 #include <functional>
 #include <stdexcept>
+#include <system_error>
+#include <type_traits>
 #include <vector>
 #include <random>
 #include <stdexcept>
 
+template<> struct fmt::formatter<std::error_code> : fmt::ostream_formatter {};
 
 static const std::map<int, Acts::Logging::Level> s_msgMap = {
     {MSG::DEBUG, Acts::Logging::DEBUG},
@@ -68,6 +75,7 @@ namespace Jug::Reco {
     declareProperty("inputSourceLinks", m_inputSourceLinks, "");
     declareProperty("inputMeasurements", m_inputMeasurements, "");
     declareProperty("inputInitialTrackParameters", m_inputInitialTrackParameters, "");
+    declareProperty("outputTracks", m_outputTracks, "");
     declareProperty("outputTrajectories", m_outputTrajectories, "");
   }
 
@@ -110,9 +118,8 @@ namespace Jug::Reco {
     const auto* const measurements    = m_inputMeasurements.get();
 
     //// Prepare the output data with MultiTrajectory
-    // TrajectoryContainer trajectories;
-    auto* trajectories = m_outputTrajectories.createAndPut();
-    trajectories->reserve(init_trk_params->size());
+    auto* acts_trajectories = m_outputTrajectories.createAndPut();
+    acts_trajectories->reserve(init_trk_params->size());
 
     //// Construct a perigee surface as the target surface
     auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3{0., 0., 0.});
@@ -122,14 +129,17 @@ namespace Jug::Reco {
     Acts::PropagatorPlainOptions pOptions;
     pOptions.maxSteps = 10000;
 
-    MeasurementCalibrator calibrator{*measurements};
+    ActsExamples::PassThroughCalibrator pcalibrator;
+    ActsExamples::MeasurementCalibratorAdapter calibrator(pcalibrator, *measurements);
     Acts::GainMatrixUpdater kfUpdater;
     Acts::GainMatrixSmoother kfSmoother;
     Acts::MeasurementSelector measSel{m_sourcelinkSelectorCfg};
 
     Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>
         extensions;
-    extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
+    extensions.calibrator.connect<
+        &ActsExamples::MeasurementCalibratorAdapter::calibrate>(
+        &calibrator);
     extensions.updater.connect<
         &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
         &kfUpdater);
@@ -140,36 +150,100 @@ namespace Jug::Reco {
         .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
             &measSel);
 
-    IndexSourceLinkAccessor slAccessor;
+    ActsExamples::IndexSourceLinkAccessor slAccessor;
     slAccessor.container = src_links;
-    Acts::SourceLinkAccessorDelegate<IndexSourceLinkAccessor::Iterator>
+    Acts::SourceLinkAccessorDelegate<ActsExamples::IndexSourceLinkAccessor::Iterator>
         slAccessorDelegate;
-    slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
+    slAccessorDelegate.connect<&ActsExamples::IndexSourceLinkAccessor::range>(&slAccessor);
 
     // Set the CombinatorialKalmanFilter options
     CKFTracking::TrackFinderOptions options(
         m_geoctx, m_fieldctx, m_calibctx, slAccessorDelegate,
-        extensions, Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
+        extensions, pOptions, &(*pSurface));
 
-    auto results = (*m_trackFinderFunc)(*init_trk_params, options);
+    // Create track container
+    auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
+    auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
+    ActsExamples::TrackContainer tracks(trackContainer, trackStateContainer);
 
+    // Add seed number column
+    tracks.addColumn<unsigned int>("seed");
+    Acts::TrackAccessor<unsigned int> seedNumber("seed");
+
+    // Loop over seeds
     for (std::size_t iseed = 0; iseed < init_trk_params->size(); ++iseed) {
+        auto result =
+            (*m_trackFinderFunc)(init_trk_params->at(iseed), options, tracks);
 
-      auto& result = results[iseed];
-
-      if (result.ok()) {
-        // Get the track finding output object
-        auto& trackFindingOutput = result.value();
-        // Create a SimMultiTrajectory
-        trajectories->emplace_back(std::move(trackFindingOutput.fittedStates), 
-                                   std::move(trackFindingOutput.lastMeasurementIndices),
-                                   std::move(trackFindingOutput.fittedParameters));
-      } else {
-        if (msgLevel(MSG::DEBUG)) {
-          debug() << "Track finding failed for truth seed " << iseed << "with error: " << result.error() << endmsg;
+        if (!result.ok()) {
+            debug() << fmt::format("Track finding failed for seed {} with error {}", iseed, result.error()) << endmsg;
+            continue;
         }
-      }
+
+        // Set seed number for all found tracks
+        auto& tracksForSeed = result.value();
+        for (auto& track : tracksForSeed) {
+            seedNumber(track) = iseed;
+        }
     }
+
+    // Move track states and track container to const containers
+    // NOTE Using the non-const containers leads to references to
+    // implicitly converted temporaries inside the Trajectories.
+    auto constTrackStateContainer =
+        std::make_shared<Acts::ConstVectorMultiTrajectory>(
+            std::move(*trackStateContainer));
+
+    auto constTrackContainer =
+        std::make_shared<Acts::ConstVectorTrackContainer>(
+            std::move(*trackContainer));
+
+    auto* constTracks = m_outputTracks.put(
+        std::make_unique<ActsExamples::ConstTrackContainer>(constTrackContainer, constTrackStateContainer)
+    );
+
+    // Seed number column accessor
+    const Acts::ConstTrackAccessor<unsigned int> constSeedNumber("seed");
+
+
+    // Prepare the output data with MultiTrajectory, per seed
+    ActsExamples::Trajectories::IndexedParameters parameters;
+    std::vector<Acts::MultiTrajectoryTraits::IndexType> tips;
+
+    std::optional<unsigned int> lastSeed;
+    for (const auto& track : *constTracks) {
+      if (!lastSeed) {
+        lastSeed = constSeedNumber(track);
+      }
+
+      if (constSeedNumber(track) != lastSeed.value()) {
+        // make copies and clear vectors
+        acts_trajectories->emplace_back(
+          constTracks->trackStateContainer(),
+          tips, parameters);
+
+        tips.clear();
+        parameters.clear();
+      }
+
+      lastSeed = constSeedNumber(track);
+
+      tips.push_back(track.tipIndex());
+      parameters.emplace(
+          std::pair{track.tipIndex(),
+                    ActsExamples::TrackParameters{track.referenceSurface().getSharedPtr(),
+                                                  track.parameters(), track.covariance(),
+                                                  track.particleHypothesis()}});
+    }
+
+    if (tips.empty()) {
+      info() << fmt::format("Last trajectory is empty") << endmsg;
+    }
+
+    // last entry: move vectors
+    acts_trajectories->emplace_back(
+      constTracks->trackStateContainer(),
+      std::move(tips), std::move(parameters));
 
     return StatusCode::SUCCESS;
   }

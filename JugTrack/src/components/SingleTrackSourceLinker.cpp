@@ -24,11 +24,11 @@
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-#include "JugTrack/GeometryContainers.hpp"
-#include "JugTrack/Index.hpp"
-#include "JugTrack/IndexSourceLink.hpp"
-#include "JugTrack/Measurement.hpp"
-#include "JugTrack/ProtoTrack.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
 
 #include "edm4eic/TrackerHitCollection.h"
 
@@ -43,10 +43,10 @@ namespace Jug::Reco {
 class SingleTrackSourceLinker : public GaudiAlgorithm {
 private:
   DataHandle<edm4eic::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-  DataHandle<std::list<IndexSourceLink>> m_sourceLinkStorage{"sourceLinkStorage", Gaudi::DataHandle::Writer, this};
-  DataHandle<IndexSourceLinkContainer> m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};
-  DataHandle<MeasurementContainer> m_outputMeasurements{"outputMeasurements", Gaudi::DataHandle::Writer, this};
-  DataHandle<ProtoTrackContainer> m_outputProtoTracks{"outputProtoTracks", Gaudi::DataHandle::Writer, this};
+  DataHandle<std::list<ActsExamples::IndexSourceLink>> m_sourceLinkStorage{"sourceLinkStorage", Gaudi::DataHandle::Writer, this};
+  DataHandle<ActsExamples::IndexSourceLinkContainer> m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};
+  DataHandle<ActsExamples::MeasurementContainer> m_outputMeasurements{"outputMeasurements", Gaudi::DataHandle::Writer, this};
+  DataHandle<ActsExamples::ProtoTrackContainer> m_outputProtoTracks{"outputProtoTracks", Gaudi::DataHandle::Writer, this};
   /// Pointer to the geometry service
   SmartIF<IGeoSvc> m_geoSvc;
 
@@ -86,7 +86,7 @@ public:
     measurements->reserve(hits->size());
 
     // assume single track --> one ProtoTrack
-    ProtoTrack track;
+    ActsExamples::ProtoTrack track;
     track.reserve((*hits).size());
 
     if (msgLevel(MSG::DEBUG)) {
@@ -137,21 +137,21 @@ public:
       Acts::Vector2 pos(acts_pos.x(), acts_pos.y());
 
       // construct the covariance matrix
-      Acts::SymMatrix2 cov = Acts::SymMatrix2::Zero();
+      Acts::SquareMatrix2 cov = Acts::SquareMatrix2::Zero();
       cov(0, 0)            = ahit.getPositionError().xx * Acts::UnitConstants::mm * Acts::UnitConstants::mm;
       cov(1, 1)            = ahit.getPositionError().yy * Acts::UnitConstants::mm * Acts::UnitConstants::mm;
 
       // Above we only consider the two position coordinates the comment below shows how to add time
       // which we will probably want to try later.
       //
-      // Acts::SymMatrix3 cov;
+      // Acts::SquareMatrix3 cov;
       // cov << 0.05, 0., 0., 0., 0.05, 0., 0., 0., 900. * Acts::UnitConstants::ps * Acts::UnitConstants::ps;
       // Acts::Vector3 par(localX, localY, simHit.time());
 
       linkStorage->emplace_back(surface->geometryId(), ihit);
-      IndexSourceLink& sourceLink = linkStorage->back();
+      ActsExamples::IndexSourceLink& sourceLink = linkStorage->back();
       auto meas =
-          Acts::makeMeasurement(sourceLink, pos, cov, Acts::eBoundLoc0, Acts::eBoundLoc1); //, Acts::eBoundTime);
+          Acts::makeMeasurement(Acts::SourceLink{sourceLink}, pos, cov, Acts::eBoundLoc0, Acts::eBoundLoc1);
 
       // add to output containers. since the input is already geometry-order,
       // new elements in geometry containers can just be appended at the end.

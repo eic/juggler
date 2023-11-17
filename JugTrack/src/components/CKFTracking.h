@@ -16,12 +16,12 @@
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/BField/DD4hepBField.h"
-#include "JugTrack/GeometryContainers.hpp"
-#include "JugTrack/Index.hpp"
-#include "JugTrack/IndexSourceLink.hpp"
-#include "JugTrack/Measurement.hpp"
-#include "JugTrack/Track.hpp"
-#include "JugTrack/Trajectories.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 
 #include "edm4eic/TrackerHitCollection.h"
 
@@ -41,18 +41,20 @@ public:
   /// Track finder function that takes input measurements, initial trackstate
   /// and track finder options and returns some track-finder-specific result.
   using TrackFinderOptions =
-      Acts::CombinatorialKalmanFilterOptions<IndexSourceLinkAccessor::Iterator,
+      Acts::CombinatorialKalmanFilterOptions<ActsExamples::IndexSourceLinkAccessor::Iterator,
                                              Acts::VectorMultiTrajectory>;
-  using TrackFinderResult = std::vector<Acts::Result<
-      Acts::CombinatorialKalmanFilterResult<Acts::VectorMultiTrajectory>>>;
+  using TrackFinderResult =
+      Acts::Result<std::vector<ActsExamples::TrackContainer::TrackProxy>>;
+
   /// Find function that takes the above parameters
   /// @note This is separated into a virtual interface to keep compilation units
   /// small
   class CKFTrackingFunction {
    public:
     virtual ~CKFTrackingFunction() = default;
-    virtual TrackFinderResult operator()(const TrackParametersContainer&,
-                                         const TrackFinderOptions&) const = 0;
+    virtual TrackFinderResult operator()(const ActsExamples::TrackParameters&,
+                                         const TrackFinderOptions&,
+                                         ActsExamples::TrackContainer&) const = 0;
   };
 
   /// Create the track finder function implementation.
@@ -63,11 +65,12 @@ public:
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
 
 public:
-  DataHandle<IndexSourceLinkContainer> m_inputSourceLinks{"inputSourceLinks", Gaudi::DataHandle::Reader, this};
-  DataHandle<MeasurementContainer> m_inputMeasurements{"inputMeasurements", Gaudi::DataHandle::Reader, this};
-  DataHandle<TrackParametersContainer> m_inputInitialTrackParameters{"inputInitialTrackParameters",
+  DataHandle<ActsExamples::IndexSourceLinkContainer> m_inputSourceLinks{"inputSourceLinks", Gaudi::DataHandle::Reader, this};
+  DataHandle<ActsExamples::MeasurementContainer> m_inputMeasurements{"inputMeasurements", Gaudi::DataHandle::Reader, this};
+  DataHandle<ActsExamples::TrackParametersContainer> m_inputInitialTrackParameters{"inputInitialTrackParameters",
                                                                      Gaudi::DataHandle::Reader, this};
-  DataHandle<TrajectoriesContainer> m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
+  DataHandle<ActsExamples::ConstTrackContainer> m_outputTracks{"outputTracks", Gaudi::DataHandle::Writer, this};
+  DataHandle<ActsExamples::TrajectoriesContainer> m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
 
   Gaudi::Property<std::vector<double>> m_etaBins{this, "etaBins", {}};
   Gaudi::Property<std::vector<double>> m_chi2CutOff{this, "chi2CutOff", {15.}};

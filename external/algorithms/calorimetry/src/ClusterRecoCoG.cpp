@@ -46,7 +46,7 @@ void ClusterRecoCoG::init() {
     std::vector<std::string> keys;
     std::transform(weightMethods.begin(), weightMethods.end(), std::back_inserter(keys),
                    [](const auto& keyvalue) { return keyvalue.first; });
-    raise(fmt::format("Cannot find energy weighting method {}, choose one from {}", m_energyWeight,
+    raise(fmt::format("Cannot find energy weighting method {}, choose one from {}", m_energyWeight.value(),
                       keys));
   }
   m_weightFunc = weightMethods.at(ew);

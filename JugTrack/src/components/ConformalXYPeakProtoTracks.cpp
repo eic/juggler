@@ -11,8 +11,8 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugTrack/ProtoTrack.hpp"
-#include "JugTrack/Track.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 
 #include "TH1F.h"
 #include "Math/Vector3D.h"
@@ -31,7 +31,7 @@ namespace Jug::Reco {
 class ConformalXYPeakProtoTracks : public GaudiAlgorithm {
 private:
   DataHandle<edm4eic::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
-  DataHandle<Jug::ProtoTrackContainer> m_outputProtoTracks{"outputProtoTracks", Gaudi::DataHandle::Writer, this};
+  DataHandle<ActsExamples::ProtoTrackContainer> m_outputProtoTracks{"outputProtoTracks", Gaudi::DataHandle::Writer, this};
   DataHandle<int> m_nProtoTracks{"nProtoTracks", Gaudi::DataHandle::Writer, this};
 
   Gaudi::Property<int> m_nPhiBins{this, "nPhiBins", 100};
@@ -91,7 +91,7 @@ public:
     }
     // 4. Group hits peaked in phi
     for(auto b : max_bins) {
-      Jug::ProtoTrack proto_track; // this is just a std::vector<int>
+      ActsExamples::ProtoTrack proto_track; // this is just a std::vector<int>
       for(size_t ihit = 0 ; ihit< hits->size() ; ihit++) {
         double phi = conformal_hits[ihit].phi();
         double bin_phi = h_phi.GetXaxis()->GetBinCenter(b);

@@ -25,9 +25,9 @@
 #include "edm4eic/ReconstructedParticleCollection.h"
 #include "edm4eic/TrackerHitCollection.h"
 #include "edm4eic/TrackParametersCollection.h"
-#include "JugTrack/IndexSourceLink.hpp"
-#include "JugTrack/Track.hpp"
-#include "JugTrack/Trajectories.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -43,7 +43,7 @@ namespace Jug::Reco {
    */
    class ParticlesFromTrackFit : public GaudiAlgorithm {
    private:
-    DataHandle<TrajectoriesContainer>     m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
+    DataHandle<ActsExamples::TrajectoriesContainer>     m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
     DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer, this};
     DataHandle<edm4eic::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters", Gaudi::DataHandle::Writer, this};
 

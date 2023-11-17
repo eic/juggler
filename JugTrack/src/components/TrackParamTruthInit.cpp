@@ -14,7 +14,7 @@
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/IParticleSvc.h"
-#include "JugTrack/Track.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Definitions/Common.hpp"
 
@@ -47,7 +47,7 @@ namespace Jug::Reco {
   private:
     DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader,
                                                                     this};
-    DataHandle<TrackParametersContainer>         m_outputInitialTrackParameters{"outputInitialTrackParameters",
+    DataHandle<ActsExamples::TrackParametersContainer>         m_outputInitialTrackParameters{"outputInitialTrackParameters",
                                                                         Gaudi::DataHandle::Writer, this};
     
     // selection settings
@@ -150,7 +150,7 @@ namespace Jug::Reco {
         using Acts::UnitConstants::ns;
 
         // build some track cov matrix
-        Acts::BoundSymMatrix cov                    = Acts::BoundSymMatrix::Zero();
+        Acts::BoundSquareMatrix cov                    = Acts::BoundSquareMatrix::Zero();
         cov(Acts::eBoundLoc0, Acts::eBoundLoc0)     = 1000*um*1000*um;
         cov(Acts::eBoundLoc1, Acts::eBoundLoc1)     = 1000*um*1000*um;
         cov(Acts::eBoundPhi, Acts::eBoundPhi)       = 0.05*0.05;
@@ -171,7 +171,7 @@ namespace Jug::Reco {
             Acts::Vector3{part.getVertex().x * mm, part.getVertex().y * mm, part.getVertex().z * mm});
 
         //params(Acts::eBoundQOverP) = charge/p;
-        init_trk_params->push_back({pSurface, params, charge,cov});
+        init_trk_params->push_back({pSurface, params, cov, Acts::ParticleHypothesis::pion()});
         // std::make_optional(std::move(cov))
 
         if (msgLevel(MSG::DEBUG)) {

@@ -11,8 +11,8 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugTrack/ProtoTrack.hpp"
-#include "JugTrack/Track.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 
 #include "Math/Vector3D.h"
 
@@ -27,7 +27,7 @@ namespace Jug::Reco {
 class FinderAlgoTemplate : public GaudiAlgorithm {
 private:
   DataHandle<edm4eic::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
-  DataHandle<Jug::ProtoTrackContainer> m_outputProtoTracks{"outputProtoTracks", Gaudi::DataHandle::Writer, this};
+  DataHandle<ActsExamples::ProtoTrackContainer> m_outputProtoTracks{"outputProtoTracks", Gaudi::DataHandle::Writer, this};
 
 public:
   FinderAlgoTemplate(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {

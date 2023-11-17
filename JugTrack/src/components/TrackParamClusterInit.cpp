@@ -14,7 +14,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugTrack/Track.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 
 #include "edm4eic/ClusterCollection.h"
 #include "edm4eic/TrackerHitCollection.h"
@@ -44,10 +44,8 @@ namespace Jug::Reco {
  */
 class TrackParamClusterInit : public GaudiAlgorithm {
 private:
-  using Clusters = edm4eic::ClusterCollection;
-
-  DataHandle<Clusters> m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
-  DataHandle<TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
+  DataHandle<edm4eic::ClusterCollection> m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
+  DataHandle<ActsExamples::TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
                                                                       Gaudi::DataHandle::Writer, this};
 
 public:
@@ -102,7 +100,7 @@ public:
       }
 
       // add both charges to the track candidate...
-      init_trk_params->push_back({pSurface, params, 1});
+      init_trk_params->push_back({pSurface, params, {}, Acts::ParticleHypothesis::pion()});
 
       Acts::BoundVector params2;
       params2(Acts::eBoundLoc0)   = 0.0 * mm;
@@ -111,7 +109,7 @@ public:
       params2(Acts::eBoundTheta)  = edm4hep::utils::anglePolar(momentum);
       params2(Acts::eBoundQOverP) = -1 / p;
       params2(Acts::eBoundTime)   = 0 * ns;
-      init_trk_params->push_back({pSurface, params2, -1});
+      init_trk_params->push_back({pSurface, params2, {}, Acts::ParticleHypothesis::pion()});
 
       // acts v1.2.0:
       // init_trk_params->emplace_back(Acts::Vector4(0 * mm, 0 * mm, 0 * mm, 0),

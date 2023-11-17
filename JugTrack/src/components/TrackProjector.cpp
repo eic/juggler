@@ -27,9 +27,9 @@
 #include "edm4eic/TrackParametersCollection.h"
 #include "edm4eic/TrajectoryCollection.h"
 #include "edm4eic/TrackSegmentCollection.h"
-#include "JugTrack/IndexSourceLink.hpp"
-#include "JugTrack/Track.hpp"
-#include "JugTrack/Trajectories.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -50,7 +50,7 @@ namespace Jug::Reco {
    */
    class TrackProjector : public GaudiAlgorithm {
    private:
-    DataHandle<TrajectoriesContainer>        m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
+    DataHandle<ActsExamples::TrajectoriesContainer>        m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
     DataHandle<edm4eic::TrackSegmentCollection> m_outputTrackSegments{"outputTrackSegments", Gaudi::DataHandle::Writer, this};
 
     Gaudi::Property<unsigned int> m_firstInVolumeID{this, "firstInVolumeID", 0};

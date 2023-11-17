@@ -9,12 +9,11 @@
 namespace Acts {
 std::unique_ptr<const Logger> getDefaultLogger(const std::string& name, const Logging::Level& lvl, std::ostream* /* unused */) {
   using namespace Logging;
-  //ServiceHandle<IMessageSvc>* msgSvc = new ServiceHandle<IMessageSvc>("MessageSvc", name);
   ServiceHandle<IMessageSvc> msgSvc("MessageSvc", name);
   msgSvc->setOutputLevel(lvl + 1);
   auto printPol = std::make_unique<GaudiPrintPolicy>(&(*msgSvc));
   printPol->setName(name);
   return std::make_unique<Acts::Logger>(std::move(printPol),
-                                        std::make_unique<GaudiFilterPolicy>(&(*msgSvc)));
+                                        std::make_unique<GaudiFilterPolicy>(&(*msgSvc), lvl));
 }
 }

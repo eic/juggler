@@ -13,19 +13,8 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#if Acts_VERSION_MAJOR >= 21
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
-#else
-#include "Acts/Seeding/SeedfinderConfig.hpp"
-#include "Acts/Seeding/Seedfinder.hpp"
-namespace Acts {
-  template<typename T>
-  using SeedFinder = Seedfinder<T>;
-  template<typename T>
-  using SeedFinderConfig = SeedfinderConfig<T>;
-}
-#endif
 
 // Gaudi
 #include "GaudiAlg/GaudiAlgorithm.h"
@@ -38,8 +27,9 @@ namespace Acts {
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
 #include "JugBase/BField/DD4hepBField.h"
-#include "JugTrack/Measurement.hpp"
-#include "JugTrack/Track.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 
 #include "DDRec/CellIDPositionConverter.h"
 
@@ -71,7 +61,7 @@ namespace Jug::Reco {
         DataHandle<edm4eic::TrackerHitCollection>
         m_inputHitCollection { "inputHitCollection",
             Gaudi::DataHandle::Reader, this };
-        DataHandle<TrackParametersContainer>
+        DataHandle<ActsExamples::TrackParametersContainer>
         m_outputInitialTrackParameters {
             "outputInitialTrackParameters",
             Gaudi::DataHandle::Writer, this };
@@ -166,7 +156,7 @@ namespace Jug::Reco {
 
         /// A proto track is a collection of hits identified by their
         /// indices.
-        using ProtoTrack = std::vector<Index>;
+        using ProtoTrack = std::vector<ActsExamples::Index>;
         /// Container of proto tracks. Each proto track is identified by
         /// its index.
         using ProtoTrackContainer = std::vector<ProtoTrack>;
@@ -187,7 +177,6 @@ namespace Jug::Reco {
             /// Output proto track collection.
             std::string outputProtoTracks;
 
-            float bFieldInZ = 1.7 * Acts::UnitConstants::T;
             float cotThetaMax = std::sinh(4.01);
             float minPt = 100 * Acts::UnitConstants::MeV / cotThetaMax;
             float rMax = 440 * Acts::UnitConstants::mm;
@@ -201,9 +190,11 @@ namespace Jug::Reco {
             float maxSeedsPerSpM = 2;
             float sigmaScattering = 5;
             float radLengthPerSeed = 0.1;
+            float impactMax = 3 * Acts::UnitConstants::mm;
+            //
+            float bFieldInZ = 1.7 * Acts::UnitConstants::T;
             float beamPosX = 0 * Acts::UnitConstants::mm;
             float beamPosY = 0 * Acts::UnitConstants::mm;
-            float impactMax = 3 * Acts::UnitConstants::mm;
 
             /// The minimum magnetic field to trigger the track
             /// parameters estimation
@@ -232,11 +223,13 @@ namespace Jug::Reco {
             std::vector<std::pair<int, int> > zBinNeighborsBottom;
         } m_cfg;
         Acts::SpacePointGridConfig m_gridCfg;
+        Acts::SpacePointGridOptions m_gridOpt;
         Acts::SeedFinderConfig<SpacePoint> m_finderCfg;
+        Acts::SeedFinderOptions m_finderOpt;
         /// The track parameters covariance (assumed to be the same
         /// for all estimated track parameters for the moment)
-        Acts::BoundSymMatrix m_covariance =
-            Acts::BoundSymMatrix::Zero();
+        Acts::BoundSquareMatrix m_covariance =
+            Acts::BoundSquareMatrix::Zero();
 
     public:
         TrackParamACTSSeeding(const std::string &name,
@@ -272,7 +265,6 @@ namespace Jug::Reco {
                 m_geoSvc->getFieldProvider());
         m_fieldContext = Jug::BField::BFieldVariant(m_BField);
 
-        m_gridCfg.bFieldInZ = m_cfg.bFieldInZ;
         m_gridCfg.minPt = m_cfg.minPt;
         m_gridCfg.rMax = m_cfg.rMax;
         m_gridCfg.zMax = m_cfg.zMax;
@@ -300,10 +292,17 @@ namespace Jug::Reco {
         m_finderCfg.sigmaScattering = m_cfg.sigmaScattering;
         m_finderCfg.radLengthPerSeed = m_cfg.radLengthPerSeed;
         m_finderCfg.minPt = m_cfg.minPt;
-        m_finderCfg.bFieldInZ = m_cfg.bFieldInZ;
-        m_finderCfg.beamPos =
-            Acts::Vector2(m_cfg.beamPosX, m_cfg.beamPosY);
         m_finderCfg.impactMax = m_cfg.impactMax;
+
+        m_finderOpt.bFieldInZ = m_cfg.bFieldInZ;
+        m_finderOpt.beamPos =
+            Acts::Vector2(m_cfg.beamPosX, m_cfg.beamPosY);
+
+        m_finderCfg =
+          m_finderCfg.toInternalUnits().calculateDerivedQuantities();
+        m_finderOpt =
+          m_finderOpt.toInternalUnits().calculateDerivedQuantities(
+            m_finderCfg);
 
         // Set up the track parameters covariance (the same for all
         // tracks)
@@ -332,20 +331,12 @@ namespace Jug::Reco {
             m_outputInitialTrackParameters.createAndPut();
 
         static SeedContainer seeds;
-#if Acts_VERSION_MAJOR >= 21
         static Acts::SeedFinder<SpacePoint>::SeedingState state;
-#else
-        static Acts::SeedFinder<SpacePoint>::State state;
-#endif
 
         // Sadly, eic::TrackerHit and eic::TrackerHitData are
 	// non-polymorphic
         std::vector<SpacePoint> spacePoint;
         std::vector<const SpacePoint *> spacePointPtrs;
-#if Acts_VERSION_MAJOR < 21
-        // extent used to store r range for middle spacepoint
-        Acts::Extent rRangeSPExtent;
-#endif
 
         std::shared_ptr<const Acts::TrackingGeometry>
             trackingGeometry = m_geoSvc->trackingGeometry();
@@ -417,11 +408,6 @@ namespace Jug::Reco {
                         << ' ' << spacePointPtrs.back()->measurementIndex()
                         << ' ' << spacePointPtrs.back()->isOnSurface()
                         << endmsg;
-#if Acts_VERSION_MAJOR < 21
-            rRangeSPExtent.extend({ spacePoint.back().x(),
-                                    spacePoint.back().y(),
-                                    spacePoint.back().z() });
-#endif
             }
         }
 #endif // USE_LOCAL_COORD
@@ -441,10 +427,8 @@ namespace Jug::Reco {
             debug() << __FILE__ << ':' << __LINE__ << ": " << endmsg;
         }
 
-#if Acts_VERSION_MAJOR >= 21
         // extent used to store r range for middle spacepoint
         Acts::Extent rRangeSPExtent;
-#endif
 
         auto bottomBinFinder =
             std::make_shared<Acts::BinFinder<SpacePoint>>(
@@ -461,10 +445,10 @@ namespace Jug::Reco {
             debug() << __FILE__ << ':' << __LINE__ << ": " << endmsg;
         }
 
-        const float bFieldInZSave = m_gridCfg.bFieldInZ;
+        const float bFieldInZSave = m_gridOpt.bFieldInZ;
         const float minPtSave = m_gridCfg.minPt;
         m_gridCfg.minPt = 400 * Acts::UnitConstants::MeV;
-        m_gridCfg.bFieldInZ =
+        m_gridOpt.bFieldInZ =
             (m_gridCfg.minPt / Acts::UnitConstants::MeV) /
             (150.0 * (1.0 + FLT_EPSILON) *
              (m_gridCfg.rMax / Acts::UnitConstants::mm)) *
@@ -473,13 +457,13 @@ namespace Jug::Reco {
             debug() << "createGrid() with temporary minPt = "
                     << m_gridCfg.minPt / Acts::UnitConstants::MeV
                     << " MeV, bFieldInZ = "
-                    << m_gridCfg.bFieldInZ / (1000 * Acts::UnitConstants::T)
+                    << m_gridOpt.bFieldInZ / (1000 * Acts::UnitConstants::T)
                     << " kT" << endmsg;
         }
         auto grid =
             Acts::SpacePointGridCreator::createGrid<SpacePoint>(
-                m_gridCfg);
-        m_gridCfg.bFieldInZ = bFieldInZSave;
+                m_gridCfg, m_gridOpt);
+        m_gridOpt.bFieldInZ = bFieldInZSave;
         m_gridCfg.minPt = minPtSave;
         if (msgLevel(MSG::DEBUG)) {
             debug() << "phiBins = "
@@ -493,10 +477,8 @@ namespace Jug::Reco {
                 spacePointPtrs.begin(), spacePointPtrs.end(),
                 extractGlobalQuantities, bottomBinFinder,
                 topBinFinder, std::move(grid),
-#if Acts_VERSION_MAJOR >= 21
                 rRangeSPExtent,
-#endif
-                m_finderCfg);
+                m_finderCfg, m_finderOpt);
         auto finder = Acts::SeedFinder<SpacePoint>(m_finderCfg);
 
         if (msgLevel(MSG::DEBUG)) {
@@ -505,28 +487,19 @@ namespace Jug::Reco {
                     << spacePointsGrouping.size() << endmsg;
         }
 
-#if Acts_VERSION_MAJOR >= 21
         const Acts::Range1D<float> rMiddleSPRange(
             std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
             m_cfg.deltaRMiddleMinSPRange,
             std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2 -
             m_cfg.deltaRMiddleMaxSPRange);
-#endif
 
         // Run the seeding
         seeds.clear();
 
-        auto group = spacePointsGrouping.begin();
-        auto groupEnd = spacePointsGrouping.end();
-        for (; !(group == groupEnd); ++group) {
+        for (const auto [bottom, middle, top] : spacePointsGrouping) {
             finder.createSeedsForGroup(
-                state, std::back_inserter(seeds),
-                group.bottom(), group.middle(), group.top(),
-#if Acts_VERSION_MAJOR >= 21
-                rMiddleSPRange
-#else
-                rRangeSPExtent
-#endif
+                m_finderOpt, state, spacePointsGrouping.grid(),
+                std::back_inserter(seeds), bottom, middle, top, rMiddleSPRange
             );
         }
 
@@ -534,7 +507,7 @@ namespace Jug::Reco {
             debug() << "seeds.size() = " << seeds.size() << endmsg;
         }
 
-        TrackParametersContainer trackParameters;
+        ActsExamples::TrackParametersContainer trackParameters;
         ProtoTrackContainer tracks;
         trackParameters.reserve(seeds.size());
         tracks.reserve(seeds.size());
@@ -600,11 +573,9 @@ namespace Jug::Reco {
                        spTaken[seed.sp()[1]->measurementIndex()] ||
                        spTaken[seed.sp()[2]->measurementIndex()])) {
                 const auto& params = optParams.value();
-                const double charge =
-                    std::copysign(1, params[Acts::eBoundQOverP]);
                 initTrackParameters->emplace_back(
-                    surface->getSharedPtr(), params, charge,
-                    m_covariance);
+                    surface->getSharedPtr(), params,
+                    m_covariance, Acts::ParticleHypothesis::pion());
                 // Activate/deactivate for unique seed filtering
 #if 0
                 spTaken[seed.sp()[0]->measurementIndex()] = true;

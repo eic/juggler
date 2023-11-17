@@ -11,8 +11,8 @@
 
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugTrack/ProtoTrack.hpp"
-#include "JugTrack/Track.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 
 #include "Math/Vector3D.h"
 
@@ -27,9 +27,9 @@ namespace Jug::Reco {
 class ProtoTrackMatching : public GaudiAlgorithm {
 private:
   DataHandle<edm4eic::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
-  DataHandle<TrackParametersContainer> m_initialTrackParameters{"initialTrackParameters", Gaudi::DataHandle::Reader, this};
-  DataHandle<ProtoTrackContainer> m_inputProtoTracks{"inputProtoTracks", Gaudi::DataHandle::Reader, this};
-  DataHandle<ProtoTrackContainer> m_outputProtoTracks{"matchedProtoTracks", Gaudi::DataHandle::Writer, this};
+  DataHandle<ActsExamples::TrackParametersContainer> m_initialTrackParameters{"initialTrackParameters", Gaudi::DataHandle::Reader, this};
+  DataHandle<ActsExamples::ProtoTrackContainer> m_inputProtoTracks{"inputProtoTracks", Gaudi::DataHandle::Reader, this};
+  DataHandle<ActsExamples::ProtoTrackContainer> m_outputProtoTracks{"matchedProtoTracks", Gaudi::DataHandle::Writer, this};
 
 public:
   ProtoTrackMatching(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {

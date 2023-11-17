@@ -16,7 +16,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "JugBase/DataHandle.h"
 #include "JugBase/IGeoSvc.h"
-#include "JugTrack/Track.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "edm4eic/ClusterCollection.h"
@@ -37,12 +37,9 @@ namespace Jug::Reco {
  */
 class TrackParamVertexClusterInit : public GaudiAlgorithm {
 private:
-  using Clusters   = edm4eic::ClusterCollection;
-  using VertexHits = edm4eic::TrackerHitCollection;
-
-  DataHandle<VertexHits> m_inputVertexHits{"inputVertexHits", Gaudi::DataHandle::Reader, this};
-  DataHandle<Clusters> m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
-  DataHandle<TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
+  DataHandle<edm4eic::TrackerHitCollection> m_inputVertexHits{"inputVertexHits", Gaudi::DataHandle::Reader, this};
+  DataHandle<edm4eic::ClusterCollection> m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
+  DataHandle<ActsExamples::TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
                                                                       Gaudi::DataHandle::Writer, this};
   Gaudi::Property<double> m_maxHitRadius{this, "maxHitRadius", 40.0 * mm};
 
@@ -109,7 +106,7 @@ public:
         // debug() << "Invoke track finding seeded by truth particle with p = " << p / GeV << " GeV" << endmsg;
 
         // add both charges to the track candidate...
-        init_trk_params->push_back({pSurface, params, 1});
+        init_trk_params->push_back({pSurface, params, {}, Acts::ParticleHypothesis::pion()});
 
         Acts::BoundVector params2;
         params2(Acts::eBoundLoc0)   = 0.0 * mm;
@@ -118,7 +115,7 @@ public:
         params2(Acts::eBoundTheta)  = edm4hep::utils::anglePolar(momentum);
         params2(Acts::eBoundQOverP) = -1 / p_cluster;
         params2(Acts::eBoundTime)   = 0 * ns;
-        init_trk_params->push_back({pSurface, params2, -1});
+        init_trk_params->push_back({pSurface, params2, {}, Acts::ParticleHypothesis::pion()});
       }
       // init_trk_params->emplace_back(Acts::Vector4(0 * mm, 0 * mm, 0 * mm, 0),
       //                              Acts::Vector3(c.x() * p / len, c.y() * p / len, c.z() * p / len), p, 1,

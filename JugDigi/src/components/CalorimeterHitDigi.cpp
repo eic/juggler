@@ -14,6 +14,7 @@
 #include <cmath>
 #include <unordered_map>
 
+#include "GaudiAlg/GaudiAlgorithm.h"
 #include "GaudiAlg/GaudiTool.h"
 #include "GaudiAlg/Transformer.h"
 #include "GaudiKernel/PhysicalConstants.h"
@@ -147,7 +148,7 @@ namespace Jug::Digi {
           return StatusCode::FAILURE;
         }
         id_mask = ~id_mask;
-        info() << fmt::format("ID mask in {:s}: {:#064b}", m_readout, id_mask) << endmsg;
+        info() << fmt::format("ID mask in {:s}: {:#064b}", m_readout.value(), id_mask) << endmsg;
         return StatusCode::SUCCESS;
       }
 

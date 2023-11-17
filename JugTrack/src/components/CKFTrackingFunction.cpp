@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Whitney Armstrong, Wouter Deconinck, Sylvester Joosten
 
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -34,6 +37,10 @@ namespace {
   using CKF =
       Acts::CombinatorialKalmanFilter<Propagator, Acts::VectorMultiTrajectory>;
 
+  using TrackContainer =
+      Acts::TrackContainer<Acts::VectorTrackContainer,
+                           Acts::VectorMultiTrajectory, std::shared_ptr>;
+
   /** Finder implmentation .
    *
    * \ingroup track
@@ -45,11 +52,10 @@ namespace {
     CKFTrackingFunctionImpl(CKF&& f) : trackFinder(std::move(f)) {}
 
     Jug::Reco::CKFTracking::TrackFinderResult
-    operator()(const Jug::TrackParametersContainer& initialParameters,
-               const Jug::Reco::CKFTracking::TrackFinderOptions& options)
-               const override
-    {
-      return trackFinder.findTracks(initialParameters, options);
+    operator()(const ActsExamples::TrackParameters& initialParameters,
+               const Jug::Reco::CKFTracking::TrackFinderOptions& options,
+               TrackContainer& tracks) const override {
+      return trackFinder.findTracks(initialParameters, options, tracks);
     };
   };
 
