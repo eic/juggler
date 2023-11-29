@@ -28,7 +28,7 @@ public:
 
     std::cout << std::endl;
     info() << "Checking the existing services:" << endmsg;
-    for (const auto [key, value] : ServiceSvc::instance().services()) {
+    for (const auto& [key, value] : ServiceSvc::instance().services()) {
       info() << " - " << key << endmsg;
     }
   }
