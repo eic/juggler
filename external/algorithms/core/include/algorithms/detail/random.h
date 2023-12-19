@@ -17,22 +17,22 @@ namespace algorithms::detail {
 //  Implements the uniform_random_bit_generator concept
 class CachedBitGenerator {
 public:
-  using value_type = uint_fast64_t;
-  using GenFunc    = std::function<std::vector<value_type>(size_t /* N */)>;
+  using result_type = uint_fast64_t;
+  using GenFunc    = std::function<std::vector<result_type>(size_t /* N */)>;
   CachedBitGenerator(const GenFunc& gen, const size_t cache_size)
       // index starts at the end of the (empty) cache to force an immediate refresh
       // on first access
       : m_gen{gen}, m_cache(cache_size), m_index{cache_size} {}
 
-  value_type operator()() {
+  result_type operator()() {
     if (m_index >= m_cache.size()) {
       refresh();
     }
     return m_cache[m_index++];
   }
 
-  static constexpr value_type min() { return 0; }
-  static constexpr value_type max() { return std::numeric_limits<value_type>::max(); }
+  static constexpr result_type min() { return 0; }
+  static constexpr result_type max() { return std::numeric_limits<result_type>::max(); }
 
 private:
   void refresh() {
@@ -41,7 +41,7 @@ private:
   }
 
   GenFunc m_gen;
-  std::vector<CachedBitGenerator::value_type> m_cache;
+  std::vector<CachedBitGenerator::result_type> m_cache;
   size_t m_index;
 };
 

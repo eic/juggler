@@ -63,7 +63,7 @@ private:
 // by running off a auto-refreshing cached random sequence.
 class RandomSvc : public LoggedService<RandomSvc> {
 public:
-  using value_type = detail::CachedBitGenerator::value_type;
+  using value_type = detail::CachedBitGenerator::result_type;
 
   Generator generator() { return {m_gen, m_cache_size}; }
 // FIXME fix the CMake setup so these are properly found in Gaudi
