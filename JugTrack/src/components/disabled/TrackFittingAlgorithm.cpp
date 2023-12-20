@@ -29,8 +29,8 @@
 
 #include <k4FWCore/DataHandle.h>
 #include <k4Interface/IGeoSvc.h>
-#include <k4ActsTracking/IActsGeoSvc.h>
-#include "JugBase/BField/DD4hepBField.h"
+#include "JugTrack/IActsGeoSvc.h"
+#include "JugTrack/DD4hepBField.h"
 
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
