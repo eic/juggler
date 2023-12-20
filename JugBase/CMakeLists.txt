@@ -6,7 +6,9 @@
 ################################################################################
 
 file(GLOB JugBase_sources CONFIGURE_DEPENDS src/*.cpp)
-gaudi_add_header_only_library(JugBase
+gaudi_add_library(JugBase
+  SOURCES
+  ${JugBase_sources}
   LINK
   Gaudi::GaudiKernel Gaudi::GaudiAlgLib
   podio::podioRootIO
@@ -16,7 +18,7 @@ gaudi_add_header_only_library(JugBase
   k4FWCore::k4FWCore
 )
 
-target_include_directories(JugBase INTERFACE
+target_include_directories(JugBase PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
