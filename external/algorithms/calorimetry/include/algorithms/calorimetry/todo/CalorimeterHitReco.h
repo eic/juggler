@@ -22,8 +22,8 @@
 #include "DDRec/Surface.h"
 #include "DDRec/SurfaceManager.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
 
 // Event Model related classes
 #include "edm4eic/CalorimeterHitCollection.h"
@@ -115,7 +115,7 @@ public:
       return StatusCode::SUCCESS;
     }
 
-    auto id_spec = m_geoSvc->detector()->readout(m_readout).idSpec();
+    auto id_spec = m_geoSvc->getDetector()->readout(m_readout).idSpec();
     try {
       id_dec = id_spec.decoder();
       if (!m_sectorField.value().empty()) {
@@ -134,7 +134,7 @@ public:
     // local detector name has higher priority
     if (!m_localDetElement.value().empty()) {
       try {
-        local = m_geoSvc->detector()->detector(m_localDetElement.value());
+        local = m_geoSvc->getDetector()->detector(m_localDetElement.value());
         info() << "Local coordinate system from DetElement " << m_localDetElement.value() << endmsg;
       } catch (...) {
         error() << "Failed to locate local coordinate system from DetElement " << m_localDetElement.value() << endmsg;
@@ -190,7 +190,7 @@ public:
       const auto gpos = converter->position(cellID);
       // local positions
       if (m_localDetElement.value().empty()) {
-        auto volman = m_geoSvc->detector()->volumeManager();
+        auto volman = m_geoSvc->getDetector()->volumeManager();
         local       = volman.lookupDetElement(cellID & local_mask);
         }
         const auto pos = local.nominal().worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));

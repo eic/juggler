@@ -15,8 +15,8 @@
 #include "DDRec/SurfaceManager.h"
 #include "DDRec/Surface.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
 
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"

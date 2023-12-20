@@ -21,7 +21,7 @@
 
 #include "CKFTracking.h"
 
-#include "JugBase/BField/DD4hepBField.h"
+#include "JugTrack/DD4hepBField.h"
 
 
 #include <random>

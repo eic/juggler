@@ -17,7 +17,7 @@
 #include "Gaudi/Property.h"
 #include "GaudiKernel/RndmGenerators.h"
 
-#include "JugBase/DataHandle.h"
+#include <k4FWCore/DataHandle.h>
 #include "JugBase/IParticleSvc.h"
 
 // Event Model related classes

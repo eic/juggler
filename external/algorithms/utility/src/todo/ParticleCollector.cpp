@@ -7,7 +7,7 @@
 #include "GaudiAlg/GaudiTool.h"
 #include "GaudiAlg/Transformer.h"
 
-#include "JugBase/DataHandle.h"
+#include <k4FWCore/DataHandle.h>
 
 // Event Model related classes
 #include "edm4eic/ReconstructedParticleCollection.h"

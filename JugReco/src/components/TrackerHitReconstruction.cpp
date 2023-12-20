@@ -16,8 +16,8 @@
 #include "DDRec/Surface.h"
 #include "DDRec/SurfaceManager.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
 
 // Event Model related classes
 //#include "GaudiExamples/MyTrack.h"
@@ -53,6 +53,7 @@ namespace Jug::Reco {
 
     /// Pointer to the geometry service
     SmartIF<IGeoSvc> m_geoSvc;
+    std::shared_ptr<const dd4hep::rec::CellIDPositionConverter> m_converter;
 
   public:
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
@@ -71,6 +72,7 @@ namespace Jug::Reco {
                 << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
         return StatusCode::FAILURE;
       }
+      m_converter = std::make_shared<const dd4hep::rec::CellIDPositionConverter>(*(m_geoSvc->getDetector()));
       return StatusCode::SUCCESS;
     }
 
@@ -84,8 +86,8 @@ namespace Jug::Reco {
       debug() << " raw hits size : " << std::size(*rawhits) << endmsg;
       for (const auto& ahit : *rawhits) {
         // debug() << "cell ID : " << ahit.cellID() << endmsg;
-        auto pos = m_geoSvc->cellIDPositionConverter()->position(ahit.getCellID());
-        auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(ahit.getCellID());
+        auto pos = m_converter->position(ahit.getCellID());
+        auto dim = m_converter->cellDimensions(ahit.getCellID());
 
         if (msgLevel(MSG::VERBOSE)) {
           size_t i = 0;

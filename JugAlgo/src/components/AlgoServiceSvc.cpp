@@ -5,7 +5,7 @@
 
 #include <GaudiKernel/Service.h>
 #include <JugAlgo/IAlgoServiceSvc.h>
-#include <JugBase/IGeoSvc.h>
+#include <k4Interface/IGeoSvc.h>
 
 #include <algorithms/geo.h>
 #include <algorithms/logger.h>
@@ -77,7 +77,7 @@ StatusCode AlgoServiceSvc::initialize() {
     }
     serviceSvc.setInit<algorithms::GeoSvc>([this](auto&& g) {
       this->info() << "Initializing algorithms::RandomSvc with the Juggler GeoSvc" << endmsg;
-      g.init(m_geoSvc->detector());
+      g.init(m_geoSvc->getDetector());
     });
     // setup random service
     info() << "Setting up algorithms::RandomSvc\n"

@@ -4,7 +4,7 @@
 #ifndef JUGBASE_EICLEGACYDATASVC_H
 #define JUGBASE_EICLEGACYDATASVC_H
 
-#include "JugBase/PodioLegacyDataSvc.h"
+#include <k4FWCore/PodioLegacyDataSvc.h>
 
 class EICLegacyDataSvc : public PodioLegacyDataSvc {
 public:

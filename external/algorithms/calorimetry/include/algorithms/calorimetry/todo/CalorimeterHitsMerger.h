@@ -28,8 +28,8 @@
 #include "fmt/format.h"
 #include "fmt/ranges.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
 
 // Event Model related classes
 #include "edm4eic/CalorimeterHitCollection.h"
@@ -84,7 +84,7 @@ public:
     }
 
     try {
-      auto id_desc = m_geoSvc->detector()->readout(m_readout).idSpec();
+      auto id_desc = m_geoSvc->getDetector()->readout(m_readout).idSpec();
       id_mask      = 0;
       std::vector<std::pair<std::string, int>> ref_fields;
       for (size_t i = 0; i < u_fields.size(); ++i) {
@@ -133,7 +133,7 @@ public:
     // reconstruct info for merged hits
     // dd4hep decoders
     auto poscon = m_geoSvc->cellIDPositionConverter();
-    auto volman = m_geoSvc->detector()->volumeManager();
+    auto volman = m_geoSvc->getDetector()->volumeManager();
 
     for (auto& [id, hits] : merge_map) {
       // reference fields id

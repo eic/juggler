@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Whitney Armstrong, Wouter Deconinck
 
-#include "GeoSvc.h"
+#include "ActsGeoSvc.h"
 #include "GaudiKernel/Service.h"
-//#include "GeoConstruction.h"
 #include "TGeoManager.h"
 
 #include "DD4hep/Printout.h"
 
-#include "JugBase/ACTSLogger.h"
+#include "JugTrack/ACTSLogger.h"
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
@@ -22,8 +21,9 @@ static const std::map<int, Acts::Logging::Level> s_msgMap = {
     {MSG::VERBOSE, Acts::Logging::VERBOSE},
     {MSG::INFO, Acts::Logging::INFO},
     {MSG::WARNING, Acts::Logging::WARNING},
-    {MSG::FATAL, Acts::Logging::FATAL},
     {MSG::ERROR, Acts::Logging::ERROR},
+    {MSG::FATAL, Acts::Logging::FATAL},
+    {MSG::ALWAYS, Acts::Logging::MAX},
 };
 
 void draw_surfaces(std::shared_ptr<const Acts::TrackingGeometry> trk_geo, const Acts::GeometryContext geo_ctx, const std::string& fname)
@@ -64,13 +64,13 @@ void draw_surfaces(std::shared_ptr<const Acts::TrackingGeometry> trk_geo, const 
 using namespace Gaudi;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-DECLARE_COMPONENT(GeoSvc)
+DECLARE_COMPONENT(ActsGeoSvc)
 
-GeoSvc::GeoSvc(const std::string& name, ISvcLocator* svc)
+ActsGeoSvc::ActsGeoSvc(const std::string& name, ISvcLocator* svc)
     : base_class(name, svc)
     , m_log(msgSvc(), name) {}
 
-GeoSvc::~GeoSvc() {
+ActsGeoSvc::~ActsGeoSvc() {
   if (m_dd4hepGeo != nullptr) {
     try {
       m_dd4hepGeo->destroyInstance();
@@ -80,7 +80,7 @@ GeoSvc::~GeoSvc() {
   }
 }
 
-StatusCode GeoSvc::initialize() {
+StatusCode ActsGeoSvc::initialize() {
   StatusCode sc = Service::initialize();
   if (!sc.isSuccess()) {
     return sc;
@@ -179,12 +179,12 @@ StatusCode GeoSvc::initialize() {
   return StatusCode::SUCCESS;
 }
 
-StatusCode GeoSvc::finalize() { return StatusCode::SUCCESS; }
+StatusCode ActsGeoSvc::finalize() { return StatusCode::SUCCESS; }
 
-StatusCode GeoSvc::buildDD4HepGeo() {
+StatusCode ActsGeoSvc::buildDD4HepGeo() {
   // we retrieve the the static instance of the DD4HEP::Geometry
   m_dd4hepGeo = &(dd4hep::Detector::getInstance());
-  m_dd4hepGeo->addExtension<IGeoSvc>(this);
+  m_dd4hepGeo->addExtension<IActsGeoSvc>(this);
 
   // load geometry
   for (auto& filename : m_xmlFileNames) {
@@ -193,10 +193,5 @@ StatusCode GeoSvc::buildDD4HepGeo() {
   }
   m_dd4hepGeo->volumeManager();
   m_dd4hepGeo->apply("DD4hepVolumeManager", 0, nullptr);
-  m_cellid_converter = std::make_shared<const dd4hep::rec::CellIDPositionConverter>(*m_dd4hepGeo);
   return StatusCode::SUCCESS;
 }
-
-dd4hep::Detector* GeoSvc::detector() { return (m_dd4hepGeo); }
-
-dd4hep::DetElement GeoSvc::getDD4HepGeo() { return (detector()->world()); }

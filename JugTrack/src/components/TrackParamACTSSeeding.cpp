@@ -24,9 +24,10 @@
 #include "GaudiKernel/RndmGenerators.h"
 #include "Gaudi/Property.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
-#include "JugBase/BField/DD4hepBField.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
+#include "JugTrack/IActsGeoSvc.h"
+#include "JugTrack/DD4hepBField.h"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -67,6 +68,9 @@ namespace Jug::Reco {
             Gaudi::DataHandle::Writer, this };
 
         SmartIF<IGeoSvc> m_geoSvc;
+        SmartIF<IActsGeoSvc> m_actsGeoSvc;
+        std::shared_ptr<const dd4hep::rec::CellIDPositionConverter> m_converter;
+
         // Acts::GeometryContext m_geoContext;
         std::shared_ptr<const Jug::BField::DD4hepBField> m_BField =
             nullptr;
@@ -94,7 +98,8 @@ namespace Jug::Reco {
             // and associated classes are all non-polymorphic
             SpacePoint(const edm4eic::TrackerHit h,
                        const int32_t measurementIndex,
-                       SmartIF<IGeoSvc> m_geoSvc)
+                       SmartIF<IActsGeoSvc> m_actsGeoSvc,
+                       std::shared_ptr<const dd4hep::rec::CellIDPositionConverter> m_converter)
                 : _measurementIndex(measurementIndex)
             {
                 _position[0] = h.getPosition().x;
@@ -104,10 +109,9 @@ namespace Jug::Reco {
                 _positionError[1] = h.getPositionError().yy;
                 _positionError[2] = h.getPositionError().zz;
                 const auto volumeId =
-                    m_geoSvc->cellIDPositionConverter()->
-                    findContext(h.getCellID())->identifier;
-                const auto its = m_geoSvc->surfaceMap().find(volumeId);
-                if (its == m_geoSvc->surfaceMap().end()) {
+                    m_converter->findContext(h.getCellID())->identifier;
+                const auto its = m_actsGeoSvc->surfaceMap().find(volumeId);
+                if (its == m_actsGeoSvc->surfaceMap().end()) {
                     _surface = nullptr;
                 }
                 else {
@@ -259,10 +263,16 @@ namespace Jug::Reco {
             error() << "Unable to locate Geometry Service. " << endmsg;
             return StatusCode::FAILURE;
         }
+        m_actsGeoSvc = service("ActsGeoSvc");
+        if (m_actsGeoSvc == nullptr) {
+            error() << "Unable to locate ACTS Geometry Service. " << endmsg;
+            return StatusCode::FAILURE;
+        }              
+        m_converter = std::make_shared<const dd4hep::rec::CellIDPositionConverter>(*(m_geoSvc->getDetector()));
 
         m_BField = std::dynamic_pointer_cast<
             const Jug::BField::DD4hepBField>(
-                m_geoSvc->getFieldProvider());
+                m_actsGeoSvc->getFieldProvider());
         m_fieldContext = Jug::BField::BFieldVariant(m_BField);
 
         m_gridCfg.minPt = m_cfg.minPt;
@@ -339,7 +349,7 @@ namespace Jug::Reco {
         std::vector<const SpacePoint *> spacePointPtrs;
 
         std::shared_ptr<const Acts::TrackingGeometry>
-            trackingGeometry = m_geoSvc->trackingGeometry();
+            trackingGeometry = m_actsGeoSvc->trackingGeometry();
 
 #ifdef USE_LOCAL_COORD
         // Currently broken, possibly geometry issues
@@ -390,7 +400,7 @@ namespace Jug::Reco {
         for(const auto &h : *hits) {
             spacePoint.push_back(SpacePoint(
                 h, static_cast<int32_t>(spacePoint.size() + 1),
-                m_geoSvc));
+                m_actsGeoSvc, m_converter));
             spacePointPtrs.push_back(&spacePoint.back());
             if (msgLevel(MSG::DEBUG)) {
                 debug() << __FILE__ << ':' << __LINE__ << ": "
@@ -513,7 +523,7 @@ namespace Jug::Reco {
         tracks.reserve(seeds.size());
 
         std::shared_ptr<const Acts::MagneticFieldProvider>
-            magneticField = m_geoSvc->getFieldProvider();
+            magneticField = m_actsGeoSvc->getFieldProvider();
 
         // if (msgLevel(MSG::DEBUG)) { debug() << __FILE__ << ':' << __LINE__ << ": " << endmsg; }
         auto bCache = magneticField->makeCache(m_fieldContext);

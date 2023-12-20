@@ -15,6 +15,7 @@ gaudi_add_module(JugDigiPlugins
   ROOT::Core ROOT::RIO ROOT::Tree
   EDM4HEP::edm4hep
   EDM4EIC::edm4eic
+  k4FWCore::k4FWCore
 )
 
 target_include_directories(JugDigiPlugins PUBLIC

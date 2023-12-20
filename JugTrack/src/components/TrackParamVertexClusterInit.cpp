@@ -14,8 +14,8 @@
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
 #include "ActsExamples/EventData/Track.hpp"
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"

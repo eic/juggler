@@ -4,7 +4,7 @@
 #ifndef JUGBASE_EICDATASVC_H
 #define JUGBASE_EICDATASVC_H
 
-#include "JugBase/PodioDataSvc.h"
+#include <k4FWCore/PodioDataSvc.h>
 
 class EICDataSvc : public PodioDataSvc {
 

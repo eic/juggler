@@ -16,6 +16,7 @@ gaudi_add_module(JugTrackPlugins
   EDM4HEP::edm4hep
   EDM4EIC::edm4eic
   DD4hep::DDRec
+  k4FWCore::k4FWCore
   ActsCore
   ${ActsCore_PATH}/${CMAKE_SHARED_LIBRARY_PREFIX}ActsExamplesFramework${CMAKE_SHARED_LIBRARY_SUFFIX}
 )

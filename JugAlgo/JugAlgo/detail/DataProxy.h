@@ -8,7 +8,7 @@
 #include <algorithms/type_traits.h>
 
 #include <GaudiAlg/GaudiAlgorithm.h>
-#include <JugBase/DataHandle.h>
+#include <k4FWCore/DataHandle.h>
 
 namespace Jug::Algo::detail {
 
