@@ -29,8 +29,8 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Definitions/Units.hpp"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
 #include "JugBase/BField/DD4hepBField.h"
 
 #include "JugTrack/GeometryContainers.hpp"

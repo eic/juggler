@@ -28,8 +28,8 @@
 #include "fmt/format.h"
 #include "fmt/ranges.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
 
 // Event Model related classes
 #include "edm4eic/CalorimeterHitCollection.h"
@@ -58,6 +58,8 @@ private:
                                                                   this};
 
   SmartIF<IGeoSvc> m_geoSvc;
+  std::shared_ptr<const dd4hep::rec::CellIDPositionConverter> m_converter;
+
   uint64_t id_mask{0}, ref_mask{0};
 
 public:
@@ -77,6 +79,7 @@ public:
               << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
       return StatusCode::FAILURE;
     }
+    m_converter = std::make_shared<const dd4hep::rec::CellIDPositionConverter>(*(m_geoSvc->getDetector()));
 
     if (m_readout.value().empty()) {
       error() << "readoutClass is not provided, it is needed to know the fields in readout ids" << endmsg;
@@ -84,7 +87,7 @@ public:
     }
 
     try {
-      auto id_desc = m_geoSvc->detector()->readout(m_readout).idSpec();
+      auto id_desc = m_geoSvc->getDetector()->readout(m_readout).idSpec();
       id_mask      = 0;
       std::vector<std::pair<std::string, int>> ref_fields;
       for (size_t i = 0; i < u_fields.size(); ++i) {
@@ -132,8 +135,8 @@ public:
 
     // reconstruct info for merged hits
     // dd4hep decoders
-    auto poscon = m_geoSvc->cellIDPositionConverter();
-    auto volman = m_geoSvc->detector()->volumeManager();
+    auto poscon = m_converter;
+    auto volman = m_geoSvc->getDetector()->volumeManager();
 
     for (auto& [id, hits] : merge_map) {
       // reference fields id

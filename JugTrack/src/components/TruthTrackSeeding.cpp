@@ -10,8 +10,8 @@
 #include "GaudiKernel/RndmGenerators.h"
 #include "Gaudi/Property.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
 #include "JugBase/IParticleSvc.h"
 #include "ActsExamples/EventData/Track.hpp"
 

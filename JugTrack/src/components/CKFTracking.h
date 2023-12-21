@@ -13,9 +13,10 @@
 #include "GaudiAlg/GaudiAlgorithm.h"
 #include "GaudiKernel/ToolHandle.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
-#include "JugBase/BField/DD4hepBField.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
+#include "JugTrack/IActsGeoSvc.h"
+#include "JugTrack/DD4hepBField.h"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -78,6 +79,7 @@ public:
 
   std::shared_ptr<CKFTrackingFunction> m_trackFinderFunc;
   SmartIF<IGeoSvc> m_geoSvc;
+  SmartIF<IActsGeoSvc> m_actsGeoSvc;
 
   std::shared_ptr<const Jug::BField::DD4hepBField> m_BField = nullptr;
   Acts::GeometryContext m_geoctx;

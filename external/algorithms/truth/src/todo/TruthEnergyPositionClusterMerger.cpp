@@ -12,7 +12,7 @@
 #include "GaudiAlg/Transformer.h"
 #include "GaudiKernel/PhysicalConstants.h"
 
-#include "JugBase/DataHandle.h"
+#include <k4FWCore/DataHandle.h>
 
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"

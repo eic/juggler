@@ -24,8 +24,8 @@
 #include "DDRec/Surface.h"
 #include "DDRec/SurfaceManager.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
 
 // Event Model related classes
 #include "edm4eic/PMTHitCollection.h"
@@ -52,6 +52,7 @@ private:
   Gaudi::Property<double> m_pedMean{this, "pedMean", 200.0};
   /// Pointer to the geometry service
   SmartIF<IGeoSvc> m_geoSvc;
+  std::shared_ptr<const dd4hep::rec::CellIDPositionConverter> m_converter;
 
 public:
   // ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
@@ -70,6 +71,7 @@ public:
               << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
       return StatusCode::FAILURE;
     }
+    m_converter = std::make_shared<const dd4hep::rec::CellIDPositionConverter>(*(m_geoSvc->getDetector()));
     return StatusCode::SUCCESS;
   }
 
@@ -86,11 +88,11 @@ public:
         float time = rh.getTimeStamp() * (static_cast<float>(m_timeStep) / ns);
         auto id    = rh.getCellID();
         // global positions
-        auto gpos = m_geoSvc->cellIDPositionConverter()->position(id);
+        auto gpos = m_converter->position(id);
         // local positions
-        auto pos = m_geoSvc->cellIDPositionConverter()->findContext(id)->volumePlacement().position();
+        auto pos = m_converter->findContext(id)->volumePlacement().position();
         // cell dimension
-        auto dim = m_geoSvc->cellIDPositionConverter()->cellDimensions(id);
+        auto dim = m_converter->cellDimensions(id);
         hits.push_back(edm4eic::PMTHit{
             rh.getCellID(),
             npe,

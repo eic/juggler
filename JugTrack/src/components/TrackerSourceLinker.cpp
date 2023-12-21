@@ -11,8 +11,9 @@
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/ToolHandle.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
+#include "JugTrack/IActsGeoSvc.h"
 
 #include "DD4hep/DD4hepUnits.h"
 #include "DD4hep/Volumes.h"
@@ -49,8 +50,10 @@ private:
   DataHandle<std::list<ActsExamples::IndexSourceLink>> m_sourceLinkStorage{"sourceLinkStorage", Gaudi::DataHandle::Writer, this};
   DataHandle<ActsExamples::IndexSourceLinkContainer> m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};
   DataHandle<ActsExamples::MeasurementContainer> m_outputMeasurements{"outputMeasurements", Gaudi::DataHandle::Writer, this};
-  /// Pointer to the geometry service
+  /// Pointer to the geometry services
   SmartIF<IGeoSvc> m_geoSvc;
+  SmartIF<IActsGeoSvc> m_actsGeoSvc;
+  std::shared_ptr<const dd4hep::rec::CellIDPositionConverter> m_converter;
 
 public:
   TrackerSourceLinker(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
@@ -67,9 +70,16 @@ public:
     m_geoSvc = service("GeoSvc");
     if (!m_geoSvc) {
       error() << "Unable to locate Geometry Service. "
-              << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
+              << "Make sure you have GeoSvc in the right place in the configuration." << endmsg;
       return StatusCode::FAILURE;
     }
+    m_actsGeoSvc = service("ActsGeoSvc");
+    if (!m_actsGeoSvc) {
+      error() << "Unable to locate ACTS Geometry Service. "
+              << "Make sure you have ActsGeoSvc in the right place in the configuration." << endmsg;
+      return StatusCode::FAILURE;
+    }
+    m_converter = std::make_shared<const dd4hep::rec::CellIDPositionConverter>(*(m_geoSvc->getDetector()));
 
     return StatusCode::SUCCESS;
   }
@@ -100,11 +110,11 @@ public:
         debug() << "cov matrix:\n" << cov << endmsg;
       }
 
-      const auto* vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.getCellID());
+      const auto* vol_ctx = m_converter->findContext(ahit.getCellID());
       auto vol_id = vol_ctx->identifier;
 
-      const auto is = m_geoSvc->surfaceMap().find(vol_id);
-      if (is == m_geoSvc->surfaceMap().end()) {
+      const auto is = m_actsGeoSvc->surfaceMap().find(vol_id);
+      if (is == m_actsGeoSvc->surfaceMap().end()) {
         error() << " vol_id (" << vol_id << ")  not found in m_surfaces." << endmsg;
         continue;
       }
@@ -125,7 +135,7 @@ public:
       loc[Acts::eBoundLoc1] = pos[1];
 
       if (msgLevel(MSG::DEBUG)) {
-        auto volman         = m_geoSvc->detector()->volumeManager();
+        auto volman         = m_geoSvc->getDetector()->volumeManager();
         auto alignment      = volman.lookupDetElement(vol_id).nominal();
         auto local_position = (alignment.worldToLocal({ahit.getPosition().x / mm_conv, ahit.getPosition().y / mm_conv,
                                                        ahit.getPosition().z / mm_conv})) *

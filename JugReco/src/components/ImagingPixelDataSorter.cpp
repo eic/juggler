@@ -22,9 +22,8 @@
 #include "DDRec/Surface.h"
 #include "DDRec/SurfaceManager.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
-#include "JugBase/Utilities/Utils.hpp"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
 
 // Event Model related classes
 #include <edm4hep/utils/vector_utils.h>

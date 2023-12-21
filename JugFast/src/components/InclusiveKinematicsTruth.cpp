@@ -11,7 +11,7 @@
 #include <cmath>
 
 #include "JugBase/IParticleSvc.h"
-#include "JugBase/DataHandle.h"
+#include <k4FWCore/DataHandle.h>
 
 #include "JugBase/Utilities/Beam.h"
 

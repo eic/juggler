@@ -11,8 +11,8 @@
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/ToolHandle.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
 
 #include "DD4hep/DD4hepUnits.h"
 #include "DD4hep/Volumes.h"
@@ -124,7 +124,7 @@ public:
       loc[Acts::eBoundLoc1] = pos[1];
 
       if (msgLevel(MSG::DEBUG)) {
-        auto volman         = m_geoSvc->detector()->volumeManager();
+        auto volman         = m_geoSvc->getDetector()->volumeManager();
         auto alignment      = volman.lookupDetElement(vol_id).nominal();
         auto local_position = (alignment.worldToLocal({ahit.getPosition().x / mm_conv, ahit.getPosition().y / mm_conv,
                                                        ahit.getPosition().z / mm_conv})) *

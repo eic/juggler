@@ -14,8 +14,9 @@
 #include "GaudiKernel/ToolHandle.h"
 #include "Gaudi/Property.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
+#include <k4ActsTracking/IActsGeoSvc.h>
 #include "JugBase/BField/DD4hepBField.h"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -66,6 +67,7 @@ namespace Jug::Reco {
 
     FitterFunction                        m_trackFittingFunc;
     SmartIF<IGeoSvc>                      m_geoSvc;
+    SmartIF<IActsGeoSvc>                  m_actsGeoSvc;
     std::shared_ptr<const Jug::BField::DD4hepBField> m_BField = nullptr;
     Acts::GeometryContext                 m_geoctx;
     Acts::CalibrationContext              m_calibctx;

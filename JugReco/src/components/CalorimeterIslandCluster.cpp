@@ -30,8 +30,8 @@
 #include "DDRec/Surface.h"
 #include "DDRec/SurfaceManager.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
 
 // Event Model related classes
 #include "edm4eic/CalorimeterHitCollection.h"
@@ -234,7 +234,7 @@ public:
         error() << "readoutClass is not provided, it is needed to know the fields in readout ids"
                 << endmsg;
       }
-      m_idSpec = m_geoSvc->detector()->readout(m_readout).idSpec();
+      m_idSpec = m_geoSvc->getDetector()->readout(m_readout).idSpec();
 
       is_neighbour = [this](const CaloHit& h1, const CaloHit& h2) {
         dd4hep::tools::Evaluator::Object evaluator;

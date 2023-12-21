@@ -34,6 +34,9 @@ public:
     case Acts::Logging::FATAL:
       l = MSG::FATAL;
       break;
+    case Acts::Logging::MAX:
+      l = MSG::ALWAYS;
+      break;
     }
     MSG::Level cl = m_currentLevel;
     return l < cl;
@@ -68,6 +71,9 @@ public:
       break;
     case Acts::Logging::FATAL:
       l = MSG::FATAL;
+      break;
+    case Acts::Logging::MAX:
+      l = MSG::ALWAYS;
       break;
     }
 

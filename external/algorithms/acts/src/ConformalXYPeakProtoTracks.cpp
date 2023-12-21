@@ -9,8 +9,8 @@
 #include "GaudiAlg/Transformer.h"
 #include "GaudiKernel/ToolHandle.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
 #include "JugTrack/ProtoTrack.hpp"
 #include "JugTrack/Track.hpp"
 

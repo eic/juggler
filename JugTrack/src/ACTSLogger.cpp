@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Whitney Armstrong
 
-#include "JugBase/ACTSLogger.h"
+#include "JugTrack/ACTSLogger.h"
 #include "GaudiKernel/IMessageSvc.h"
 #include "GaudiKernel/IMessageSvc.h"
 #include "GaudiKernel/MsgStream.h"

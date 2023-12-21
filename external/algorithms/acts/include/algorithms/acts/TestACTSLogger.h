@@ -9,7 +9,7 @@
 #include "Gaudi/Property.h"
 
 // FCCSW
-#include "JugBase/DataHandle.h"
+#include <k4FWCore/DataHandle.h>
 
 /** Logging for ACTS.
  *

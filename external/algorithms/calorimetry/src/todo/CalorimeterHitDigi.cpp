@@ -23,8 +23,8 @@
 #include "DDRec/CellIDPositionConverter.h"
 #include "DDSegmentation/BitFieldCoder.h"
 
-#include "JugBase/IGeoSvc.h"
-#include "JugBase/DataHandle.h"
+#include <k4Interface/IGeoSvc.h>
+#include <k4FWCore/DataHandle.h>
 
 #include "fmt/format.h"
 #include "fmt/ranges.h"
@@ -131,7 +131,7 @@ namespace Jug::Digi {
 
         // get decoders
         try {
-          auto id_desc = m_geoSvc->detector()->readout(m_readout).idSpec();
+          auto id_desc = m_geoSvc->getDetector()->readout(m_readout).idSpec();
           id_mask      = 0;
           std::vector<std::pair<std::string, int>> ref_fields;
           for (size_t i = 0; i < u_fields.size(); ++i) {

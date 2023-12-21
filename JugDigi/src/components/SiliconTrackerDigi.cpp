@@ -11,7 +11,7 @@
 #include "GaudiKernel/PhysicalConstants.h"
 #include "GaudiKernel/RndmGenerators.h"
 
-#include "JugBase/DataHandle.h"
+#include <k4FWCore/DataHandle.h>
 
 // Event Model related classes
 // edm4hep's tracker hit is the input collectiopn

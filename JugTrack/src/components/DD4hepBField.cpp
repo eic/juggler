@@ -1,18 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Whitney Armstrong, Wouter Deconinck
 
-#include "JugBase/BField/DD4hepBField.h"
+#include "JugTrack/DD4hepBField.h"
 
 #include <cmath>
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Definitions/Algebra.hpp"
 #include "DD4hep/DD4hepUnits.h"
 #include "DD4hep/Objects.h"
-
-//#include "JugBase/VectorHelpers.hpp"
-
-//using Vec        = Jug::Helpers::VectorToActs<ROOT::Math::XYZVector>;
-//using Vec2DD4hep = Jug::Helpers::ArrayToRoot<Acts::Vector3>;
 
 namespace Jug::BField {
 

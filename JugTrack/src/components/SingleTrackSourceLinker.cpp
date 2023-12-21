@@ -9,8 +9,9 @@
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/ToolHandle.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
+#include "JugTrack/IActsGeoSvc.h"
 
 #include "DD4hep/DD4hepUnits.h"
 #include "DD4hep/Volumes.h"
@@ -49,6 +50,8 @@ private:
   DataHandle<ActsExamples::ProtoTrackContainer> m_outputProtoTracks{"outputProtoTracks", Gaudi::DataHandle::Writer, this};
   /// Pointer to the geometry service
   SmartIF<IGeoSvc> m_geoSvc;
+  SmartIF<IActsGeoSvc> m_actsGeoSvc;
+  std::shared_ptr<const dd4hep::rec::CellIDPositionConverter> m_converter;
 
 public:
   SingleTrackSourceLinker(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
@@ -69,6 +72,13 @@ public:
               << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
       return StatusCode::FAILURE;
     }
+    m_actsGeoSvc = service("ActsGeoSvc");
+    if (!m_actsGeoSvc) {
+      error() << "Unable to locate ACTS Geometry Service. "
+              << "Make sure you have ActsGeoSvc and SimSvc in the right order in the configuration." << endmsg;
+      return StatusCode::FAILURE;
+    }
+    m_converter = std::make_shared<const dd4hep::rec::CellIDPositionConverter>(*(m_geoSvc->getDetector()));
     return StatusCode::SUCCESS;
   }
 
@@ -97,10 +107,10 @@ public:
 
       track.emplace_back(ihit);
 
-      const auto* vol_ctx = m_geoSvc->cellIDPositionConverter()->findContext(ahit.getCellID());
+      const auto* vol_ctx = m_converter->findContext(ahit.getCellID());
       auto vol_id   = vol_ctx->identifier;
-      const auto is = m_geoSvc->surfaceMap().find(vol_id);
-      if (is == m_geoSvc->surfaceMap().end()) {
+      const auto is = m_actsGeoSvc->surfaceMap().find(vol_id);
+      if (is == m_actsGeoSvc->surfaceMap().end()) {
         if (msgLevel(MSG::DEBUG)) {
           debug() << " vol_id (" << vol_id << ")  not found in m_surfaces!!!!" << endmsg;
         }
@@ -119,7 +129,7 @@ public:
                           .value();
 
       if (msgLevel(MSG::DEBUG)) {
-        auto volman  = m_geoSvc->detector()->volumeManager();
+        auto volman  = m_geoSvc->getDetector()->volumeManager();
         auto detelem = volman.lookupDetElement(vol_id);
         auto local_pos =
             detelem.nominal().worldToLocal({ahit.getPosition().x, ahit.getPosition().y, ahit.getPosition().z});

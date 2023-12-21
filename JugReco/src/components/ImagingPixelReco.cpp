@@ -20,8 +20,8 @@
 #include "DDRec/Surface.h"
 #include "DDRec/SurfaceManager.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
 
 // Event Model related classes
 #include "edm4eic/CalorimeterHitCollection.h"
@@ -67,6 +67,7 @@ private:
 
   // Pointer to the geometry service
   SmartIF<IGeoSvc> m_geoSvc;
+  std::shared_ptr<const dd4hep::rec::CellIDPositionConverter> m_converter;
   // visit readout fields
   dd4hep::BitFieldCoder* id_dec;
   size_t sector_idx{0}, layer_idx{0};
@@ -87,6 +88,7 @@ public:
               << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
       return StatusCode::FAILURE;
     }
+    m_converter = std::make_shared<const dd4hep::rec::CellIDPositionConverter>(*(m_geoSvc->getDetector()));
 
     if (m_readout.value().empty()) {
       error() << "readoutClass is not provided, it is needed to know the fields in readout ids" << endmsg;
@@ -94,7 +96,7 @@ public:
     }
 
     try {
-      id_dec     = m_geoSvc->detector()->readout(m_readout).idSpec().decoder();
+      id_dec     = m_geoSvc->getDetector()->readout(m_readout).idSpec().decoder();
       sector_idx = id_dec->index(m_sectorField);
       layer_idx  = id_dec->index(m_layerField);
     } catch (...) {
@@ -136,9 +138,9 @@ public:
       const int sid = (int)id_dec->get(id, sector_idx);
 
       // global positions
-      const auto gpos = m_geoSvc->cellIDPositionConverter()->position(id);
+      const auto gpos = m_converter->position(id);
       // local positions
-      const auto volman = m_geoSvc->detector()->volumeManager();
+      const auto volman = m_geoSvc->getDetector()->volumeManager();
       // TODO remove
       const auto alignment = volman.lookupDetElement(id).nominal();
       const auto pos       = alignment.worldToLocal(dd4hep::Position(gpos.x(), gpos.y(), gpos.z()));

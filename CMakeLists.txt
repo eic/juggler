@@ -88,6 +88,7 @@ else()
 endif()
 
 find_package(Gaudi)
+find_package(k4FWCore)
 add_subdirectory(JugBase)
 add_subdirectory(JugAlgo)
 add_subdirectory(JugDigi)

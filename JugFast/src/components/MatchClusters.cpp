@@ -16,7 +16,7 @@
 #include "GaudiAlg/Transformer.h"
 #include "GaudiKernel/RndmGenerators.h"
 
-#include "JugBase/DataHandle.h"
+#include <k4FWCore/DataHandle.h>
 
 // Event Model related classes
 #include "edm4hep/MCParticleCollection.h"

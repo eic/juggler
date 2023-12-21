@@ -6,27 +6,22 @@
 ################################################################################
 
 file(GLOB JugBase_sources CONFIGURE_DEPENDS src/*.cpp)
-file(GLOB JugBase_plugins CONFIGURE_DEPENDS src/Plugins/*.cpp)
-file(GLOB JugBase_utilities CONFIGURE_DEPENDS src/Utilities/*.cpp)
 gaudi_add_library(JugBase
   SOURCES
   ${JugBase_sources}
-  ${JugBase_plugins}
-  ${JugBase_utilities}
   LINK
   Gaudi::GaudiKernel Gaudi::GaudiAlgLib
   podio::podioRootIO
   ROOT::Core ROOT::RIO ROOT::Tree
   DD4hep::DDRec
   ActsCore ActsPluginDD4hep
+  k4FWCore::k4FWCore
 )
 
 target_include_directories(JugBase PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-
-target_compile_options(JugBase PRIVATE -Wno-suggest-override)
 
 file(GLOB JugBasePlugins_sources CONFIGURE_DEPENDS src/components/*.cpp)
 gaudi_add_module(JugBasePlugins

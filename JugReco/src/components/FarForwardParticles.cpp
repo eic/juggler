@@ -15,8 +15,8 @@
 #include "DDRec/Surface.h"
 #include "DDRec/SurfaceManager.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
 
 // Event Model related classes
 #include "edm4eic/ReconstructedParticleCollection.h"
@@ -45,6 +45,7 @@ private:
   Gaudi::Property<std::string> m_layerField{this, "layerField", ""};
   Gaudi::Property<std::string> m_sectorField{this, "sectorField", ""};
   SmartIF<IGeoSvc> m_geoSvc;
+  std::shared_ptr<const dd4hep::rec::CellIDPositionConverter> m_converter;
   dd4hep::BitFieldCoder* id_dec = nullptr;
   size_t sector_idx{0}, layer_idx{0};
 
@@ -82,13 +83,14 @@ public:
               << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
       return StatusCode::FAILURE;
     }
+    m_converter = std::make_shared<const dd4hep::rec::CellIDPositionConverter>(*(m_geoSvc->getDetector()));
 
     // do not get the layer/sector ID if no readout class provided
     if (m_readout.value().empty()) {
       return StatusCode::SUCCESS;
     }
 
-    auto id_spec = m_geoSvc->detector()->readout(m_readout).idSpec();
+    auto id_spec = m_geoSvc->getDetector()->readout(m_readout).idSpec();
     try {
       id_dec = id_spec.decoder();
       if (!m_sectorField.value().empty()) {
@@ -107,7 +109,7 @@ public:
     // local detector name has higher priority
     if (!m_localDetElement.value().empty()) {
       try {
-        local = m_geoSvc->detector()->detector(m_localDetElement.value());
+        local = m_geoSvc->getDetector()->detector(m_localDetElement.value());
         info() << "Local coordinate system from DetElement " << m_localDetElement.value() << endmsg;
       } catch (...) {
         error() << "Failed to locate local coordinate system from DetElement " << m_localDetElement.value() << endmsg;
@@ -155,7 +157,7 @@ public:
     const edm4eic::TrackerHitCollection* rawhits = m_inputHitCollection.get();
     auto& rc                                 = *(m_outputParticles.createAndPut());
 
-    auto converter = m_geoSvc->cellIDPositionConverter();
+    auto converter = m_converter;
 
     // for (const auto& part : mc) {
     //    if (part.genStatus() > 1) {
@@ -181,7 +183,7 @@ public:
       auto gpos = converter->position(cellID);
       // local positions
       if (m_localDetElement.value().empty()) {
-        auto volman = m_geoSvc->detector()->volumeManager();
+        auto volman = m_geoSvc->getDetector()->volumeManager();
         local       = volman.lookupDetElement(cellID);
       }
       auto pos0 = local.nominal().worldToLocal(

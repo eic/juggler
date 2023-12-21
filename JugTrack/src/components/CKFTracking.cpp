@@ -30,9 +30,10 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Definitions/Units.hpp"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
-#include "JugBase/BField/DD4hepBField.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
+#include "JugTrack/IActsGeoSvc.h"
+#include "JugTrack/DD4hepBField.h"
 
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -90,8 +91,14 @@ namespace Jug::Reco {
               << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
       return StatusCode::FAILURE;
     }
+    m_actsGeoSvc = service("ActsGeoSvc");
+    if (!m_actsGeoSvc) {
+      error() << "Unable to locate ACTS Geometry Service. "
+              << "Make sure you have ActsGeoSvc in the right place in the configuration." << endmsg;
+      return StatusCode::FAILURE;
+    }
 
-    m_BField   = std::dynamic_pointer_cast<const Jug::BField::DD4hepBField>(m_geoSvc->getFieldProvider());
+    m_BField   = std::dynamic_pointer_cast<const Jug::BField::DD4hepBField>(m_actsGeoSvc->getFieldProvider());
     m_fieldctx = Jug::BField::BFieldVariant(m_BField);
 
     // eta bins, chi2 and #sourclinks per surface cutoffs
@@ -102,7 +109,7 @@ namespace Jug::Reco {
             }
         },
     };
-    m_trackFinderFunc = CKFTracking::makeCKFTrackingFunction(m_geoSvc->trackingGeometry(), m_BField);
+    m_trackFinderFunc = CKFTracking::makeCKFTrackingFunction(m_actsGeoSvc->trackingGeometry(), m_BField);
     auto im = s_msgMap.find(msgLevel());
     if (im != s_msgMap.end()) {
         m_actsLoggingLevel = im->second;

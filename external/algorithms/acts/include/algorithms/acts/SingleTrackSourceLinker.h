@@ -9,8 +9,8 @@
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/ToolHandle.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
 
 #include "DD4hep/DD4hepUnits.h"
 #include "DD4hep/Volumes.h"
@@ -119,7 +119,7 @@ public:
                           .value();
 
       if (msgLevel(MSG::DEBUG)) {
-        auto volman  = m_geoSvc->detector()->volumeManager();
+        auto volman  = m_geoSvc->getDetector()->volumeManager();
         auto detelem = volman.lookupDetElement(vol_id);
         auto local_pos =
             detelem.nominal().worldToLocal({ahit.getPosition().x, ahit.getPosition().y, ahit.getPosition().z});

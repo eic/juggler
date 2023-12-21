@@ -14,8 +14,8 @@
 #include "GaudiKernel/ToolHandle.h"
 #include "Gaudi/Property.h"
 
-#include "JugBase/DataHandle.h"
-#include "JugBase/IGeoSvc.h"
+#include <k4FWCore/DataHandle.h>
+#include <k4Interface/IGeoSvc.h>
 #include "JugBase/BField/DD4hepBField.h"
 #include "JugTrack/GeometryContainers.hpp"
 #include "JugTrack/IndexSourceLink.hpp"

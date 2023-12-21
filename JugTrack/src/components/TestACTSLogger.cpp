@@ -5,7 +5,7 @@
 
 // FCCSW
 //#include "DetCommon/DetUtils.h"
-#include "JugBase/IGeoSvc.h"
+#include <k4Interface/IGeoSvc.h>
 
 #include "Acts/Utilities/Logger.hpp"
 
