@@ -63,6 +63,8 @@ void draw_surfaces(std::shared_ptr<const Acts::TrackingGeometry> trk_geo, const 
 
 using namespace Gaudi;
 
+namespace Jug::Reco {
+
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DECLARE_COMPONENT(ActsGeoSvc)
 
@@ -194,4 +196,6 @@ StatusCode ActsGeoSvc::buildDD4HepGeo() {
   m_dd4hepGeo->volumeManager();
   m_dd4hepGeo->apply("DD4hepVolumeManager", 0, nullptr);
   return StatusCode::SUCCESS;
+}
+
 }
