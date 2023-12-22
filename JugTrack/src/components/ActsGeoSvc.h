@@ -45,6 +45,8 @@
  */
 void draw_surfaces(std::shared_ptr<const Acts::TrackingGeometry> trk_geo, const std::string& fname);
 
+namespace Jug::Reco {
+
 class ActsGeoSvc : public extends<Service, IActsGeoSvc> {
 public:
   using VolumeSurfaceMap = std::unordered_map<uint64_t, const Acts::Surface*>;
@@ -117,6 +119,8 @@ public:
 inline std::shared_ptr<const Acts::TrackingGeometry> ActsGeoSvc::trackingGeometry() const
 {
   return m_trackingGeo;
+}
+
 }
 
 #endif // GEOSVC_H
