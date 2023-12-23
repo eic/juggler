@@ -101,6 +101,7 @@ public:
               << "Make sure you have GeoSvc and SimSvc in the right order in the configuration." << endmsg;
       return StatusCode::FAILURE;
     }
+    m_converter = std::make_shared<const dd4hep::rec::CellIDPositionConverter>(*(m_geoSvc->getDetector()));
 
     // unitless conversion
     dyRangeADC = m_dyRangeADC.value() / GeV;
