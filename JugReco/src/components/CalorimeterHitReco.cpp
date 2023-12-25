@@ -220,7 +220,7 @@ public:
           pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit
         );
 
-        hits.push_back({
+        hits.push_back(edm4eic::CalorimeterHit({
             rh.getCellID(), // cellID
             energy,         // energy
             0,              // @TODO: energy error
@@ -232,7 +232,7 @@ public:
             sid,
             lid,
             local_position, // local pos
-        });
+	}));
     }
 
     return StatusCode::SUCCESS;
