@@ -19,6 +19,7 @@
 //#include "Acts/Definitions/Common.hpp"
 //#include "Acts/EventData/Charge.hpp"
 
+#include "edm4eic/EDM4eicVersion.h"
 #include "edm4hep/MCParticleCollection.h"
 #include "edm4eic/TrackParametersCollection.h"
 #include "Math/Vector3D.h"
@@ -93,22 +94,33 @@ namespace Jug::Reco {
 
         const auto q_over_p = charge / p;
 
-        edm4eic::TrackParameters params{-1,                // type --> seed (-1)
-                                     {0.0F, 0.0F},      // location on surface
-                                     {0.1, 0.1, 0.1},   // Covariance on location
-                                     theta,             // theta (rad)
-                                     phi,               // phi  (rad)
-                                     q_over_p * .05F,   // Q/P (e/GeV)
-                                     {0.1, 0.1, 0.1},   // Covariance on theta/phi/Q/P
-                                     part.getTime(),    // Time (ns)
-                                     0.1,               // Error on time
-                                     charge};           // Charge
+        auto params = init_trk_params->create();
+        params.setType(-1);                  // type --> seed (-1)
+        params.setLoc({0.0F, 0.0F});         // location on surface
+        params.setTheta(theta);              // theta (rad)
+        params.setPhi(phi);                  // phi  (rad)
+        params.setQOverP(q_over_p * .05F);   // Q/P (e/GeV)
+        params.setTime(part.getTime());      // Time (ns)
+        #if EDM4EIC_VERSION_MAJOR >= 5
+          edm4eic::Cov6f cov;
+          cov(0,0) = 0.1; // loc0
+          cov(0,1) = 0.1; // loc0/loc1
+          cov(1,1) = 0.1; // loc1
+          cov(2,2) = 0.1; // theta
+          cov(3,3) = 0.1; // phi
+          cov(4,4) = 0.1; // qOverP
+          cov(5,5) = 0.1; // time
+          params.setCovariance(cov);
+        #else
+          params.setLocError({0.1, 0.1, 0.1}); // Covariance on location
+          params.setMomentumError({0.1, 0.1, 0.1}); // Covariance on theta/phi/Q/P
+          params.setTimeError(0.1);            // Error on time
+          params.srtCharge(charge);            // Charge
+        #endif
 
         ////// Construct a perigee surface as the target surface
         //auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
         //    Acts::Vector3{part.getVertex().x * mm, part.getVertex().y * mm, part.getVertex().z * mm});
-
-        init_trk_params->push_back(params);
 
         if (msgLevel(MSG::DEBUG)) {
           debug() << "Invoke track finding seeded by truth particle with p = " << p  << " GeV" << endmsg;

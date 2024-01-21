@@ -29,7 +29,7 @@ void ParticlesWithTruthPID::process(const ParticlesWithTruthPID::Input& input,
   for (const auto& trk : tracks) {
     const auto mom =
         edm4hep::utils::sphericalToVector(1.0 / std::abs(trk.getQOverP()), trk.getTheta(), trk.getPhi());
-    const auto charge_rec = trk.getCharge();
+    const auto charge_rec = std::copysign(1., trk.getQOverP());
     // utility variables for matching
     int best_match    = -1;
     double best_delta = std::numeric_limits<double>::max();

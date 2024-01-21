@@ -22,6 +22,7 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 
 // Event Model related classes
+#include "edm4eic/EDM4eicVersion.h"
 #include "edm4eic/ReconstructedParticleCollection.h"
 #include "edm4eic/TrackerHitCollection.h"
 #include "edm4eic/TrackParametersCollection.h"
@@ -36,6 +37,23 @@
 #include <cmath>
 
 namespace Jug::Reco {
+
+  #if EDM4EIC_VERSION_MAJOR >= 5
+    // This array relates the Acts and EDM4eic covariance matrices, including
+    // the unit conversion to get from Acts units into EDM4eic units.
+    //
+    // Note: std::map is not constexpr, so we use a constexpr std::array
+    // std::array initialization need double braces since arrays are aggregates
+    // ref: https://en.cppreference.com/w/cpp/language/aggregate_initialization
+    static constexpr std::array<std::pair<Acts::BoundIndices, double>, 6> edm4eic_indexed_units{{
+      {Acts::eBoundLoc0, Acts::UnitConstants::mm},
+      {Acts::eBoundLoc1, Acts::UnitConstants::mm},
+      {Acts::eBoundTheta, 1.},
+      {Acts::eBoundPhi, 1.},
+      {Acts::eBoundQOverP, 1. / Acts::UnitConstants::GeV},
+      {Acts::eBoundTime, Acts::UnitConstants::ns}
+    }};
+  #endif
 
   /** Extract the particles form fit trajectories.
    *
@@ -116,35 +134,42 @@ namespace Jug::Reco {
               debug() << " chi2 = " << trajState.chi2Sum << endmsg;
             }
 
-            const decltype(edm4eic::TrackParametersData::loc) loc {
+            auto pars = track_pars->create();
+            pars.setType(0); // type: track head --> 0
+            pars.setLoc({
               static_cast<float>(parameter[Acts::eBoundLoc0]),
               static_cast<float>(parameter[Acts::eBoundLoc1])
-            };
-            const decltype(edm4eic::TrackParametersData::momentumError) momentumError {
-              static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundTheta)),
-              static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundPhi)),
-              static_cast<float>(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)),
-              static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundPhi)),
-              static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundQOverP)),
-              static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundQOverP))};
-            const decltype(edm4eic::TrackParametersData::locError) locError {
-              static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
-              static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)),
-              static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc1))};
-            const float timeError{sqrt(static_cast<float>(covariance(Acts::eBoundTime, Acts::eBoundTime)))};
-
-            edm4eic::TrackParameters pars{
-              0, // type: track head --> 0
-              loc,
-              locError,
-              static_cast<float>(parameter[Acts::eBoundTheta]),
-              static_cast<float>(parameter[Acts::eBoundPhi]),
-              static_cast<float>(parameter[Acts::eBoundQOverP]),
-              momentumError,
-              static_cast<float>(parameter[Acts::eBoundTime]),
-              timeError,
-              static_cast<float>(boundParam.charge())};
-            track_pars->push_back(pars);
+            });
+            pars.setTheta(static_cast<float>(parameter[Acts::eBoundTheta]));
+            pars.setPhi(static_cast<float>(parameter[Acts::eBoundPhi]));
+            pars.setQOverP(static_cast<float>(parameter[Acts::eBoundQOverP]));
+            pars.setTime(static_cast<float>(parameter[Acts::eBoundTime]));
+            #if EDM4EIC_VERSION_MAJOR >= 5
+              edm4eic::Cov6f cov;
+              for (size_t i = 0; const auto& [a, x] : edm4eic_indexed_units) {
+                for (size_t j = 0; const auto& [b, y] : edm4eic_indexed_units) {
+                  // FIXME why not pars.getCovariance()(i,j) = covariance(a,b) / x / y;
+                  cov(i,j) = covariance(a,b) / x / y;
+                }
+              }
+              pars.setCovariance(cov);
+            #else
+              pars.setCharge(static_cast<float>(boundParam.charge()));
+              pars.setLocError({
+                    static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
+                    static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)),
+                    static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc1))
+                });
+              pars.setMomentumError({
+                    static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundTheta)),
+                    static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundPhi)),
+                    static_cast<float>(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)),
+                    static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundPhi)),
+                    static_cast<float>(covariance(Acts::eBoundTheta, Acts::eBoundQOverP)),
+                    static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundQOverP))
+                });
+              pars.setTimeError(sqrt(static_cast<float>(covariance(Acts::eBoundTime, Acts::eBoundTime))));
+            #endif
           }
 
           auto tsize = trackTips.size();
