@@ -115,7 +115,7 @@ namespace Jug::Reco {
           params.setLocError({0.1, 0.1, 0.1}); // Covariance on location
           params.setMomentumError({0.1, 0.1, 0.1}); // Covariance on theta/phi/Q/P
           params.setTimeError(0.1);            // Error on time
-          params.srtCharge(charge);            // Charge
+          params.setCharge(charge);            // Charge
         #endif
 
         ////// Construct a perigee surface as the target surface
