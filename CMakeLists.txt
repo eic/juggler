@@ -85,6 +85,7 @@ endif()
 
 ## Dependencies
 find_package(algorithms)
+find_package(EICrecon)
 find_package(Gaudi)
 find_package(k4FWCore)
 
