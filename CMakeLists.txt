@@ -78,6 +78,7 @@ get_filename_component(ActsCore_PATH ${ActsCore_LOCATION} DIRECTORY)
 
 ## Dependencies
 find_package(algorithms)
+find_package(EICrecon)
 find_package(Gaudi)
 find_package(k4FWCore)
 
