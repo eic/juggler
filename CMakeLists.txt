@@ -77,7 +77,7 @@ get_target_property(ActsCore_LOCATION ActsCore LOCATION)
 get_filename_component(ActsCore_PATH ${ActsCore_LOCATION} DIRECTORY)
 
 ## algorithms dependency
-option(USE_SYSTEM_ALGORITHMS "Use system-provided algorithms" OFF)
+option(USE_SYSTEM_ALGORITHMS "Use system-provided algorithms" ON)
 if (USE_SYSTEM_ALGORITHMS)
   find_package(algorithms)
 else()
