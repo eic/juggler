@@ -13,7 +13,7 @@ gaudi_add_module(JugFastPlugins
   Gaudi::GaudiAlgLib Gaudi::GaudiKernel
   JugBase
   JugBase JugAlgo
-  algorithms::core algorithms::truth
+  algorithms::algocore algorithms::algotruth
   ROOT::Core ROOT::RIO ROOT::Tree
   EDM4HEP::edm4hep
   EDM4EIC::edm4eic
