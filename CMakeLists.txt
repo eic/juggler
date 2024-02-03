@@ -76,19 +76,12 @@ add_definitions("-DActs_VERSION_PATCH=${Acts_VERSION_PATCH}")
 get_target_property(ActsCore_LOCATION ActsCore LOCATION)
 get_filename_component(ActsCore_PATH ${ActsCore_LOCATION} DIRECTORY)
 
-## algorithms dependency
-option(USE_SYSTEM_ALGORITHMS "Use system-provided algorithms" OFF)
-if (USE_SYSTEM_ALGORITHMS)
-  find_package(algorithms)
-else()
-  add_subdirectory(external/algorithms)
-  add_library(algorithms::core ALIAS algocore)
-  add_library(algorithms::truth ALIAS algotruth)
-  add_library(algorithms::calorimetry ALIAS algocalorimetry)
-endif()
-
+## Dependencies
+find_package(algorithms)
 find_package(Gaudi)
 find_package(k4FWCore)
+
+## Components
 add_subdirectory(JugBase)
 add_subdirectory(JugAlgo)
 add_subdirectory(JugDigi)
@@ -96,8 +89,9 @@ add_subdirectory(JugFast)
 add_subdirectory(JugPID)
 add_subdirectory(JugReco)
 add_subdirectory(JugTrack)
-gaudi_install(CMAKE)
 
+## CMake config
+gaudi_install(CMAKE)
 
 # create and install Juggler.xenv file as it still has a use-case
 # TODO: update workflow to not need xenv files anymore
