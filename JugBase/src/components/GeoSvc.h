@@ -72,7 +72,6 @@ public:
    * <a href="https://dd4hep.web.cern.ch/dd4hep/reference/classdd4hep_1_1Detector.html">See DD4hep Detector documentation</a>
    */
   virtual dd4hep::Detector* getDetector() override;
-  [[deprecated("Use getDetector() instead")]]
   virtual dd4hep::Detector* lcdd() {
     return getDetector();
   };
