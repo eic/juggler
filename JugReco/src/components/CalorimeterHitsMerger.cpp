@@ -172,17 +172,18 @@ public:
         pos.x(), pos.y(), pos.z()
       );
 
-      outputs.push_back(
-          edm4eic::CalorimeterHit{href.getCellID(),
-                              energy,
-                              energyError,
-                              time,
-                              timeError,
-                              position,
-                              href.getDimension(),
-                              href.getSector(),
-                              href.getLayer(),
-                              local}); // Can do better here? Right now position is mapped on the central hit
+      outputs.create(
+        href.getCellID(),
+        energy,
+        energyError,
+        time,
+        timeError,
+        position,
+        href.getDimension(),
+        href.getSector(),
+        href.getLayer(),
+        local
+      ); // Can do better here? Right now position is mapped on the central hit
     }
 
     if (msgLevel(MSG::DEBUG)) {

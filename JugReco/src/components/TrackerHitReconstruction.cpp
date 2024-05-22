@@ -108,16 +108,16 @@ namespace Jug::Reco {
         //      - XYZ segmentation: xx -> sigma_x, yy-> sigma_y, zz -> sigma_z, tt -> 0
         //    This is properly in line with how we get the local coordinates for the hit
         //    in the TrackerSourceLinker.
-        edm4eic::TrackerHit hit{ahit.getCellID(), // Raw DD4hep cell ID
-                             {static_cast<float>(pos.x() / mm), static_cast<float>(pos.y() / mm),
-                              static_cast<float>(pos.z() / mm)},                    // mm
-                             {get_variance(dim[0] / mm), get_variance(dim[1] / mm), // variance (see note above)
-                              std::size(dim) > 2 ? get_variance(dim[2] / mm) : 0.},
-                             static_cast<float>(ahit.getTimeStamp() / 1000), // ns
-                             m_timeResolution,                            // in ns
-                             static_cast<float>(ahit.getCharge() / 1.0e6),   // Collected energy (GeV)
-                             0.0F};                                       // Error on the energy
-        rec_hits->push_back(hit);
+        rec_hits->create(
+          ahit.getCellID(), // Raw DD4hep cell ID
+          edm4hep::Vector3f{static_cast<float>(pos.x() / mm), static_cast<float>(pos.y() / mm), static_cast<float>(pos.z() / mm)},                    // mm
+          edm4eic::CovDiag3f{get_variance(dim[0] / mm), get_variance(dim[1] / mm), // variance (see note above)
+          std::size(dim) > 2 ? get_variance(dim[2] / mm) : 0.},
+          static_cast<float>(ahit.getTimeStamp() / 1000), // ns
+          m_timeResolution,                            // in ns
+          static_cast<float>(ahit.getCharge() / 1.0e6),   // Collected energy (GeV)
+          0.0F
+        );                                       // Error on the energy
       }
       return StatusCode::SUCCESS;
     }
