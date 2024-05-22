@@ -83,10 +83,11 @@ public:
       }
       if (cell_hit_map.count(ahit.getCellID()) == 0) {
         cell_hit_map[ahit.getCellID()] = rawhits->size();
-        edm4eic::RawTrackerHit rawhit(ahit.getCellID(),
-                                   ahit.getMCParticle().getTime() * 1e6 + m_gaussDist() * 1e3, // ns->fs
-                                   std::llround(ahit.getEDep() * 1e6));
-        rawhits->push_back(rawhit);
+        rawhits->create(
+          ahit.getCellID(),
+          ahit.getMCParticle().getTime() * 1e6 + m_gaussDist() * 1e3, // ns->fs
+          std::llround(ahit.getEDep() * 1e6)
+        );
       } else {
         auto hit = (*rawhits)[cell_hit_map[ahit.getCellID()]];
         hit.setTimeStamp(ahit.getMCParticle().getTime() * 1e6 + m_gaussDist() * 1e3);

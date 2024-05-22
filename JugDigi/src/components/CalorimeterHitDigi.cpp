@@ -195,12 +195,11 @@ namespace Jug::Digi {
         }
         const long long tdc = std::llround((time + m_normDist() * tRes) * stepTDC);
 
-        edm4eic::RawCalorimeterHit rawhit(
+        rawhits->create(
           ahit.getCellID(),
           (adc > m_capADC.value() ? m_capADC.value() : adc),
           tdc
         );
-        rawhits->push_back(rawhit);
       }
     }
 
@@ -250,12 +249,11 @@ namespace Jug::Digi {
         unsigned long long adc     = std::llround(ped + edep * (1. + eResRel) / dyRangeADC * m_capADC);
         unsigned long long tdc     = std::llround((time + m_normDist() * tRes) * stepTDC);
 
-        edm4eic::RawCalorimeterHit rawhit(
+        rawhits->create(
           id,
           (adc > m_capADC.value() ? m_capADC.value() : adc),
           tdc
         );
-        rawhits->push_back(rawhit);
       }
     }
   };

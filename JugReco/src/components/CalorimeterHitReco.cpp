@@ -220,7 +220,7 @@ public:
           pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit
         );
 
-        hits.push_back(edm4eic::CalorimeterHit({
+        hits.push_back(edm4eic::MutableCalorimeterHit({
             rh.getCellID(), // cellID
             energy,         // energy
             0,              // @TODO: energy error

@@ -266,7 +266,7 @@ private:
 
   // reconstruct a neutral cluster
   // (for now assuming the vertex is at (0,0,0))
-  edm4eic::ReconstructedParticle reconstruct_neutral(const edm4eic::Cluster& clus, const double mass,
+  edm4eic::MutableReconstructedParticle reconstruct_neutral(const edm4eic::Cluster& clus, const double mass,
                                                  const int32_t pdg) const {
     const float energy = clus.getEnergy();
     const float p = energy < mass ? 0 : std::sqrt(energy * energy - mass * mass);

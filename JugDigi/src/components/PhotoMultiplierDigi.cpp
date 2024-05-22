@@ -125,11 +125,11 @@ public:
         // build hit
         for (auto &it : hit_groups) {
             for (auto &data : it.second) {
-                edm4eic::RawTrackerHit hit{
+                raw.create(
                   it.first,
                   static_cast<decltype(edm4eic::RawTrackerHitData::charge)>(data.signal), 
-                  static_cast<decltype(edm4eic::RawTrackerHitData::timeStamp)>(data.time/(m_timeStep/ns))};
-                raw.push_back(hit);
+                  static_cast<decltype(edm4eic::RawTrackerHitData::timeStamp)>(data.time/(m_timeStep/ns))
+                );
             }
         }
 

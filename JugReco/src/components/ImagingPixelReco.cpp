@@ -154,15 +154,16 @@ public:
         pos.x() / m_lUnit, pos.y() / m_lUnit, pos.z() / m_lUnit
       );
 
-      hits.push_back(edm4eic::CalorimeterHit{id,                         // cellID
-                                          static_cast<float>(energy), // energy
-                                          0,                          // energyError
-                                          static_cast<float>(time),   // time
-                                          0,                          // timeError TODO
-                                          position,                   // global pos
-                                          {0, 0, 0}, // @TODO: add dimension
-                                          sid,lid,
-                                          local});                    // local pos
+      hits.create(id,                         // cellID
+                  static_cast<float>(energy), // energy
+                  0,                          // energyError
+                  static_cast<float>(time),   // time
+                  0,                          // timeError TODO
+                  position,                   // global pos
+                  edm4hep::Vector3f{0, 0, 0}, // @TODO: add dimension
+                  sid,lid,
+                  local                       // local pos
+      );
     }
     return StatusCode::SUCCESS;
   }
