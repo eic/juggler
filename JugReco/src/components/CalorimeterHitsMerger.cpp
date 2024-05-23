@@ -114,7 +114,7 @@ public:
     auto& outputs = *m_outputHitCollection.createAndPut();
 
     // find the hits that belong to the same group (for merging)
-    std::unordered_map<long long, std::vector<edm4eic::CalorimeterHit>> merge_map;
+    std::unordered_map<long long, std::vector<edm4eic::MutableCalorimeterHit>> merge_map;
     for (const auto& h : inputs) {
       int64_t id = h.getCellID() & id_mask;
       // use the reference field position
