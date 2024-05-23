@@ -118,8 +118,6 @@ public:
     std::size_t ix = 0;
     for (const auto& h : inputs) {
       int64_t id = h.getCellID() & id_mask;
-      // use the reference field position
-      auto it = merge_map.find(id);
       merge_map[id].push_back(ix);
 
       ix++;
