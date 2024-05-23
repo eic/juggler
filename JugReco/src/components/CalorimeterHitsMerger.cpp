@@ -128,7 +128,7 @@ public:
     // sort hits by energy from large to small
     for (auto &it : merge_map) {
         std::sort(it.second.begin(), it.second.end(), [&](std::size_t ix1, std::size_t ix2) {
-            return (*in_hits)[ix1].getEnergy() > (*in_hits)[ix2].getEnergy();
+            return inputs[ix1].getEnergy() > inputs[ix2].getEnergy();
         });
     }
 
@@ -152,7 +152,7 @@ public:
       float time        = 0;
       float timeError   = 0;
       for (auto ix : ixs) {
-        auto hit = (*in_hits)[ix];
+        auto hit = inputs[ix];
         energy += hit.getEnergy();
         energyError += hit.getEnergyError() * hit.getEnergyError();
         time += hit.getTime();
@@ -162,7 +162,7 @@ public:
       time /= ixs.size();
       timeError = sqrt(timeError) / ixs.size();
 
-      const auto& href = (*in_hits)[ixs.front()];
+      const auto& href = inputs[ixs.front()];
 
       // create const vectors for passing to hit initializer list
       const decltype(edm4eic::CalorimeterHitData::position) position(
