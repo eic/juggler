@@ -114,31 +114,28 @@ public:
     auto& outputs = *m_outputHitCollection.createAndPut();
 
     // find the hits that belong to the same group (for merging)
-    std::unordered_map<long long, std::vector<edm4eic::CalorimeterHit>> merge_map;
+    std::unordered_map<long long, std::vector<size_t>> merge_map;
+    std::size_t ix = 0;
     for (const auto& h : inputs) {
       int64_t id = h.getCellID() & id_mask;
-      // use the reference field position
-      auto it = merge_map.find(id);
-      if (it == merge_map.end()) {
-        merge_map[id] = {h};
-      } else {
-        it->second.push_back(h);
-      }
+      merge_map[id].push_back(ix);
+
+      ix++;
     }
 
     // sort hits by energy from large to small
-    std::for_each(merge_map.begin(), merge_map.end(), [](auto& it) {
-      std::sort(it.second.begin(), it.second.end(), [](const auto& h1, const auto& h2) {
-        return h1.getEnergy() > h2.getEnergy();
-      });
-    });
+    for (auto &it : merge_map) {
+        std::sort(it.second.begin(), it.second.end(), [&](std::size_t ix1, std::size_t ix2) {
+            return inputs[ix1].getEnergy() > inputs[ix2].getEnergy();
+        });
+    }
 
     // reconstruct info for merged hits
     // dd4hep decoders
     auto poscon = m_converter;
     auto volman = m_geoSvc->getDetector()->volumeManager();
 
-    for (auto& [id, hits] : merge_map) {
+    for (auto& [id, ixs] : merge_map) {
       // reference fields id
       const uint64_t ref_id = id | ref_mask;
       // global positions
@@ -152,17 +149,18 @@ public:
       float energyError = 0.;
       float time        = 0;
       float timeError   = 0;
-      for (auto& hit : hits) {
+      for (auto ix : ixs) {
+        auto hit = inputs[ix];
         energy += hit.getEnergy();
         energyError += hit.getEnergyError() * hit.getEnergyError();
         time += hit.getTime();
         timeError += hit.getTimeError() * hit.getTimeError();
       }
       energyError = sqrt(energyError);
-      time /= hits.size();
-      timeError = sqrt(timeError) / hits.size();
+      time /= ixs.size();
+      timeError = sqrt(timeError) / ixs.size();
 
-      const auto& href = hits.front();
+      const auto& href = inputs[ixs.front()];
 
       // create const vectors for passing to hit initializer list
       const decltype(edm4eic::CalorimeterHitData::position) position(
