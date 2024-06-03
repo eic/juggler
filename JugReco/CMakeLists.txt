@@ -18,6 +18,7 @@ gaudi_add_module(JugRecoPlugins
   EDM4HEP::edm4hep
   EDM4EIC::edm4eic
   DD4hep::DDRec
+  GENCONF_OPTIONS --load-library=JugAlgoPreload.so
 )
 
 target_include_directories(JugRecoPlugins PUBLIC
