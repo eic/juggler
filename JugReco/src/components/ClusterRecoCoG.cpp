@@ -1,16 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-// Copyright (C) 2022 Sylvester Joosten, Chao, Chao Peng, Whitney Armstrong
-
-/*
- *  Reconstruct the cluster with Center of Gravity method
- *  Logarithmic weighting is used for mimicing energy deposit in transverse direction
- *
- *  Author: Sylvester Joosten, Chao Peng (ANL), 09/20/2022
- */
+// Copyright (C) 2024 Wouter Deconinck
 
 #include <JugAlgo/Algorithm.h>
-#include <algorithms/calorimetry/CalorimeterClusterRecoCoG.h>
+#include <EICrecon/algorithms/calorimetry/CalorimeterClusterRecoCoG.h>
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 JUGALGO_DEFINE_ALGORITHM(ClusterRecoCoG, eicrecon::CalorimeterClusterRecoCoG, Jug::Reco)
-JUGALGO_DEFINE_ALGORITHM(CalorimeterClusterRecoCoG, eicrecon::CalorimeterClusterRecoCoG, Jug::Reco)
