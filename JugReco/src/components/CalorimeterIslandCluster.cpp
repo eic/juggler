@@ -440,7 +440,6 @@ private:
       pcls.emplace_back();
     }
 
-    size_t i = 0;
     for (const auto& [idx, hit] : group) {
       size_t j = 0;
       // calculate weights for local maxima
@@ -472,7 +471,6 @@ private:
         pcls[k].addToHits(hit);
         pcls[k].addToWeights(weight);
       }
-      i += 1;
     }
     for (auto& pcl : pcls) {
       proto.push_back(pcl);
