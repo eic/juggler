@@ -5,22 +5,12 @@
 # Package: JugAlgo
 ################################################################################
 
-file(GLOB JugAlgo_sources CONFIGURE_DEPENDS src/*.cpp)
-gaudi_add_library(JugAlgo
-  SOURCES
-  ${JugAlgo_sources}
+gaudi_add_header_only_library(JugAlgo
   LINK
   Gaudi::GaudiKernel Gaudi::GaudiAlgLib
   algorithms::core
   JugBase
 )
-
-target_include_directories(JugAlgo PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-)
-
-target_compile_options(JugAlgo PRIVATE -Wno-suggest-override)
 
 file(GLOB JugAlgoPlugins_sources CONFIGURE_DEPENDS src/components/*.cpp)
 gaudi_add_module(JugAlgoPlugins
