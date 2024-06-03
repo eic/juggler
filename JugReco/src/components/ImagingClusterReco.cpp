@@ -8,10 +8,7 @@
  *  Author: Chao Peng (ANL), 06/02/2021
  */
 #include "fmt/format.h"
-#pragma GCC diagnostic push                             // save the actual diag context
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"  // disable maybe warnings
 #include <Eigen/Dense>
-#pragma GCC diagnostic pop                              // restore previous diag context
 #include <algorithm>
 
 #include "Gaudi/Property.h"
