@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Wouter Deconinck
 
 #include <JugAlgo/Algorithm.h>
-#include <algorithms/calorimetry/CalorimeterIslandCluster.h>
+#include <EICrecon/algorithms/calorimetry/CalorimeterIslandCluster.h>
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 JUGALGO_DEFINE_ALGORITHM(CalorimeterIslandCluster, eicrecon::CalorimeterIslandCluster, Jug::Reco)
