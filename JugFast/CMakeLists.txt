@@ -13,6 +13,7 @@ gaudi_add_module(JugFastPlugins
   Gaudi::GaudiKernel
   JugBase
   JugAlgo
+  EICrecon::algorithms_calorimetry_library
   algorithms::core algorithms::truth
   ROOT::Core ROOT::RIO ROOT::Tree
   EDM4HEP::edm4hep

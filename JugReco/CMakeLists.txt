@@ -11,8 +11,8 @@ gaudi_add_module(JugRecoPlugins
   ${JugRecoPlugins_sources}
   LINK
   Gaudi::GaudiKernel
-  JugBase JugAlgo
-  algorithms::core algorithms::calorimetry
+  JugBase
+  JugAlgo
   EICrecon::algorithms_calorimetry_library
   ROOT::Core ROOT::RIO ROOT::Tree
   EDM4HEP::edm4hep

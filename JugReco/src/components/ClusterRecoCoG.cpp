@@ -9,9 +9,8 @@
  */
 
 #include <JugAlgo/Algorithm.h>
-#include <algorithms/calorimetry/ClusterRecoCoG.h>
 #include <algorithms/calorimetry/CalorimeterClusterRecoCoG.h>
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-JUGALGO_DEFINE_ALGORITHM(ClusterRecoCoG, algorithms::calorimetry::ClusterRecoCoG, Jug::Reco)
+JUGALGO_DEFINE_ALGORITHM(ClusterRecoCoG, eicrecon::CalorimeterClusterRecoCoG, Jug::Reco)
 JUGALGO_DEFINE_ALGORITHM(CalorimeterClusterRecoCoG, eicrecon::CalorimeterClusterRecoCoG, Jug::Reco)
