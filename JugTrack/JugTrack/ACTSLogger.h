@@ -51,7 +51,7 @@ class GaudiPrintPolicy : public Acts::Logging::OutputPrintPolicy {
 public:
   GaudiPrintPolicy(IMessageSvc* owner) : m_messenger(owner) {}
 
-  void flush(const Acts::Logging::Level& lvl, const std::ostringstream& input) {
+  void flush(const Acts::Logging::Level& lvl, const std::string& input) {
     MSG::Level l = MSG::VERBOSE;
     switch (lvl) {
     case Acts::Logging::VERBOSE:
@@ -77,7 +77,7 @@ public:
       break;
     }
 
-    m_messenger << l << input.str() << endmsg;
+    m_messenger << l << input << endmsg;
   }
 
 private:
