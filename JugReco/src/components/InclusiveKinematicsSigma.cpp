@@ -160,8 +160,6 @@ public:
     // -----------------------------------------------------------------
 
     // Sums in colinear frame
-    double pxsum = 0;
-    double pysum = 0;
     double pzsum = 0;
     double Esum = 0;
 
@@ -188,8 +186,6 @@ public:
         PxPyPzEVector hf_lab(p.getMomentum().x, p.getMomentum().y, p.getMomentum().z, p.getEnergy());
         // Boost to colinear frame
         PxPyPzEVector hf_boosted = Jug::Base::Boost::apply_boost(boost, hf_lab);
-        pxsum += hf_boosted.Px();
-        pysum += hf_boosted.Py();
         pzsum += hf_boosted.Pz();
         Esum += hf_boosted.E();
       }
