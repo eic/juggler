@@ -68,7 +68,7 @@ find_package(ROOT COMPONENTS Core RIO Tree MathCore GenVector Geom REQUIRED)
 find_package(DD4hep COMPONENTS DDRec REQUIRED)
 
 if(JUGGLER_BUILD_TRACKING)
-  find_package(Acts COMPONENTS Core PluginIdentification PluginTGeo PluginDD4hep PluginJson)
+  find_package(Acts REQUIRED COMPONENTS Core PluginIdentification PluginTGeo PluginDD4hep PluginJson)
   set(Acts_VERSION_MIN "20.2.0")
   set(Acts_VERSION "${Acts_VERSION_MAJOR}.${Acts_VERSION_MINOR}.${Acts_VERSION_PATCH}")
   if(${Acts_VERSION} VERSION_LESS ${Acts_VERSION_MIN}
