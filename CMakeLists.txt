@@ -8,6 +8,8 @@ cmake_policy(SET CMP0074 NEW)
 
 project(Juggler VERSION 4.3.0)
 
+option(JUGGLER_BUILD_TRACKING "Build tracking algorithms" TRUE)
+
 set(CMAKE_CXX_STANDARD 20 CACHE STRING "")
 if(NOT CMAKE_CXX_STANDARD MATCHES "20")
   message(FATAL_ERROR "Unsupported C++ standard: ${CMAKE_CXX_STANDARD}")
@@ -65,19 +67,21 @@ add_definitions("-Dpodio_VERSION_PATCH=${podio_VERSION_PATCH}")
 find_package(ROOT COMPONENTS Core RIO Tree MathCore GenVector Geom REQUIRED)
 find_package(DD4hep COMPONENTS DDRec REQUIRED)
 
-find_package(Acts REQUIRED COMPONENTS Core PluginIdentification PluginTGeo PluginDD4hep PluginJson)
-set(Acts_VERSION_MIN "20.2.0")
-set(Acts_VERSION "${Acts_VERSION_MAJOR}.${Acts_VERSION_MINOR}.${Acts_VERSION_PATCH}")
-if(${Acts_VERSION} VERSION_LESS ${Acts_VERSION_MIN}
-   AND NOT "${Acts_VERSION}" STREQUAL "9.9.9")
-  message(FATAL_ERROR "Acts version ${Acts_VERSION_MIN} or higher required, but ${Acts_VERSION} found")
+if(JUGGLER_BUILD_TRACKING)
+  find_package(Acts COMPONENTS Core PluginIdentification PluginTGeo PluginDD4hep PluginJson)
+  set(Acts_VERSION_MIN "20.2.0")
+  set(Acts_VERSION "${Acts_VERSION_MAJOR}.${Acts_VERSION_MINOR}.${Acts_VERSION_PATCH}")
+  if(${Acts_VERSION} VERSION_LESS ${Acts_VERSION_MIN}
+    AND NOT "${Acts_VERSION}" STREQUAL "9.9.9")
+    message(FATAL_ERROR "Acts version ${Acts_VERSION_MIN} or higher required, but ${Acts_VERSION} found")
+  endif()
+  add_definitions("-DActs_VERSION_MAJOR=${Acts_VERSION_MAJOR}")
+  add_definitions("-DActs_VERSION_MINOR=${Acts_VERSION_MINOR}")
+  add_definitions("-DActs_VERSION_PATCH=${Acts_VERSION_PATCH}")
+  # Get ActsCore path for ActsExamples include
+  get_target_property(ActsCore_LOCATION ActsCore LOCATION)
+  get_filename_component(ActsCore_PATH ${ActsCore_LOCATION} DIRECTORY)
 endif()
-add_definitions("-DActs_VERSION_MAJOR=${Acts_VERSION_MAJOR}")
-add_definitions("-DActs_VERSION_MINOR=${Acts_VERSION_MINOR}")
-add_definitions("-DActs_VERSION_PATCH=${Acts_VERSION_PATCH}")
-# Get ActsCore path for ActsExamples include
-get_target_property(ActsCore_LOCATION ActsCore LOCATION)
-get_filename_component(ActsCore_PATH ${ActsCore_LOCATION} DIRECTORY)
 
 ## Dependencies
 find_package(algorithms)
@@ -91,7 +95,9 @@ add_subdirectory(JugDigi)
 add_subdirectory(JugFast)
 add_subdirectory(JugPID)
 add_subdirectory(JugReco)
-add_subdirectory(JugTrack)
+if(JUGGLER_BUILD_TRACKING)
+  add_subdirectory(JugTrack)
+endif()
 
 ## CMake config
 gaudi_install(CMAKE)
