@@ -26,41 +26,6 @@ static const std::map<int, Acts::Logging::Level> s_msgMap = {
     {MSG::ALWAYS, Acts::Logging::MAX},
 };
 
-void draw_surfaces(std::shared_ptr<const Acts::TrackingGeometry> trk_geo, const Acts::GeometryContext geo_ctx, const std::string& fname)
-{
-  using namespace Acts;
-  std::vector<const Surface*> surfaces;
-
-  trk_geo->visitSurfaces([&](const Acts::Surface* surface) {
-    // for now we just require a valid surface
-    if (surface == nullptr) {
-      std::cout << " Not a surface \n";
-      return;
-    }
-    surfaces.push_back(surface);
-  });
-  std::ofstream os;
-  os.open(fname);
-  os << std::fixed << std::setprecision(6);
-  size_t nVtx = 0;
-  for (const auto& srfx : surfaces) {
-    const auto* srf    = dynamic_cast<const PlaneSurface*>(srfx);
-    const auto* bounds = dynamic_cast<const PlanarBounds*>(&srf->bounds());
-    for (const auto& vtxloc : bounds->vertices()) {
-      Vector3 vtx = srf->transform(geo_ctx) * Vector3(vtxloc.x(), vtxloc.y(), 0);
-      os << "v " << vtx.x() << " " << vtx.y() << " " << vtx.z() << "\n";
-    }
-    // connect them
-    os << "f";
-    for (size_t i = 1; i <= bounds->vertices().size(); ++i) {
-      os << " " << nVtx + i;
-    }
-    os << "\n";
-    nVtx += bounds->vertices().size();
-  }
-  os.close();
-}
-
 using namespace Gaudi;
 
 namespace Jug::Reco {
@@ -139,7 +104,6 @@ StatusCode ActsGeoSvc::initialize() {
       m_materialDeco);
   // Visit surfaces
   if (m_trackingGeo) {
-    draw_surfaces(m_trackingGeo, m_trackingGeoCtx, "tracking_geometry.obj");
     debug() << "visiting all the surfaces  " << endmsg;
     m_trackingGeo->visitSurfaces([this](const Acts::Surface* surface) {
       // for now we just require a valid surface
