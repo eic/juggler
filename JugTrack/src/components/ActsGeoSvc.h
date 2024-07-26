@@ -39,12 +39,6 @@
 #include "JugTrack/DD4hepBField.h"
 
 
-/** Draw the surfaces and save to obj file.
- *  This is useful for debugging the ACTS geometry. The obj file can
- *  be loaded into various tools, such as FreeCAD, for inspection.
- */
-void draw_surfaces(std::shared_ptr<const Acts::TrackingGeometry> trk_geo, const std::string& fname);
-
 namespace Jug::Reco {
 
 class ActsGeoSvc : public extends<Service, IActsGeoSvc> {
