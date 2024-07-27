@@ -19,6 +19,7 @@ gaudi_add_module(JugFastPlugins
   EDM4HEP::edm4hep
   EDM4EIC::edm4eic
   k4FWCore::k4FWCore
+  GENCONF_OPTIONS --load-library=JugAlgoPreload.so
 )
 
 target_include_directories(JugFastPlugins PUBLIC
