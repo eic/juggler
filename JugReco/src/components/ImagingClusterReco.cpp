@@ -2,7 +2,6 @@
 // Copyright (C) 2024 Wouter Deconinck
 
 #include <JugAlgo/Algorithm.h>
-#include <edm4hep/utils/vector_utils.h> // FIXME remove when https://github.com/eic/EICrecon/pull/1482 merged
 #include <EICrecon/algorithms/calorimetry/ImagingClusterReco.h>
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
