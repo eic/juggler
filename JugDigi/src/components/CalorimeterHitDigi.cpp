@@ -32,8 +32,7 @@
 
 // Event Model related classes
 #include "edm4hep/SimCalorimeterHitCollection.h"
-#include "edm4eic/RawCalorimeterHitCollection.h"
-#include "edm4eic/RawCalorimeterHitData.h"
+#include "edm4hep/RawCalorimeterHitCollection.h"
 
 
 using namespace Gaudi::Units;
@@ -83,7 +82,7 @@ namespace Jug::Digi {
 
     DataHandle<edm4hep::SimCalorimeterHitCollection> m_inputHitCollection{
       "inputHitCollection", Gaudi::DataHandle::Reader, this};
-    DataHandle<edm4eic::RawCalorimeterHitCollection> m_outputHitCollection{
+    DataHandle<edm4hep::RawCalorimeterHitCollection> m_outputHitCollection{
       "outputHitCollection", Gaudi::DataHandle::Writer, this};
 
     //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;

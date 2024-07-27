@@ -27,7 +27,7 @@
 
 // Event Model related classes
 #include "edm4eic/CalorimeterHitCollection.h"
-#include "edm4eic/RawCalorimeterHitCollection.h"
+#include "edm4hep/RawCalorimeterHitCollection.h"
 
 using namespace Gaudi::Units;
 
@@ -62,7 +62,7 @@ private:
   double thresholdADC{0};
   double stepTDC{0};
 
-  DataHandle<edm4eic::RawCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+  DataHandle<edm4hep::RawCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                     this};
   DataHandle<edm4eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                   this};

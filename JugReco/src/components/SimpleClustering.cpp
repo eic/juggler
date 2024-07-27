@@ -23,7 +23,6 @@
 #include "edm4eic/CalorimeterHitCollection.h"
 #include "edm4eic/ClusterCollection.h"
 #include "edm4eic/ProtoClusterCollection.h"
-#include "edm4eic/RawCalorimeterHitCollection.h"
 #include "edm4hep/utils/vector_utils.h"
 
 using namespace Gaudi::Units;
