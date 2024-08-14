@@ -15,19 +15,35 @@
 #include "DDRec/SurfaceManager.h"
 #include "DDRec/Surface.h"
 
+#if Acts_VERSION_MAJOR < 36
+#include <Acts/EventData/Measurement.hpp>
+#endif
+#if Acts_VERSION_MAJOR >= 32
+#include "Acts/EventData/ProxyAccessor.hpp"
+#endif  
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
-#include "Acts/TrackFinding/SourceLinkAccessorConcept.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#if Acts_VERSION_MAJOR >= 34
+#include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
+#endif  
 #include "Acts/Propagator/Propagator.hpp"
+#if Acts_VERSION_MAJOR >= 34
+#include "Acts/Propagator/StandardAborters.hpp"
+#endif
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#if Acts_VERSION_MAJOR >= 34
+#include "Acts/Utilities/TrackHelpers.hpp"
+#endif
 #include "Acts/Definitions/Units.hpp"
 
 #include <k4FWCore/DataHandle.h>
@@ -139,7 +155,9 @@ namespace Jug::Reco {
     ActsExamples::PassThroughCalibrator pcalibrator;
     ActsExamples::MeasurementCalibratorAdapter calibrator(pcalibrator, *measurements);
     Acts::GainMatrixUpdater kfUpdater;
+#if Acts_VERSION_MAJOR < 34
     Acts::GainMatrixSmoother kfSmoother;
+#endif
     Acts::MeasurementSelector measSel{m_sourcelinkSelectorCfg};
 
     Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>
@@ -150,9 +168,11 @@ namespace Jug::Reco {
     extensions.updater.connect<
         &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
         &kfUpdater);
+#if Acts_VERSION_MAJOR < 34
     extensions.smoother.connect<
         &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
         &kfSmoother);
+#endif
     extensions.measurementSelector
         .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
             &measSel);
@@ -164,9 +184,27 @@ namespace Jug::Reco {
     slAccessorDelegate.connect<&ActsExamples::IndexSourceLinkAccessor::range>(&slAccessor);
 
     // Set the CombinatorialKalmanFilter options
+#if Acts_VERSION_MAJOR < 34
     CKFTracking::TrackFinderOptions options(
         m_geoctx, m_fieldctx, m_calibctx, slAccessorDelegate,
         extensions, pOptions, &(*pSurface));
+#else
+    CKFTracking::TrackFinderOptions options(
+        m_geoctx, m_fieldctx, m_calibctx, slAccessorDelegate,
+        extensions, pOptions);
+#endif
+
+#if Acts_VERSION_MAJOR >= 34
+    Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
+        Acts::EigenStepper<>(m_BField),
+        Acts::Navigator({m_actsGeoSvc->trackingGeometry()},
+                        logger().cloneWithSuffix("Navigator")),
+        logger().cloneWithSuffix("Propagator"));
+
+    Acts::PropagatorOptions<Acts::ActionList<Acts::MaterialInteractor>,
+                            Acts::AbortList<Acts::EndOfWorldReached>>
+        extrapolationOptions(m_geoctx, m_fieldctx);
+#endif
 
     // Create track container
     auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
@@ -175,7 +213,11 @@ namespace Jug::Reco {
 
     // Add seed number column
     tracks.addColumn<unsigned int>("seed");
+#if Acts_VERSION_MAJOR >= 32
+    Acts::ProxyAccessor<unsigned int> seedNumber("seed");
+#else
     Acts::TrackAccessor<unsigned int> seedNumber("seed");
+#endif
 
     // Loop over seeds
     for (std::size_t iseed = 0; iseed < init_trk_params->size(); ++iseed) {
@@ -190,6 +232,27 @@ namespace Jug::Reco {
         // Set seed number for all found tracks
         auto& tracksForSeed = result.value();
         for (auto& track : tracksForSeed) {
+
+#if Acts_VERSION_MAJOR >=34
+            auto smoothingResult = Acts::smoothTrack(m_geoctx, track, logger());
+            if (!smoothingResult.ok()) {
+                ACTS_ERROR("Smoothing for seed "
+                    << iseed << " and track " << track.index()
+                    << " failed with error " << smoothingResult.error());
+                continue;
+            }
+
+            auto extrapolationResult = Acts::extrapolateTrackToReferenceSurface(
+                track, *pSurface, extrapolator, extrapolationOptions,
+                Acts::TrackExtrapolationStrategy::firstOrLast, logger());
+            if (!extrapolationResult.ok()) {
+                ACTS_ERROR("Extrapolation for seed "
+                    << iseed << " and track " << track.index()
+                    << " failed with error " << extrapolationResult.error());
+                continue;
+            }
+#endif
+
             seedNumber(track) = iseed;
         }
     }
@@ -210,8 +273,11 @@ namespace Jug::Reco {
     );
 
     // Seed number column accessor
+#if Acts_VERSION_MAJOR >= 32
+    const Acts::ConstProxyAccessor<unsigned int> constSeedNumber("seed");
+#else
     const Acts::ConstTrackAccessor<unsigned int> constSeedNumber("seed");
-
+#endif
 
     // Prepare the output data with MultiTrajectory, per seed
     ActsExamples::Trajectories::IndexedParameters parameters;
