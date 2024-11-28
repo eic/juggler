@@ -56,7 +56,7 @@ find_package(Microsoft.GSL CONFIG)
 find_package(EDM4EIC REQUIRED)
 find_package(EDM4HEP 0.4.1 REQUIRED)
 
-find_package(podio 0.16.3 REQUIRED)
+find_package(podio 0.16.3)
 if(NOT podio_FOUND)
   find_package(podio 1.0 REQUIRED)
 endif()
