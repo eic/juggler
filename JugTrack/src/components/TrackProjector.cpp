@@ -168,7 +168,7 @@ namespace Jug::Reco {
             static_cast<float>(covariance(Acts::eBoundPhi, Acts::eBoundQOverP))
           };
           const float time{static_cast<float>(parameter(Acts::eBoundTime))};
-          const float timeError{sqrt(static_cast<float>(covariance(Acts::eBoundTime, Acts::eBoundTime)))};
+          const float timeError{static_cast<float>(sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)))};
           const float theta(parameter[Acts::eBoundTheta]);
           const float phi(parameter[Acts::eBoundPhi]);
           const decltype(edm4eic::TrackPoint::directionError) directionError {
