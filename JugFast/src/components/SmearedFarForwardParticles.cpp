@@ -264,9 +264,9 @@ private:
         const auto part_p_theta = edm4hep::utils::anglePolar(part_p);
         debug() << fmt::format("Found B0 particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
-                               part.getPDG(), part_p_mag, edm4hep::utils::magnitude(rc_part.momentum()), part_p_pt,
-                               edm4hep::utils::magnitudeTransverse(rc_part.momentum()), part_p_theta,
-                               edm4hep::utils::anglePolar(rc_part.momentum()))
+                               part.getPDG(), part_p_mag, edm4hep::utils::magnitude(rc_part.getMomentum()), part_p_pt,
+                               edm4hep::utils::magnitudeTransverse(rc_part.getMomentum()), part_p_theta,
+                               edm4hep::utils::anglePolar(rc_part.getMomentum()))
                 << endmsg;
       }
     }
@@ -303,9 +303,9 @@ private:
         const auto part_p_theta = edm4hep::utils::anglePolar(part_p);
         debug() << fmt::format("Found RP particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
-                               part.getPDG(), part_p_mag, edm4hep::utils::magnitude(rc_part.momentum()), part_p_pt,
-                               edm4hep::utils::magnitudeTransverse(rc_part.momentum()), part_p_theta,
-                               edm4hep::utils::anglePolar(rc_part.momentum()))
+                               part.getPDG(), part_p_mag, edm4hep::utils::magnitude(rc_part.getMomentum()), part_p_pt,
+                               edm4hep::utils::magnitudeTransverse(rc_part.getMomentum()), part_p_theta,
+                               edm4hep::utils::anglePolar(rc_part.getMomentum()))
                 << endmsg;
       }
     }
@@ -339,9 +339,9 @@ private:
         const auto part_p_theta = edm4hep::utils::anglePolar(part_p);
         debug() << fmt::format("Found OMD particle: {}, ptrue: {}, pmeas: {}, pttrue: {}, ptmeas: {}, theta_true: {}, "
                                "theta_meas: {}",
-                               part.getPDG(), part_p_mag, edm4hep::utils::magnitude(rc_part.momentum()), part_p_pt,
-                               edm4hep::utils::magnitudeTransverse(rc_part.momentum()), part_p_theta,
-                               edm4hep::utils::anglePolar(rc_part.momentum()))
+                               part.getPDG(), part_p_mag, edm4hep::utils::magnitude(rc_part.getMomentum()), part_p_pt,
+                               edm4hep::utils::magnitudeTransverse(rc_part.getMomentum()), part_p_theta,
+                               edm4hep::utils::anglePolar(rc_part.getMomentum()))
                 << endmsg;
       }
     }
