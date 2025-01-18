@@ -161,6 +161,8 @@ public:
       // cov << 0.05, 0., 0., 0., 0.05, 0., 0., 0., 900. * Acts::UnitConstants::ps * Acts::UnitConstants::ps;
       // Acts::Vector3 par(localX, localY, simHit.time());
 
+      auto goeId = surface->geometryId();
+
       linkStorage->emplace_back(surface->geometryId(), ihit);
       ActsExamples::IndexSourceLink& sourceLink = linkStorage->back();
       sourceLinks->emplace_hint(sourceLinks->end(), sourceLink);
