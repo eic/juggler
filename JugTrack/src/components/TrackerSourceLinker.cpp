@@ -156,6 +156,9 @@ public:
       //
       // variable hitIdx not used anywhere
       // Index hitIdx = measurements->size();
+
+      auto geoId = surface->geometryId();
+
       linkStorage->emplace_back(surface->geometryId(), ihit);
       ActsExamples::IndexSourceLink& sourceLink = linkStorage->back();
       sourceLinks->emplace_hint(sourceLinks->end(), sourceLink);
