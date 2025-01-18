@@ -59,7 +59,11 @@ namespace {
     Jug::Reco::CKFTracking::TrackFinderResult
     operator()(const ActsExamples::TrackParameters& initialParameters,
                const Jug::Reco::CKFTracking::TrackFinderOptions& options,
+#if Acts_VERSION_MAJOR >= 36
+               ActsExamples::TrackContainer& tracks) const override {
+#else
                TrackContainer& tracks) const override {
+#endif
       return trackFinder.findTracks(initialParameters, options, tracks);
     };
   };
