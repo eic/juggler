@@ -34,12 +34,17 @@ namespace {
   using Stepper    = Acts::EigenStepper<>;
   using Navigator  = Acts::Navigator;
   using Propagator = Acts::Propagator<Stepper, Navigator>;
+#if Acts_VERSION_MAJOR >= 36
+  using CKF =
+      Acts::CombinatorialKalmanFilter<Propagator, ActsExamples::TrackContainer>;
+#else
   using CKF =
       Acts::CombinatorialKalmanFilter<Propagator, Acts::VectorMultiTrajectory>;
 
   using TrackContainer =
       Acts::TrackContainer<Acts::VectorTrackContainer,
                            Acts::VectorMultiTrajectory, std::shared_ptr>;
+#endif
 
   /** Finder implmentation .
    *

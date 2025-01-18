@@ -41,9 +41,15 @@ class CKFTracking : public GaudiAlgorithm {
 public:
   /// Track finder function that takes input measurements, initial trackstate
   /// and track finder options and returns some track-finder-specific result.
+#if Acts_VERSION_MAJOR >= 36
+  using TrackFinderOptions =
+      Acts::CombinatorialKalmanFilterOptions<ActsExamples::IndexSourceLinkAccessor::Iterator,
+                                             ActsExamples::TrackContainer>;
+#else
   using TrackFinderOptions =
       Acts::CombinatorialKalmanFilterOptions<ActsExamples::IndexSourceLinkAccessor::Iterator,
                                              Acts::VectorMultiTrajectory>;
+#endif
   using TrackFinderResult =
       Acts::Result<std::vector<ActsExamples::TrackContainer::TrackProxy>>;
 
@@ -66,7 +72,9 @@ public:
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
 
 public:
+#if Acts_VERSION_MAJOR < 37 || (Acts_VERSION_MAJOR == 37 && Acts_VERSION_MINOR < 1)
   DataHandle<ActsExamples::IndexSourceLinkContainer> m_inputSourceLinks{"inputSourceLinks", Gaudi::DataHandle::Reader, this};
+#endif
   DataHandle<ActsExamples::MeasurementContainer> m_inputMeasurements{"inputMeasurements", Gaudi::DataHandle::Reader, this};
   DataHandle<ActsExamples::TrackParametersContainer> m_inputInitialTrackParameters{"inputInitialTrackParameters",
                                                                      Gaudi::DataHandle::Reader, this};

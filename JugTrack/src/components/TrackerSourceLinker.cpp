@@ -23,6 +23,9 @@
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
+#if Acts_VERSION_MAJOR < 36
+#include "Acts/EventData/Measurement.hpp"
+#endif
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -155,12 +158,35 @@ public:
       // Index hitIdx = measurements->size();
       linkStorage->emplace_back(surface->geometryId(), ihit);
       ActsExamples::IndexSourceLink& sourceLink = linkStorage->back();
-      auto meas = Acts::makeMeasurement(Acts::SourceLink{sourceLink}, loc, cov, Acts::eBoundLoc0, Acts::eBoundLoc1);
-
-      // add to output containers. since the input is already geometry-order,
-      // new elements in geometry containers can just be appended at the end.
       sourceLinks->emplace_hint(sourceLinks->end(), sourceLink);
-      measurements->emplace_back(std::move(meas));
+
+#if Acts_VERSION_MAJOR > 37 || (Acts_VERSION_MAJOR == 37 && Acts_VERSION_MINOR >= 1)
+      std::array<Acts::BoundIndices, 2> indices = {Acts::eBoundLoc0, Acts::eBoundLoc1};
+      Acts::visit_measurement(
+        indices.size(), [&](auto dim) -> ActsExamples::FixedBoundMeasurementProxy<6> {
+          return measurements->emplaceMeasurement<dim>(geoId, indices, loc, cov);
+        }
+      );
+#elif Acts_VERSION_MAJOR == 37 && Acts_VERSION_MINOR == 0
+      std::array<Acts::BoundIndices, 2> indices = {Acts::eBoundLoc0, Acts::eBoundLoc1};
+      Acts::visit_measurement(
+        indices.size(), [&](auto dim) -> ActsExamples::FixedBoundMeasurementProxy<6> {
+          return measurements->emplaceMeasurement<dim>(sourceLink, indices, loc, cov);
+        }
+      );
+#elif Acts_VERSION_MAJOR == 36 && Acts_VERSION_MINOR >= 1
+      auto measurement = ActsExamples::makeVariableSizeMeasurement(
+        Acts::SourceLink{sourceLink}, loc, cov, Acts::eBoundLoc0, Acts::eBoundLoc1);
+      measurements->emplace_back(std::move(measurement));
+#elif Acts_VERSION_MAJOR == 36 && Acts_VERSION_MINOR == 0
+      auto measurement = ActsExamples::makeFixedSizeMeasurement(
+        Acts::SourceLink{sourceLink}, loc, cov, Acts::eBoundLoc0, Acts::eBoundLoc1);
+      measurements->emplace_back(std::move(measurement));
+#else
+      auto measurement = Acts::makeMeasurement(
+        Acts::SourceLink{sourceLink}, loc, cov, Acts::eBoundLoc0, Acts::eBoundLoc1);
+      measurements->emplace_back(std::move(measurement));
+#endif
 
       ihit++;
     }
