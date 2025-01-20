@@ -15,8 +15,8 @@
 
 // Event Model related classes
 // edm4hep's tracker hit is the input collectiopn
+#include "edm4hep/EDM4hepVersion.h"
 #include "edm4hep/MCParticleCollection.h"
-#include "edm4hep/MCParticle.h"
 #include "edm4hep/SimTrackerHitCollection.h"
 // edm4eic's RawTrackerHit is the output
 #include "edm4eic/RawTrackerHitCollection.h"
