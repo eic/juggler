@@ -15,6 +15,7 @@
 
 // Event Model related classes
 // edm4hep's tracker hit is the input collectiopn
+#include "edm4hep/MCParticleCollection.h"
 #include "edm4hep/MCParticle.h"
 #include "edm4hep/SimTrackerHitCollection.h"
 // edm4eic's RawTrackerHit is the output
@@ -85,12 +86,20 @@ public:
         cell_hit_map[ahit.getCellID()] = rawhits->size();
         rawhits->create(
           ahit.getCellID(),
+#if EDM4HEP_BUILD_VERSION >= EDM4HEP_VERSION(0, 99, 0)
+          ahit.getParticle().getTime() * 1e6 + m_gaussDist() * 1e3, // ns->fs
+#else
           ahit.getMCParticle().getTime() * 1e6 + m_gaussDist() * 1e3, // ns->fs
+#endif
           std::llround(ahit.getEDep() * 1e6)
         );
       } else {
         auto hit = (*rawhits)[cell_hit_map[ahit.getCellID()]];
+#if EDM4HEP_BUILD_VERSION >= EDM4HEP_VERSION(0, 99, 0)
+        hit.setTimeStamp(ahit.getParticle().getTime() * 1e6 + m_gaussDist() * 1e3);
+#else
         hit.setTimeStamp(ahit.getMCParticle().getTime() * 1e6 + m_gaussDist() * 1e3);
+#endif
         auto ch = hit.getCharge();
         hit.setCharge(ch + std::llround(ahit.getEDep() * 1e6));
       }

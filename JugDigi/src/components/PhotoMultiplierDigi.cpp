@@ -25,6 +25,7 @@
 
 // Event Model related classes
 #include "edm4eic/RawTrackerHitCollection.h"
+#include "edm4hep/EDM4hepVersion.h"
 #include "edm4hep/MCParticleCollection.h"
 #include "edm4hep/SimTrackerHitCollection.h"
 
@@ -99,7 +100,11 @@ public:
             }
             // cell id, time, signal amplitude
             uint64_t id = ahit.getCellID();
+#if EDM4HEP_BUILD_VERSION >= EDM4HEP_VERSION(0, 99, 0)
+            double time = ahit.getParticle().getTime();
+#else
             double time = ahit.getMCParticle().getTime();
+#endif
             double amp = m_speMean + m_rngNorm()*m_speError;
 
             // group hits
