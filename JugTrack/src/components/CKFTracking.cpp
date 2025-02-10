@@ -202,7 +202,7 @@ namespace Jug::Reco {
             &measSel);
 
     ActsExamples::IndexSourceLinkAccessor slAccessor;
-#if Acts_VERSION_MAJOR >= 37 || (Acts_VERSION_MAJOR == 37 && Acts_VERSION_MINOR >= 1)
+#if Acts_VERSION_MAJOR > 37 || (Acts_VERSION_MAJOR == 37 && Acts_VERSION_MINOR >= 1)
     slAccessor.container = measurements->orderedIndices();
 #else
     slAccessor.container = src_links;
