@@ -26,6 +26,7 @@
 #if Acts_VERSION_MAJOR < 36
 #include "Acts/EventData/Measurement.hpp"
 #endif
+#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
