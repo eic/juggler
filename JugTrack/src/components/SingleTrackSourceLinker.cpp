@@ -163,23 +163,35 @@ public:
 
       auto geoId = surface->geometryId();
 
-      linkStorage->emplace_back(surface->geometryId(), ihit);
+      linkStorage->emplace_back(geoId, ihit);
       ActsExamples::IndexSourceLink& sourceLink = linkStorage->back();
       sourceLinks->emplace_hint(sourceLinks->end(), sourceLink);
 
 #if Acts_VERSION_MAJOR > 37 || (Acts_VERSION_MAJOR == 37 && Acts_VERSION_MINOR >= 1)
       std::array<Acts::BoundIndices, 2> indices = {Acts::eBoundLoc0, Acts::eBoundLoc1};
       Acts::visit_measurement(
-          indices.size(), [&](auto dim) -> ActsExamples::FixedBoundMeasurementProxy<6> {
-              return measurements->emplaceMeasurement<dim>(geoId, indices, pos, cov);
+        indices.size(), [&](auto dim) -> ActsExamples::VariableBoundMeasurementProxy {
+          if constexpr (dim == indices.size()) {
+            return ActsExamples::VariableBoundMeasurementProxy{
+              measurements->emplaceMeasurement<dim>(geoId, indices, pos, cov)
+            };
+          } else {
+            throw std::runtime_error("Dimension not supported in measurement creation");
           }
+        }
       );
 #elif Acts_VERSION_MAJOR == 37 && Acts_VERSION_MINOR == 0
       std::array<Acts::BoundIndices, 2> indices = {Acts::eBoundLoc0, Acts::eBoundLoc1};
       Acts::visit_measurement(
-          indices.size(), [&](auto dim) -> ActsExamples::FixedBoundMeasurementProxy<6> {
-              return measurements->emplaceMeasurement<dim>(sourceLink, indices, pos, cov);
+        indices.size(), [&](auto dim) -> ActsExamples::VariableBoundMeasurementProxy {
+          if constexpr (dim == indices.size()) {
+            return ActsExamples::VariableBoundMeasurementProxy{
+              measurements->emplaceMeasurement<dim>(Acts::SourceLink{sourceLink}, indices, pos, cov)
+            };
+          } else {
+            throw std::runtime_error("Dimension not supported in measurement creation");
           }
+        }
       );
 #elif Acts_VERSION_MAJOR == 36 && Acts_VERSION_MINOR >= 1
       auto measurement = ActsExamples::makeVariableSizeMeasurement(
