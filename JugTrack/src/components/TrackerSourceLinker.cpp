@@ -26,6 +26,7 @@
 #if Acts_VERSION_MAJOR < 36
 #include "Acts/EventData/Measurement.hpp"
 #endif
+#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -50,7 +51,9 @@ class TrackerSourceLinker : public GaudiAlgorithm {
 private:
   DataHandle<edm4eic::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
   DataHandle<std::list<ActsExamples::IndexSourceLink>> m_sourceLinkStorage{"sourceLinkStorage", Gaudi::DataHandle::Writer, this};
+#if Acts_VERSION_MAJOR < 37 || (Acts_VERSION_MAJOR == 37 && Acts_VERSION_MINOR == 0)
   DataHandle<ActsExamples::IndexSourceLinkContainer> m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};
+#endif
   DataHandle<ActsExamples::MeasurementContainer> m_outputMeasurements{"outputMeasurements", Gaudi::DataHandle::Writer, this};
   /// Pointer to the geometry services
   SmartIF<IGeoSvc> m_geoSvc;
@@ -61,7 +64,9 @@ public:
   TrackerSourceLinker(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
     declareProperty("inputHitCollection", m_inputHitCollection, "");
     declareProperty("sourceLinkStorage", m_sourceLinkStorage, "");
+#if Acts_VERSION_MAJOR < 37 || (Acts_VERSION_MAJOR == 37 && Acts_VERSION_MINOR == 0)
     declareProperty("outputSourceLinks", m_outputSourceLinks, "");
+#endif
     declareProperty("outputMeasurements", m_outputMeasurements, "");
   }
 
@@ -94,9 +99,11 @@ public:
     const edm4eic::TrackerHitCollection* hits = m_inputHitCollection.get();
     // Create output collections
     auto* linkStorage  = m_sourceLinkStorage.createAndPut();
+#if Acts_VERSION_MAJOR < 37 || (Acts_VERSION_MAJOR == 37 && Acts_VERSION_MINOR == 0)
     auto* sourceLinks  = m_outputSourceLinks.createAndPut();
-    auto* measurements = m_outputMeasurements.createAndPut();
     sourceLinks->reserve(hits->size());
+#endif
+    auto* measurements = m_outputMeasurements.createAndPut();
     measurements->reserve(hits->size());
 
     if (msgLevel(MSG::DEBUG)) {
@@ -156,22 +163,39 @@ public:
       //
       // variable hitIdx not used anywhere
       // Index hitIdx = measurements->size();
-      linkStorage->emplace_back(surface->geometryId(), ihit);
+
+      auto geoId = surface->geometryId();
+
+      linkStorage->emplace_back(geoId, ihit);
+#if Acts_VERSION_MAJOR < 37 || (Acts_VERSION_MAJOR == 37 && Acts_VERSION_MINOR == 0)
       ActsExamples::IndexSourceLink& sourceLink = linkStorage->back();
       sourceLinks->emplace_hint(sourceLinks->end(), sourceLink);
+#endif
 
 #if Acts_VERSION_MAJOR > 37 || (Acts_VERSION_MAJOR == 37 && Acts_VERSION_MINOR >= 1)
       std::array<Acts::BoundIndices, 2> indices = {Acts::eBoundLoc0, Acts::eBoundLoc1};
       Acts::visit_measurement(
-        indices.size(), [&](auto dim) -> ActsExamples::FixedBoundMeasurementProxy<6> {
-          return measurements->emplaceMeasurement<dim>(geoId, indices, loc, cov);
+        indices.size(), [&](auto dim) -> ActsExamples::VariableBoundMeasurementProxy {
+          if constexpr (dim == indices.size()) {
+            return ActsExamples::VariableBoundMeasurementProxy{
+              measurements->emplaceMeasurement<dim>(geoId, indices, loc, cov)
+            };
+          } else {
+            throw std::runtime_error("Dimension not supported in measurement creation");
+          }
         }
       );
 #elif Acts_VERSION_MAJOR == 37 && Acts_VERSION_MINOR == 0
       std::array<Acts::BoundIndices, 2> indices = {Acts::eBoundLoc0, Acts::eBoundLoc1};
       Acts::visit_measurement(
-        indices.size(), [&](auto dim) -> ActsExamples::FixedBoundMeasurementProxy<6> {
-          return measurements->emplaceMeasurement<dim>(sourceLink, indices, loc, cov);
+        indices.size(), [&](auto dim) -> ActsExamples::VariableBoundMeasurementProxy {
+          if constexpr (dim == indices.size()) {
+            return ActsExamples::VariableBoundMeasurementProxy{
+              measurements->emplaceMeasurement<dim>(Acts::SourceLink{sourceLink}, indices, loc, cov)
+            };
+          } else {
+            throw std::runtime_error("Dimension not supported in measurement creation");
+          }
         }
       );
 #elif Acts_VERSION_MAJOR == 36 && Acts_VERSION_MINOR >= 1
