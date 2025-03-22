@@ -131,7 +131,7 @@ public:
     //  [&ef_coll](const auto& a){ return a.getSimID() == ef_coll[0].getObjectID().index; });
     auto ef_assoc = rcassoc.begin();
     for (; ef_assoc != rcassoc.end(); ++ef_assoc) {
-      if (ef_assoc->getSimID() == ef_coll[0].getObjectID().index) {
+      if (ef_assoc->getSimID() == (unsigned) ef_coll[0].getObjectID().index) {
         break;
       }
     }
