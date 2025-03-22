@@ -42,7 +42,7 @@ namespace Jug::Reco {
  */
 class TrackParamClusterInit : public Gaudi::Algorithm {
 private:
-  mutable DataHandle<const edm4eic::ClusterCollection> m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::ClusterCollection> m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
   mutable DataHandle<ActsExamples::TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
                                                                       Gaudi::DataHandle::Writer, this};
 

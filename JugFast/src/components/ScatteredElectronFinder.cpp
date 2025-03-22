@@ -22,7 +22,7 @@ namespace Jug::Fast {
 
 class ScatteredElectronFinder : public Gaudi::Algorithm {
 private:
-  mutable DataHandle<const edm4hep::MCParticleCollection> m_inputMCParticleCollection{
+  mutable DataHandle<edm4hep::MCParticleCollection> m_inputMCParticleCollection{
     "inputMCParticles",
     Gaudi::DataHandle::Reader,
     this};

@@ -24,7 +24,7 @@ namespace Jug::Reco {
  */
 class FinderAlgoTemplate : public Gaudi::Algorithm {
 private:
-  mutable DataHandle<const edm4eic::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
   mutable DataHandle<ActsExamples::ProtoTrackContainer> m_outputProtoTracks{"outputProtoTracks", Gaudi::DataHandle::Writer, this};
 
 public:

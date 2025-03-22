@@ -44,8 +44,8 @@ class ImagingPixelDataCombiner : public Gaudi::Algorithm {
 private:
   Gaudi::Property<int> m_layerIncrement{this, "layerIncrement", 0};
   Gaudi::Property<std::string> m_rule{this, "rule", "concatenate"};
-  mutable DataHandle<const edm4eic::CalorimeterHitCollection> m_inputHits1{"inputHits1", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<const edm4eic::CalorimeterHitCollection> m_inputHits2{"inputHits2", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::CalorimeterHitCollection> m_inputHits1{"inputHits1", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::CalorimeterHitCollection> m_inputHits2{"inputHits2", Gaudi::DataHandle::Reader, this};
   mutable DataHandle<edm4eic::CalorimeterHitCollection> m_outputHits{"outputHits", Gaudi::DataHandle::Writer, this};
   std::vector<std::string> supported_rules{"concatenate", "interlayer"};
 

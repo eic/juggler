@@ -59,7 +59,7 @@ namespace Jug::Reco {
    */
    class ParticlesFromTrackFit : public Gaudi::Algorithm {
    private:
-    mutable DataHandle<const ActsExamples::TrajectoriesContainer>     m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
+    mutable DataHandle<ActsExamples::TrajectoriesContainer>     m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
     mutable DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer, this};
     mutable DataHandle<edm4eic::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters", Gaudi::DataHandle::Writer, this};
 

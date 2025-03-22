@@ -37,7 +37,7 @@ namespace Jug::Reco {
     using ProtoClusters = edm4eic::ProtoClusterCollection;
     using Clusters = edm4eic::ClusterCollection;
 
-    mutable DataHandle<const RecHits>       m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+    mutable DataHandle<RecHits>       m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
     mutable DataHandle<ProtoClusters> m_outputProtoClusters{"outputProtoCluster", Gaudi::DataHandle::Writer, this};
     mutable DataHandle<Clusters>      m_outputClusters{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
 

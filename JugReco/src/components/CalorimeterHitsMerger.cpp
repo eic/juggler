@@ -51,7 +51,7 @@ private:
   Gaudi::Property<std::vector<std::string>> u_fields{this, "fields", {"layer"}};
   // reference field numbers to locate position for each merged hits group
   Gaudi::Property<std::vector<int>> u_refs{this, "fieldRefNumbers", {}};
-  mutable DataHandle<const edm4eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
   mutable DataHandle<edm4eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                   this};
 

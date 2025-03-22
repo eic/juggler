@@ -30,7 +30,7 @@ private:
   Gaudi::Property<double> m_timeResolution{this, "timeResolution", 10}; // todo : add units
   Gaudi::Property<double> m_threshold{this, "threshold", 0. * Gaudi::Units::keV};
   Rndm::Numbers m_gaussDist;
-  mutable DataHandle<const edm4hep::SimTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+  mutable DataHandle<edm4hep::SimTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                     this};
   mutable DataHandle<edm4eic::RawTrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                   this};

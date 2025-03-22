@@ -29,10 +29,10 @@ namespace Jug::Fast {
 class MatchClusters : public Gaudi::Algorithm {
 private:
   // input data
-  mutable DataHandle<const edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<const edm4eic::ReconstructedParticleCollection> m_inputParticles{"ReconstructedChargedParticles",
+  mutable DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::ReconstructedParticleCollection> m_inputParticles{"ReconstructedChargedParticles",
                                                                     Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<const edm4eic::MCRecoParticleAssociationCollection> m_inputParticlesAssoc{"ReconstructedChargedParticlesAssoc",
+  mutable DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_inputParticlesAssoc{"ReconstructedChargedParticlesAssoc",
                                                                     Gaudi::DataHandle::Reader, this};
   Gaudi::Property<std::vector<std::string>> m_inputClusters{this, "inputClusters", {}, "Clusters to be aggregated"};
   Gaudi::Property<std::vector<std::string>> m_inputClustersAssoc{this, "inputClustersAssoc", {}, "Cluster associations to be aggregated"};

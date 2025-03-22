@@ -19,7 +19,7 @@ namespace Jug::Reco {
 
 class FarForwardParticlesOMD : public Gaudi::Algorithm {
 private:
-  mutable DataHandle<const edm4eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHits", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHits", Gaudi::DataHandle::Reader, this};
   mutable DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
                                                                      this};
 

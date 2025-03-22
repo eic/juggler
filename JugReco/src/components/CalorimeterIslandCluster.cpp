@@ -140,7 +140,7 @@ private:
   Gaudi::Property<bool> m_splitCluster{this, "splitCluster", true};
   Gaudi::Property<double> m_minClusterHitEdep{this, "minClusterHitEdep", 0.};
   Gaudi::Property<double> m_minClusterCenterEdep{this, "minClusterCenterEdep", 50.0 * MeV};
-  mutable DataHandle<const CaloHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<CaloHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
   mutable DataHandle<edm4eic::ProtoClusterCollection> m_outputProtoCollection{"outputProtoClusterCollection",
                                                                   Gaudi::DataHandle::Writer, this};
 

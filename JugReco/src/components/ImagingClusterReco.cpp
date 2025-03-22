@@ -49,7 +49,7 @@ class ImagingClusterReco : public Gaudi::Algorithm {
 private:
   Gaudi::Property<int> m_trackStopLayer{this, "trackStopLayer", 9};
 
-  mutable DataHandle<const edm4eic::ProtoClusterCollection> m_inputProtoClusters{"inputProtoClusters", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::ProtoClusterCollection> m_inputProtoClusters{"inputProtoClusters", Gaudi::DataHandle::Reader, this};
   mutable DataHandle<edm4eic::ClusterCollection> m_outputLayers{"outputLayers", Gaudi::DataHandle::Writer, this};
   mutable DataHandle<edm4eic::ClusterCollection> m_outputClusters{"outputClusters", Gaudi::DataHandle::Reader, this};
 

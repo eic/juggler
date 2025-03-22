@@ -39,7 +39,7 @@ namespace Jug::Reco {
  */
 class PhotoRingClusters : public Gaudi::Algorithm {
 private:
-  mutable DataHandle<const edm4eic::PMTHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::PMTHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
   mutable DataHandle<edm4eic::RingImageCollection> m_outputClusterCollection{"outputClusterCollection", Gaudi::DataHandle::Writer,
                                                                   this};
   // @TODO

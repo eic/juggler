@@ -29,8 +29,8 @@ namespace Jug::Fast {
 class ClusterMerger : public Gaudi::Algorithm {
 private:
   // Input
-  mutable DataHandle<const edm4eic::ClusterCollection> m_inputClusters{"InputClusters", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<const edm4eic::MCRecoClusterParticleAssociationCollection> m_inputAssociations{"InputAssociations", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::ClusterCollection> m_inputClusters{"InputClusters", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_inputAssociations{"InputAssociations", Gaudi::DataHandle::Reader, this};
   // Output
   mutable DataHandle<edm4eic::ClusterCollection> m_outputClusters{"OutputClusters", Gaudi::DataHandle::Writer, this};
   mutable DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_outputAssociations{"OutputAssociations", Gaudi::DataHandle::Writer, this};

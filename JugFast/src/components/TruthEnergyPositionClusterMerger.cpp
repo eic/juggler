@@ -33,11 +33,11 @@ namespace Jug::Fast {
 class TruthEnergyPositionClusterMerger : public Gaudi::Algorithm {
 private:
   // Input
-  mutable DataHandle<const edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<const edm4eic::ClusterCollection> m_energyClusters{"EnergyClusters", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<const edm4eic::MCRecoClusterParticleAssociationCollection> m_energyAssociations{"EnergyAssociations", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<const edm4eic::ClusterCollection> m_positionClusters{"PositionClusters", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<const edm4eic::MCRecoClusterParticleAssociationCollection> m_positionAssociations{"PositionAssociations", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::ClusterCollection> m_energyClusters{"EnergyClusters", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_energyAssociations{"EnergyAssociations", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::ClusterCollection> m_positionClusters{"PositionClusters", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_positionAssociations{"PositionAssociations", Gaudi::DataHandle::Reader, this};
   // Output
   mutable DataHandle<edm4eic::ClusterCollection> m_outputClusters{"OutputClusters", Gaudi::DataHandle::Writer, this};
   mutable DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_outputAssociations{"OutputAssociations", Gaudi::DataHandle::Writer, this};

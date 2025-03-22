@@ -66,7 +66,7 @@ private:
   // minimum number of hits (to save this cluster)
   Gaudi::Property<int> m_minClusterNhits{this, "minClusterNhits", 10};
   // input hits collection
-  mutable DataHandle<const edm4eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+  mutable DataHandle<edm4eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                   this};
   // output clustered hits
   mutable DataHandle<edm4eic::ProtoClusterCollection> m_outputProtoClusterCollection{"outputProtoClusterCollection",

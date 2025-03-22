@@ -24,7 +24,7 @@ namespace Jug::Fast {
 
 class SmearedFarForwardParticles : public Gaudi::Algorithm {
 private:
-  mutable DataHandle<const edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader, this};
   mutable DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"SmearedFarForwardParticles",
                                                                       Gaudi::DataHandle::Writer, this};
   mutable DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_outputAssocCollection{"MCRecoParticleAssociation",
@@ -389,21 +389,24 @@ private:
   }
 
   // Rotate 25mrad about the y-axis
-  edm4hep::Vector3f rotateLabToIonDirection(const edm4hep::Vector3f& vec) const {
+  template<typename Vector3>
+  Vector3 rotateLabToIonDirection(const Vector3& vec) const {
     const auto sth = sin(-m_crossingAngle);
     const auto cth = cos(-m_crossingAngle);
     return {static_cast<float>(cth * vec.x + sth * vec.z), static_cast<float>(vec.y),
             static_cast<float>(-sth * vec.x + cth * vec.z)};
   }
 
-  edm4hep::Vector3f rotateIonToLabDirection(const edm4hep::Vector3f& vec) const {
+  template<typename Vector3>
+  Vector3 rotateIonToLabDirection(const Vector3& vec) const {
     const auto sth = sin(m_crossingAngle);
     const auto cth = cos(m_crossingAngle);
     return {static_cast<float>(cth * vec.x + sth * vec.z), static_cast<float>(vec.y),
             static_cast<float>(-sth * vec.x + cth * vec.z)};
   }
 
-  edm4hep::Vector3f removeCrossingAngle(const edm4hep::Vector3f& vec) const {
+  template<typename Vector3>
+  Vector3 removeCrossingAngle(const Vector3& vec) const {
     const auto sth = std::sin(-m_crossingAngle);
     const auto cth = std::cos(-m_crossingAngle);
     return {static_cast<float>(cth * vec.x + sth * vec.z), static_cast<float>(vec.y),

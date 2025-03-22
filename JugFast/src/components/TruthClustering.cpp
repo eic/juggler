@@ -33,8 +33,8 @@ namespace Jug::Fast {
  */
 class TruthClustering : public Gaudi::Algorithm {
 private:
-  mutable DataHandle<const edm4eic::CalorimeterHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<const edm4hep::SimCalorimeterHitCollection> m_mcHits{"mcHits", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::CalorimeterHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4hep::SimCalorimeterHitCollection> m_mcHits{"mcHits", Gaudi::DataHandle::Reader, this};
   mutable DataHandle<edm4eic::ProtoClusterCollection> m_outputProtoClusters{"outputProtoClusters", Gaudi::DataHandle::Writer, this};
 
 public:

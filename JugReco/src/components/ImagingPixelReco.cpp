@@ -58,7 +58,7 @@ private:
   double dyRangeADC{0};
 
   // hits containers
-  mutable DataHandle<const edm4hep::RawCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+  mutable DataHandle<edm4hep::RawCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                     this};
   mutable DataHandle<edm4eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                   this};

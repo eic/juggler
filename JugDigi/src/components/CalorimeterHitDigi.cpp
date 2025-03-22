@@ -78,7 +78,7 @@ namespace Jug::Digi {
     SmartIF<IGeoSvc> m_geoSvc;
     uint64_t         id_mask{0}, ref_mask{0};
 
-    mutable DataHandle<const edm4hep::SimCalorimeterHitCollection> m_inputHitCollection{
+    mutable DataHandle<edm4hep::SimCalorimeterHitCollection> m_inputHitCollection{
       "inputHitCollection", Gaudi::DataHandle::Reader, this};
     mutable DataHandle<edm4hep::RawCalorimeterHitCollection> m_outputHitCollection{
       "outputHitCollection", Gaudi::DataHandle::Writer, this};

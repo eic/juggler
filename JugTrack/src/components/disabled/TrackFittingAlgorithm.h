@@ -58,10 +58,10 @@ namespace Jug::Reco {
       const std::vector<ActsExamples::IndexSourceLink>&, const ActsExamples::TrackParameters&, const TrackFitterOptions&)>;
 
   public:
-    mutable DataHandle<const ActsExamples::IndexSourceLinkContainer> m_inputSourceLinks{"inputSourceLinks", Gaudi::DataHandle::Reader, this};
+    mutable DataHandle<ActsExamples::IndexSourceLinkContainer> m_inputSourceLinks{"inputSourceLinks", Gaudi::DataHandle::Reader, this};
     DataHandle<ActsExamples::TrackParametersContainer> m_initialTrackParameters{"initialTrackParameters", Gaudi::DataHandle::Reader, this};
-    mutable DataHandle<const ActsExamples::MeasurementContainer>     m_inputMeasurements{"inputMeasurements", Gaudi::DataHandle::Reader, this};
-    mutable DataHandle<const ActsExamples::ProtoTrackContainer>      m_inputProtoTracks{"inputProtoTracks", Gaudi::DataHandle::Reader, this};
+    mutable DataHandle<ActsExamples::MeasurementContainer>     m_inputMeasurements{"inputMeasurements", Gaudi::DataHandle::Reader, this};
+    mutable DataHandle<ActsExamples::ProtoTrackContainer>      m_inputProtoTracks{"inputProtoTracks", Gaudi::DataHandle::Reader, this};
     DataHandle<ActsExamples::TrajectoriesContainer>    m_foundTracks{"foundTracks", Gaudi::DataHandle::Reader, this};
     mutable DataHandle<ActsExamples::TrajectoriesContainer>    m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
 

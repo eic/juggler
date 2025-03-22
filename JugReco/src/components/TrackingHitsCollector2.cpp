@@ -24,7 +24,7 @@ namespace Jug::Reco {
       Gaudi::Property<std::vector<std::string>> m_inputTrackingHits{this, "inputTrackingHits", {},"Tracker hits to be aggregated"};
       mutable DataHandle<edm4eic::TrackerHitCollection> m_trackingHits{"trackingHits", Gaudi::DataHandle::Writer, this};
 
-      mutable std::vector<DataHandle<const edm4eic::TrackerHitCollection>*> m_hitCollections;
+      mutable std::vector<DataHandle<edm4eic::TrackerHitCollection>*> m_hitCollections;
 
     public:
       TrackingHitsCollector2(const std::string& name, ISvcLocator* svcLoc)
@@ -44,7 +44,7 @@ namespace Jug::Reco {
         }
         for (auto colname : m_inputTrackingHits) {
           debug() << "initializing collection: " << colname  << endmsg;
-          m_hitCollections.push_back(new DataHandle<const edm4eic::TrackerHitCollection>{colname, Gaudi::DataHandle::Reader, this});
+          m_hitCollections.push_back(new DataHandle<edm4eic::TrackerHitCollection>{colname, Gaudi::DataHandle::Reader, this});
         }
         return StatusCode::SUCCESS;
       }

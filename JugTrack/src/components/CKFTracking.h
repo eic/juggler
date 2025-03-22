@@ -76,10 +76,10 @@ public:
 
 public:
 #if Acts_VERSION_MAJOR < 37 || (Acts_VERSION_MAJOR == 37 && Acts_VERSION_MINOR < 1)
-  mutable DataHandle<const ActsExamples::IndexSourceLinkContainer> m_inputSourceLinks{"inputSourceLinks", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<ActsExamples::IndexSourceLinkContainer> m_inputSourceLinks{"inputSourceLinks", Gaudi::DataHandle::Reader, this};
 #endif
-  mutable DataHandle<const ActsExamples::MeasurementContainer> m_inputMeasurements{"inputMeasurements", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<const ActsExamples::TrackParametersContainer> m_inputInitialTrackParameters{"inputInitialTrackParameters",
+  mutable DataHandle<ActsExamples::MeasurementContainer> m_inputMeasurements{"inputMeasurements", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<ActsExamples::TrackParametersContainer> m_inputInitialTrackParameters{"inputInitialTrackParameters",
                                                                      Gaudi::DataHandle::Reader, this};
   mutable DataHandle<ActsExamples::ConstTrackContainer> m_outputTracks{"outputTracks", Gaudi::DataHandle::Writer, this};
   mutable DataHandle<ActsExamples::TrajectoriesContainer> m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};

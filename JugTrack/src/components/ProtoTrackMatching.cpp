@@ -24,9 +24,9 @@ namespace Jug::Reco {
  */
 class ProtoTrackMatching : public Gaudi::Algorithm {
 private:
-  mutable DataHandle<const edm4eic::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<const ActsExamples::TrackParametersContainer> m_initialTrackParameters{"initialTrackParameters", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<const ActsExamples::ProtoTrackContainer> m_inputProtoTracks{"inputProtoTracks", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<ActsExamples::TrackParametersContainer> m_initialTrackParameters{"initialTrackParameters", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<ActsExamples::ProtoTrackContainer> m_inputProtoTracks{"inputProtoTracks", Gaudi::DataHandle::Reader, this};
   mutable DataHandle<ActsExamples::ProtoTrackContainer> m_outputProtoTracks{"matchedProtoTracks", Gaudi::DataHandle::Writer, this};
 
 public:

@@ -34,7 +34,7 @@ namespace Jug::Reco {
    */
   class TruthTrackSeeding : public Gaudi::Algorithm {
   private:
-    mutable DataHandle<const edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader,
+    mutable DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader,
                                                                     this};
     mutable DataHandle<edm4eic::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters",
                                                                        Gaudi::DataHandle::Writer, this};

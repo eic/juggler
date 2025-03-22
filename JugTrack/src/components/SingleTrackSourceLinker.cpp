@@ -45,7 +45,7 @@ namespace Jug::Reco {
  */
 class SingleTrackSourceLinker : public Gaudi::Algorithm {
 private:
-  mutable DataHandle<const edm4eic::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::TrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
   mutable DataHandle<std::list<ActsExamples::IndexSourceLink>> m_sourceLinkStorage{"sourceLinkStorage", Gaudi::DataHandle::Writer, this};
 #if Acts_VERSION_MAJOR < 37 || (Acts_VERSION_MAJOR == 37 && Acts_VERSION_MINOR == 0)
   mutable DataHandle<ActsExamples::IndexSourceLinkContainer> m_outputSourceLinks{"outputSourceLinks", Gaudi::DataHandle::Writer, this};

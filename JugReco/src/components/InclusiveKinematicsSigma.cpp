@@ -26,15 +26,15 @@ namespace Jug::Reco {
 
 class InclusiveKinematicsSigma : public Gaudi::Algorithm {
 private:
-  mutable DataHandle<const edm4hep::MCParticleCollection> m_inputMCParticleCollection{
+  mutable DataHandle<edm4hep::MCParticleCollection> m_inputMCParticleCollection{
     "inputMCParticles",
     Gaudi::DataHandle::Reader,
     this};
-  mutable DataHandle<const edm4eic::ReconstructedParticleCollection> m_inputParticleCollection{
+  mutable DataHandle<edm4eic::ReconstructedParticleCollection> m_inputParticleCollection{
     "inputReconstructedParticles",
     Gaudi::DataHandle::Reader,
     this};
-  mutable DataHandle<const edm4eic::MCRecoParticleAssociationCollection> m_inputParticleAssociation{
+  mutable DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_inputParticleAssociation{
     "inputParticleAssociations",
     Gaudi::DataHandle::Reader,
     this};
