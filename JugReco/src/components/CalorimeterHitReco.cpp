@@ -11,9 +11,7 @@
 #include <bitset>
 
 #include "Gaudi/Property.h"
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/PhysicalConstants.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/ToolHandle.h"
@@ -38,7 +36,7 @@ namespace Jug::Reco {
  * Reconstruct digitized outputs, paired with Jug::Digi::CalorimeterHitDigi
  * \ingroup reco
  */
-class CalorimeterHitReco : public GaudiAlgorithm {
+class CalorimeterHitReco : public Gaudi::Algorithm {
 private:
   // length unit from dd4hep, should be fixed
   Gaudi::Property<double> m_lUnit{this, "lengthUnit", dd4hep::mm};
@@ -62,9 +60,9 @@ private:
   double thresholdADC{0};
   double stepTDC{0};
 
-  DataHandle<edm4hep::RawCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+  mutable DataHandle<const edm4hep::RawCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                     this};
-  DataHandle<edm4eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+  mutable DataHandle<edm4eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                   this};
 
   // geometry service to get ids, ignored if no names provided
@@ -81,17 +79,17 @@ private:
   // if nothing is provided, the lowest level DetElement (from cellID) will be used
   Gaudi::Property<std::string> m_localDetElement{this, "localDetElement", ""};
   Gaudi::Property<std::vector<std::string>> u_localDetFields{this, "localDetFields", {}};
-  dd4hep::DetElement local;
+  mutable dd4hep::DetElement local;
   size_t local_mask = ~0;
 
 public:
-  CalorimeterHitReco(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+  CalorimeterHitReco(const std::string& name, ISvcLocator* svcLoc) : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("inputHitCollection", m_inputHitCollection, "");
     declareProperty("outputHitCollection", m_outputHitCollection, "");
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure()) {
+    if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
 
@@ -160,7 +158,7 @@ public:
     return StatusCode::SUCCESS;
   }
 
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     // input collections
     const auto& rawhits = *m_inputHitCollection.get();
     // create output collections

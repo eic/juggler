@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Wouter Deconinck
 
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Producer.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/PhysicalConstants.h"
 #include <algorithm>
@@ -23,29 +20,29 @@ using ROOT::Math::PxPyPzEVector;
 
 namespace Jug::Fast {
 
-class ScatteredElectronFinder : public GaudiAlgorithm {
+class ScatteredElectronFinder : public Gaudi::Algorithm {
 private:
-  DataHandle<edm4hep::MCParticleCollection> m_inputMCParticleCollection{
+  mutable DataHandle<const edm4hep::MCParticleCollection> m_inputMCParticleCollection{
     "inputMCParticles",
     Gaudi::DataHandle::Reader,
     this};
-  DataHandle<edm4hep::MCParticleCollection> m_outputMCScatteredElectron{
+  mutable DataHandle<edm4hep::MCParticleCollection> m_outputMCScatteredElectron{
     "outputMCScatteredElectron",
     Gaudi::DataHandle::Writer,
     this};
 
 public:
   ScatteredElectronFinder(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc) {
+      : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputMCParticleCollection, "MCParticles");
     declareProperty("outputMCScatteredElectron", m_outputMCScatteredElectron, "MCScatteredElectron");
   }
 
   StatusCode initialize() override {
-    return GaudiAlgorithm::initialize();
+    return Gaudi::Algorithm::initialize();
   }
 
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     // input collections
     const auto& mcparts = *(m_inputMCParticleCollection.get());
     // output collection

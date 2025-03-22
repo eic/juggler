@@ -4,9 +4,7 @@
 #include <cmath>
 // Gaudi
 #include "Gaudi/Property.h"
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/ToolHandle.h"
 
 #include <k4FWCore/DataHandle.h>
@@ -24,25 +22,25 @@ namespace Jug::Reco {
  *
  *  \ingroup tracking
  */
-class FinderAlgoTemplate : public GaudiAlgorithm {
+class FinderAlgoTemplate : public Gaudi::Algorithm {
 private:
-  DataHandle<edm4eic::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
-  DataHandle<ActsExamples::ProtoTrackContainer> m_outputProtoTracks{"outputProtoTracks", Gaudi::DataHandle::Writer, this};
+  mutable DataHandle<const edm4eic::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<ActsExamples::ProtoTrackContainer> m_outputProtoTracks{"outputProtoTracks", Gaudi::DataHandle::Writer, this};
 
 public:
-  FinderAlgoTemplate(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+  FinderAlgoTemplate(const std::string& name, ISvcLocator* svcLoc) : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("inputTrackerHits", m_inputTrackerHits, "tracker hits whose indices are used in proto-tracks");
     declareProperty("outputProtoTracks", m_outputProtoTracks, "grouped hit indicies");
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure()) {
+    if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
     return StatusCode::SUCCESS;
   }
 
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     // input collection
     //const edm4eic::TrackerHitCollection* hits = m_inputTrackerHits.get();
     // Create output collections

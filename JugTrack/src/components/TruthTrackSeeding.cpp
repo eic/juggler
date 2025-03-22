@@ -3,10 +3,8 @@
 
 #include <cmath>
 // Gaudi
-#include "GaudiAlg/GaudiAlgorithm.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/ToolHandle.h"
-#include "GaudiAlg/Transformer.h"
-#include "GaudiAlg/GaudiTool.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "Gaudi/Property.h"
 
@@ -34,25 +32,25 @@ namespace Jug::Reco {
    *
    *  \ingroup tracking
    */
-  class TruthTrackSeeding : public GaudiAlgorithm {
+  class TruthTrackSeeding : public Gaudi::Algorithm {
   private:
-    DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader,
+    mutable DataHandle<const edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader,
                                                                     this};
-    DataHandle<edm4eic::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters",
+    mutable DataHandle<edm4eic::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters",
                                                                        Gaudi::DataHandle::Writer, this};
     SmartIF<IParticleSvc> m_pidSvc;
 
   public:
-    TruthTrackSeeding(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+    TruthTrackSeeding(const std::string& name, ISvcLocator* svcLoc) : Gaudi::Algorithm(name, svcLoc) {
       declareProperty("inputMCParticles", m_inputMCParticles, "mcparticle truth data from npsim");
       declareProperty("outputTrackParameters", m_outputTrackParameters, "Output initial track parameters");
     }
 
     StatusCode initialize() override {
-      if (GaudiAlgorithm::initialize().isFailure()) {
+      if (Gaudi::Algorithm::initialize().isFailure()) {
         return StatusCode::FAILURE;
       }
-      IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
+      IRndmGenSvc* randSvc = Gaudi::svcLocator()->service<IRndmGenSvc>("RndmGenSvc", true);
       if (randSvc == nullptr) {
         return StatusCode::FAILURE;
       }
@@ -66,7 +64,7 @@ namespace Jug::Reco {
       return StatusCode::SUCCESS;
     }
 
-    StatusCode execute() override {
+    StatusCode execute(const EventContext&) const override {
       // input collection
       const auto* const mcparts = m_inputMCParticles.get();
       // Create output collections

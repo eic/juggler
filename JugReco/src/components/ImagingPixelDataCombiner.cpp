@@ -12,9 +12,7 @@
 #include <unordered_map>
 
 #include "Gaudi/Property.h"
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/PhysicalConstants.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/ToolHandle.h"
@@ -42,25 +40,25 @@ namespace Jug::Reco {
  *
  * \ingroup reco
  */
-class ImagingPixelDataCombiner : public GaudiAlgorithm {
+class ImagingPixelDataCombiner : public Gaudi::Algorithm {
 private:
   Gaudi::Property<int> m_layerIncrement{this, "layerIncrement", 0};
   Gaudi::Property<std::string> m_rule{this, "rule", "concatenate"};
-  DataHandle<edm4eic::CalorimeterHitCollection> m_inputHits1{"inputHits1", Gaudi::DataHandle::Reader, this};
-  DataHandle<edm4eic::CalorimeterHitCollection> m_inputHits2{"inputHits2", Gaudi::DataHandle::Reader, this};
-  DataHandle<edm4eic::CalorimeterHitCollection> m_outputHits{"outputHits", Gaudi::DataHandle::Writer, this};
+  mutable DataHandle<const edm4eic::CalorimeterHitCollection> m_inputHits1{"inputHits1", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<const edm4eic::CalorimeterHitCollection> m_inputHits2{"inputHits2", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::CalorimeterHitCollection> m_outputHits{"outputHits", Gaudi::DataHandle::Writer, this};
   std::vector<std::string> supported_rules{"concatenate", "interlayer"};
 
 public:
   ImagingPixelDataCombiner(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc) {
+      : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("inputHits1", m_inputHits1, "");
     declareProperty("inputHits2", m_inputHits2, "");
     declareProperty("outputHits", m_outputHits, "");
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure()) {
+    if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
 
@@ -74,7 +72,7 @@ public:
     return StatusCode::SUCCESS;
   }
 
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     // input collections
     const auto* const hits1 = m_inputHits1.get();
     const auto* const hits2 = m_inputHits2.get();

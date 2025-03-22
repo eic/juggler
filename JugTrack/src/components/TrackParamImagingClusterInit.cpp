@@ -3,10 +3,8 @@
 
 #include <cmath>
 // Gaudi
-#include "GaudiAlg/GaudiAlgorithm.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/ToolHandle.h"
-#include "GaudiAlg/Transformer.h"
-#include "GaudiAlg/GaudiTool.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "Gaudi/Property.h"
 
@@ -42,31 +40,31 @@ namespace Jug::Reco {
    *
    *  \ingroup tracking
    */
-  class TrackParamImagingClusterInit : public GaudiAlgorithm {
+  class TrackParamImagingClusterInit : public Gaudi::Algorithm {
   private:
-    DataHandle<edm4eic::ClusterCollection>          m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
-    DataHandle<ActsExamples::TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
+    mutable DataHandle<const edm4eic::ClusterCollection>          m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
+    mutable DataHandle<ActsExamples::TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
                                                                         Gaudi::DataHandle::Writer, this};
 
   public:
     TrackParamImagingClusterInit(const std::string& name, ISvcLocator* svcLoc)
-        : GaudiAlgorithm(name, svcLoc) {
+        : Gaudi::Algorithm(name, svcLoc) {
       declareProperty("inputClusters", m_inputClusters, "Input clusters");
       declareProperty("outputInitialTrackParameters", m_outputInitialTrackParameters, "");
     }
 
     StatusCode initialize() override {
-      if (GaudiAlgorithm::initialize().isFailure()) {
+      if (Gaudi::Algorithm::initialize().isFailure()) {
         return StatusCode::FAILURE;
       }
-      IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
+      IRndmGenSvc* randSvc = Gaudi::svcLocator()->service<IRndmGenSvc>("RndmGenSvc", true);
       if (randSvc == nullptr) {
         return StatusCode::FAILURE;
       }
       return StatusCode::SUCCESS;
     }
 
-    StatusCode execute() override {
+    StatusCode execute(const EventContext&) const override {
       // input collection
       const auto* const clusters = m_inputClusters.get();
       // Create output collections

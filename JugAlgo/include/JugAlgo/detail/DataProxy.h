@@ -7,7 +7,7 @@
 #include <algorithms/algorithm.h>
 #include <algorithms/type_traits.h>
 
-#include <GaudiAlg/GaudiAlgorithm.h>
+#include <Gaudi/Algorithm.h>
 #include <k4FWCore/DataHandle.h>
 
 namespace Jug::Algo::detail {
@@ -135,7 +135,7 @@ public:
   constexpr static size_t kSize = Data::kSize;
   using names_type              = typename Data::key_type;
   using elements_type =
-      decltype(createElements<kMode>(std::declval<GaudiAlgorithm*>(), names_type(), data_type(),
+      decltype(createElements<kMode>(std::declval<Gaudi::Algorithm*>(), names_type(), data_type(),
                                      std::make_index_sequence<kSize>()));
 
   template <class Owner>

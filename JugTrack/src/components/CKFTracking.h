@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "Gaudi/Property.h"
-#include "GaudiAlg/GaudiAlgorithm.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/ToolHandle.h"
 
 #include <k4FWCore/DataHandle.h>
@@ -37,7 +37,7 @@ namespace Jug::Reco {
  *
  * \ingroup tracking
  */
-class CKFTracking : public GaudiAlgorithm {
+class CKFTracking : public Gaudi::Algorithm {
 public:
   /// Track finder function that takes input measurements, initial trackstate
   /// and track finder options and returns some track-finder-specific result.
@@ -76,13 +76,13 @@ public:
 
 public:
 #if Acts_VERSION_MAJOR < 37 || (Acts_VERSION_MAJOR == 37 && Acts_VERSION_MINOR < 1)
-  DataHandle<ActsExamples::IndexSourceLinkContainer> m_inputSourceLinks{"inputSourceLinks", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<const ActsExamples::IndexSourceLinkContainer> m_inputSourceLinks{"inputSourceLinks", Gaudi::DataHandle::Reader, this};
 #endif
-  DataHandle<ActsExamples::MeasurementContainer> m_inputMeasurements{"inputMeasurements", Gaudi::DataHandle::Reader, this};
-  DataHandle<ActsExamples::TrackParametersContainer> m_inputInitialTrackParameters{"inputInitialTrackParameters",
+  mutable DataHandle<const ActsExamples::MeasurementContainer> m_inputMeasurements{"inputMeasurements", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<const ActsExamples::TrackParametersContainer> m_inputInitialTrackParameters{"inputInitialTrackParameters",
                                                                      Gaudi::DataHandle::Reader, this};
-  DataHandle<ActsExamples::ConstTrackContainer> m_outputTracks{"outputTracks", Gaudi::DataHandle::Writer, this};
-  DataHandle<ActsExamples::TrajectoriesContainer> m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
+  mutable DataHandle<ActsExamples::ConstTrackContainer> m_outputTracks{"outputTracks", Gaudi::DataHandle::Writer, this};
+  mutable DataHandle<ActsExamples::TrajectoriesContainer> m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
 
   Gaudi::Property<std::vector<double>> m_etaBins{this, "etaBins", {}};
   Gaudi::Property<std::vector<double>> m_chi2CutOff{this, "chi2CutOff", {15.}};
@@ -104,7 +104,7 @@ public:
 
   StatusCode initialize() override;
 
-  StatusCode execute() override;
+  StatusCode execute(const EventContext&) const override;
 };
 
 } // namespace Jug::Reco

@@ -4,9 +4,7 @@
 #include <cmath>
 // Gaudi
 #include "Gaudi/Property.h"
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/ToolHandle.h"
 
 #include <k4FWCore/DataHandle.h>
@@ -24,15 +22,15 @@ namespace Jug::Reco {
  *
  *  \ingroup tracking
  */
-class ProtoTrackMatching : public GaudiAlgorithm {
+class ProtoTrackMatching : public Gaudi::Algorithm {
 private:
-  DataHandle<edm4eic::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
-  DataHandle<ActsExamples::TrackParametersContainer> m_initialTrackParameters{"initialTrackParameters", Gaudi::DataHandle::Reader, this};
-  DataHandle<ActsExamples::ProtoTrackContainer> m_inputProtoTracks{"inputProtoTracks", Gaudi::DataHandle::Reader, this};
-  DataHandle<ActsExamples::ProtoTrackContainer> m_outputProtoTracks{"matchedProtoTracks", Gaudi::DataHandle::Writer, this};
+  mutable DataHandle<const edm4eic::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<const ActsExamples::TrackParametersContainer> m_initialTrackParameters{"initialTrackParameters", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<const ActsExamples::ProtoTrackContainer> m_inputProtoTracks{"inputProtoTracks", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<ActsExamples::ProtoTrackContainer> m_outputProtoTracks{"matchedProtoTracks", Gaudi::DataHandle::Writer, this};
 
 public:
-  ProtoTrackMatching(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+  ProtoTrackMatching(const std::string& name, ISvcLocator* svcLoc) : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("inputTrackerHits",     m_inputTrackerHits,     "");
     declareProperty("initialTrackParameters", m_initialTrackParameters, "");
     declareProperty("inputProtoTracks",       m_inputProtoTracks,       "");
@@ -40,13 +38,13 @@ public:
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure()) {
+    if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
     return StatusCode::SUCCESS;
   }
 
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     // input collection
     
     // hits is unused, commented out for now to avoid compiler warning

@@ -15,12 +15,12 @@ using namespace Acts;
 DECLARE_COMPONENT(TestACTSLogger)
 
 TestACTSLogger::TestACTSLogger(const std::string& aName, ISvcLocator* aSvcLoc)
-    : GaudiAlgorithm(aName, aSvcLoc) {}
+    : Gaudi::Algorithm(aName, aSvcLoc) {}
 
 TestACTSLogger::~TestACTSLogger() = default;
 
 StatusCode TestACTSLogger::initialize() {
-  if (GaudiAlgorithm::initialize().isFailure()) {
+  if (Gaudi::Algorithm::initialize().isFailure()) {
     return StatusCode::FAILURE;
   }
   {
@@ -46,7 +46,7 @@ StatusCode TestACTSLogger::initialize() {
   return StatusCode::SUCCESS;
 }
 
-StatusCode TestACTSLogger::execute() { 
+StatusCode TestACTSLogger::execute(const EventContext&) const { 
   return StatusCode::SUCCESS; }
 
-StatusCode TestACTSLogger::finalize() { return GaudiAlgorithm::finalize(); }
+StatusCode TestACTSLogger::finalize() { return Gaudi::Algorithm::finalize(); }

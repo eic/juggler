@@ -5,9 +5,7 @@
 
 // Gaudi
 #include "Gaudi/Property.h"
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/PhysicalConstants.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/ToolHandle.h"
@@ -35,33 +33,33 @@ namespace Jug::Reco {
  *
  * \ingroup tracking
  */
-class TrackParamVertexClusterInit : public GaudiAlgorithm {
+class TrackParamVertexClusterInit : public Gaudi::Algorithm {
 private:
-  DataHandle<edm4eic::TrackerHitCollection> m_inputVertexHits{"inputVertexHits", Gaudi::DataHandle::Reader, this};
-  DataHandle<edm4eic::ClusterCollection> m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
-  DataHandle<ActsExamples::TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
+  mutable DataHandle<const edm4eic::TrackerHitCollection> m_inputVertexHits{"inputVertexHits", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<const edm4eic::ClusterCollection> m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<ActsExamples::TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
                                                                       Gaudi::DataHandle::Writer, this};
   Gaudi::Property<double> m_maxHitRadius{this, "maxHitRadius", 40.0 * mm};
 
 public:
-  TrackParamVertexClusterInit(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+  TrackParamVertexClusterInit(const std::string& name, ISvcLocator* svcLoc) : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("inputVertexHits", m_inputVertexHits, "Vertex tracker hits");
     declareProperty("inputClusters", m_inputClusters, "Input clusters");
     declareProperty("outputInitialTrackParameters", m_outputInitialTrackParameters, "");
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure()) {
+    if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
-    IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
+    IRndmGenSvc* randSvc = Gaudi::svcLocator()->service<IRndmGenSvc>("RndmGenSvc", true);
     if (randSvc == nullptr) {
       return StatusCode::FAILURE;
     }
     return StatusCode::SUCCESS;
   }
 
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     // input collection
     const auto* const clusters = m_inputClusters.get();
     const auto* const vtx_hits = m_inputVertexHits.get();

@@ -5,10 +5,8 @@
 #include "TrackFittingAlgorithm.h"
 
 // Gaudi
-#include "GaudiAlg/GaudiAlgorithm.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/ToolHandle.h"
-#include "GaudiAlg/Transformer.h"
-#include "GaudiAlg/GaudiTool.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "Gaudi/Property.h"
 
@@ -51,7 +49,7 @@ namespace Jug::Reco {
   using namespace Acts::UnitLiterals;
 
   TrackFittingAlgorithm::TrackFittingAlgorithm(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc)
+      : Gaudi::Algorithm(name, svcLoc)
   {
     declareProperty("inputSourceLinks", m_inputSourceLinks, "");
     declareProperty("initialTrackParameters", m_initialTrackParameters, "");
@@ -63,7 +61,7 @@ namespace Jug::Reco {
 
   StatusCode TrackFittingAlgorithm::initialize()
   {
-    if (GaudiAlgorithm::initialize().isFailure()) {
+    if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
     m_geoSvc = service("GeoSvc");
@@ -86,7 +84,7 @@ namespace Jug::Reco {
     return StatusCode::SUCCESS;
   }
 
-  StatusCode TrackFittingAlgorithm::execute()
+  StatusCode TrackFittingAlgorithm::execute(const EventContext&) const
   {
     // Read input data
     const auto* const sourceLinks       = m_inputSourceLinks.get();

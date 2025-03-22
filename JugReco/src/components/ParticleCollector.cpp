@@ -3,9 +3,7 @@
 
 // Gaudi
 #include "Gaudi/Property.h"
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 
 #include <k4FWCore/DataHandle.h>
 
@@ -21,16 +19,16 @@ namespace Jug::Reco {
  *
  * \ingroup reco
  */
-class ParticleCollector : public GaudiAlgorithm {
+class ParticleCollector : public Gaudi::Algorithm {
 private:
   Gaudi::Property<std::vector<std::string>> m_inputParticles{this, "inputParticles", {}, "Particles to be aggregated"};
-  DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
+  mutable DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
                                                                      this};
 
   std::vector<DataHandle<edm4eic::ReconstructedParticleCollection>*> m_particleCollections;
 
 public:
-  ParticleCollector(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+  ParticleCollector(const std::string& name, ISvcLocator* svcLoc) : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("outputParticles", m_outputParticles, "output particles combined into single collection");
   }
   ~ParticleCollector() {
@@ -40,7 +38,7 @@ public:
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure()) {
+    if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
     for (auto colname : m_inputParticles) {
@@ -51,7 +49,7 @@ public:
     return StatusCode::SUCCESS;
   }
 
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     auto* output = m_outputParticles.createAndPut();
     if (msgLevel(MSG::DEBUG)) {
       debug() << "execute collector" << endmsg;

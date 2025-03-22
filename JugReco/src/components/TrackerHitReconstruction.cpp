@@ -4,11 +4,9 @@
 #include <algorithm>
 
 // Gaudi
-#include "GaudiAlg/GaudiAlgorithm.h"
+#include "Gaudi/Algorithm.h"
 //#include "GaudiKernel/ToolHandle.h"
 #include "Gaudi/Property.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
 #include "GaudiKernel/RndmGenerators.h"
 
 #include "DD4hep/DD4hepUnits.h"
@@ -43,12 +41,12 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class TrackerHitReconstruction : public GaudiAlgorithm {
+  class TrackerHitReconstruction : public Gaudi::Algorithm {
   private:
     Gaudi::Property<float> m_timeResolution{this, "timeResolution", 10}; // in ns
-    DataHandle<edm4eic::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+    mutable DataHandle<const edm4eic::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                    this};
-    DataHandle<edm4eic::TrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+    mutable DataHandle<edm4eic::TrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                  this};
 
     /// Pointer to the geometry service
@@ -56,14 +54,14 @@ namespace Jug::Reco {
     std::shared_ptr<const dd4hep::rec::CellIDPositionConverter> m_converter;
 
   public:
-    //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
-    TrackerHitReconstruction(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+    //  ill-formed: using Gaudi::Algorithm::GaudiAlgorithm;
+    TrackerHitReconstruction(const std::string& name, ISvcLocator* svcLoc) : Gaudi::Algorithm(name, svcLoc) {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
     }
 
     StatusCode initialize() override {
-      if (GaudiAlgorithm::initialize().isFailure()) {
+      if (Gaudi::Algorithm::initialize().isFailure()) {
         return StatusCode::FAILURE;
       }
       m_geoSvc = service("GeoSvc");
@@ -76,7 +74,7 @@ namespace Jug::Reco {
       return StatusCode::SUCCESS;
     }
 
-    StatusCode execute() override {
+    StatusCode execute(const EventContext&) const override {
       constexpr auto mm = dd4hep::mm;
       // input collection
       const auto* const rawhits = m_inputHitCollection.get();

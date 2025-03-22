@@ -4,10 +4,8 @@
 #include "CKFTracking.h"
 
 // Gaudi
-#include "GaudiAlg/GaudiAlgorithm.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/ToolHandle.h"
-#include "GaudiAlg/Transformer.h"
-#include "GaudiAlg/GaudiTool.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "Gaudi/Property.h"
 
@@ -94,7 +92,7 @@ namespace Jug::Reco {
   using namespace Acts::UnitLiterals;
 
   CKFTracking::CKFTracking(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc)
+      : Gaudi::Algorithm(name, svcLoc)
   {
 #if Acts_VERSION_MAJOR < 37 || (Acts_VERSION_MAJOR == 37 && Acts_VERSION_MINOR < 1)
     declareProperty("inputSourceLinks", m_inputSourceLinks, "");
@@ -107,7 +105,7 @@ namespace Jug::Reco {
 
   StatusCode CKFTracking::initialize()
   {
-    if (GaudiAlgorithm::initialize().isFailure()) {
+    if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
     m_geoSvc = service("GeoSvc");
@@ -142,7 +140,7 @@ namespace Jug::Reco {
     return StatusCode::SUCCESS;
   }
 
-  StatusCode CKFTracking::execute()
+  StatusCode CKFTracking::execute(const EventContext&) const
   {
     // Read input data
 #if Acts_VERSION_MAJOR < 37 || (Acts_VERSION_MAJOR == 37 && Acts_VERSION_MINOR < 1)

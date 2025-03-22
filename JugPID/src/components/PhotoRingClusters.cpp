@@ -11,9 +11,7 @@
 #include <algorithm>
 
 #include "Gaudi/Property.h"
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/PhysicalConstants.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/ToolHandle.h"
@@ -39,10 +37,10 @@ namespace Jug::Reco {
  *
  * \ingroup reco
  */
-class PhotoRingClusters : public GaudiAlgorithm {
+class PhotoRingClusters : public Gaudi::Algorithm {
 private:
-  DataHandle<edm4eic::PMTHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-  DataHandle<edm4eic::RingImageCollection> m_outputClusterCollection{"outputClusterCollection", Gaudi::DataHandle::Writer,
+  mutable DataHandle<const edm4eic::PMTHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::RingImageCollection> m_outputClusterCollection{"outputClusterCollection", Gaudi::DataHandle::Writer,
                                                                   this};
   // @TODO
   // A more realistic way is to have tracker info as the input to determine how much clusters should be found
@@ -55,14 +53,14 @@ private:
   SmartIF<IGeoSvc> m_geoSvc;
 
 public:
-  // ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
-  PhotoRingClusters(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+  // ill-formed: using Gaudi::Algorithm::GaudiAlgorithm;
+  PhotoRingClusters(const std::string& name, ISvcLocator* svcLoc) : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("inputHitCollection", m_inputHitCollection, "");
     declareProperty("outputClusterCollection", m_outputClusterCollection, "");
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure()) {
+    if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
     m_geoSvc = service("GeoSvc");
@@ -74,7 +72,7 @@ public:
     return StatusCode::SUCCESS;
   }
 
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     // input collections
     const auto& rawhits = *m_inputHitCollection.get();
     // Create output collections

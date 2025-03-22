@@ -10,7 +10,7 @@ gaudi_add_module(JugRecoPlugins
   SOURCES
   ${JugRecoPlugins_sources}
   LINK
-  Gaudi::GaudiAlgLib Gaudi::GaudiKernel
+  Gaudi::GaudiKernel
   JugBase JugAlgo
   algorithms::core algorithms::calorimetry
   ROOT::Core ROOT::RIO ROOT::Tree

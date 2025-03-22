@@ -4,10 +4,8 @@
 #include <algorithm>
 
 // Gaudi
-#include "GaudiAlg/GaudiAlgorithm.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/ToolHandle.h"
-#include "GaudiAlg/Transformer.h"
-#include "GaudiAlg/GaudiTool.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "Gaudi/Property.h"
 
@@ -48,10 +46,10 @@ namespace Jug::Reco {
    *
    * \ingroup tracking
    */
-   class TrackProjector : public GaudiAlgorithm {
+   class TrackProjector : public Gaudi::Algorithm {
    private:
-    DataHandle<ActsExamples::TrajectoriesContainer>        m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
-    DataHandle<edm4eic::TrackSegmentCollection> m_outputTrackSegments{"outputTrackSegments", Gaudi::DataHandle::Writer, this};
+    mutable DataHandle<const ActsExamples::TrajectoriesContainer>        m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
+    mutable DataHandle<edm4eic::TrackSegmentCollection> m_outputTrackSegments{"outputTrackSegments", Gaudi::DataHandle::Writer, this};
 
     Gaudi::Property<unsigned int> m_firstInVolumeID{this, "firstInVolumeID", 0};
     Gaudi::Property<std::string> m_firstInVolumeName{this, "firstInVolumeName", ""};
@@ -62,20 +60,20 @@ namespace Jug::Reco {
     Acts::GeometryContext m_geoContext;
 
     public:
-    //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
+    //  ill-formed: using Gaudi::Algorithm::GaudiAlgorithm;
     TrackProjector(const std::string& name, ISvcLocator* svcLoc)
-        : GaudiAlgorithm(name, svcLoc) {
+        : Gaudi::Algorithm(name, svcLoc) {
           declareProperty("inputTrajectories", m_inputTrajectories,"");
           declareProperty("outputTrackSegments", m_outputTrackSegments, "");
         }
 
     StatusCode initialize() override {
-      if (GaudiAlgorithm::initialize().isFailure())
+      if (Gaudi::Algorithm::initialize().isFailure())
         return StatusCode::FAILURE;
       return StatusCode::SUCCESS;
     }
 
-    StatusCode execute() override {
+    StatusCode execute(const EventContext&) const override {
       // input collection
       const auto* const trajectories = m_inputTrajectories.get();
       // create output collections

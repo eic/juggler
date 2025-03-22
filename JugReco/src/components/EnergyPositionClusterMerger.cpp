@@ -7,9 +7,7 @@
 #include <fmt/format.h>
 // Gaudi
 #include "Gaudi/Property.h"
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/PhysicalConstants.h"
 
 #include <k4FWCore/DataHandle.h>
@@ -34,13 +32,13 @@ namespace Jug::Reco {
  *
  * \ingroup reco
  */
-class EnergyPositionClusterMerger : public GaudiAlgorithm {
+class EnergyPositionClusterMerger : public Gaudi::Algorithm {
 private:
   // Input
-  DataHandle<edm4eic::ClusterCollection> m_energyClusters{"energyClusters", Gaudi::DataHandle::Reader, this};
-  DataHandle<edm4eic::ClusterCollection> m_positionClusters{"positionClusters", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<const edm4eic::ClusterCollection> m_energyClusters{"energyClusters", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<const edm4eic::ClusterCollection> m_positionClusters{"positionClusters", Gaudi::DataHandle::Reader, this};
   // Output
-  DataHandle<edm4eic::ClusterCollection> m_outputClusters{"outputClusters", Gaudi::DataHandle::Writer, this};
+  mutable DataHandle<edm4eic::ClusterCollection> m_outputClusters{"outputClusters", Gaudi::DataHandle::Writer, this};
   // Negative values mean the tolerance check is disabled
   Gaudi::Property<double> m_zToleranceUnits{this, "zTolerance", -1 * cm};
   Gaudi::Property<double> m_phiToleranceUnits{this, "phiTolerance", 20 * degree};
@@ -50,7 +48,7 @@ private:
   double m_phiTolerance{0};
 
 public:
-  EnergyPositionClusterMerger(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+  EnergyPositionClusterMerger(const std::string& name, ISvcLocator* svcLoc) : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("energyClusters", m_energyClusters, "Cluster collection with good energy precision");
     declareProperty("positionClusters", m_positionClusters, "Cluster collection with good position precision");
     declareProperty("outputClusters", m_outputClusters, "");
@@ -62,7 +60,7 @@ public:
     return StatusCode::SUCCESS;
   }
 
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     // input
     const auto& e_clus   = *(m_energyClusters.get());
     const auto& pos_clus = *(m_positionClusters.get());

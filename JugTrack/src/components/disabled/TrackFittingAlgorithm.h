@@ -10,7 +10,7 @@
 #include <random>
 #include <stdexcept>
 
-#include "GaudiAlg/GaudiAlgorithm.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/ToolHandle.h"
 #include "Gaudi/Property.h"
 
@@ -43,7 +43,7 @@ namespace Jug::Reco {
    *
    * \ingroup tracking
    */
-  class TrackFittingAlgorithm : public GaudiAlgorithm {
+  class TrackFittingAlgorithm : public Gaudi::Algorithm {
   public:
     /// Track fitter function that takes input measurements, initial trackstate
     /// and fitter options and returns some track-fitter-specific result.
@@ -58,12 +58,12 @@ namespace Jug::Reco {
       const std::vector<ActsExamples::IndexSourceLink>&, const ActsExamples::TrackParameters&, const TrackFitterOptions&)>;
 
   public:
-    DataHandle<ActsExamples::IndexSourceLinkContainer> m_inputSourceLinks{"inputSourceLinks", Gaudi::DataHandle::Reader, this};
+    mutable DataHandle<const ActsExamples::IndexSourceLinkContainer> m_inputSourceLinks{"inputSourceLinks", Gaudi::DataHandle::Reader, this};
     DataHandle<ActsExamples::TrackParametersContainer> m_initialTrackParameters{"initialTrackParameters", Gaudi::DataHandle::Reader, this};
-    DataHandle<ActsExamples::MeasurementContainer>     m_inputMeasurements{"inputMeasurements", Gaudi::DataHandle::Reader, this};
-    DataHandle<ActsExamples::ProtoTrackContainer>      m_inputProtoTracks{"inputProtoTracks", Gaudi::DataHandle::Reader, this};
+    mutable DataHandle<const ActsExamples::MeasurementContainer>     m_inputMeasurements{"inputMeasurements", Gaudi::DataHandle::Reader, this};
+    mutable DataHandle<const ActsExamples::ProtoTrackContainer>      m_inputProtoTracks{"inputProtoTracks", Gaudi::DataHandle::Reader, this};
     DataHandle<ActsExamples::TrajectoriesContainer>    m_foundTracks{"foundTracks", Gaudi::DataHandle::Reader, this};
-    DataHandle<ActsExamples::TrajectoriesContainer>    m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
+    mutable DataHandle<ActsExamples::TrajectoriesContainer>    m_outputTrajectories{"outputTrajectories", Gaudi::DataHandle::Writer, this};
 
     FitterFunction                        m_trackFittingFunc;
     SmartIF<IGeoSvc>                      m_geoSvc;
@@ -87,7 +87,7 @@ namespace Jug::Reco {
 
     StatusCode initialize() override;
 
-    StatusCode execute() override;
+    StatusCode execute(const EventContext&) const override;
    private:
     /// Helper function to call correct FitterFunction
     FitterResult fitTrack(

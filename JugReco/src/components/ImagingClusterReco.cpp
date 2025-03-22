@@ -12,9 +12,7 @@
 #include <algorithm>
 
 #include "Gaudi/Property.h"
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/PhysicalConstants.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/ToolHandle.h"
@@ -47,13 +45,13 @@ namespace Jug::Reco {
  *
  *  \ingroup reco
  */
-class ImagingClusterReco : public GaudiAlgorithm {
+class ImagingClusterReco : public Gaudi::Algorithm {
 private:
   Gaudi::Property<int> m_trackStopLayer{this, "trackStopLayer", 9};
 
-  DataHandle<edm4eic::ProtoClusterCollection> m_inputProtoClusters{"inputProtoClusters", Gaudi::DataHandle::Reader, this};
-  DataHandle<edm4eic::ClusterCollection> m_outputLayers{"outputLayers", Gaudi::DataHandle::Writer, this};
-  DataHandle<edm4eic::ClusterCollection> m_outputClusters{"outputClusters", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<const edm4eic::ProtoClusterCollection> m_inputProtoClusters{"inputProtoClusters", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::ClusterCollection> m_outputLayers{"outputLayers", Gaudi::DataHandle::Writer, this};
+  mutable DataHandle<edm4eic::ClusterCollection> m_outputClusters{"outputClusters", Gaudi::DataHandle::Reader, this};
 
   // Collection for MC hits when running on MC
   Gaudi::Property<std::string> m_mcHits{this, "mcHits", ""};
@@ -66,14 +64,14 @@ private:
   std::unique_ptr<DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>> m_outputAssociations_ptr;
 
 public:
-  ImagingClusterReco(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+  ImagingClusterReco(const std::string& name, ISvcLocator* svcLoc) : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("inputProtoClusters", m_inputProtoClusters, "");
     declareProperty("outputLayers", m_outputLayers, "");
     declareProperty("outputClusters", m_outputClusters, "");
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure()) {
+    if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
 
@@ -94,7 +92,7 @@ public:
     return StatusCode::SUCCESS;
   }
 
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     // input collections
     const auto& proto = *m_inputProtoClusters.get();
     // output collections
@@ -195,7 +193,7 @@ public:
 private:
   template <typename T> static inline T pow2(const T& x) { return x * x; }
 
-  static std::vector<edm4eic::MutableCluster> reconstruct_cluster_layers(const edm4eic::ProtoCluster& pcl) {
+  std::vector<edm4eic::MutableCluster> reconstruct_cluster_layers(const edm4eic::ProtoCluster& pcl) const {
     const auto& hits    = pcl.getHits();
     const auto& weights = pcl.getWeights();
     // using map to have hits sorted by layer
@@ -218,7 +216,7 @@ private:
     return cl_layers;
   }
 
-  static edm4eic::MutableCluster reconstruct_layer(const std::vector<std::pair<edm4eic::CalorimeterHit, float>>& hits) {
+ edm4eic::MutableCluster reconstruct_layer(const std::vector<std::pair<edm4eic::CalorimeterHit, float>>& hits) const {
     edm4eic::MutableCluster layer;
     layer.setType(ClusterType::kClusterSlice);
     // Calculate averages
@@ -257,7 +255,7 @@ private:
     return layer;
   }
 
-  edm4eic::MutableCluster reconstruct_cluster(const edm4eic::ProtoCluster& pcl) {
+  edm4eic::MutableCluster reconstruct_cluster(const edm4eic::ProtoCluster& pcl) const {
     edm4eic::MutableCluster cluster;
 
     const auto& hits    = pcl.getHits();

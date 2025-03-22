@@ -5,10 +5,7 @@
 #include <cmath>
 #include <fmt/format.h>
 
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Producer.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/RndmGenerators.h"
 
 #include <k4FWCore/DataHandle.h>
@@ -20,10 +17,10 @@
 
 namespace Jug::Reco {
 
-class FarForwardParticlesOMD : public GaudiAlgorithm {
+class FarForwardParticlesOMD : public Gaudi::Algorithm {
 private:
-  DataHandle<edm4eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHits", Gaudi::DataHandle::Reader, this};
-  DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
+  mutable DataHandle<const edm4eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHits", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
                                                                      this};
 
   //----- Define constants here ------
@@ -43,13 +40,13 @@ private:
 
 public:
   FarForwardParticlesOMD(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc) {
+      : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("inputCollection", m_inputHitCollection, "FarForwardTrackerHits");
     declareProperty("outputCollection", m_outputParticles, "ReconstructedParticles");
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure()) {
+    if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
     double det = aXOMD[0][0] * aXOMD[1][1] - aXOMD[0][1] * aXOMD[1][0];
@@ -74,7 +71,7 @@ public:
     return StatusCode::SUCCESS;
   }
 
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     const edm4eic::TrackerHitCollection* rawhits = m_inputHitCollection.get();
     auto& rc                                 = *(m_outputParticles.createAndPut());
 

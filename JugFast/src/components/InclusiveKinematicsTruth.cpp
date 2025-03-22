@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Wouter Deconinck
 
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Producer.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/PhysicalConstants.h"
 #include <algorithm>
@@ -26,13 +23,13 @@ using ROOT::Math::PxPyPzEVector;
 
 namespace Jug::Fast {
 
-class InclusiveKinematicsTruth : public GaudiAlgorithm {
+class InclusiveKinematicsTruth : public Gaudi::Algorithm {
 private:
-  DataHandle<edm4hep::MCParticleCollection> m_inputMCParticleCollection{
+  mutable DataHandle<const edm4hep::MCParticleCollection> m_inputMCParticleCollection{
     "inputMCParticles",
     Gaudi::DataHandle::Reader,
     this};
-  DataHandle<edm4eic::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{
+  mutable DataHandle<edm4eic::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{
     "outputInclusiveKinematics",
     Gaudi::DataHandle::Writer,
     this};
@@ -44,13 +41,13 @@ private:
 
 public:
   InclusiveKinematicsTruth(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc) {
+      : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputMCParticleCollection, "MCParticles");
     declareProperty("outputInclusiveKinematics", m_outputInclusiveKinematicsCollection, "InclusiveKinematicsTruth");
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure()) {
+    if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
 
@@ -68,7 +65,7 @@ public:
     return StatusCode::SUCCESS;
   }
 
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     // input collections
     const auto& mcparts = *(m_inputMCParticleCollection.get());
     // output collection

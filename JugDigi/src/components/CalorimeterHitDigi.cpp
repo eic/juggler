@@ -14,9 +14,7 @@
 #include <cmath>
 #include <unordered_map>
 
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/PhysicalConstants.h"
 #include "Gaudi/Property.h"
 #include "GaudiKernel/RndmGenerators.h"
@@ -44,7 +42,7 @@ namespace Jug::Digi {
    * \ingroup digi
    * \ingroup calorimetry
    */
-  class CalorimeterHitDigi : public GaudiAlgorithm {
+  class CalorimeterHitDigi : public Gaudi::Algorithm {
   public:
     // additional smearing resolutions
     Gaudi::Property<std::vector<double>> u_eRes{this, "energyResolutions", {}}; // a/sqrt(E/GeV) + b + c/(E/GeV)
@@ -80,25 +78,25 @@ namespace Jug::Digi {
     SmartIF<IGeoSvc> m_geoSvc;
     uint64_t         id_mask{0}, ref_mask{0};
 
-    DataHandle<edm4hep::SimCalorimeterHitCollection> m_inputHitCollection{
+    mutable DataHandle<const edm4hep::SimCalorimeterHitCollection> m_inputHitCollection{
       "inputHitCollection", Gaudi::DataHandle::Reader, this};
-    DataHandle<edm4hep::RawCalorimeterHitCollection> m_outputHitCollection{
+    mutable DataHandle<edm4hep::RawCalorimeterHitCollection> m_outputHitCollection{
       "outputHitCollection", Gaudi::DataHandle::Writer, this};
 
-    //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
+    //  ill-formed: using Gaudi::Algorithm::GaudiAlgorithm;
     CalorimeterHitDigi(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc) {
+      : Gaudi::Algorithm(name, svcLoc) {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
     }
 
     StatusCode initialize() override
     {
-      if (GaudiAlgorithm::initialize().isFailure()) {
+      if (Gaudi::Algorithm::initialize().isFailure()) {
         return StatusCode::FAILURE;
       }
       // random number generator from service
-      auto randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
+      auto randSvc = Gaudi::svcLocator()->service<IRndmGenSvc>("RndmGenSvc", true);
       auto sc      = m_normDist.initialize(randSvc, Rndm::Gauss(0.0, 1.0));
       if (!sc.isSuccess()) {
         return StatusCode::FAILURE;
@@ -154,7 +152,7 @@ namespace Jug::Digi {
       return StatusCode::SUCCESS;
     }
 
-    StatusCode execute() override
+    StatusCode execute(const EventContext&) const override
     {
       if (!u_fields.value().empty()) {
         signal_sum_digi();
@@ -165,7 +163,7 @@ namespace Jug::Digi {
     }
 
   private:
-    void single_hits_digi() {
+    void single_hits_digi() const {
       // input collections
       const auto* const simhits = m_inputHitCollection.get();
       // Create output collections
@@ -202,7 +200,7 @@ namespace Jug::Digi {
       }
     }
 
-    void signal_sum_digi() {
+    void signal_sum_digi() const {
       const auto* const simhits = m_inputHitCollection.get();
       auto* rawhits = m_outputHitCollection.createAndPut();
 
