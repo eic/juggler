@@ -35,7 +35,7 @@ gaudi_add_module(JugAlgoPreload
   SOURCES
   ${JugAlgoPreload_sources}
   LINK
-  Gaudi::GaudiKernel Gaudi::GaudiAlgLib
+  Gaudi::GaudiKernel
   JugBase
   JugAlgo
   algorithms::core
