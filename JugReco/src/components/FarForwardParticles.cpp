@@ -5,10 +5,7 @@
 #include <cmath>
 #include <fmt/format.h>
 
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Producer.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/RndmGenerators.h"
 
 #include "DDRec/CellIDPositionConverter.h"
@@ -25,10 +22,10 @@
 
 namespace Jug::Reco {
 
-class FarForwardParticles : public GaudiAlgorithm {
+class FarForwardParticles : public Gaudi::Algorithm {
 private:
-  DataHandle<edm4eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHits", Gaudi::DataHandle::Reader, this};
-  DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
+  mutable DataHandle<edm4eic::TrackerHitCollection> m_inputHitCollection{"FarForwardTrackerHits", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer,
                                                                      this};
 
   //----- Define constants here ------
@@ -51,7 +48,7 @@ private:
 
   Gaudi::Property<std::string> m_localDetElement{this, "localDetElement", ""};
   Gaudi::Property<std::vector<std::string>> u_localDetFields{this, "localDetFields", {}};
-  dd4hep::DetElement local;
+  mutable dd4hep::DetElement local;
   size_t local_mask = ~0;
 
   const double aXRP[2][2] = {{2.102403743, 29.11067626}, {0.186640381, 0.192604619}};
@@ -61,7 +58,7 @@ private:
   double aYRPinv[2][2] = {{0.0, 0.0}, {0.0, 0.0}};
 
 public:
-  FarForwardParticles(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+  FarForwardParticles(const std::string& name, ISvcLocator* svcLoc) : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("inputCollection", m_inputHitCollection, "FarForwardTrackerHits");
     declareProperty("outputCollection", m_outputParticles, "ReconstructedParticles");
   }
@@ -74,7 +71,7 @@ public:
   // include the Eigen libraries, used in ACTS, for the linear algebra.
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure()) {
+    if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
     m_geoSvc = service(m_geoSvcName);
@@ -153,7 +150,7 @@ public:
     return StatusCode::SUCCESS;
   }
 
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     const edm4eic::TrackerHitCollection* rawhits = m_inputHitCollection.get();
     auto& rc                                 = *(m_outputParticles.createAndPut());
 

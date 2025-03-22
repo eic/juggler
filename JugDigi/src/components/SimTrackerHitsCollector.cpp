@@ -2,10 +2,8 @@
 // Copyright (C) 2022 Wouter Deconinck, Whitney Armstrong, Chao Peng
 
 // Gaudi
-#include "GaudiAlg/GaudiAlgorithm.h"
+#include "Gaudi/Algorithm.h"
 #include "Gaudi/Property.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
 
 #include <k4FWCore/DataHandle.h>
 
@@ -21,16 +19,16 @@ namespace Jug::Digi {
      *
      * \ingroup digi
      */
-    class SimTrackerHitsCollector : public GaudiAlgorithm {
+    class SimTrackerHitsCollector : public Gaudi::Algorithm {
     private:
       Gaudi::Property<std::vector<std::string>> m_inputSimTrackerHits{this, "inputSimTrackerHits", {},"Tracker hits to be aggregated"};
-      DataHandle<edm4hep::SimTrackerHitCollection> m_outputSimTrackerHits{"outputSimTrackerHits", Gaudi::DataHandle::Writer, this};
+      mutable DataHandle<edm4hep::SimTrackerHitCollection> m_outputSimTrackerHits{"outputSimTrackerHits", Gaudi::DataHandle::Writer, this};
 
       std::vector<DataHandle<edm4hep::SimTrackerHitCollection>*> m_hitCollections;
 
     public:
       SimTrackerHitsCollector(const std::string& name, ISvcLocator* svcLoc)
-          : GaudiAlgorithm(name, svcLoc)
+          : Gaudi::Algorithm(name, svcLoc)
       {
         declareProperty("outputSimTrackerHits", m_outputSimTrackerHits, "output hits combined into single collection");
       }
@@ -41,7 +39,7 @@ namespace Jug::Digi {
       }
 
       StatusCode initialize() override {
-        if (GaudiAlgorithm::initialize().isFailure()) {
+        if (Gaudi::Algorithm::initialize().isFailure()) {
           return StatusCode::FAILURE;
         }
         for (auto colname : m_inputSimTrackerHits) {
@@ -51,7 +49,7 @@ namespace Jug::Digi {
         return StatusCode::SUCCESS;
       }
 
-      StatusCode execute() override
+      StatusCode execute(const EventContext&) const override
       {
         auto* outputHits = m_outputSimTrackerHits.createAndPut();
         if (msgLevel(MSG::DEBUG)) {

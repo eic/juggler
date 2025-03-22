@@ -7,9 +7,7 @@
 #include <fmt/format.h>
 // Gaudi
 #include "Gaudi/Property.h"
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/PhysicalConstants.h"
 
 #include <k4FWCore/DataHandle.h>
@@ -32,21 +30,21 @@ namespace Jug::Fast {
  *
  * \ingroup reco
  */
-class TruthEnergyPositionClusterMerger : public GaudiAlgorithm {
+class TruthEnergyPositionClusterMerger : public Gaudi::Algorithm {
 private:
   // Input
-  DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
-  DataHandle<edm4eic::ClusterCollection> m_energyClusters{"EnergyClusters", Gaudi::DataHandle::Reader, this};
-  DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_energyAssociations{"EnergyAssociations", Gaudi::DataHandle::Reader, this};
-  DataHandle<edm4eic::ClusterCollection> m_positionClusters{"PositionClusters", Gaudi::DataHandle::Reader, this};
-  DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_positionAssociations{"PositionAssociations", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::ClusterCollection> m_energyClusters{"EnergyClusters", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_energyAssociations{"EnergyAssociations", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::ClusterCollection> m_positionClusters{"PositionClusters", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_positionAssociations{"PositionAssociations", Gaudi::DataHandle::Reader, this};
   // Output
-  DataHandle<edm4eic::ClusterCollection> m_outputClusters{"OutputClusters", Gaudi::DataHandle::Writer, this};
-  DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_outputAssociations{"OutputAssociations", Gaudi::DataHandle::Writer, this};
+  mutable DataHandle<edm4eic::ClusterCollection> m_outputClusters{"OutputClusters", Gaudi::DataHandle::Writer, this};
+  mutable DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_outputAssociations{"OutputAssociations", Gaudi::DataHandle::Writer, this};
 
 public:
   TruthEnergyPositionClusterMerger(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc) {
+      : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputMCParticles, "MCParticles");
     declareProperty("inputEnergyClusters", m_energyClusters, "Cluster collection with good energy precision");
     declareProperty("inputEnergyAssociations", m_energyAssociations, "Cluster association with good energy precision");
@@ -58,7 +56,7 @@ public:
 
   StatusCode initialize() override { return StatusCode::SUCCESS; }
 
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     if (msgLevel(MSG::DEBUG)) {
       debug() << "Merging energy and position clusters for new event" << endmsg;
     }

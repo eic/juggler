@@ -7,7 +7,7 @@
 #include <algorithms/algorithm.h>
 #include <algorithms/type_traits.h>
 
-#include <GaudiAlg/GaudiAlgorithm.h>
+#include <Gaudi/Algorithm.h>
 #include <GaudiKernel/Service.h>
 #include <JugAlgo/IAlgoServiceSvc.h>
 #include <JugAlgo/detail/DataProxy.h>
@@ -23,7 +23,7 @@
 
 namespace Jug::Algo {
 
-template <class AlgoImpl> class Algorithm : public GaudiAlgorithm {
+template <class AlgoImpl> class Algorithm : public Gaudi::Algorithm {
 public:
   using algo_type   = AlgoImpl;
   using input_type  = typename algo_type::input_type;
@@ -32,7 +32,7 @@ public:
   using Output      = typename algo_type::Output;
 
   Algorithm(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc)
+      : Gaudi::Algorithm(name, svcLoc)
       , m_algo{name}
       , m_output{this, m_algo.outputNames()}
       , m_input{this, m_algo.inputNames()} {
@@ -80,7 +80,7 @@ public:
     return StatusCode::SUCCESS;
   }
 
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     try {
       m_algo.process(m_input.get(), m_output.get());
     } catch (const std::exception& e) {

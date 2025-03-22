@@ -19,9 +19,7 @@
 #include "fmt/format.h"
 
 #include "Gaudi/Property.h"
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/PhysicalConstants.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/ToolHandle.h"
@@ -137,13 +135,13 @@ namespace Jug::Reco {
  *
  * \ingroup reco
  */
-class CalorimeterIslandCluster : public GaudiAlgorithm {
+class CalorimeterIslandCluster : public Gaudi::Algorithm {
 private:
   Gaudi::Property<bool> m_splitCluster{this, "splitCluster", true};
   Gaudi::Property<double> m_minClusterHitEdep{this, "minClusterHitEdep", 0.};
   Gaudi::Property<double> m_minClusterCenterEdep{this, "minClusterCenterEdep", 50.0 * MeV};
-  DataHandle<CaloHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-  DataHandle<edm4eic::ProtoClusterCollection> m_outputProtoCollection{"outputProtoClusterCollection",
+  mutable DataHandle<CaloHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::ProtoClusterCollection> m_outputProtoCollection{"outputProtoClusterCollection",
                                                                   Gaudi::DataHandle::Writer, this};
 
   Gaudi::Property<std::string> m_geoSvcName{this, "geoServiceName", "GeoSvc"};
@@ -172,13 +170,13 @@ private:
   dd4hep::IDDescriptor m_idSpec;
 
 public:
-  CalorimeterIslandCluster(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+  CalorimeterIslandCluster(const std::string& name, ISvcLocator* svcLoc) : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("inputHitCollection", m_inputHitCollection, "");
     declareProperty("outputProtoClusterCollection", m_outputProtoCollection, "");
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure()) {
+    if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
 
@@ -288,7 +286,7 @@ public:
     return StatusCode::SUCCESS;
   }
 
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     // input collections
     const auto& hits = *(m_inputHitCollection.get());
     // Create output collections

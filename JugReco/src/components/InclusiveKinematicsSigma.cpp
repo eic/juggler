@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // Copyright (C) 2022 Wouter Deconinck, Barak Schmookler
 
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Producer.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/PhysicalConstants.h"
 #include <algorithm>
@@ -27,21 +24,21 @@ using ROOT::Math::PxPyPzEVector;
 
 namespace Jug::Reco {
 
-class InclusiveKinematicsSigma : public GaudiAlgorithm {
+class InclusiveKinematicsSigma : public Gaudi::Algorithm {
 private:
-  DataHandle<edm4hep::MCParticleCollection> m_inputMCParticleCollection{
+  mutable DataHandle<edm4hep::MCParticleCollection> m_inputMCParticleCollection{
     "inputMCParticles",
     Gaudi::DataHandle::Reader,
     this};
-  DataHandle<edm4eic::ReconstructedParticleCollection> m_inputParticleCollection{
+  mutable DataHandle<edm4eic::ReconstructedParticleCollection> m_inputParticleCollection{
     "inputReconstructedParticles",
     Gaudi::DataHandle::Reader,
     this};
-  DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_inputParticleAssociation{
+  mutable DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_inputParticleAssociation{
     "inputParticleAssociations",
     Gaudi::DataHandle::Reader,
     this};
-  DataHandle<edm4eic::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{
+  mutable DataHandle<edm4eic::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{
     "outputInclusiveKinematics",
     Gaudi::DataHandle::Writer,
     this};
@@ -53,7 +50,7 @@ private:
 
 public:
   InclusiveKinematicsSigma(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc) {
+      : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputMCParticleCollection, "MCParticles");
     declareProperty("inputReconstructedParticles", m_inputParticleCollection, "ReconstructedParticles");
     declareProperty("inputParticleAssociations", m_inputParticleAssociation, "MCRecoParticleAssociation");
@@ -61,7 +58,7 @@ public:
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure())
+    if (Gaudi::Algorithm::initialize().isFailure())
       return StatusCode::FAILURE;
 
     m_pidSvc = service("ParticleSvc");
@@ -78,7 +75,7 @@ public:
     return StatusCode::SUCCESS;
   }
 
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     // input collections
     const auto& mcparts = *(m_inputMCParticleCollection.get());
     const auto& rcparts = *(m_inputParticleCollection.get());

@@ -13,9 +13,7 @@
 #include <algorithm>
 
 #include "Gaudi/Property.h"
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/PhysicalConstants.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/ToolHandle.h"
@@ -42,10 +40,10 @@ namespace Jug::Reco {
  *
  * \ingroup reco
  */
-class PhotoMultiplierReco : public GaudiAlgorithm {
+class PhotoMultiplierReco : public Gaudi::Algorithm {
 private:
-  DataHandle<edm4eic::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-  DataHandle<edm4eic::PMTHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
+  mutable DataHandle<edm4eic::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::PMTHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
   Gaudi::Property<double> m_timeStep{this, "timeStep", 0.0625 * ns};
   Gaudi::Property<double> m_minNpe{this, "minNpe", 0.0};
   Gaudi::Property<double> m_speMean{this, "speMean", 80.0};
@@ -55,14 +53,14 @@ private:
   std::shared_ptr<const dd4hep::rec::CellIDPositionConverter> m_converter;
 
 public:
-  // ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
-  PhotoMultiplierReco(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+  // ill-formed: using Gaudi::Algorithm::GaudiAlgorithm;
+  PhotoMultiplierReco(const std::string& name, ISvcLocator* svcLoc) : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("inputHitCollection", m_inputHitCollection, "");
     declareProperty("outputHitCollection", m_outputHitCollection, "");
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure()) {
+    if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
     m_geoSvc = service("GeoSvc");
@@ -75,7 +73,7 @@ public:
     return StatusCode::SUCCESS;
   }
 
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     // input collections
     const auto& rawhits = *m_inputHitCollection.get();
     // Create output collections

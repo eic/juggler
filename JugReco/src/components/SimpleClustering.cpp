@@ -4,9 +4,7 @@
 #include <algorithm>
 
 #include "Gaudi/Property.h"
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/PhysicalConstants.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/ToolHandle.h"
@@ -33,15 +31,15 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class SimpleClustering : public GaudiAlgorithm {
+  class SimpleClustering : public Gaudi::Algorithm {
   private:
     using RecHits  = edm4eic::CalorimeterHitCollection;
     using ProtoClusters = edm4eic::ProtoClusterCollection;
     using Clusters = edm4eic::ClusterCollection;
 
-    DataHandle<RecHits>       m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-    DataHandle<ProtoClusters> m_outputProtoClusters{"outputProtoCluster", Gaudi::DataHandle::Writer, this};
-    DataHandle<Clusters>      m_outputClusters{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
+    mutable DataHandle<RecHits>       m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+    mutable DataHandle<ProtoClusters> m_outputProtoClusters{"outputProtoCluster", Gaudi::DataHandle::Writer, this};
+    mutable DataHandle<Clusters>      m_outputClusters{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
 
     Gaudi::Property<std::string> m_mcHits{this, "mcHits", ""};
 
@@ -56,7 +54,7 @@ namespace Jug::Reco {
 
   public:
     SimpleClustering(const std::string& name, ISvcLocator* svcLoc) 
-      : GaudiAlgorithm(name, svcLoc) {
+      : Gaudi::Algorithm(name, svcLoc) {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputProtoClusterCollection", m_outputClusters, "Output proto clusters");
       declareProperty("outputClusterCollection", m_outputClusters, "Output clusters");
@@ -64,7 +62,7 @@ namespace Jug::Reco {
 
     StatusCode initialize() override
     {
-      if (GaudiAlgorithm::initialize().isFailure()) {
+      if (Gaudi::Algorithm::initialize().isFailure()) {
         return StatusCode::FAILURE;
       }
       // Initialize the MC input hit collection if requested
@@ -81,7 +79,7 @@ namespace Jug::Reco {
       return StatusCode::SUCCESS;
     }
 
-    StatusCode execute() override
+    StatusCode execute(const EventContext&) const override
     {
       // input collections
       const auto& hits = *m_inputHitCollection.get();

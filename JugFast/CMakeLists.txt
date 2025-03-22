@@ -10,7 +10,7 @@ gaudi_add_module(JugFastPlugins
   SOURCES
   ${JugFastPlugins_sources}
   LINK
-  Gaudi::GaudiAlgLib Gaudi::GaudiKernel
+  Gaudi::GaudiKernel
   JugBase
   JugAlgo
   algorithms::core algorithms::truth

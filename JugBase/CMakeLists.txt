@@ -7,7 +7,7 @@
 
 gaudi_add_header_only_library(JugBase
   LINK
-  Gaudi::GaudiKernel Gaudi::GaudiAlgLib
+  Gaudi::GaudiKernel
   podio::podioRootIO
   ROOT::Core ROOT::RIO ROOT::Tree
   DD4hep::DDRec
@@ -20,7 +20,7 @@ gaudi_add_module(JugBasePlugins
   SOURCES
   ${JugBasePlugins_sources}
   LINK
-  Gaudi::GaudiKernel Gaudi::GaudiAlgLib
+  Gaudi::GaudiKernel
   ROOT::Core ROOT::RIO ROOT::Tree
   JugBase
   EDM4HEP::edm4hep

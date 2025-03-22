@@ -13,9 +13,7 @@
 #include <algorithm>
 
 #include "Gaudi/Property.h"
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/PhysicalConstants.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/ToolHandle.h"
@@ -48,7 +46,7 @@ namespace Jug::Reco {
  *
  * \ingroup reco
  */
-class ImagingTopoCluster : public GaudiAlgorithm {
+class ImagingTopoCluster : public Gaudi::Algorithm {
 private:
   // maximum difference in layer numbers that can be considered as neighbours
   Gaudi::Property<int> m_neighbourLayersRange{this, "neighbourLayersRange", 1};
@@ -68,10 +66,10 @@ private:
   // minimum number of hits (to save this cluster)
   Gaudi::Property<int> m_minClusterNhits{this, "minClusterNhits", 10};
   // input hits collection
-  DataHandle<edm4eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+  mutable DataHandle<edm4eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                   this};
   // output clustered hits
-  DataHandle<edm4eic::ProtoClusterCollection> m_outputProtoClusterCollection{"outputProtoClusterCollection",
+  mutable DataHandle<edm4eic::ProtoClusterCollection> m_outputProtoClusterCollection{"outputProtoClusterCollection",
                                                                           Gaudi::DataHandle::Writer, this};
 
   // unitless counterparts of the input parameters
@@ -79,13 +77,13 @@ private:
   double minClusterHitEdep{0}, minClusterCenterEdep{0}, minClusterEdep{0};
 
 public:
-  ImagingTopoCluster(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+  ImagingTopoCluster(const std::string& name, ISvcLocator* svcLoc) : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("inputHitCollection", m_inputHitCollection, "");
     declareProperty("outputProtoClusterCollection", m_outputProtoClusterCollection, "");
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure()) {
+    if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
 
@@ -127,7 +125,7 @@ public:
     return StatusCode::SUCCESS;
   }
 
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     // input collections
     const auto& hits = *m_inputHitCollection.get();
     // Create output collections

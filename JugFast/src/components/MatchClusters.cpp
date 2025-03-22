@@ -10,10 +10,7 @@
 
 #include <fmt/format.h>
 
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Producer.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/RndmGenerators.h"
 
 #include <k4FWCore/DataHandle.h>
@@ -29,13 +26,13 @@
 
 namespace Jug::Fast {
 
-class MatchClusters : public GaudiAlgorithm {
+class MatchClusters : public Gaudi::Algorithm {
 private:
   // input data
-  DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
-  DataHandle<edm4eic::ReconstructedParticleCollection> m_inputParticles{"ReconstructedChargedParticles",
+  mutable DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::ReconstructedParticleCollection> m_inputParticles{"ReconstructedChargedParticles",
                                                                     Gaudi::DataHandle::Reader, this};
-  DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_inputParticlesAssoc{"ReconstructedChargedParticlesAssoc",
+  mutable DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_inputParticlesAssoc{"ReconstructedChargedParticlesAssoc",
                                                                     Gaudi::DataHandle::Reader, this};
   Gaudi::Property<std::vector<std::string>> m_inputClusters{this, "inputClusters", {}, "Clusters to be aggregated"};
   Gaudi::Property<std::vector<std::string>> m_inputClustersAssoc{this, "inputClustersAssoc", {}, "Cluster associations to be aggregated"};
@@ -43,14 +40,14 @@ private:
   std::vector<DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>*> m_inputClustersAssocCollections;
 
   // output data
-  DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"ReconstructedParticles",
+  mutable DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"ReconstructedParticles",
                                                                      Gaudi::DataHandle::Writer, this};
-  DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_outputParticlesAssoc{"ReconstructedParticlesAssoc",
+  mutable DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_outputParticlesAssoc{"ReconstructedParticlesAssoc",
                                                                      Gaudi::DataHandle::Writer, this};
 
 public:
   MatchClusters(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc) {
+      : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputMCParticles, "MCParticles");
     declareProperty("inputParticles", m_inputParticles, "ReconstructedChargedParticles");
     declareProperty("inputParticlesAssoc", m_inputParticlesAssoc, "ReconstructedChargedParticlesAssoc");
@@ -59,14 +56,14 @@ public:
   }
 
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure()) {
+    if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
     m_inputClustersCollections = getClusterCollections(m_inputClusters);
     m_inputClustersAssocCollections = getClusterAssociations(m_inputClustersAssoc);
     return StatusCode::SUCCESS;
   }
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     if (msgLevel(MSG::DEBUG)) {
       debug() << "Processing cluster info for new event" << endmsg;
     }

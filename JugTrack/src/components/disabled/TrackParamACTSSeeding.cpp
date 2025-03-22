@@ -17,10 +17,8 @@
 #include "Acts/Seeding/SeedFinder.hpp"
 
 // Gaudi
-#include "GaudiAlg/GaudiAlgorithm.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/ToolHandle.h"
-#include "GaudiAlg/Transformer.h"
-#include "GaudiAlg/GaudiTool.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "Gaudi/Property.h"
 
@@ -57,7 +55,7 @@ namespace Jug::Reco {
      *  TrackParmetersContainer
      *  \ingroup tracking
      */
-    class TrackParamACTSSeeding : public GaudiAlgorithm {
+    class TrackParamACTSSeeding : public Gaudi::Algorithm {
     public:
         DataHandle<edm4eic::TrackerHitCollection>
         m_inputHitCollection { "inputHitCollection",
@@ -238,7 +236,7 @@ namespace Jug::Reco {
     public:
         TrackParamACTSSeeding(const std::string &name,
                               ISvcLocator* svcLoc)
-            : GaudiAlgorithm(name, svcLoc)
+            : Gaudi::Algorithm(name, svcLoc)
         {
             declareProperty("inputHitCollection",
                             m_inputHitCollection, "");
@@ -248,13 +246,13 @@ namespace Jug::Reco {
 
         StatusCode initialize() override;
 
-        StatusCode execute() override;
+        StatusCode execute(const EventContext&) const override;
     };
 
 
     StatusCode TrackParamACTSSeeding::initialize()
     {
-        if (GaudiAlgorithm::initialize().isFailure()) {
+        if (Gaudi::Algorithm::initialize().isFailure()) {
             return StatusCode::FAILURE;
         }
 
@@ -332,7 +330,7 @@ namespace Jug::Reco {
         return StatusCode::SUCCESS;
     }
 
-    StatusCode TrackParamACTSSeeding::execute()
+    StatusCode TrackParamACTSSeeding::execute(const EventContext&) const
     {
         const edm4eic::TrackerHitCollection *hits =
             m_inputHitCollection.get();

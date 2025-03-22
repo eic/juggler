@@ -5,9 +5,7 @@
 #include <cmath>
 
 #include "Gaudi/Property.h"
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/PhysicalConstants.h"
 #include "GaudiKernel/RndmGenerators.h"
 
@@ -27,34 +25,34 @@ namespace Jug::Digi {
  *
  * \ingroup digi
  */
-class SiliconTrackerDigi : public GaudiAlgorithm {
+class SiliconTrackerDigi : public Gaudi::Algorithm {
 private:
   Gaudi::Property<double> m_timeResolution{this, "timeResolution", 10}; // todo : add units
   Gaudi::Property<double> m_threshold{this, "threshold", 0. * Gaudi::Units::keV};
   Rndm::Numbers m_gaussDist;
-  DataHandle<edm4hep::SimTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+  mutable DataHandle<edm4hep::SimTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                     this};
-  DataHandle<edm4eic::RawTrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+  mutable DataHandle<edm4eic::RawTrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                   this};
 
 public:
-  //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
-  SiliconTrackerDigi(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+  //  ill-formed: using Gaudi::Algorithm::GaudiAlgorithm;
+  SiliconTrackerDigi(const std::string& name, ISvcLocator* svcLoc) : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("inputHitCollection", m_inputHitCollection, "");
     declareProperty("outputHitCollection", m_outputHitCollection, "");
   }
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure()) {
+    if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
-    IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
+    IRndmGenSvc* randSvc = Gaudi::svcLocator()->service<IRndmGenSvc>("RndmGenSvc", true);
     StatusCode sc        = m_gaussDist.initialize(randSvc, Rndm::Gauss(0.0, m_timeResolution.value()));
     if (!sc.isSuccess()) {
       return StatusCode::FAILURE;
     }
     return StatusCode::SUCCESS;
   }
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     // input collection
     const auto* const simhits = m_inputHitCollection.get();
     // Create output collections

@@ -15,9 +15,7 @@
 #include <unordered_map>
 #include <cmath>
 
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/Transformer.h"
-#include "GaudiAlg/GaudiTool.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/PhysicalConstants.h"
 
@@ -38,12 +36,12 @@ namespace Jug::Digi {
  *
  * \ingroup digi
  */
-class PhotoMultiplierDigi : public GaudiAlgorithm
+class PhotoMultiplierDigi : public Gaudi::Algorithm
 {
 public:
-    DataHandle<edm4hep::SimTrackerHitCollection>
+    mutable DataHandle<edm4hep::SimTrackerHitCollection>
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-    DataHandle<edm4eic::RawTrackerHitCollection>
+    mutable DataHandle<edm4eic::RawTrackerHitCollection>
         m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
     Gaudi::Property<std::vector<std::pair<double, double>>>
         u_quantumEfficiency{this, "quantumEfficiency", {{2.6*eV, 0.3}, {7.0*eV, 0.3}}};
@@ -57,7 +55,7 @@ public:
 
     // constructor
     PhotoMultiplierDigi(const std::string& name, ISvcLocator* svcLoc)
-        : GaudiAlgorithm(name, svcLoc)
+        : Gaudi::Algorithm(name, svcLoc)
     {
         declareProperty("inputHitCollection", m_inputHitCollection,"");
         declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -65,11 +63,11 @@ public:
 
     StatusCode initialize() override
     {
-        if (GaudiAlgorithm::initialize().isFailure()) {
+        if (Gaudi::Algorithm::initialize().isFailure()) {
             return StatusCode::FAILURE;
         }
 
-        auto randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
+        auto randSvc = Gaudi::svcLocator()->service<IRndmGenSvc>("RndmGenSvc", true);
         auto sc1 = m_rngUni.initialize(randSvc, Rndm::Flat(0., 1.));
         auto sc2 = m_rngNorm.initialize(randSvc, Rndm::Gauss(0., 1.));
         if (!sc1.isSuccess() || !sc2.isSuccess()) {
@@ -82,7 +80,7 @@ public:
         return StatusCode::SUCCESS;
     }
 
-    StatusCode execute() override
+    StatusCode execute(const EventContext&) const override
     {
         // input collection
         const auto &sim = *m_inputHitCollection.get();

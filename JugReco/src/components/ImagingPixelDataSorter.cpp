@@ -11,9 +11,7 @@
 #include <unordered_map>
 
 #include "Gaudi/Property.h"
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/PhysicalConstants.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "GaudiKernel/ToolHandle.h"
@@ -43,18 +41,18 @@ namespace Jug::Reco {
    *
    * \ingroup reco
    */
-  class ImagingPixelDataSorter : public GaudiAlgorithm {
+  class ImagingPixelDataSorter : public Gaudi::Algorithm {
   private:
     Gaudi::Property<int>                        m_nLayers{this, "numberOfLayers", 9};
     Gaudi::Property<int>                        m_nHits{this, "numberOfHits", 50};
-    DataHandle<edm4eic::CalorimeterHitCollection>   m_inputHitCollection{"inputHitCollection",
+    mutable DataHandle<edm4eic::CalorimeterHitCollection>   m_inputHitCollection{"inputHitCollection",
                                                                      Gaudi::DataHandle::Reader, this};
-    DataHandle<edm4eic::CalorimeterHitCollection>   m_outputHitCollection{"outputHitCollection",
+    mutable DataHandle<edm4eic::CalorimeterHitCollection>   m_outputHitCollection{"outputHitCollection",
                                                                       Gaudi::DataHandle::Writer, this};
 
   public:
     ImagingPixelDataSorter(const std::string& name, ISvcLocator* svcLoc)
-      : GaudiAlgorithm(name, svcLoc)
+      : Gaudi::Algorithm(name, svcLoc)
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -62,14 +60,14 @@ namespace Jug::Reco {
 
     StatusCode initialize() override
     {
-      if (GaudiAlgorithm::initialize().isFailure()) {
+      if (Gaudi::Algorithm::initialize().isFailure()) {
         return StatusCode::FAILURE;
       }
 
       return StatusCode::SUCCESS;
     }
 
-    StatusCode execute() override
+    StatusCode execute(const EventContext&) const override
     {
       // input collections
       const auto& hits = *m_inputHitCollection.get();

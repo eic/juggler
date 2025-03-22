@@ -4,10 +4,8 @@
 #include <algorithm>
 
 // Gaudi
-#include "GaudiAlg/GaudiAlgorithm.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/ToolHandle.h"
-#include "GaudiAlg/Transformer.h"
-#include "GaudiAlg/GaudiTool.h"
 #include "GaudiKernel/RndmGenerators.h"
 #include "Gaudi/Property.h"
 
@@ -59,29 +57,29 @@ namespace Jug::Reco {
    *
    * \ingroup tracking
    */
-   class ParticlesFromTrackFit : public GaudiAlgorithm {
+   class ParticlesFromTrackFit : public Gaudi::Algorithm {
    private:
-    DataHandle<ActsExamples::TrajectoriesContainer>     m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
-    DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer, this};
-    DataHandle<edm4eic::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters", Gaudi::DataHandle::Writer, this};
+    mutable DataHandle<ActsExamples::TrajectoriesContainer>     m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
+    mutable DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"outputParticles", Gaudi::DataHandle::Writer, this};
+    mutable DataHandle<edm4eic::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters", Gaudi::DataHandle::Writer, this};
 
    public:
-    //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
+    //  ill-formed: using Gaudi::Algorithm::GaudiAlgorithm;
     ParticlesFromTrackFit(const std::string& name, ISvcLocator* svcLoc)
-        : GaudiAlgorithm(name, svcLoc) {
+        : Gaudi::Algorithm(name, svcLoc) {
           declareProperty("inputTrajectories", m_inputTrajectories,"");
           declareProperty("outputParticles", m_outputParticles, "");
           declareProperty("outputTrackParameters", m_outputTrackParameters, "Acts Track Parameters");
         }
 
     StatusCode initialize() override {
-      if (GaudiAlgorithm::initialize().isFailure()) {
+      if (Gaudi::Algorithm::initialize().isFailure()) {
         return StatusCode::FAILURE;
       }
       return StatusCode::SUCCESS;
     }
 
-    StatusCode execute() override {
+    StatusCode execute(const EventContext&) const override {
       // input collection
       const auto* const trajectories = m_inputTrajectories.get();
       // create output collections

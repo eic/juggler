@@ -5,10 +5,7 @@
 #include <cmath>
 #include <fmt/format.h>
 
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Producer.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/RndmGenerators.h"
 
 #include <k4FWCore/DataHandle.h>
@@ -25,12 +22,12 @@ enum DetectorTags { kTagB0 = 1, kTagRP = 2, kTagOMD = 3, kTagZDC = 4 };
 
 namespace Jug::Fast {
 
-class SmearedFarForwardParticles : public GaudiAlgorithm {
+class SmearedFarForwardParticles : public Gaudi::Algorithm {
 private:
-  DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader, this};
-  DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"SmearedFarForwardParticles",
+  mutable DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader, this};
+  mutable DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"SmearedFarForwardParticles",
                                                                       Gaudi::DataHandle::Writer, this};
-  DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_outputAssocCollection{"MCRecoParticleAssociation",
+  mutable DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_outputAssocCollection{"MCRecoParticleAssociation",
                                                                                 Gaudi::DataHandle::Writer, this};
 
   Gaudi::Property<bool> m_enableZDC{this, "enableZDC", true};
@@ -71,16 +68,16 @@ private:
   using RecData = std::pair<RecPart, Assoc>;
 
 public:
-  SmearedFarForwardParticles(const std::string& name, ISvcLocator* svcLoc) : GaudiAlgorithm(name, svcLoc) {
+  SmearedFarForwardParticles(const std::string& name, ISvcLocator* svcLoc) : Gaudi::Algorithm(name, svcLoc) {
     declareProperty("inputMCParticles", m_inputMCParticles, "MCParticles");
     declareProperty("outputParticles", m_outputParticles, "ReconstructedParticles");
     declareProperty("outputAssociations", m_outputAssocCollection, "MCRecoParticleAssociation");
   }
   StatusCode initialize() override {
-    if (GaudiAlgorithm::initialize().isFailure()) {
+    if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
-    IRndmGenSvc* randSvc = svc<IRndmGenSvc>("RndmGenSvc", true);
+    IRndmGenSvc* randSvc = Gaudi::svcLocator()->service<IRndmGenSvc>("RndmGenSvc", true);
     // use 0 for mean and 1 for standard deviation. Can rescale appropriately for the
     // different subsystems
     StatusCode sc = m_gaussDist.initialize(randSvc, Rndm::Gauss(0.0, 1.0));
@@ -89,7 +86,7 @@ public:
     }
     return StatusCode::SUCCESS;
   }
-  StatusCode execute() override {
+  StatusCode execute(const EventContext&) const override {
     const auto& mc = *(m_inputMCParticles.get());
     auto& rc       = *(m_outputParticles.createAndPut());
     auto& assoc    = *(m_outputAssocCollection.createAndPut());
@@ -145,7 +142,7 @@ public:
 private:
   // ZDC smearing as in eic_smear
   // https://github.com/eic/eicsmeardetectors/blob/9a1831dd97bf517b80a06043b9ee4bfb96b483d8/SmearMatrixDetector_0_1_FF.cxx#L224
-  std::vector<RecData> zdc(const edm4hep::MCParticleCollection& mc, const double /* ionBeamEnergy */) {
+  std::vector<RecData> zdc(const edm4hep::MCParticleCollection& mc, const double /* ionBeamEnergy */) const {
     std::vector<RecData> rc;
     for (const auto& part : mc) {
       if (part.getGeneratorStatus() > 1) {
@@ -229,7 +226,7 @@ private:
   }
   // Fast B0 as in
   // https://github.com/eic/eicsmeardetectors/blob/9a1831dd97bf517b80a06043b9ee4bfb96b483d8/SmearMatrixDetector_0_1_FF.cxx#L254
-  std::vector<RecData> b0(const edm4hep::MCParticleCollection& mc, const double /* ionBeamEnergy */) {
+  std::vector<RecData> b0(const edm4hep::MCParticleCollection& mc, const double /* ionBeamEnergy */) const {
     std::vector<RecData> rc;
     for (const auto& part : mc) {
       if (part.getGeneratorStatus() > 1) {
@@ -274,7 +271,7 @@ private:
     return rc;
   }
 
-  std::vector<RecData> rp(const edm4hep::MCParticleCollection& mc, const double ionBeamEnergy) {
+  std::vector<RecData> rp(const edm4hep::MCParticleCollection& mc, const double ionBeamEnergy) const {
     std::vector<RecData> rc;
     for (const auto& part : mc) {
       if (part.getGeneratorStatus() > 1) {
@@ -312,7 +309,7 @@ private:
     return rc;
   }
 
-  std::vector<RecData> omd(const edm4hep::MCParticleCollection& mc, const double ionBeamEnergy) {
+  std::vector<RecData> omd(const edm4hep::MCParticleCollection& mc, const double ionBeamEnergy) const {
     std::vector<RecData> rc;
     for (const auto& part : mc) {
       if (part.getGeneratorStatus() > 1) {
@@ -350,7 +347,7 @@ private:
 
   // all momentum smearing in EIC-smear for the far-forward region uses
   // the same 2 relations for P and Pt smearing (B0, RP, OMD)
-  RecData smearMomentum(const edm4hep::MCParticle& part) {
+  RecData smearMomentum(const edm4hep::MCParticle& part) const {
     const auto mom_ion = rotateLabToIonDirection(part.getMomentum());
     const double p     = std::hypot(mom_ion.x, mom_ion.y, mom_ion.z);
     const double dp    = (0.025 * p) * m_gaussDist();
@@ -392,21 +389,24 @@ private:
   }
 
   // Rotate 25mrad about the y-axis
-  edm4hep::Vector3f rotateLabToIonDirection(const edm4hep::Vector3f& vec) const {
+  template<typename Vector3>
+  Vector3 rotateLabToIonDirection(const Vector3& vec) const {
     const auto sth = sin(-m_crossingAngle);
     const auto cth = cos(-m_crossingAngle);
     return {static_cast<float>(cth * vec.x + sth * vec.z), static_cast<float>(vec.y),
             static_cast<float>(-sth * vec.x + cth * vec.z)};
   }
 
-  edm4hep::Vector3f rotateIonToLabDirection(const edm4hep::Vector3f& vec) const {
+  template<typename Vector3>
+  Vector3 rotateIonToLabDirection(const Vector3& vec) const {
     const auto sth = sin(m_crossingAngle);
     const auto cth = cos(m_crossingAngle);
     return {static_cast<float>(cth * vec.x + sth * vec.z), static_cast<float>(vec.y),
             static_cast<float>(-sth * vec.x + cth * vec.z)};
   }
 
-  edm4hep::Vector3f removeCrossingAngle(const edm4hep::Vector3f& vec) const {
+  template<typename Vector3>
+  Vector3 removeCrossingAngle(const Vector3& vec) const {
     const auto sth = std::sin(-m_crossingAngle);
     const auto cth = std::cos(-m_crossingAngle);
     return {static_cast<float>(cth * vec.x + sth * vec.z), static_cast<float>(vec.y),

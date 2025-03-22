@@ -2,10 +2,8 @@
 // Copyright (C) 2022 Whitney Armstrong, Sylvester Joosten, Wouter Deconinck
 
 // Gaudi
-#include "GaudiAlg/GaudiAlgorithm.h"
+#include "Gaudi/Algorithm.h"
 #include "Gaudi/Property.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
 
 #include <k4FWCore/DataHandle.h>
 
@@ -21,16 +19,16 @@ namespace Jug::Reco {
      *
      * \ingroup reco
      */
-    class TrackingHitsCollector2 : public GaudiAlgorithm {
+    class TrackingHitsCollector2 : public Gaudi::Algorithm {
     private:
       Gaudi::Property<std::vector<std::string>> m_inputTrackingHits{this, "inputTrackingHits", {},"Tracker hits to be aggregated"};
-      DataHandle<edm4eic::TrackerHitCollection> m_trackingHits{"trackingHits", Gaudi::DataHandle::Writer, this};
+      mutable DataHandle<edm4eic::TrackerHitCollection> m_trackingHits{"trackingHits", Gaudi::DataHandle::Writer, this};
 
-      std::vector<DataHandle<edm4eic::TrackerHitCollection>*> m_hitCollections;
+      mutable std::vector<DataHandle<edm4eic::TrackerHitCollection>*> m_hitCollections;
 
     public:
       TrackingHitsCollector2(const std::string& name, ISvcLocator* svcLoc)
-          : GaudiAlgorithm(name, svcLoc)
+          : Gaudi::Algorithm(name, svcLoc)
       {
         declareProperty("trackingHits", m_trackingHits, "output hits combined into single collection");
       }
@@ -41,7 +39,7 @@ namespace Jug::Reco {
       }
 
       StatusCode initialize() override {
-        if (GaudiAlgorithm::initialize().isFailure()) {
+        if (Gaudi::Algorithm::initialize().isFailure()) {
           return StatusCode::FAILURE;
         }
         for (auto colname : m_inputTrackingHits) {
@@ -51,7 +49,7 @@ namespace Jug::Reco {
         return StatusCode::SUCCESS;
       }
 
-      StatusCode execute() override
+      StatusCode execute(const EventContext&) const override
       {
         auto* outputHits = m_trackingHits.createAndPut();
         if (msgLevel(MSG::DEBUG)) {

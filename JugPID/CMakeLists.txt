@@ -10,7 +10,7 @@ gaudi_add_module(JugPIDPlugins
   SOURCES
   ${JugPIDPlugins_sources}
   LINK
-  Gaudi::GaudiAlgLib Gaudi::GaudiKernel
+  Gaudi::GaudiKernel
   ROOT::Core ROOT::RIO ROOT::Tree
   EDM4HEP::edm4hep
   EDM4EIC::edm4eic

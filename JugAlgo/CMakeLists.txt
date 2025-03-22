@@ -7,7 +7,7 @@
 
 gaudi_add_header_only_library(JugAlgo
   LINK
-  Gaudi::GaudiKernel Gaudi::GaudiAlgLib
+  Gaudi::GaudiKernel
   algorithms::core
   JugBase
 )
@@ -17,7 +17,7 @@ gaudi_add_module(JugAlgoPlugins
   SOURCES
   ${JugAlgoPlugins_sources}
   LINK
-  Gaudi::GaudiKernel Gaudi::GaudiAlgLib
+  Gaudi::GaudiKernel
   JugBase
   JugAlgo
   algorithms::core

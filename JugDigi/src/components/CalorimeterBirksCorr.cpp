@@ -10,9 +10,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include "GaudiAlg/GaudiAlgorithm.h"
-#include "GaudiAlg/GaudiTool.h"
-#include "GaudiAlg/Transformer.h"
+#include "Gaudi/Algorithm.h"
 #include "GaudiKernel/PhysicalConstants.h"
 #include "Gaudi/Property.h"
 #include "GaudiKernel/RndmGenerators.h"
@@ -33,24 +31,24 @@ namespace Jug::Digi {
    * \ingroup digi
    * \ingroup calorimetry
    */
-  class CalorimeterBirksCorr : public GaudiAlgorithm {
+  class CalorimeterBirksCorr : public Gaudi::Algorithm {
   public:
 
     // digitization settings
     Gaudi::Property<double> m_birksConstant{this, "birksConstant", 0.126*mm/MeV};
 
-    DataHandle<edm4hep::SimCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+    mutable DataHandle<edm4hep::SimCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                       this};
-    DataHandle<edm4hep::SimCalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+    mutable DataHandle<edm4hep::SimCalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                        this};
 
     SmartIF<IParticleSvc> m_pidSvc;
     // unitless conterpart of arguments
     double birksConstant{0};
 
-    //  ill-formed: using GaudiAlgorithm::GaudiAlgorithm;
+    //  ill-formed: using Gaudi::Algorithm::GaudiAlgorithm;
     CalorimeterBirksCorr(const std::string& name, ISvcLocator* svcLoc) 
-      : GaudiAlgorithm(name, svcLoc)
+      : Gaudi::Algorithm(name, svcLoc)
     {
       declareProperty("inputHitCollection", m_inputHitCollection, "");
       declareProperty("outputHitCollection", m_outputHitCollection, "");
@@ -58,7 +56,7 @@ namespace Jug::Digi {
 
     StatusCode initialize() override
     {
-      if (GaudiAlgorithm::initialize().isFailure()) {
+      if (Gaudi::Algorithm::initialize().isFailure()) {
         return StatusCode::FAILURE;
       }
 
@@ -76,7 +74,7 @@ namespace Jug::Digi {
       return StatusCode::SUCCESS;
     }
 
-    StatusCode execute() override
+    StatusCode execute(const EventContext&) const override
     {
       auto& ohits = *m_outputHitCollection.createAndPut();
       for (const auto& hit : *m_inputHitCollection.get()) {
