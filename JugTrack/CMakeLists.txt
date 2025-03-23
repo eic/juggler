@@ -12,6 +12,7 @@ gaudi_add_module(JugTrackPlugins
   LINK
   Gaudi::GaudiKernel
   JugBase
+  EICrecon::algorithms_tracking_library
   ROOT::Core ROOT::RIO ROOT::Tree
   EDM4HEP::edm4hep
   EDM4EIC::edm4eic
@@ -19,6 +20,7 @@ gaudi_add_module(JugTrackPlugins
   k4FWCore::k4FWCore
   ActsCore ActsPluginDD4hep ActsPluginJson
   ${ActsCore_PATH}/${CMAKE_SHARED_LIBRARY_PREFIX}ActsExamplesFramework${CMAKE_SHARED_LIBRARY_SUFFIX}
+  GENCONF_OPTIONS --load-library=JugAlgoPreload.so
 )
 
 target_include_directories(JugTrackPlugins PUBLIC
