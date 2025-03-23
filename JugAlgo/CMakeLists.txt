@@ -39,6 +39,7 @@ gaudi_add_module(JugAlgoPreload
   JugBase
   JugAlgo
   algorithms::core
+  EICrecon::algorithms_interfaces_library
 )
 
 target_include_directories(JugAlgoPreload PUBLIC
