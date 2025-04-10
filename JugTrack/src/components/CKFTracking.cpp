@@ -289,6 +289,7 @@ namespace Jug::Reco {
 #else
     Acts::TrackAccessor<unsigned int> seedNumber("seed");
 #endif
+    std::set<Acts::TrackIndexType> passed_tracks;
 
     // Loop over seeds
     for (std::size_t iseed = 0; iseed < init_trk_params->size(); ++iseed) {
@@ -324,7 +325,23 @@ namespace Jug::Reco {
             }
 #endif
 
+            passed_tracks.insert(track.index());
             seedNumber(track) = iseed;
+        }
+    }
+
+    for (ssize_t track_index = static_cast<ssize_t>(tracks.size()) - 1; track_index >= 0; track_index--) {
+        if (not passed_tracks.count(track_index)) {
+            // NOTE This does not remove track states corresponding to the
+            // removed tracks. Doing so would require implementing some garbage
+            // collection. We'll just assume no algorithm will access them
+            // directly.
+            tracks.removeTrack(track_index);
+#if Acts_VERSION_MAJOR < 36 || (Acts_VERSION_MAJOR == 36 && Acts_VERSION_MINOR < 1)
+            // Workaround an upstream bug in Acts::VectorTrackContainer::removeTrack_impl()
+            // https://github.com/acts-project/acts/commit/94cf81f3f1109210b963977e0904516b949b1154
+            trackContainer->m_particleHypothesis.erase(trackContainer->m_particleHypothesis.begin() + track_index);
+#endif
         }
     }
 
