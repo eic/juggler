@@ -12,7 +12,7 @@ stages:
 
 workflow:
   ## Only rebuild on MRs and on commits to the main, as in other cases
-  ## we should use the tagged jug_xl releases from eic_container.
+  ## we should use the tagged eic_ci releases from eic_container.
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -31,7 +31,7 @@ default:
 ##  - MR          --> unstable-mr-XXX (on eicweb only, untag at end of pipeline)
 
 juggler:local:
-  image: eicweb.phy.anl.gov:4567/containers/eic_container/jug_xl:nightly
+  image: eicweb.phy.anl.gov:4567/containers/eic_container/eic_ci:nightly
   stage: build
   parallel:
     matrix:
@@ -47,7 +47,7 @@ juggler:local:
       - build/
 
 analysis:clang-tidy:
-  image: eicweb.phy.anl.gov:4567/containers/eic_container/jug_xl:nightly
+  image: eicweb.phy.anl.gov:4567/containers/eic_container/eic_ci:nightly
   stage: analysis
   needs: 
     - juggler:local
