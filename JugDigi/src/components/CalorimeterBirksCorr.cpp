@@ -78,7 +78,7 @@ namespace Jug::Digi {
     {
       auto& ohits = *m_outputHitCollection.createAndPut();
       for (const auto& hit : *m_inputHitCollection.get()) {
-        auto ohit = ohits->create(hit.getCellID(), hit.getEnergy(), hit.getPosition());
+        auto ohit = ohits.create(hit.getCellID(), hit.getEnergy(), hit.getPosition());
         double energy = 0.;
         for (const auto &c: hit.getContributions()) {
           ohit.addToContributions(c);
