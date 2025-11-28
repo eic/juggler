@@ -171,7 +171,7 @@ public:
       rpTrack.setGoodnessOfPID(1.);
       rpTrack.setPDG(2122);
       //rpTrack.covMatrix(); // @TODO: Errors
-      rc->push_back(rpTrack);
+      rc.push_back(rpTrack);
 
     } // end enough hits for matrix reco
 
