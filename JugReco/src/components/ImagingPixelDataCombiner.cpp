@@ -8,8 +8,10 @@
  */
 #include <algorithm>
 #include <bitset>
-#include <fmt/format.h>
 #include <unordered_map>
+
+#include <fmt/format.h>
+#include <fmt/ranges.h>
 
 #include "Gaudi/Property.h"
 #include "Gaudi/Algorithm.h"

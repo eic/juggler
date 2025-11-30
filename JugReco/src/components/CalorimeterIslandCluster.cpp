@@ -16,7 +16,8 @@
 #include <sstream>
 #include <tuple>
 
-#include "fmt/format.h"
+#include <fmt/format.h>
+#include <fmt/ranges.h>
 
 #include "Gaudi/Property.h"
 #include "Gaudi/Algorithm.h"
