@@ -78,8 +78,14 @@ if(JUGGLER_BUILD_TRACKING)
   add_definitions("-DActs_VERSION_MAJOR=${Acts_VERSION_MAJOR}")
   add_definitions("-DActs_VERSION_MINOR=${Acts_VERSION_MINOR}")
   add_definitions("-DActs_VERSION_PATCH=${Acts_VERSION_PATCH}")
+  # Get Acts namespace prefix
+  if(${Acts_VERSION} VERSION_GREATER_EQUAL "43.0.0")
+    set(Acts_NAMESPACE_PREFIX Acts::)
+  else()
+    set(Acts_NAMESPACE_PREFIX Acts)
+  endif()
   # Get ActsCore path for ActsExamples include
-  get_target_property(ActsCore_LOCATION ActsCore LOCATION)
+  get_target_property(ActsCore_LOCATION ${Acts_NAMESPACE_PREFIX}Core LOCATION)
   get_filename_component(ActsCore_PATH ${ActsCore_LOCATION} DIRECTORY)
 endif()
 

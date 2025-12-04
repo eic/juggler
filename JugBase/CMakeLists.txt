@@ -11,7 +11,7 @@ gaudi_add_header_only_library(JugBase
   podio::podioRootIO
   ROOT::Core ROOT::RIO ROOT::Tree
   DD4hep::DDRec
-  ActsCore ActsPluginDD4hep
+  ${Acts_NAMESPACE_PREFIX}Core ${Acts_NAMESPACE_PREFIX}PluginDD4hep
   k4FWCore::k4FWCore
 )
 
@@ -25,7 +25,7 @@ gaudi_add_module(JugBasePlugins
   JugBase
   EDM4HEP::edm4hep
   DD4hep::DDRec
-  ActsCore ActsPluginDD4hep ActsPluginJson
+  ${Acts_NAMESPACE_PREFIX}Core ${Acts_NAMESPACE_PREFIX}PluginDD4hep ${Acts_NAMESPACE_PREFIX}PluginJson
   EDM4EIC::edm4eic
 )
 
