@@ -26,12 +26,17 @@
 #endif
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+
+#if Acts_VERSION_MAJOR >= 44
+#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
+#else
+#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#endif
 
 #include "edm4eic/TrackerHitCollection.h"
 

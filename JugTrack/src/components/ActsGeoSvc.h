@@ -21,8 +21,13 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include <Acts/Material/IMaterialDecorator.hpp>
+
+#if Acts_VERSION_MAJOR >= 44
+#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
+#else
+#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#endif
 
 // Gaudi
 #include "GaudiKernel/MsgStream.h"

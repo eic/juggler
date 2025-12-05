@@ -20,7 +20,6 @@
 #include "Acts/EventData/ProxyAccessor.hpp"
 #endif  
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
 #if Acts_VERSION_MAJOR >= 39
@@ -50,6 +49,12 @@
 #include "Acts/Utilities/TrackHelpers.hpp"
 #endif
 #include "Acts/Definitions/Units.hpp"
+
+#if Acts_VERSION_MAJOR >= 44
+#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
+#else
+#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#endif
 
 #include <k4FWCore/DataHandle.h>
 #include <k4Interface/IGeoSvc.h>

@@ -10,11 +10,24 @@
 #include "JugTrack/ACTSLogger.h"
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+
+#if Acts_VERSION_MAJOR >= 44
+#include "ActsPlugins/DD4hep/ConvertDD4hepDetector.hpp"
+#include "ActsPlugins/Json/JsonMaterialDecorator.hpp"
+#include "ActsPlugins/Json/MaterialMapJsonConverter.hpp"
+using ActsPlugins::sortDetElementsByID;
+using ActsPlugins::convertDD4hepDetector;
+using ActsPlugins::DD4hepDetectorElement;
+#else
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
 #include "Acts/Plugins/Json/JsonMaterialDecorator.hpp"
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
+using Acts::sortDetElementsByID;
+using Acts::convertDD4hepDetector;
+using Acts::DD4hepDetectorElement;
+#endif
 
 static const std::map<int, Acts::Logging::Level> s_msgMap = {
     {MSG::DEBUG, Acts::Logging::DEBUG},
@@ -89,8 +102,7 @@ StatusCode ActsGeoSvc::initialize() {
   double layerEnvelopeR = Acts::UnitConstants::mm;
   double layerEnvelopeZ = Acts::UnitConstants::mm;
   double defaultLayerThickness = Acts::UnitConstants::fm;
-  using Acts::sortDetElementsByID;
-  m_trackingGeo = Acts::convertDD4hepDetector(
+  m_trackingGeo = convertDD4hepDetector(
       m_dd4hepGeo->world(),
       *logger,
       bTypePhi,
@@ -112,7 +124,7 @@ StatusCode ActsGeoSvc::initialize() {
         return;
       }
       const auto* det_element =
-        dynamic_cast<const Acts::DD4hepDetectorElement*>(surface->associatedDetectorElement());
+        dynamic_cast<const DD4hepDetectorElement*>(surface->associatedDetectorElement());
 
       if (det_element == nullptr) {
         error() << "invalid det_element!!! " << endmsg;
