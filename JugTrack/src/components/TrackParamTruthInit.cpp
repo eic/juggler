@@ -43,9 +43,9 @@ namespace Jug::Reco {
    */
   class TrackParamTruthInit : public Gaudi::Algorithm {
   private:
-    mutable DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader,
+    mutable k4FWCore::DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader,
                                                                     this};
-    mutable DataHandle<ActsExamples::TrackParametersContainer>         m_outputInitialTrackParameters{"outputInitialTrackParameters",
+    mutable k4FWCore::DataHandle<ActsExamples::TrackParametersContainer>         m_outputInitialTrackParameters{"outputInitialTrackParameters",
                                                                         Gaudi::DataHandle::Writer, this};
     
     // selection settings

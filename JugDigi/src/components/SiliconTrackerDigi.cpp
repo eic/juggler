@@ -30,9 +30,9 @@ private:
   Gaudi::Property<double> m_timeResolution{this, "timeResolution", 10}; // todo : add units
   Gaudi::Property<double> m_threshold{this, "threshold", 0. * Gaudi::Units::keV};
   Rndm::Numbers m_gaussDist;
-  mutable DataHandle<edm4hep::SimTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+  mutable k4FWCore::DataHandle<edm4hep::SimTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                     this};
-  mutable DataHandle<edm4eic::RawTrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+  mutable k4FWCore::DataHandle<edm4eic::RawTrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                   this};
 
 public:
@@ -45,7 +45,7 @@ public:
     if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
-    IRndmGenSvc* randSvc = Gaudi::svcLocator()->service<IRndmGenSvc>("RndmGenSvc", true);
+    auto randSvc = Gaudi::svcLocator()->service<IRndmGenSvc>("RndmGenSvc", true);
     StatusCode sc        = m_gaussDist.initialize(randSvc, Rndm::Gauss(0.0, m_timeResolution.value()));
     if (!sc.isSuccess()) {
       return StatusCode::FAILURE;

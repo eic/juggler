@@ -28,9 +28,9 @@ namespace Jug::Reco {
  */
 class ConformalXYPeakProtoTracks : public Gaudi::Algorithm {
 private:
-  mutable DataHandle<edm4eic::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<ActsExamples::ProtoTrackContainer> m_outputProtoTracks{"outputProtoTracks", Gaudi::DataHandle::Writer, this};
-  mutable DataHandle<int> m_nProtoTracks{"nProtoTracks", Gaudi::DataHandle::Writer, this};
+  mutable k4FWCore::DataHandle<edm4eic::TrackerHitCollection> m_inputTrackerHits{"inputTrackerHits", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<ActsExamples::ProtoTrackContainer> m_outputProtoTracks{"outputProtoTracks", Gaudi::DataHandle::Writer, this};
+  mutable k4FWCore::DataHandle<int> m_nProtoTracks{"nProtoTracks", Gaudi::DataHandle::Writer, this};
 
   Gaudi::Property<int> m_nPhiBins{this, "nPhiBins", 100};
 

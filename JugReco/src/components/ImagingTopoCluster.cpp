@@ -66,10 +66,10 @@ private:
   // minimum number of hits (to save this cluster)
   Gaudi::Property<int> m_minClusterNhits{this, "minClusterNhits", 10};
   // input hits collection
-  mutable DataHandle<edm4eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+  mutable k4FWCore::DataHandle<edm4eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                   this};
   // output clustered hits
-  mutable DataHandle<edm4eic::ProtoClusterCollection> m_outputProtoClusterCollection{"outputProtoClusterCollection",
+  mutable k4FWCore::DataHandle<edm4eic::ProtoClusterCollection> m_outputProtoClusterCollection{"outputProtoClusterCollection",
                                                                           Gaudi::DataHandle::Writer, this};
 
   // unitless counterparts of the input parameters

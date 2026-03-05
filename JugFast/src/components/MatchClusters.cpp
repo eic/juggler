@@ -29,20 +29,20 @@ namespace Jug::Fast {
 class MatchClusters : public Gaudi::Algorithm {
 private:
   // input data
-  mutable DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<edm4eic::ReconstructedParticleCollection> m_inputParticles{"ReconstructedChargedParticles",
+  mutable k4FWCore::DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<edm4eic::ReconstructedParticleCollection> m_inputParticles{"ReconstructedChargedParticles",
                                                                     Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_inputParticlesAssoc{"ReconstructedChargedParticlesAssoc",
+  mutable k4FWCore::DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_inputParticlesAssoc{"ReconstructedChargedParticlesAssoc",
                                                                     Gaudi::DataHandle::Reader, this};
   Gaudi::Property<std::vector<std::string>> m_inputClusters{this, "inputClusters", {}, "Clusters to be aggregated"};
   Gaudi::Property<std::vector<std::string>> m_inputClustersAssoc{this, "inputClustersAssoc", {}, "Cluster associations to be aggregated"};
-  std::vector<DataHandle<edm4eic::ClusterCollection>*> m_inputClustersCollections;
-  std::vector<DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>*> m_inputClustersAssocCollections;
+  std::vector<k4FWCore::DataHandle<edm4eic::ClusterCollection>*> m_inputClustersCollections;
+  std::vector<k4FWCore::DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>*> m_inputClustersAssocCollections;
 
   // output data
-  mutable DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"ReconstructedParticles",
+  mutable k4FWCore::DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"ReconstructedParticles",
                                                                      Gaudi::DataHandle::Writer, this};
-  mutable DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_outputParticlesAssoc{"ReconstructedParticlesAssoc",
+  mutable k4FWCore::DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_outputParticlesAssoc{"ReconstructedParticlesAssoc",
                                                                      Gaudi::DataHandle::Writer, this};
 
 public:
@@ -102,7 +102,7 @@ public:
       // find associated particle
       for (const auto& assoc: inpartsassoc) {
         if (assoc.getRec() == inpart) {
-          mcID = assoc.getSimID();
+          mcID = assoc.getSim().getObjectID().index;
           break;
         }
       }
@@ -128,8 +128,6 @@ public:
 
       // create truth associations
       auto assoc = outpartsassoc.create();
-      assoc.setRecID(outpart.getObjectID().index);
-      assoc.setSimID(mcID);
       assoc.setWeight(1.0);
       assoc.setRec(outpart);
       //assoc.setSim(mcparticles[mcID]);
@@ -170,8 +168,6 @@ public:
 
       // Create truth associations
       auto assoc = outpartsassoc.create();
-      assoc.setRecID(outpart.getObjectID().index);
-      assoc.setSimID(mcID);
       assoc.setWeight(1.0);
       assoc.setRec(outpart);
       //assoc.setSim(mcparticles[mcID]);
@@ -180,20 +176,20 @@ public:
   }
 
 private:
-  std::vector<DataHandle<edm4eic::ClusterCollection>*> getClusterCollections(const std::vector<std::string>& cols) {
-    std::vector<DataHandle<edm4eic::ClusterCollection>*> ret;
+  std::vector<k4FWCore::DataHandle<edm4eic::ClusterCollection>*> getClusterCollections(const std::vector<std::string>& cols) {
+    std::vector<k4FWCore::DataHandle<edm4eic::ClusterCollection>*> ret;
     for (const auto& colname : cols) {
       debug() << "initializing cluster collection: " << colname << endmsg;
-      ret.push_back(new DataHandle<edm4eic::ClusterCollection>{colname, Gaudi::DataHandle::Reader, this});
+      ret.push_back(new k4FWCore::DataHandle<edm4eic::ClusterCollection>{colname, Gaudi::DataHandle::Reader, this});
     }
     return ret;
   }
 
-  std::vector<DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>*> getClusterAssociations(const std::vector<std::string>& cols) {
-    std::vector<DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>*> ret;
+  std::vector<k4FWCore::DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>*> getClusterAssociations(const std::vector<std::string>& cols) {
+    std::vector<k4FWCore::DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>*> ret;
     for (const auto& colname : cols) {
       debug() << "initializing cluster association collection: " << colname << endmsg;
-      ret.push_back(new DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>{colname, Gaudi::DataHandle::Reader, this});
+      ret.push_back(new k4FWCore::DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>{colname, Gaudi::DataHandle::Reader, this});
     }
     return ret;
   }
@@ -202,8 +198,8 @@ private:
   // input: cluster_collections --> list of handles to all cluster collections
   std::map<int, edm4eic::Cluster>
   indexedClusters(
-      const std::vector<DataHandle<edm4eic::ClusterCollection>*>& cluster_collections,
-      const std::vector<DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>*>& associations_collections
+      const std::vector<k4FWCore::DataHandle<edm4eic::ClusterCollection>*>& cluster_collections,
+      const std::vector<k4FWCore::DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>*>& associations_collections
   ) const {
     std::map<int, edm4eic::Cluster> matched = {};
 
@@ -223,7 +219,7 @@ private:
           // find associated particle
           for (const auto& assoc : associations) {
             if (assoc.getRec() == cluster) {
-              mcID = assoc.getSimID();
+              mcID = assoc.getSim().getObjectID().index;
               break;
             }
           }

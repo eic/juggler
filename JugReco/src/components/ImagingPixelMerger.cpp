@@ -54,8 +54,8 @@ class ImagingPixelMerger : public Gaudi::Algorithm {
 private:
   Gaudi::Property<float> m_etaSize{this, "etaSize", 0.001};
   Gaudi::Property<float> m_phiSize{this, "phiSize", 0.001};
-  mutable DataHandle<edm4eic::CalorimeterHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<edm4eic::CalorimeterHitCollection> m_outputHits{"outputHits", Gaudi::DataHandle::Writer, this};
+  mutable k4FWCore::DataHandle<edm4eic::CalorimeterHitCollection> m_inputHits{"inputHits", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<edm4eic::CalorimeterHitCollection> m_outputHits{"outputHits", Gaudi::DataHandle::Writer, this};
 
 public:
   ImagingPixelMerger(const std::string& name, ISvcLocator* svcLoc) : Gaudi::Algorithm(name, svcLoc) {

@@ -60,9 +60,9 @@ private:
   double thresholdADC{0};
   double stepTDC{0};
 
-  mutable DataHandle<edm4hep::RawCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+  mutable k4FWCore::DataHandle<edm4hep::RawCalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                     this};
-  mutable DataHandle<edm4eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+  mutable k4FWCore::DataHandle<edm4eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                   this};
 
   // geometry service to get ids, ignored if no names provided

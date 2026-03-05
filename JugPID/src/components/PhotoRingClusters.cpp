@@ -39,8 +39,8 @@ namespace Jug::Reco {
  */
 class PhotoRingClusters : public Gaudi::Algorithm {
 private:
-  mutable DataHandle<edm4eic::PMTHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<edm4eic::RingImageCollection> m_outputClusterCollection{"outputClusterCollection", Gaudi::DataHandle::Writer,
+  mutable k4FWCore::DataHandle<edm4eic::PMTHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<edm4eic::RingImageCollection> m_outputClusterCollection{"outputClusterCollection", Gaudi::DataHandle::Writer,
                                                                   this};
   // @TODO
   // A more realistic way is to have tracker info as the input to determine how much clusters should be found

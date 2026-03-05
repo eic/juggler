@@ -39,9 +39,9 @@ namespace Jug::Digi {
 class PhotoMultiplierDigi : public Gaudi::Algorithm
 {
 public:
-    mutable DataHandle<edm4hep::SimTrackerHitCollection>
+    mutable k4FWCore::DataHandle<edm4hep::SimTrackerHitCollection>
         m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-    mutable DataHandle<edm4eic::RawTrackerHitCollection>
+    mutable k4FWCore::DataHandle<edm4eic::RawTrackerHitCollection>
         m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
     Gaudi::Property<std::vector<std::pair<double, double>>>
         u_quantumEfficiency{this, "quantumEfficiency", {{2.6*eV, 0.3}, {7.0*eV, 0.3}}};

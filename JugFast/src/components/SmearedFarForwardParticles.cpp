@@ -24,10 +24,10 @@ namespace Jug::Fast {
 
 class SmearedFarForwardParticles : public Gaudi::Algorithm {
 private:
-  mutable DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"SmearedFarForwardParticles",
+  mutable k4FWCore::DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<edm4eic::ReconstructedParticleCollection> m_outputParticles{"SmearedFarForwardParticles",
                                                                       Gaudi::DataHandle::Writer, this};
-  mutable DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_outputAssocCollection{"MCRecoParticleAssociation",
+  mutable k4FWCore::DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_outputAssocCollection{"MCRecoParticleAssociation",
                                                                                 Gaudi::DataHandle::Writer, this};
 
   Gaudi::Property<bool> m_enableZDC{this, "enableZDC", true};
@@ -77,7 +77,7 @@ public:
     if (Gaudi::Algorithm::initialize().isFailure()) {
       return StatusCode::FAILURE;
     }
-    IRndmGenSvc* randSvc = Gaudi::svcLocator()->service<IRndmGenSvc>("RndmGenSvc", true);
+    auto randSvc = Gaudi::svcLocator()->service<IRndmGenSvc>("RndmGenSvc", true);
     // use 0 for mean and 1 for standard deviation. Can rescale appropriately for the
     // different subsystems
     StatusCode sc = m_gaussDist.initialize(randSvc, Rndm::Gauss(0.0, 1.0));
@@ -202,8 +202,6 @@ private:
       rec_part.setGoodnessOfPID(1.);
       rec_part.setPDG(part.getPDG());
       Assoc assoc;
-      assoc.setRecID(rec_part.getObjectID().index);
-      assoc.setSimID(part.getObjectID().index);
       assoc.setWeight(1.);
       assoc.setRec(rec_part);
       //assoc.setSim(part);
@@ -379,8 +377,6 @@ private:
     rec_part.setGoodnessOfPID(1); // perfect PID
     rec_part.setPDG(part.getPDG());
     Assoc assoc;
-    assoc.setRecID(rec_part.getObjectID().index);
-    assoc.setSimID(part.getObjectID().index);
     assoc.setWeight(1.);
     assoc.setRec(rec_part);
     //assoc.setSim(part);

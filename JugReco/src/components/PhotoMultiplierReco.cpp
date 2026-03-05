@@ -42,8 +42,8 @@ namespace Jug::Reco {
  */
 class PhotoMultiplierReco : public Gaudi::Algorithm {
 private:
-  mutable DataHandle<edm4eic::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<edm4eic::PMTHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
+  mutable k4FWCore::DataHandle<edm4eic::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<edm4eic::PMTHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer, this};
   Gaudi::Property<double> m_timeStep{this, "timeStep", 0.0625 * ns};
   Gaudi::Property<double> m_minNpe{this, "minNpe", 0.0};
   Gaudi::Property<double> m_speMean{this, "speMean", 80.0};

@@ -32,7 +32,7 @@ public:
       // treat error: already initialized
     }
     if (!m_data_name->empty()) {
-      m_handle = std::make_unique<DataHandle<data_type>>(
+      m_handle = std::make_unique<k4FWCore::DataHandle<data_type>>(
           *m_data_name,
           ((kMode == DataMode::kInput) ? Gaudi::DataHandle::Reader : Gaudi::DataHandle::Writer),
           m_owner);
@@ -58,7 +58,7 @@ private:
       m_data_name; // This needs to be a pointer, else things go wrong once we go through
                    // createElements - probably something about passing the Property through an
                    // rvalue (or copy) constructor
-  std::unique_ptr<DataHandle<data_type>> m_handle;
+  std::unique_ptr<k4FWCore::DataHandle<data_type>> m_handle;
   gsl::not_null<Gaudi::Algorithm*> m_owner;
 };
 
@@ -81,7 +81,7 @@ public:
     if (!m_data_names->empty()) {
       for (const auto& name : *m_data_names) {
         if (!name.empty()) {
-          m_handles.emplace_back(std::make_unique<DataHandle<data_type>>(
+          m_handles.emplace_back(std::make_unique<k4FWCore::DataHandle<data_type>>(
               name,
               (kMode == DataMode::kInput ? Gaudi::DataHandle::Reader : Gaudi::DataHandle::Writer),
               m_owner));
@@ -107,7 +107,7 @@ public:
 
 private:
   std::unique_ptr<Gaudi::Property<std::vector<std::string>>> m_data_names;
-  std::vector<std::unique_ptr<DataHandle<T>>> m_handles;
+  std::vector<std::unique_ptr<k4FWCore::DataHandle<T>>> m_handles;
   gsl::not_null<Gaudi::Algorithm*> m_owner;
 };
 

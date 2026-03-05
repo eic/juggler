@@ -29,11 +29,11 @@ namespace Jug::Fast {
 class ClusterMerger : public Gaudi::Algorithm {
 private:
   // Input
-  mutable DataHandle<edm4eic::ClusterCollection> m_inputClusters{"InputClusters", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_inputAssociations{"InputAssociations", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<edm4eic::ClusterCollection> m_inputClusters{"InputClusters", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_inputAssociations{"InputAssociations", Gaudi::DataHandle::Reader, this};
   // Output
-  mutable DataHandle<edm4eic::ClusterCollection> m_outputClusters{"OutputClusters", Gaudi::DataHandle::Writer, this};
-  mutable DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_outputAssociations{"OutputAssociations", Gaudi::DataHandle::Writer, this};
+  mutable k4FWCore::DataHandle<edm4eic::ClusterCollection> m_outputClusters{"OutputClusters", Gaudi::DataHandle::Writer, this};
+  mutable k4FWCore::DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_outputAssociations{"OutputAssociations", Gaudi::DataHandle::Writer, this};
 public:
   ClusterMerger(const std::string& name, ISvcLocator* svcLoc)
       : Gaudi::Algorithm(name, svcLoc) {
@@ -92,8 +92,6 @@ public:
         auto new_clus = clus.clone();
         merged.push_back(new_clus);
         auto ca = assoc2.create();
-        ca.setRecID(new_clus.getObjectID().index);
-        ca.setSimID(mcID);
         ca.setWeight(1.0);
         ca.setRec(new_clus);
         //ca.setSim(//FIXME);
@@ -128,7 +126,6 @@ public:
           debug() << "   --> Merged cluster with energy: " << new_clus.getEnergy() << endmsg;
         }
         auto ca = assoc2.create();
-        ca.setSimID(mcID);
         ca.setWeight(1.0);
         ca.setRec(new_clus);
       }
@@ -155,7 +152,7 @@ public:
       // find associated particle
       for (const auto& assoc : associations) {
         if (assoc.getRec() == cluster) {
-          mcID = assoc.getSimID();
+          mcID = assoc.getSim().getObjectID().index;
           break;
         }
       }

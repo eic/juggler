@@ -57,9 +57,9 @@ namespace Jug::Reco {
 class CalorimeterHitsEtaPhiProjector : public Gaudi::Algorithm {
 private:
   Gaudi::Property<std::vector<double>> u_gridSizes{this, "gridSizes", {0.001, 0.001 * rad}};
-  mutable DataHandle<edm4eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+  mutable k4FWCore::DataHandle<edm4eic::CalorimeterHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                   this};
-  mutable DataHandle<edm4eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+  mutable k4FWCore::DataHandle<edm4eic::CalorimeterHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                    this};
 
   double gridSizes[2]{0.0, 0.0};

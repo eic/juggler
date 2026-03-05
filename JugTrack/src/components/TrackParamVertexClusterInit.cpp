@@ -35,9 +35,9 @@ namespace Jug::Reco {
  */
 class TrackParamVertexClusterInit : public Gaudi::Algorithm {
 private:
-  mutable DataHandle<edm4eic::TrackerHitCollection> m_inputVertexHits{"inputVertexHits", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<edm4eic::ClusterCollection> m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<ActsExamples::TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
+  mutable k4FWCore::DataHandle<edm4eic::TrackerHitCollection> m_inputVertexHits{"inputVertexHits", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<edm4eic::ClusterCollection> m_inputClusters{"inputClusters", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<ActsExamples::TrackParametersContainer> m_outputInitialTrackParameters{"outputInitialTrackParameters",
                                                                       Gaudi::DataHandle::Writer, this};
   Gaudi::Property<double> m_maxHitRadius{this, "maxHitRadius", 40.0 * mm};
 

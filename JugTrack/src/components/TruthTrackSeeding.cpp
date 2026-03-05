@@ -34,9 +34,9 @@ namespace Jug::Reco {
    */
   class TruthTrackSeeding : public Gaudi::Algorithm {
   private:
-    mutable DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader,
+    mutable k4FWCore::DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"inputMCParticles", Gaudi::DataHandle::Reader,
                                                                     this};
-    mutable DataHandle<edm4eic::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters",
+    mutable k4FWCore::DataHandle<edm4eic::TrackParametersCollection> m_outputTrackParameters{"outputTrackParameters",
                                                                        Gaudi::DataHandle::Writer, this};
     SmartIF<IParticleSvc> m_pidSvc;
 
