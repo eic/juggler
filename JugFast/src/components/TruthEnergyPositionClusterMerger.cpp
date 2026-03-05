@@ -122,7 +122,7 @@ public:
         edm4eic::MutableMCRecoClusterParticleAssociation clusterassoc;
         clusterassoc.setWeight(1.0);
         clusterassoc.setRec(new_clus);
-        //clusterassoc.setSim(mcparticles[mcID]);
+        clusterassoc.setSim(mcparticles[mcID]);
         merged_assoc.push_back(clusterassoc);
 
         // erase the energy cluster from the map, so we can in the end account for all
@@ -140,7 +140,7 @@ public:
         edm4eic::MutableMCRecoClusterParticleAssociation clusterassoc;
         clusterassoc.setWeight(1.0);
         clusterassoc.setRec(new_clus);
-        //clusterassoc.setSim(mcparticles[mcID]);
+        clusterassoc.setSim(mcparticles[mcID]);
         merged_assoc.push_back(clusterassoc);
       }
     }
@@ -173,7 +173,7 @@ public:
       edm4eic::MutableMCRecoClusterParticleAssociation clusterassoc;
       clusterassoc.setWeight(1.0);
       clusterassoc.setRec(new_clus);
-      //clusterassoc.setSim(mc);
+      clusterassoc.setSim(mc);
       merged_assoc.push_back(clusterassoc);
     }
 

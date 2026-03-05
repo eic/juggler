@@ -15,6 +15,7 @@
 // Event Model related classes
 #include "edm4eic/ClusterCollection.h"
 #include "edm4eic/MCRecoClusterParticleAssociationCollection.h"
+#include "edm4hep/MCParticle.h"
 #include "edm4hep/utils/vector_utils.h"
 
 using namespace Gaudi::Units;
@@ -79,7 +80,8 @@ public:
     if (msgLevel(MSG::DEBUG)) {
       debug() << "Step 1/1: Merging clusters where needed" << endmsg;
     }
-    for (const auto& [mcID, clusters] : clusterMap) {
+    for (const auto& [mcID, mcData] : clusterMap) {
+      const auto& [simParticle, clusters] = mcData;
       if (msgLevel(MSG::DEBUG)) {
         debug() << " --> Processing " << clusters.size() << " clusters for mcID " << mcID << endmsg;
       }
@@ -94,7 +96,7 @@ public:
         auto ca = assoc2.create();
         ca.setWeight(1.0);
         ca.setRec(new_clus);
-        //ca.setSim(//FIXME);
+        ca.setSim(simParticle);
       } else {
         auto new_clus = merged.create();
         // calculate aggregate info
@@ -128,6 +130,7 @@ public:
         auto ca = assoc2.create();
         ca.setWeight(1.0);
         ca.setRec(new_clus);
+        ca.setSim(simParticle);
       }
     }
 
@@ -136,23 +139,25 @@ public:
     return StatusCode::SUCCESS;
   }
 
-  // get a map of MCParticle index--> std::vector<Cluster> for clusters that belong together
-  std::map<int, std::vector<edm4eic::Cluster>> indexedClusterLists(
+  // get a map of MCParticle index--> std::pair<MCParticle, std::vector<Cluster>> for clusters that belong together
+  std::map<int, std::pair<edm4hep::MCParticle, std::vector<edm4eic::Cluster>>> indexedClusterLists(
       const edm4eic::ClusterCollection& clusters,
       const edm4eic::MCRecoClusterParticleAssociationCollection& associations
   ) const {
 
-    std::map<int, std::vector<edm4eic::Cluster>> matched = {};
+    std::map<int, std::pair<edm4hep::MCParticle, std::vector<edm4eic::Cluster>>> matched = {};
 
     // loop over clusters
     for (const auto& cluster : clusters) {
 
       int mcID = -1;
+      edm4hep::MCParticle simParticle;
 
       // find associated particle
       for (const auto& assoc : associations) {
         if (assoc.getRec() == cluster) {
-          mcID = assoc.getSim().getObjectID().index;
+          simParticle = assoc.getSim();
+          mcID = simParticle.getObjectID().index;
           break;
         }
       }
@@ -170,9 +175,9 @@ public:
       }
 
       if (!matched.count(mcID)) {
-        matched[mcID] = {};
+        matched[mcID] = {simParticle, {}};
       }
-      matched[mcID].push_back(cluster);
+      matched[mcID].second.push_back(cluster);
     }
     return matched;
   }

@@ -98,11 +98,13 @@ public:
       outparts.push_back(outpart);
 
       int mcID = -1;
+      edm4hep::MCParticle simParticle;
 
       // find associated particle
       for (const auto& assoc: inpartsassoc) {
         if (assoc.getRec() == inpart) {
-          mcID = assoc.getSim().getObjectID().index;
+          simParticle = assoc.getSim();
+          mcID = simParticle.getObjectID().index;
           break;
         }
       }
@@ -130,7 +132,7 @@ public:
       auto assoc = outpartsassoc.create();
       assoc.setWeight(1.0);
       assoc.setRec(outpart);
-      //assoc.setSim(mcparticles[mcID]);
+      assoc.setSim(simParticle);
     }
 
     // 2. Now loop over all remaining clusters and add neutrals. Also add in Hcal energy
@@ -170,7 +172,7 @@ public:
       auto assoc = outpartsassoc.create();
       assoc.setWeight(1.0);
       assoc.setRec(outpart);
-      //assoc.setSim(mcparticles[mcID]);
+      assoc.setSim(mcparticles[mcID]);
     }
     return StatusCode::SUCCESS;
   }
