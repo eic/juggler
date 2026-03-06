@@ -44,9 +44,9 @@ namespace Jug::Reco {
   class TrackerHitReconstruction : public Gaudi::Algorithm {
   private:
     Gaudi::Property<float> m_timeResolution{this, "timeResolution", 10}; // in ns
-    mutable DataHandle<edm4eic::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
+    mutable k4FWCore::DataHandle<edm4eic::RawTrackerHitCollection> m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader,
                                                                    this};
-    mutable DataHandle<edm4eic::TrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
+    mutable k4FWCore::DataHandle<edm4eic::TrackerHitCollection> m_outputHitCollection{"outputHitCollection", Gaudi::DataHandle::Writer,
                                                                  this};
 
     /// Pointer to the geometry service

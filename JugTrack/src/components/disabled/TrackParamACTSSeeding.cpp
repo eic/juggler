@@ -57,10 +57,10 @@ namespace Jug::Reco {
      */
     class TrackParamACTSSeeding : public Gaudi::Algorithm {
     public:
-        DataHandle<edm4eic::TrackerHitCollection>
+        k4FWCore::DataHandle<edm4eic::TrackerHitCollection>
         m_inputHitCollection { "inputHitCollection",
             Gaudi::DataHandle::Reader, this };
-        DataHandle<ActsExamples::TrackParametersContainer>
+        k4FWCore::DataHandle<ActsExamples::TrackParametersContainer>
         m_outputInitialTrackParameters {
             "outputInitialTrackParameters",
             Gaudi::DataHandle::Writer, this };

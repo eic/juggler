@@ -26,19 +26,19 @@ namespace Jug::Reco {
 
 class InclusiveKinematicsDA : public Gaudi::Algorithm {
 private:
-  mutable DataHandle<edm4hep::MCParticleCollection> m_inputMCParticleCollection{
+  mutable k4FWCore::DataHandle<edm4hep::MCParticleCollection> m_inputMCParticleCollection{
     "inputMCParticles",
     Gaudi::DataHandle::Reader,
     this};
-  mutable DataHandle<edm4eic::ReconstructedParticleCollection> m_inputParticleCollection{
+  mutable k4FWCore::DataHandle<edm4eic::ReconstructedParticleCollection> m_inputParticleCollection{
     "inputReconstructedParticles",
     Gaudi::DataHandle::Reader,
     this};
-  mutable DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_inputParticleAssociation{
+  mutable k4FWCore::DataHandle<edm4eic::MCRecoParticleAssociationCollection> m_inputParticleAssociation{
     "inputParticleAssociations",
     Gaudi::DataHandle::Reader,
     this};
-  mutable DataHandle<edm4eic::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{
+  mutable k4FWCore::DataHandle<edm4eic::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{
     "outputInclusiveKinematics",
     Gaudi::DataHandle::Writer,
     this};
@@ -127,10 +127,10 @@ public:
     //const auto ef_assoc = std::find_if(
     //  rcassoc.begin(),
     //  rcassoc.end(),
-    //  [&ef_coll](const auto& a){ return a.getSimID() == ef_coll[0].getObjectID().index; });
+    //  [&ef_coll](const auto& a){ return a.getSim().getObjectID().index == ef_coll[0].getObjectID().index; });
     auto ef_assoc = rcassoc.begin();
     for (; ef_assoc != rcassoc.end(); ++ef_assoc) {
-      if (ef_assoc->getSimID() == (unsigned) ef_coll[0].getObjectID().index) {
+      if (ef_assoc->getSim().getObjectID().index == ef_coll[0].getObjectID().index) {
         break;
       }
     }

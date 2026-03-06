@@ -22,9 +22,9 @@ namespace Jug::Digi {
     class SimTrackerHitsCollector : public Gaudi::Algorithm {
     private:
       Gaudi::Property<std::vector<std::string>> m_inputSimTrackerHits{this, "inputSimTrackerHits", {},"Tracker hits to be aggregated"};
-      mutable DataHandle<edm4hep::SimTrackerHitCollection> m_outputSimTrackerHits{"outputSimTrackerHits", Gaudi::DataHandle::Writer, this};
+      mutable k4FWCore::DataHandle<edm4hep::SimTrackerHitCollection> m_outputSimTrackerHits{"outputSimTrackerHits", Gaudi::DataHandle::Writer, this};
 
-      std::vector<DataHandle<edm4hep::SimTrackerHitCollection>*> m_hitCollections;
+      std::vector<k4FWCore::DataHandle<edm4hep::SimTrackerHitCollection>*> m_hitCollections;
 
     public:
       SimTrackerHitsCollector(const std::string& name, ISvcLocator* svcLoc)
@@ -44,7 +44,7 @@ namespace Jug::Digi {
         }
         for (auto colname : m_inputSimTrackerHits) {
           debug() << "initializing collection: " << colname  << endmsg;
-          m_hitCollections.push_back(new DataHandle<edm4hep::SimTrackerHitCollection>{colname, Gaudi::DataHandle::Reader, this});
+          m_hitCollections.push_back(new k4FWCore::DataHandle<edm4hep::SimTrackerHitCollection>{colname, Gaudi::DataHandle::Reader, this});
         }
         return StatusCode::SUCCESS;
       }

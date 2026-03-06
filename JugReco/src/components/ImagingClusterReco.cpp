@@ -49,19 +49,19 @@ class ImagingClusterReco : public Gaudi::Algorithm {
 private:
   Gaudi::Property<int> m_trackStopLayer{this, "trackStopLayer", 9};
 
-  mutable DataHandle<edm4eic::ProtoClusterCollection> m_inputProtoClusters{"inputProtoClusters", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<edm4eic::ClusterCollection> m_outputLayers{"outputLayers", Gaudi::DataHandle::Writer, this};
-  mutable DataHandle<edm4eic::ClusterCollection> m_outputClusters{"outputClusters", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<edm4eic::ProtoClusterCollection> m_inputProtoClusters{"inputProtoClusters", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<edm4eic::ClusterCollection> m_outputLayers{"outputLayers", Gaudi::DataHandle::Writer, this};
+  mutable k4FWCore::DataHandle<edm4eic::ClusterCollection> m_outputClusters{"outputClusters", Gaudi::DataHandle::Reader, this};
 
   // Collection for MC hits when running on MC
   Gaudi::Property<std::string> m_mcHits{this, "mcHits", ""};
   // Optional handle to MC hits
-  std::unique_ptr<DataHandle<edm4hep::SimCalorimeterHitCollection>> m_mcHits_ptr;
+  std::unique_ptr<k4FWCore::DataHandle<edm4hep::SimCalorimeterHitCollection>> m_mcHits_ptr;
 
   // Collection for associations when running on MC
   Gaudi::Property<std::string> m_outputAssociations{this, "outputAssociations", ""};
   // Optional handle to MC hits
-  std::unique_ptr<DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>> m_outputAssociations_ptr;
+  std::unique_ptr<k4FWCore::DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>> m_outputAssociations_ptr;
 
 public:
   ImagingClusterReco(const std::string& name, ISvcLocator* svcLoc) : Gaudi::Algorithm(name, svcLoc) {
@@ -78,14 +78,14 @@ public:
     // Initialize the optional MC input hit collection if requested
     if (m_mcHits != "") {
       m_mcHits_ptr =
-        std::make_unique<DataHandle<edm4hep::SimCalorimeterHitCollection>>(m_mcHits, Gaudi::DataHandle::Reader,
+        std::make_unique<k4FWCore::DataHandle<edm4hep::SimCalorimeterHitCollection>>(m_mcHits, Gaudi::DataHandle::Reader,
         this);
     }
 
     // Initialize the optional association collection if requested
     if (m_outputAssociations != "") {
       m_outputAssociations_ptr =
-        std::make_unique<DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>>(m_outputAssociations, Gaudi::DataHandle::Writer,
+        std::make_unique<k4FWCore::DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection>>(m_outputAssociations, Gaudi::DataHandle::Writer,
         this);
     }
 
@@ -167,8 +167,6 @@ public:
 
         // set association
         edm4eic::MutableMCRecoClusterParticleAssociation clusterassoc;
-        clusterassoc.setRecID(cl.getObjectID().index);
-        clusterassoc.setSimID(mcp.getObjectID().index);
         clusterassoc.setWeight(1.0);
         clusterassoc.setRec(cl);
         //clusterassoc.setSim(mcp);

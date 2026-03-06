@@ -22,11 +22,11 @@ namespace Jug::Fast {
 
 class ScatteredElectronFinder : public Gaudi::Algorithm {
 private:
-  mutable DataHandle<edm4hep::MCParticleCollection> m_inputMCParticleCollection{
+  mutable k4FWCore::DataHandle<edm4hep::MCParticleCollection> m_inputMCParticleCollection{
     "inputMCParticles",
     Gaudi::DataHandle::Reader,
     this};
-  mutable DataHandle<edm4hep::MCParticleCollection> m_outputMCScatteredElectron{
+  mutable k4FWCore::DataHandle<edm4hep::MCParticleCollection> m_outputMCScatteredElectron{
     "outputMCScatteredElectron",
     Gaudi::DataHandle::Writer,
     this};

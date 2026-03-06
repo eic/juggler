@@ -45,9 +45,9 @@ namespace Jug::Reco {
   private:
     Gaudi::Property<int>                        m_nLayers{this, "numberOfLayers", 9};
     Gaudi::Property<int>                        m_nHits{this, "numberOfHits", 50};
-    mutable DataHandle<edm4eic::CalorimeterHitCollection>   m_inputHitCollection{"inputHitCollection",
+    mutable k4FWCore::DataHandle<edm4eic::CalorimeterHitCollection>   m_inputHitCollection{"inputHitCollection",
                                                                      Gaudi::DataHandle::Reader, this};
-    mutable DataHandle<edm4eic::CalorimeterHitCollection>   m_outputHitCollection{"outputHitCollection",
+    mutable k4FWCore::DataHandle<edm4eic::CalorimeterHitCollection>   m_outputHitCollection{"outputHitCollection",
                                                                       Gaudi::DataHandle::Writer, this};
 
   public:

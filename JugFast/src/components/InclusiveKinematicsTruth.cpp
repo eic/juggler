@@ -25,11 +25,11 @@ namespace Jug::Fast {
 
 class InclusiveKinematicsTruth : public Gaudi::Algorithm {
 private:
-  mutable DataHandle<edm4hep::MCParticleCollection> m_inputMCParticleCollection{
+  mutable k4FWCore::DataHandle<edm4hep::MCParticleCollection> m_inputMCParticleCollection{
     "inputMCParticles",
     Gaudi::DataHandle::Reader,
     this};
-  mutable DataHandle<edm4eic::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{
+  mutable k4FWCore::DataHandle<edm4eic::InclusiveKinematicsCollection> m_outputInclusiveKinematicsCollection{
     "outputInclusiveKinematics",
     Gaudi::DataHandle::Writer,
     this};

@@ -35,10 +35,10 @@ namespace Jug::Reco {
 class EnergyPositionClusterMerger : public Gaudi::Algorithm {
 private:
   // Input
-  mutable DataHandle<edm4eic::ClusterCollection> m_energyClusters{"energyClusters", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<edm4eic::ClusterCollection> m_positionClusters{"positionClusters", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<edm4eic::ClusterCollection> m_energyClusters{"energyClusters", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<edm4eic::ClusterCollection> m_positionClusters{"positionClusters", Gaudi::DataHandle::Reader, this};
   // Output
-  mutable DataHandle<edm4eic::ClusterCollection> m_outputClusters{"outputClusters", Gaudi::DataHandle::Writer, this};
+  mutable k4FWCore::DataHandle<edm4eic::ClusterCollection> m_outputClusters{"outputClusters", Gaudi::DataHandle::Writer, this};
   // Negative values mean the tolerance check is disabled
   Gaudi::Property<double> m_zToleranceUnits{this, "zTolerance", -1 * cm};
   Gaudi::Property<double> m_phiToleranceUnits{this, "phiTolerance", 20 * degree};

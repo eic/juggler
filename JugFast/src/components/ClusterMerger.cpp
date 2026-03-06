@@ -15,6 +15,7 @@
 // Event Model related classes
 #include "edm4eic/ClusterCollection.h"
 #include "edm4eic/MCRecoClusterParticleAssociationCollection.h"
+#include "edm4hep/MCParticle.h"
 #include "edm4hep/utils/vector_utils.h"
 
 using namespace Gaudi::Units;
@@ -29,11 +30,11 @@ namespace Jug::Fast {
 class ClusterMerger : public Gaudi::Algorithm {
 private:
   // Input
-  mutable DataHandle<edm4eic::ClusterCollection> m_inputClusters{"InputClusters", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_inputAssociations{"InputAssociations", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<edm4eic::ClusterCollection> m_inputClusters{"InputClusters", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_inputAssociations{"InputAssociations", Gaudi::DataHandle::Reader, this};
   // Output
-  mutable DataHandle<edm4eic::ClusterCollection> m_outputClusters{"OutputClusters", Gaudi::DataHandle::Writer, this};
-  mutable DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_outputAssociations{"OutputAssociations", Gaudi::DataHandle::Writer, this};
+  mutable k4FWCore::DataHandle<edm4eic::ClusterCollection> m_outputClusters{"OutputClusters", Gaudi::DataHandle::Writer, this};
+  mutable k4FWCore::DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_outputAssociations{"OutputAssociations", Gaudi::DataHandle::Writer, this};
 public:
   ClusterMerger(const std::string& name, ISvcLocator* svcLoc)
       : Gaudi::Algorithm(name, svcLoc) {
@@ -79,7 +80,8 @@ public:
     if (msgLevel(MSG::DEBUG)) {
       debug() << "Step 1/1: Merging clusters where needed" << endmsg;
     }
-    for (const auto& [mcID, clusters] : clusterMap) {
+    for (const auto& [mcID, mcData] : clusterMap) {
+      const auto& [simParticle, clusters] = mcData;
       if (msgLevel(MSG::DEBUG)) {
         debug() << " --> Processing " << clusters.size() << " clusters for mcID " << mcID << endmsg;
       }
@@ -92,11 +94,9 @@ public:
         auto new_clus = clus.clone();
         merged.push_back(new_clus);
         auto ca = assoc2.create();
-        ca.setRecID(new_clus.getObjectID().index);
-        ca.setSimID(mcID);
         ca.setWeight(1.0);
         ca.setRec(new_clus);
-        //ca.setSim(//FIXME);
+        ca.setSim(simParticle);
       } else {
         auto new_clus = merged.create();
         // calculate aggregate info
@@ -128,9 +128,9 @@ public:
           debug() << "   --> Merged cluster with energy: " << new_clus.getEnergy() << endmsg;
         }
         auto ca = assoc2.create();
-        ca.setSimID(mcID);
         ca.setWeight(1.0);
         ca.setRec(new_clus);
+        ca.setSim(simParticle);
       }
     }
 
@@ -139,23 +139,25 @@ public:
     return StatusCode::SUCCESS;
   }
 
-  // get a map of MCParticle index--> std::vector<Cluster> for clusters that belong together
-  std::map<int, std::vector<edm4eic::Cluster>> indexedClusterLists(
+  // get a map of MCParticle index--> std::pair<MCParticle, std::vector<Cluster>> for clusters that belong together
+  std::map<int, std::pair<edm4hep::MCParticle, std::vector<edm4eic::Cluster>>> indexedClusterLists(
       const edm4eic::ClusterCollection& clusters,
       const edm4eic::MCRecoClusterParticleAssociationCollection& associations
   ) const {
 
-    std::map<int, std::vector<edm4eic::Cluster>> matched = {};
+    std::map<int, std::pair<edm4hep::MCParticle, std::vector<edm4eic::Cluster>>> matched = {};
 
     // loop over clusters
     for (const auto& cluster : clusters) {
 
       int mcID = -1;
+      edm4hep::MCParticle simParticle;
 
       // find associated particle
       for (const auto& assoc : associations) {
         if (assoc.getRec() == cluster) {
-          mcID = assoc.getSimID();
+          simParticle = assoc.getSim();
+          mcID = simParticle.getObjectID().index;
           break;
         }
       }
@@ -173,9 +175,9 @@ public:
       }
 
       if (!matched.count(mcID)) {
-        matched[mcID] = {};
+        matched[mcID] = {simParticle, {}};
       }
-      matched[mcID].push_back(cluster);
+      matched[mcID].second.push_back(cluster);
     }
     return matched;
   }

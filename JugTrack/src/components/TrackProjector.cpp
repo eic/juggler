@@ -48,8 +48,8 @@ namespace Jug::Reco {
    */
    class TrackProjector : public Gaudi::Algorithm {
    private:
-    mutable DataHandle<ActsExamples::TrajectoriesContainer>        m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
-    mutable DataHandle<edm4eic::TrackSegmentCollection> m_outputTrackSegments{"outputTrackSegments", Gaudi::DataHandle::Writer, this};
+    mutable k4FWCore::DataHandle<ActsExamples::TrajectoriesContainer>        m_inputTrajectories{"inputTrajectories", Gaudi::DataHandle::Reader, this};
+    mutable k4FWCore::DataHandle<edm4eic::TrackSegmentCollection> m_outputTrackSegments{"outputTrackSegments", Gaudi::DataHandle::Writer, this};
 
     Gaudi::Property<unsigned int> m_firstInVolumeID{this, "firstInVolumeID", 0};
     Gaudi::Property<std::string> m_firstInVolumeName{this, "firstInVolumeName", ""};

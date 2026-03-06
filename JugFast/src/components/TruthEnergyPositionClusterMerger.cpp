@@ -33,14 +33,14 @@ namespace Jug::Fast {
 class TruthEnergyPositionClusterMerger : public Gaudi::Algorithm {
 private:
   // Input
-  mutable DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<edm4eic::ClusterCollection> m_energyClusters{"EnergyClusters", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_energyAssociations{"EnergyAssociations", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<edm4eic::ClusterCollection> m_positionClusters{"PositionClusters", Gaudi::DataHandle::Reader, this};
-  mutable DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_positionAssociations{"PositionAssociations", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<edm4hep::MCParticleCollection> m_inputMCParticles{"MCParticles", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<edm4eic::ClusterCollection> m_energyClusters{"EnergyClusters", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_energyAssociations{"EnergyAssociations", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<edm4eic::ClusterCollection> m_positionClusters{"PositionClusters", Gaudi::DataHandle::Reader, this};
+  mutable k4FWCore::DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_positionAssociations{"PositionAssociations", Gaudi::DataHandle::Reader, this};
   // Output
-  mutable DataHandle<edm4eic::ClusterCollection> m_outputClusters{"OutputClusters", Gaudi::DataHandle::Writer, this};
-  mutable DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_outputAssociations{"OutputAssociations", Gaudi::DataHandle::Writer, this};
+  mutable k4FWCore::DataHandle<edm4eic::ClusterCollection> m_outputClusters{"OutputClusters", Gaudi::DataHandle::Writer, this};
+  mutable k4FWCore::DataHandle<edm4eic::MCRecoClusterParticleAssociationCollection> m_outputAssociations{"OutputAssociations", Gaudi::DataHandle::Writer, this};
 
 public:
   TruthEnergyPositionClusterMerger(const std::string& name, ISvcLocator* svcLoc)
@@ -120,11 +120,9 @@ public:
 
         // set association
         edm4eic::MutableMCRecoClusterParticleAssociation clusterassoc;
-        clusterassoc.setRecID(new_clus.getObjectID().index);
-        clusterassoc.setSimID(mcID);
         clusterassoc.setWeight(1.0);
         clusterassoc.setRec(new_clus);
-        //clusterassoc.setSim(mcparticles[mcID]);
+        clusterassoc.setSim(mcparticles[mcID]);
         merged_assoc.push_back(clusterassoc);
 
         // erase the energy cluster from the map, so we can in the end account for all
@@ -140,11 +138,9 @@ public:
 
         // set association
         edm4eic::MutableMCRecoClusterParticleAssociation clusterassoc;
-        clusterassoc.setRecID(new_clus.getObjectID().index);
-        clusterassoc.setSimID(mcID);
         clusterassoc.setWeight(1.0);
         clusterassoc.setRec(new_clus);
-        //clusterassoc.setSim(mcparticles[mcID]);
+        clusterassoc.setSim(mcparticles[mcID]);
         merged_assoc.push_back(clusterassoc);
       }
     }
@@ -175,11 +171,9 @@ public:
 
       // set association
       edm4eic::MutableMCRecoClusterParticleAssociation clusterassoc;
-      clusterassoc.setRecID(new_clus.getObjectID().index);
-      clusterassoc.setSimID(mcID);
       clusterassoc.setWeight(1.0);
       clusterassoc.setRec(new_clus);
-      //clusterassoc.setSim(mc);
+      clusterassoc.setSim(mc);
       merged_assoc.push_back(clusterassoc);
     }
 
@@ -202,7 +196,7 @@ public:
       // find associated particle
       for (const auto& assoc : associations) {
         if (assoc.getRec() == cluster) {
-          mcID = assoc.getSimID();
+          mcID = assoc.getSim().getObjectID().index;
           break;
         }
       }

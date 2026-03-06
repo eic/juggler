@@ -37,9 +37,9 @@ namespace Jug::Reco {
     using ProtoClusters = edm4eic::ProtoClusterCollection;
     using Clusters = edm4eic::ClusterCollection;
 
-    mutable DataHandle<RecHits>       m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
-    mutable DataHandle<ProtoClusters> m_outputProtoClusters{"outputProtoCluster", Gaudi::DataHandle::Writer, this};
-    mutable DataHandle<Clusters>      m_outputClusters{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
+    mutable k4FWCore::DataHandle<RecHits>       m_inputHitCollection{"inputHitCollection", Gaudi::DataHandle::Reader, this};
+    mutable k4FWCore::DataHandle<ProtoClusters> m_outputProtoClusters{"outputProtoCluster", Gaudi::DataHandle::Writer, this};
+    mutable k4FWCore::DataHandle<Clusters>      m_outputClusters{"outputClusterCollection", Gaudi::DataHandle::Writer, this};
 
     Gaudi::Property<std::string> m_mcHits{this, "mcHits", ""};
 
@@ -50,7 +50,7 @@ namespace Jug::Reco {
     SmartIF<IGeoSvc> m_geoSvc;
 
     // Optional handle to MC hits
-    std::unique_ptr<DataHandle<edm4hep::SimCalorimeterHitCollection>> m_inputMC;
+    std::unique_ptr<k4FWCore::DataHandle<edm4hep::SimCalorimeterHitCollection>> m_inputMC;
 
   public:
     SimpleClustering(const std::string& name, ISvcLocator* svcLoc) 
@@ -68,7 +68,7 @@ namespace Jug::Reco {
       // Initialize the MC input hit collection if requested
       if (m_mcHits != "") {
         m_inputMC =
-            std::make_unique<DataHandle<edm4hep::SimCalorimeterHitCollection>>(m_mcHits, Gaudi::DataHandle::Reader, this);
+            std::make_unique<k4FWCore::DataHandle<edm4hep::SimCalorimeterHitCollection>>(m_mcHits, Gaudi::DataHandle::Reader, this);
       }
       m_geoSvc = service("GeoSvc");
       if (!m_geoSvc) {
