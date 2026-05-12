@@ -54,7 +54,10 @@ endif()
 find_package(Microsoft.GSL CONFIG)
 
 find_package(EDM4EIC REQUIRED)
-find_package(EDM4HEP 0.4.1 REQUIRED)
+find_package(EDM4HEP REQUIRED)
+if(${EDM4HEP_VERSION} VERSION_LESS 0.4.1)
+  message(FATAL_ERROR "EDM4HEP version ${EDM4HEP_VERSION} is too old. Please use at least version 0.4.1.")
+endif()
 
 find_package(podio 0.16.3)
 if(NOT podio_FOUND)
